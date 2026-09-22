@@ -33,12 +33,12 @@ ranking.
 
 ## Status
 
-**Early.** Repository tooling is in place and the eBay OAuth token exchange is
-written and tested. Nothing else is built: no want-list, no polling, no UI.
-See `docs/` for the product brief and the decision record.
+**Early.** Repository tooling, the eBay OAuth token exchange, and eBay's
+account-deletion compliance endpoint. Nothing else: no want-list, no polling,
+no UI. See `docs/` for the product brief and the decision record.
 
-The eBay keys currently return `invalid_client` from the token endpoint. The
-client code is not the cause — see decision 4.
+The production keyset is disabled until the deletion endpoint is deployed and
+registered with eBay — see decision 16 and the checklist below.
 
 ## Sources
 
@@ -63,9 +63,10 @@ Fly.io or self-hosted. Running cost is roughly $2–3/month, all of it hosting.
 ## Layout
 
 ```
-docs/              product brief and decision record
-src/book_watch/    the application
-tests/             offline by default; `-m network` opts into real requests
+docs/                  product brief and decision record
+src/book_watch/ebay/   eBay API client
+src/book_watch/web/    FastAPI app; currently just the compliance endpoint
+tests/                 offline by default; `-m network` opts into real requests
 ```
 
 ## Running it
@@ -80,6 +81,43 @@ uv run python -m book_watch.ebay     # verify the eBay keys work (one request)
 ```
 
 The last command makes a real call to eBay. Everything above it is offline.
+
+## eBay compliance endpoint
+
+eBay disables a production keyset until the application either receives
+marketplace account deletion notifications or is granted an exemption. This
+repo takes the first route (decision 16), which means the endpoint has to be
+live before the API works at all.
+
+The endpoint URL is hashed into every response eBay validates against, so it
+must be settled first and must match eBay's copy exactly.
+
+```sh
+# 1. Generate a verification token (32-80 chars, [A-Za-z0-9_-])
+python -c "import secrets; print(secrets.token_urlsafe(48))"
+
+# 2. Tell Fly about both values. The URL follows the app name in fly.toml.
+fly secrets set \
+  EBAY_VERIFICATION_TOKEN='<the token>' \
+  EBAY_DELETION_ENDPOINT_URL='https://<app>.fly.dev/ebay/deletion'
+
+# 3. Deploy
+fly deploy
+
+# 4. Check the challenge response before touching eBay's console
+curl "https://<app>.fly.dev/ebay/deletion?challenge_code=test123"
+```
+
+That last response should equal:
+
+```sh
+python -c "import hashlib; print(hashlib.sha256(('test123' + '<the token>' + 'https://<app>.fly.dev/ebay/deletion').encode()).hexdigest())"
+```
+
+If it matches, enter the URL and the token in eBay's developer console under
+**Alerts & Notifications → Marketplace Account Deletion** and save. The keyset
+should stop reporting *Non Compliant*, after which
+`uv run python -m book_watch.ebay` is the check that it worked.
 
 ## License
 

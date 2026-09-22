@@ -77,11 +77,13 @@ existed to answer is answered. The token exchange was therefore written as real
 code (`src/book_watch/ebay/auth.py`) rather than throwaway spike code, and
 `spikes/` was removed.
 
-**Open.** As of 2026-09-22 the issued keys return `invalid_client` from the
-token endpoint. The request shape was ruled out as the cause — the same
-rejection comes back through httpx's own Basic-auth implementation — so this is
-a keyset problem, not a client problem. `uv run python -m book_watch.ebay`
-reports it and lists what to check.
+**Cause of the initial failure, now understood.** The issued keys returned
+`invalid_client`. The request shape was ruled out first — the same rejection
+comes back through httpx's own Basic-auth implementation — and the keyset
+turned out to be marked Non Compliant in eBay's console. eBay disables a
+production keyset until account-deletion compliance is settled, which is
+decision 16. `uv run python -m book_watch.ebay` reports the failure and lists
+what to check.
 
 ---
 
@@ -276,3 +278,63 @@ be an unrequested request to somebody else's API.
 **Cost, and it is a real one.** CI structurally cannot tell you that a key has
 been revoked or has expired — only the manual check can. That is the trade
 being made, not an oversight.
+
+---
+
+## 16. Receive eBay's account deletion notifications rather than request an exemption
+
+**Decision.** Run an HTTPS endpoint that answers eBay's marketplace account
+deletion notifications. Deploy it to Fly.io now, ahead of the rest of the app.
+
+**Alternatives.** Request the exemption eBay offers for applications that
+persist no eBay user data. Host the endpoint separately, on a free Cloudflare
+Worker.
+
+**Why.** eBay disables a production keyset until one of the two is settled —
+this is what was behind the `invalid_client` in decision 4, not a bad
+credential. The exemption is not a switch: it opens a request with a stated
+reason, and eBay's own wording is that the keyset activates once the opt-out
+*succeeds*. A rejected request costs the waiting time and then the endpoint
+work anyway, so the endpoint is the path that works under either outcome.
+
+It also buys back a design freedom. The exemption would have permanently
+committed the schema to holding no seller identifiers, since that claim is what
+the exemption rests on. Receiving notifications instead leaves what to store as
+an ordinary design decision.
+
+Fly rather than a Cloudflare Worker because decision 2 chose one language on
+purpose. A separate JavaScript service with its own deploy pipeline and its own
+copy of the verification token is a poor trade for $2–3/month, and the handler
+will eventually need database access to delete anything it stored, which a
+detached Worker would not have.
+
+**Cost.** The hosting spend in decision 10 starts now rather than at launch,
+and it buys nothing yet beyond compliance. The machine also cannot scale to
+zero: eBay re-validates the endpoint on its own schedule and marks the keyset
+non-compliant when the check fails, so a cold start that misses the timeout is
+expensive in a way a slow request normally isn't.
+
+**Consequence.** The eventual application host now has an uptime obligation
+that has nothing to do with the application. If the endpoint moves, its URL is
+hashed into every challenge response, so `EBAY_DELETION_ENDPOINT_URL` and
+eBay's console copy have to change together.
+
+---
+
+## 17. Notification signatures are not verified yet
+
+**Decision.** The GET challenge is answered properly. The POST notification is
+acknowledged without verifying eBay's signature on it.
+
+**Why.** Verifying means fetching eBay's public keys, caching them, and doing
+ECDSA on each notification. Today the handler stores nothing and deletes
+nothing, so the signature would be guarding a no-op: a forged notification can
+cause exactly as much harm as a genuine one, which is none.
+
+**The trigger to revisit, which is not "some day".** The moment the handler
+touches the database — the first time it deletes anything — an unauthenticated
+POST becomes a way to make this application destroy data on request. Signature
+verification has to land in the same change, before that code does.
+
+This is recorded rather than left implicit precisely because it is the kind of
+deferral that looks harmless until the day it isn't.

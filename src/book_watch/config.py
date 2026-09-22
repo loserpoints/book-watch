@@ -9,6 +9,7 @@ values. See docs/decisions.md entry 11.
 from __future__ import annotations
 
 import os
+import re
 from dataclasses import dataclass
 
 from dotenv import load_dotenv
@@ -57,3 +58,57 @@ def load_ebay_credentials(*, use_dotenv: bool = True) -> EbayCredentials:
         client_id=_require("EBAY_CLIENT_ID"),
         client_secret=_require("EBAY_CLIENT_SECRET"),
     )
+
+
+#: eBay requires the verification token to be 32-80 characters of
+#: alphanumerics, underscores and hyphens. Checking it here turns a confusing
+#: rejection in eBay's console into a clear error before anything is deployed.
+_VERIFICATION_TOKEN_PATTERN = re.compile(r"^[A-Za-z0-9_-]{32,80}$")
+
+
+class InvalidConfigError(RuntimeError):
+    """A setting is present but cannot be used."""
+
+
+@dataclass(frozen=True, slots=True, repr=False)
+class DeletionEndpointConfig:
+    """Settings for the eBay marketplace account deletion endpoint.
+
+    `endpoint_url` is the URL as typed into eBay's developer console, not
+    whatever URL a request happens to arrive at. It is one of the three inputs
+    to the challenge hash, so it has to match eBay's copy exactly — a
+    difference of one trailing slash produces a valid-looking hash that eBay
+    rejects.
+    """
+
+    verification_token: str
+    endpoint_url: str
+
+    def __repr__(self) -> str:
+        return (
+            f"DeletionEndpointConfig(verification_token=<hidden>, "
+            f"endpoint_url={self.endpoint_url!r})"
+        )
+
+
+def load_deletion_config(*, use_dotenv: bool = True) -> DeletionEndpointConfig:
+    """Read the deletion-endpoint settings from the environment."""
+    if use_dotenv:
+        load_dotenv()
+
+    token = _require("EBAY_VERIFICATION_TOKEN")
+    if not _VERIFICATION_TOKEN_PATTERN.match(token):
+        raise InvalidConfigError(
+            "EBAY_VERIFICATION_TOKEN must be 32-80 characters of letters, "
+            f"digits, underscores and hyphens; got {len(token)} characters. "
+            "eBay will reject anything else."
+        )
+
+    url = _require("EBAY_DELETION_ENDPOINT_URL")
+    if not url.startswith("https://"):
+        raise InvalidConfigError(
+            f"EBAY_DELETION_ENDPOINT_URL must be an https:// URL; got {url!r}. "
+            "eBay will not call a plaintext endpoint."
+        )
+
+    return DeletionEndpointConfig(verification_token=token, endpoint_url=url)
