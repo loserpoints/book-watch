@@ -691,3 +691,63 @@ remembered.
 recreates them: rebuilding the app from scratch means re-entering two values
 from eBay's console. `.env.example` is the record of which names are needed,
 which is what makes that recoverable rather than archaeology.
+
+---
+
+## 26. A want-list entry is one ISBN, not one book
+
+**Decision.** `book` holds one row per ISBN. A title I would accept in any
+edition is several rows until edition resolution exists.
+
+**Alternatives.** Modelling works and editions now — a `work` table with
+`edition` rows hanging off it — and typing a single ISBN into that shape.
+
+**Why.** Open Library's works-and-editions model is the intended backbone
+(decision 7), and building a local mirror of it before having called the API
+once would be guessing at a join whose shape is the very thing that makes
+resolution hard. The brief calls identity resolution the hard part and manual
+ISBN entry the escape hatch; M1 takes the escape hatch first deliberately, so
+that what resolution has to do is learned from using the thing rather than
+imagined.
+
+**What it costs, and the cost is real.** Searching by one ISBN finds copies of
+one edition. Someone hunting a cheap reading copy — who would happily take any
+of a dozen editions — sees a fraction of what is actually for sale. That is not
+a rough edge to polish; it is the gap that makes this a better saved search
+rather than the tool the brief describes, and closing it is what edition
+resolution is for.
+
+**No `mode` column either.** M1 does not distinguish reading from collectible,
+and a column nothing reads is a column that quietly stops meaning what its name
+says. It arrives in the migration that first needs it.
+
+---
+
+## 27. Removing a book deletes the row
+
+**Decision.** Removing a book from the want-list is a `DELETE`. No status
+column, no soft delete, no archive.
+
+**Alternatives.** A `status` column — wanted, bought, abandoned. Or a split:
+keep the rows for books that were bought, delete the ones simply given up on.
+
+**Why.** There is exactly one question that keeping rows would answer: *do I
+already own this?* It is a real question for a list of dozens of books that get
+read and donated. But it is a question about a **book**, and by decision 26 a
+row is an **edition**. Marking one ISBN bought leaves the other editions of the
+same title on the list, still wanted — so the answer is least reliable in
+precisely the situation where it would be asked. The feature is worth much less
+than it looks until resolution groups editions together.
+
+The third state is also the one that genuinely resists definition. *Bought* is
+obvious. *Didn't buy it and no longer want it listed* has no clear meaning yet,
+and inventing one now and then living with the invention is worse than using
+the simple version and finding out from use what the distinction should be.
+
+**Cost.** Removal is irreversible, so a mistaken tap loses the entry. Re-adding
+takes seconds, which is the brief's own bar for adding a book at all, so the
+loss is bounded and small.
+
+**Revisit when** edition resolution groups editions under a work. At that point
+*bought* becomes a statement about a book rather than about one ISBN among
+several, and starts being worth recording.
