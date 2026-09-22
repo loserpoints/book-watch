@@ -77,13 +77,14 @@ existed to answer is answered. The token exchange was therefore written as real
 code (`src/book_watch/ebay/auth.py`) rather than throwaway spike code, and
 `spikes/` was removed.
 
-**Cause of the initial failure, now understood.** The issued keys returned
-`invalid_client`. The request shape was ruled out first — the same rejection
-comes back through httpx's own Basic-auth implementation — and the keyset
-turned out to be marked Non Compliant in eBay's console. eBay disables a
-production keyset until account-deletion compliance is settled, which is
-decision 16. `uv run python -m book_watch.ebay` reports the failure and lists
-what to check.
+**Resolved, 2026-09-22.** The issued keys initially returned `invalid_client`.
+The request shape was ruled out first — the same rejection comes back through
+httpx's own Basic-auth implementation — and the keyset turned out to be marked
+Non Compliant in eBay's console. eBay disables a production keyset until
+account-deletion compliance is settled, which is decision 16. Once the deletion
+endpoint was deployed and registered, the token exchange succeeded:
+a two-hour application token on the `api_scope` scope. The Browse API is
+available. `uv run python -m book_watch.ebay` is the check, and it passes.
 
 ---
 
