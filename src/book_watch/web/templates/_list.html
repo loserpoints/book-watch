@@ -10,7 +10,7 @@
         <div class="title">{{ book.title or book.isbn }}</div>
         <div class="muted">
           {%- if book.title %}{{ book.isbn }} · {% endif -%}
-          added {{ book.added_at }}
+          added {{ book.added_on or book.added_at }}
         </div>
       </div>
       <button class="remove"

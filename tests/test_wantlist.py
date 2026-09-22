@@ -84,3 +84,18 @@ def test_a_book_without_an_isbn_can_still_be_stored(connection):
     book = wantlist.add(connection, "The Riddle of the Sands 1903", "Childers")
 
     assert book.isbn == "The Riddle of the Sands 1903"
+
+
+def test_the_added_date_is_just_the_date(connection):
+    book = wantlist.add(connection, "9780099448396")
+    connection.execute("UPDATE book SET added_at = '2026-09-22 18:01:19'")
+
+    assert str(wantlist.get(connection, book.id).added_on) == "2026-09-22"
+
+
+def test_an_unreadable_added_at_does_not_break_the_page(connection):
+    """A hand-edited row should degrade, not take the want-list down."""
+    book = wantlist.add(connection, "9780099448396")
+    connection.execute("UPDATE book SET added_at = 'sometime last spring'")
+
+    assert wantlist.get(connection, book.id).added_on is None

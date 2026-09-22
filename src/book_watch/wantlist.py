@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import sqlite3
 from dataclasses import dataclass
+from datetime import date, datetime
 
 
 class DuplicateBook(Exception):
@@ -28,6 +29,21 @@ class Book:
     isbn: str
     title: str | None
     added_at: str
+
+    @property
+    def added_on(self) -> date | None:
+        """The day this was added, or `None` if the stored value is unreadable.
+
+        SQLite writes `datetime('now')`, which is UTC. Near midnight the date
+        shown can therefore be a day ahead of the local one. Harmless while
+        this only ever reads "added 2026-09-22"; it needs deciding before
+        anything says "today".
+        """
+        try:
+            return datetime.fromisoformat(self.added_at).date()
+        except (TypeError, ValueError):
+            # A hand-edited row should not take the page down with it.
+            return None
 
 
 def add(connection: sqlite3.Connection, isbn: str, title: str | None = None) -> Book:
