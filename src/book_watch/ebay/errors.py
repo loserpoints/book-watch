@@ -14,3 +14,12 @@ class EbayAuthError(EbayError):
     response alike. Callers that only want to answer "can we talk to eBay?"
     do not need to tell those apart.
     """
+
+
+class EbaySearchError(EbayError):
+    """A Browse API search failed, or returned something unusable.
+
+    Deliberately distinct from `EbayAuthError`: a rejected credential and a
+    malformed search response send you to different places, and the search
+    path is the one that runs unattended later.
+    """
