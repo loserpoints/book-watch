@@ -1,0 +1,26 @@
+{# The list on its own, so a delete can swap just this and leave the form alone. #}
+<div id="want-list">
+{% if not books %}
+  <p class="muted">Nothing on the list yet.</p>
+{% else %}
+  <p class="muted">{{ books | length }} book{{ '' if books | length == 1 else 's' }}.</p>
+  {% for book in books %}
+    <div class="entry">
+      <div class="details">
+        <div class="title">{{ book.title or book.isbn }}</div>
+        <div class="muted">
+          {%- if book.title %}{{ book.isbn }} · {% endif -%}
+          added {{ book.added_on or book.added_at }}
+        </div>
+      </div>
+      <button class="remove"
+              hx-delete="/books/{{ book.id }}"
+              hx-target="#want-list"
+              hx-swap="outerHTML"
+              hx-confirm="Remove {{ book.title or book.isbn }} from the list?">
+        Remove
+      </button>
+    </div>
+  {% endfor %}
+{% endif %}
+</div>

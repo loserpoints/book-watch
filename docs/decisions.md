@@ -799,3 +799,50 @@ starting small costs nothing later.
 deleting it or losing the machine loses the want-list. For a list that can be
 retyped in an evening that is an acceptable trade, and it is recorded so it is
 a trade rather than an assumption.
+
+---
+
+## 29. ISBNs are validated arithmetically, with an explicit override
+
+**Decision.** An entry's check digit is verified, ISBN-10 is converted to
+ISBN-13, and the ISBN-13 form is what gets stored. An entry that fails is
+refused with the reason — and offered a second, explicit "add it anyway" that
+stores the text exactly as typed.
+
+**Why validate.** A wrong ISBN matches nothing, and on the results page
+"nothing is listed" and "you mistyped it" are the same screen. Without a check
+digit the tool would be quietly useless for that book and give no hint why. The
+check catches every single-digit error, which is the overwhelming majority of
+typing mistakes.
+
+**What it misses, stated rather than implied.** ISBN-13's weights alternate 1
+and 3, so swapping two adjacent digits shifts the total by twice their
+difference — and when that difference is exactly 5, the total moves by 10 and
+the check digit does not notice. Every other adjacent transposition is caught.
+This is a guard, not a guarantee, and there is a test naming the two cases it
+misses for one real ISBN so the claim stays honest.
+
+**What this deliberately does not do.** It does not ask any catalogue whether
+a book with that number exists. The override was requested to cover the case
+where "the public source we use is missing a legitimate ISBN" — but that case
+needs a source, and M1 has none: Open Library resolution is the hard part this
+milestone defers on purpose (decision 26). Arithmetic validation cannot be
+missing a book, because it never consults a list of them.
+
+**So what is the override for today?** Books that never had an ISBN. The brief
+names pre-1970 titles as a real category and manual entry as their escape
+hatch, and a check digit cannot tell "this book predates ISBNs" from "you
+mistyped". Only the person holding the book knows. The override is a second
+click rather than a checkbox on the form, so it is a decision taken about one
+specific entry and never the default.
+
+**When resolution lands** the override gains its second meaning — a valid ISBN
+the catalogue has never heard of — without the interface changing. That is the
+version originally asked for, and it arrives with the source that makes it
+possible.
+
+**Cost.** An overridden row holds text in a column named `isbn`, and nothing
+downstream may assume that column parses. `wantlist.Book` says so where someone
+would look. The alternative — a column recording whether the value is really an
+ISBN — was rejected as more schema than a single-user list needs before it has
+been used once.
