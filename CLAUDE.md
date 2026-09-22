@@ -8,6 +8,12 @@ Read `docs/product-brief.md` and `docs/decisions.md` before doing anything
 else. They carry the scope, the two use cases, and why each technical choice
 was made. If something here contradicts them, they win — and say so.
 
+Then **stop and propose a plan.** Say what you intend to do, what it buys, and
+where you need a decision from me — and wait for me to approve it. Reading the
+docs is not permission to start. Exploring to inform the plan is fine;
+producing deliverables is not. Code I didn't agree to is wasted tokens even
+when the code is good.
+
 ## Context
 
 This is a personal hobby project on a Pro account, not an enterprise one.
