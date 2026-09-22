@@ -691,3 +691,44 @@ remembered.
 recreates them: rebuilding the app from scratch means re-entering two values
 from eBay's console. `.env.example` is the record of which names are needed,
 which is what makes that recoverable rather than archaeology.
+
+---
+
+## 28. The SQLite file lives on a mounted Fly volume
+
+**Decision.** A 1GB Fly volume named `book_watch_data`, mounted at `/data`,
+with `BOOK_WATCH_DB_PATH=/data/book-watch.db`. The deploy workflow creates the
+volume if it is absent and leaves it alone otherwise.
+
+**Why this is an entry rather than a footnote to decision 10.** Entry 10 costed
+a 1GB volume and then nothing mounted one. A machine's own filesystem is
+rebuilt on every deploy, so a want-list written there would have survived
+exactly until the next release — working perfectly in testing, losing
+everything in use, and giving no error either time. The gap between a decision
+and its implementation is invisible in a way the decision itself is not, which
+is the argument for writing down the mount rather than assuming entry 10 covers
+it.
+
+**What mounting a volume constrains.** A Fly volume attaches to one machine.
+That suits this app, which is pinned at a single machine on purpose (entry 10),
+but it turns that pin into a correctness requirement rather than a cost
+preference: a second machine would not share this database, it would have none.
+`--ha=false` and `scale count 1` were about spending less. They are now also
+about the want-list being in one place.
+
+**Why creation is conditional, and why that check is not decoration.** Fly does
+not object to a second volume of the same name. It would be given to a second
+machine, and the list would appear to lose and regain entries depending on
+which machine answered. The workflow counts volumes by name and creates one
+only when none exists.
+
+**Cost.** Fly bills volumes per GB-month on top of the machine. 1GB is far more
+than a want-list in the dozens will ever use — a database of a few thousand
+listings is measured in megabytes — but it is Fly's usual minimum and the
+smallest thing worth having. A volume also cannot be shrunk, only grown, so
+starting small costs nothing later.
+
+**What is not solved.** A volume is storage, not a backup: it is one copy, and
+deleting it or losing the machine loses the want-list. For a list that can be
+retyped in an evening that is an acceptable trade, and it is recorded so it is
+a trade rather than an assumption.

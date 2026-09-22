@@ -27,6 +27,13 @@ primary_region = "iad"
     path = "/health"
     timeout = "5s"
 
+# The SQLite file lives here, not on the machine's own filesystem, which is
+# rebuilt on every deploy. Decision 10 costed this volume; decision 28 records
+# what mounting it actually constrains.
+[mounts]
+  source = "book_watch_data"
+  destination = "/data"
+
 [[vm]]
   size = "shared-cpu-1x"
   memory = "256mb"
