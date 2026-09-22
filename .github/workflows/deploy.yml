@@ -64,7 +64,35 @@ jobs:
           app=$(grep -E '^app *= *' fly.toml | head -1 | cut -d'"' -f2)
           flyctl secrets set --app "${app}" --stage \
             "EBAY_VERIFICATION_TOKEN=${EBAY_VERIFICATION_TOKEN}" \
-            "EBAY_DELETION_ENDPOINT_URL=https://${app}.fly.dev/ebay/deletion"
+            "EBAY_DELETION_ENDPOINT_URL=https://${app}.fly.dev/ebay/deletion" \
+            "BOOK_WATCH_DB_PATH=/data/book-watch.db"
+
+      # fly.toml mounts a volume, and a deploy fails outright if it does not
+      # exist — so this runs before the deploy, not after.
+      #
+      # Created only when absent, and that check matters more than it looks: a
+      # second volume of the same name is not an error to Fly. It would become
+      # a second machine's database, and the want-list would appear to lose
+      # entries at random depending on which machine served the request.
+      - name: Create the data volume if it does not exist
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          app=$(grep -E '^app *= *' fly.toml | head -1 | cut -d'"' -f2)
+          region=$(grep -E '^primary_region *= *' fly.toml | head -1 | cut -d'"' -f2)
+          name=$(grep -A2 '^\[mounts\]' fly.toml | grep 'source' | cut -d'"' -f2)
+
+          existing=$(flyctl volumes list --app "${app}" --json \
+            | python3 -c 'import json,sys; print(sum(1 for v in json.load(sys.stdin) if v["name"] == sys.argv[1]))' "${name}")
+
+          if [ "${existing}" -gt 0 ]; then
+            echo "Volume ${name} already exists (${existing}). Leaving it alone."
+          else
+            echo "Creating volume ${name} in ${region}."
+            flyctl volumes create "${name}" \
+              --app "${app}" --region "${region}" --size 1 --yes
+          fi
 
       # --local-only builds the image on GitHub's runner, which is free, rather
       # than on a Fly builder machine, which is billed as compute. For an image
