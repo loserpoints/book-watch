@@ -11,6 +11,7 @@ from __future__ import annotations
 import os
 import re
 from dataclasses import dataclass
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -112,3 +113,18 @@ def load_deletion_config(*, use_dotenv: bool = True) -> DeletionEndpointConfig:
         )
 
     return DeletionEndpointConfig(verification_token=token, endpoint_url=url)
+
+
+def load_database_path(*, use_dotenv: bool = True) -> Path:
+    """Where the SQLite file lives.
+
+    Required rather than defaulting to something in the working directory.
+    A default would be friendlier locally and dangerous in production: an
+    unset variable would write to the container's own filesystem, the app
+    would look perfectly healthy, and the want-list would vanish on the next
+    deploy. A missing variable that stops the process is the loud version of
+    the same mistake.
+    """
+    if use_dotenv:
+        load_dotenv()
+    return Path(_require("BOOK_WATCH_DB_PATH"))
