@@ -209,9 +209,7 @@ def test_a_listing_with_no_seller_is_still_a_listing():
 
 def test_only_the_seller_username_is_kept():
     """Feedback comes back in the same object and is deliberately dropped."""
-    summary = a_summary(
-        seller={"username": "a_bookshop", "feedbackPercentage": "12.0"}
-    )
+    summary = a_summary(seller={"username": "a_bookshop", "feedbackPercentage": "12.0"})
     (listing,) = build_browse(responds_with(search_response(summary))).search("x")
 
     assert listing.seller == "a_bookshop"
