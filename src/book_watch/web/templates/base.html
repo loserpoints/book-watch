@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}book-watch{% endblock %}</title>
+<style>
+/* No build step and no framework, by decisions.md entry 2. Small enough to
+   read in one sitting, which is the point. */
+:root {
+  color-scheme: light dark;
+  --bg: #fdfdfc;
+  --fg: #1a1a18;
+  --muted: #6b6b66;
+  --line: #e2e2dd;
+  --card: #ffffff;
+  --link: #1a4fa0;
+  --warn: #8a2b16;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17171a;
+    --fg: #e8e8e4;
+    --muted: #9a9a94;
+    --line: #2e2e33;
+    --card: #1f1f23;
+    --link: #8fb4f0;
+    --warn: #f0a08a;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+header {
+  border-bottom: 1px solid var(--line);
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+}
+main { max-width: 46rem; margin: 0 auto; padding: 1rem; }
+h1 { font-size: 1.25rem; margin: 0 0 0.25rem; }
+a { color: var(--link); }
+.muted { color: var(--muted); font-size: 0.875rem; }
+.error {
+  border: 1px solid var(--warn);
+  border-radius: 6px;
+  padding: 0.75rem;
+  color: var(--warn);
+  /* eBay's messages can be long and unbroken; never push the page sideways. */
+  overflow-wrap: anywhere;
+}
+.listing {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.thumb {
+  flex: 0 0 72px;
+  width: 72px;
+  height: 96px;
+  object-fit: contain;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.thumb.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 0.7rem;
+  text-align: center;
+}
+/* min-width:0 lets a flex child shrink below its content width, which is what
+   stops a long title forcing a horizontal scrollbar. */
+.details { min-width: 0; }
+.title { font-weight: 600; overflow-wrap: anywhere; }
+.costs { margin-top: 0.25rem; }
+.landed { font-weight: 600; }
+img { max-width: 100%; }
+</style>
+</head>
+<body>
+<!-- Plain text rather than a link: the want-list it would point at does not
+     exist yet. It becomes a link to "/" when that page lands. -->
+<header>book-watch</header>
+<main>
+{% block content %}{% endblock %}
+</main>
+</body>
+</html>

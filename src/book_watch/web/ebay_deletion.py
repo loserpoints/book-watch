@@ -20,10 +20,10 @@ import hashlib
 import logging
 from typing import Any
 
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from book_watch.config import DeletionEndpointConfig, load_deletion_config
+from book_watch.config import DeletionEndpointConfig
 
 logger = logging.getLogger(__name__)
 
@@ -79,21 +79,3 @@ def build_router(config: DeletionEndpointConfig) -> APIRouter:
         return {"status": "ok"}
 
     return router
-
-
-def create_app(config: DeletionEndpointConfig | None = None) -> FastAPI:
-    """Build the application.
-
-    Configuration is injected so tests never depend on the environment, and
-    loaded from it when nothing is passed. Loading eagerly means a missing or
-    malformed token fails at startup with a clear message rather than at the
-    moment eBay validates the endpoint.
-    """
-    app = FastAPI(
-        title="book-watch",
-        description="Personal used-book want-list watcher.",
-        docs_url=None,
-        redoc_url=None,
-    )
-    app.include_router(build_router(config or load_deletion_config()))
-    return app

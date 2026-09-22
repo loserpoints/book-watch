@@ -602,3 +602,43 @@ UI, traded for a definition that cannot drift.
 agent working in a container. Decision 18 assumes no usable local machine, so
 the portability a contributor-facing script would need is not a cost this one
 has to carry.
+
+---
+
+## 24. The web application boots without eBay search credentials
+
+**Decision.** `create_app` loads the deletion endpoint's configuration eagerly
+and the eBay search credentials not at all. The Browse client is built on the
+first search (`listings.LazyBrowseSearch`), so a missing key fails that request
+rather than the process.
+
+**Alternatives.** Loading both at startup, which is what decision 14's
+fail-fast-with-a-clear-message argument suggests, and what the deletion config
+already does.
+
+**Why the asymmetry.** Production does not have the eBay keys. Fly holds
+`EBAY_VERIFICATION_TOKEN` and `EBAY_DELETION_ENDPOINT_URL` — the deploy
+workflow sets exactly those two — and nothing else. An application that read
+`EBAY_CLIENT_ID` while booting would crash on the next deploy, and what it
+would take down is the compliance endpoint: the one thing running there that
+carries an uptime obligation, which eBay re-validates on its own schedule and
+whose failure marks the keyset Non Compliant (decision 16). The application
+would be down for want of a credential that nothing deployed actually uses.
+
+Failing fast is right when the thing that fails is the thing that is broken.
+Here it would fail something else entirely.
+
+**What this defers, and it is not small.** Search does not work in production
+and will not until the eBay keys reach Fly. That is its own decision rather
+than this one: decision 15 deliberately keeps eBay credentials out of GitHub,
+and the deploy workflow takes Fly's secrets from GitHub, so putting search in
+production means either revisiting 15 or setting that secret on Fly by some
+other route. It needs settling before any milestone depends on the deployed
+application rather than a local one.
+
+**Cost.** A misconfiguration surfaces as a broken page rather than a refused
+startup, which is the weaker signal and is exactly what decision 14 argued
+against. Accepted here because the alternative is worse, and there is a test
+asserting that startup does not read the search credentials — "make it eager,
+it's tidier" is a very natural change for someone to make later, and it would
+be discovered in production.

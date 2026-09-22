@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{% if isbn %}{{ isbn }} · {% endif %}book-watch{% endblock %}
+
+{% block content %}
+{% if not isbn %}
+  <h1>Search</h1>
+  <p class="muted">
+    Add an ISBN to the address bar to see what is listed:
+    <code>/search?isbn=9780099448396</code>
+  </p>
+{% else %}
+  <h1>{{ isbn }}</h1>
+
+  {% if error %}
+    <p class="error">{{ error }}</p>
+  {% elif not listings %}
+    <p class="muted">Nothing listed right now.</p>
+  {% else %}
+    <p class="muted">{{ listings | length }} listing{{ '' if listings | length == 1 else 's' }}, straight from eBay.</p>
+
+    {% for listing in listings %}
+      <div class="listing">
+        {% if listing.thumbnail_url %}
+          <img class="thumb" src="{{ listing.thumbnail_url }}" alt="" loading="lazy">
+        {% else %}
+          <div class="thumb empty">no image</div>
+        {% endif %}
+        <div class="details">
+          <div class="title">
+            <a href="{{ listing.item_web_url }}" rel="noopener noreferrer" target="_blank">{{ listing.title }}</a>
+          </div>
+          <div class="muted">
+            {{ listing.condition or 'condition unstated' }}
+            {%- if listing.seller %} · {{ listing.seller }}{% endif %}
+          </div>
+          <div class="costs">
+            <span class="landed">
+              {%- if listing.landed_cost %}{{ listing.landed_cost }} delivered
+              {%- else %}{{ listing.price }} + shipping unknown{% endif -%}
+            </span>
+            <span class="muted">
+              ({{ listing.price }} +
+              {%- if listing.shipping_cost %} {{ listing.shipping_cost }} shipping
+              {%- else %} shipping calculated at checkout{% endif %})
+            </span>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endif %}
+{% endblock %}
