@@ -36,6 +36,11 @@ how the two start disagreeing — and only one of them updates itself.
 Only the current milestone gets its slices written as issues. The rest stay as
 one paragraph until they are next.
 
+**The numbers are names, not positions.** This file is ordered by what happens
+next, and that order changes at reviews — renumbering each time would break
+every reference to a milestone from a decision, an issue or a conversation. So
+M2 sits fourth and that is not a mistake. Read down the page.
+
 ---
 
 ## M1 · See what's for sale
@@ -72,65 +77,10 @@ placeholder for the cache, not a design — M2 replaces it (decision 30).
 
 ---
 
-## M2 · Always current, without my looking
-
-**Goal.** The daily poll runs, listings are stored, and opening a book shows
-what is there — already fetched, already dated, with what is new since I last
-looked marked as new.
-
-**Jobs advanced.**
-
-- **J1**, completed. The list re-runs itself. Opening the app no longer starts
-  the search.
-- **J2**, in large part. Sorting by landed cost, and dismissing a listing so it
-  stops coming back.
-
-**Why here.** Everything after this needs stored listings. A digest of "new
-listings" is impossible without a record of the old ones, and "new" has to mean
-new *to me* rather than new to eBay — which is a stored fact, not a computed
-one. Decision 30 also commits to it: the first slice that writes a listing to
-the database replaces per-page-view fetching in the same change.
-
-It is also the point at which the tool stops depending on my attention, which
-is the brief's whole argument for existing.
-
-**The hard part.** Identity across relists. eBay issues a fresh item id when a
-seller relists, so the cheap implementation will call the same copy new every
-few days — and that is exactly the failure that makes "what's new" worthless.
-J2's open question.
-
-**Probably the largest milestone here**, and the most likely to split at its
-first review: the poll, the listing schema, seen-state, ranking and dismissal
-are five separable things.
-
----
-
-## M3 · Tell me, so I stop looking
-
-**Goal.** A price threshold per book, and a daily email containing only new
-listings under it. Nothing arrives on a day when nothing qualifies.
-
-**Jobs advanced.**
-
-- **J4.** The job M1 deliberately left empty.
-
-**Why here.** This is the brief's actual success criterion — *I stop manually
-searching marketplaces* — and until it ships, the tool still depends on me
-remembering to open it. It sits after M2 because a digest needs stored listings
-to know what is new, and it sits before the harder matching work because the
-threshold does most of the filtering that matching would otherwise have to.
-
-**The risk to design against.** A digest that is mostly noise gets ignored
-within a week, and then the job has failed while every part of it still works.
-The threshold is the first defence. If it proves insufficient, that is an
-argument for pulling M4 forward rather than for sending more email.
-
----
-
 ## M4 · The right book, in any edition
 
-**Goal.** A want-list entry means a book rather than one ISBN. Open Library
-resolves it to the set of editions that count, the poll searches all of them,
+**Goal.** A want-list entry means a book rather than one ISBN. It can be added
+by title and author, not only by ISBN. The set of editions that count is known,
 and listings that are not one of them are rejected.
 
 **Jobs advanced.**
@@ -140,18 +90,59 @@ and listings that are not one of them are rejected.
 - **J2**, completed. Precision, not just ranking: the wrong book stops
   appearing.
 
-**Why here.** This is the brief's hard part and the thing that separates the
-tool from a saved keyword search — and it is also the biggest single change to
-the data model, since decision 26 currently makes a row an ISBN. Doing it after
-M2 and M3 means the poll and the digest already exist to consume it, and that
-what resolution has to do is known from use rather than imagined.
+**Why first.** Automating something that returns the wrong books only sends the
+wrong books daily. Matching is what everything after this is worth doing on top
+of, and it is the part that is genuinely hard rather than merely unbuilt. It is
+also the biggest change to the data model, since decision 26 currently makes a
+row an ISBN.
 
-**The argument against this position, kept because it may win a review.** Right
-now a reading copy search finds one edition's copies, so the cheapest copy of a
-book is invisible unless it happens to be that edition. That is the central use
-case working at a fraction of its value. If M2 and M3 make that limitation feel
-worse rather than better — and they might, since a daily digest of one edition
-is a daily reminder of the other eleven — this moves ahead of them.
+**What is already measured.** Searching eBay for an ISBN string is not the same
+as finding copies of that edition. Nearly every used-book listing carries an
+`epid` — eBay's own product id — and searching by it finds listings the ISBN
+search misses, because plenty of sellers never type the ISBN at all. Decision
+32 has the numbers. Searching by title and author instead finds many editions
+but reaches any *specific* one poorly.
+
+**The open question, and it is the real one.** A work has many editions, and
+covering all of them looks like one search per edition — which is both slow on
+a page and wasteful of the call budget. Whether that is solved by caching the
+edition set hard, by covering only the editions that actually have inventory,
+or by a title-level search filtered on known product ids, is not known. This is
+what the first slice of M4 exists to settle, and it should settle it by
+measuring rather than by choosing.
+
+**It will pull storage forward.** Whatever the answer, re-searching every
+edition on every page view is not it — so some of M2's caching arrives here.
+
+---
+
+## M6 · What I will pay, and whether this is fair
+
+**Goal.** A price ceiling per book, and enough context to act on a listing
+without opening a second tab to sanity-check it.
+
+**Jobs advanced.**
+
+- **J5**, which is recorded and unscheduled until here.
+- **J2**, in part: a threshold is the bluntest and most useful filter there is.
+
+**Why here.** A threshold — "under $8 delivered" — and *is this a fair price*
+are the same question at two resolutions, and splitting them across milestones
+would mean building price judgement twice. Both also depend on M4: comparing a
+listing against others of the same edition is only meaningful once editions are
+a thing the system understands.
+
+**The open question.** The mechanism is genuinely undecided — four candidates
+are recorded against J5 and none is chosen. It is also the most open-ended
+thing in the project and the likeliest source of scope creep, which is why the
+concrete half (the threshold) is worth shipping first and on its own.
+
+**What M2 will quietly buy it.** Once listings are stored daily, the tool
+accumulates its own record of what copies of *these* books have been listed at.
+In a year that is a price history nobody can revoke, specific to the books I
+actually watch, costing one table and no extra API calls. Useless on day one,
+compounding after — an argument for the storage being right in M2, not for
+building anything here early.
 
 ---
 
@@ -179,26 +170,69 @@ is really "show me everything and let me read", is not yet known.
 
 ---
 
-## M6 · Am I overpaying
+## M2 · Always current, without my looking
 
-**Goal.** Enough price context to act on a listing without opening a second tab
-to sanity-check it.
+**Goal.** The daily poll runs, listings are stored, and opening a book shows
+what is there — already fetched, already dated, with what is new since I last
+looked marked as new.
 
 **Jobs advanced.**
 
-- **J5**, which is recorded and unscheduled until here.
+- **J1**, completed. The list re-runs itself. Opening the app no longer starts
+  the search.
+- **J2**, in large part. Sorting by landed cost, and dismissing a listing so it
+  stops coming back.
 
-**Why last.** It is the only job with no chosen mechanism — four candidates are
-recorded against J5 and none is picked. It is also the most open-ended thing in
-the project and the most plausible source of scope creep, so it waits until the
-rest works.
+**Why here, rather than earlier.** The digest cannot exist without it: "new
+listings" needs a record of the old ones, and "new" has to mean new *to me*
+rather than new to eBay, which is a stored fact and not a computed one. So it
+sits immediately before M3 and could reasonably merge with it.
 
-**What M2 quietly buys it.** Once listings are stored daily, the tool starts
-accumulating its own record of what copies of *these* books have been listed at.
-In a year that is a price history nobody can revoke, specific to the books I
-actually watch, costing one table and no extra API calls. It is useless on day
-one and compounding after that — which is an argument for the storage being
-right in M2, not for building anything here early.
+It is also the point at which the tool stops depending on my attention, which
+is the brief's whole argument for existing — and that is the argument for
+pulling it earlier. It loses to a simpler one: a tool that checks every day on
+my behalf is worth having only once it is checking for the right thing. M4, M6
+and M5 are what make it the right thing.
+
+**Some of this arrives early regardless.** M4 cannot re-search every edition of
+a book on every page view, so caching turns up there whether or not the poll
+does. What is left here is the daily cadence and the memory it builds.
+
+**Stored does not mean stale.** Everything the page shows comes from the store,
+and a refresh updates the store — so live-on-demand survives and the memory is
+gained rather than traded for. Decision 30 originally said the page must stop
+searching, which was too strong a rule drawn from a correct reason; it is
+amended.
+
+**The hard part.** Identity across relists. eBay issues a fresh item id when a
+seller relists, so the cheap implementation will call the same copy new every
+few days — and that is exactly the failure that makes "what's new" worthless.
+J2's open question.
+
+**Probably the largest milestone here**, and the most likely to split at its
+first review: the poll, the listing schema, seen-state, ranking and dismissal
+are five separable things.
+
+---
+
+## M3 · Tell me, so I stop looking
+
+**Goal.** A daily email containing only listings that are new since the last
+one and inside the price ceiling set in M6. Nothing arrives on a day when
+nothing qualifies.
+
+**Jobs advanced.**
+
+- **J4.** The job M1 deliberately left empty.
+
+**Why last.** It is the brief's actual success criterion — *I stop manually
+searching marketplaces* — so it is tempting to pull forward, and that temptation
+is the trap. A digest is a daily statement that these listings are worth your
+attention. Send it before matching is right and it is a daily demonstration
+that they are not, which is a habit that takes far longer to undo than it took
+to form.
+
+Everything before this exists to make the email worth opening.
 
 ---
 
