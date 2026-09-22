@@ -23,12 +23,12 @@ jobs:
       - name: Install dependencies
         run: uv sync --locked
 
-      - name: Lint
-        run: uv run ruff check .
-
-      - name: Check formatting
-        run: uv run ruff format --check .
-
+      # One script rather than three steps, so that what CI enforces and what
+      # a slice's acceptance list tells you to run cannot drift apart. The
+      # cost is that a failure shows up as "Check" rather than naming the
+      # stage in the job list; the script echoes each stage, so the log still
+      # says which one.
+      #
       # No eBay keys here: tests marked `network` are deselected by default.
-      - name: Test
-        run: uv run pytest
+      - name: Check
+        run: scripts/check.sh

@@ -566,3 +566,39 @@ it may be slow, or be local pickup that isn't usable. Good enough to rank on,
 and the brief optimises for landed cost rather than delivery speed. If a copy
 turns out to be worth buying, the real shipping detail is one click away on the
 listing itself.
+
+---
+
+## 23. One definition of "does this pass", in `scripts/check.sh`
+
+**Decision.** CI runs `scripts/check.sh`, and the slice issue template's
+acceptance list tells you to run the same script. Three named CI steps became
+one.
+
+**Alternatives.** Leaving the three steps and repeating them in the template,
+which is the status quo. A `Makefile` with a `check` target. A task runner such
+as `poethepoet`.
+
+**Why.** The two copies had already drifted, and it cost a red build. The
+template seeded every acceptance list with `ruff check` and `pytest`; CI also
+ran `ruff format --check`; a slice validated against its own checklist, passed,
+and failed CI on formatting. The checklist was not wrong about the code. It was
+wrong about what "passes" means, and no amount of care could have caught that
+while two definitions existed — which is the same argument decision 19 makes
+for never writing status into a file, applied to a different kind of
+duplication.
+
+A `Makefile` would do the same job and is more conventional for this, but make
+brings its own tab-sensitive syntax to a repo with no other use for it. A task
+runner adds a dependency to run three commands a five-line script already runs.
+
+**Cost, and it is a real one.** A failure now appears in GitHub's job list as
+`Check` rather than as `Lint`, `Check formatting` or `Test`, so seeing which
+stage broke means opening the log. The script echoes each stage, so the log
+says plainly which one — but the at-a-glance signal is gone. Granularity in the
+UI, traded for a definition that cannot drift.
+
+**Why a shell script is enough here.** Only two things ever run it: CI, and an
+agent working in a container. Decision 18 assumes no usable local machine, so
+the portability a contributor-facing script would need is not a cost this one
+has to carry.
