@@ -879,3 +879,41 @@ disagrees with the digest it is supposed to match.
 exists so there is somewhere for "last checked on Tuesday" to go, and a page
 with nowhere to say so is a page that quietly implies data is fresher than it
 is.
+
+---
+
+## 31. The whole path is written down, and reviewed at every milestone close
+
+**Decision.** `docs/milestones.md` carries every milestone that can be named,
+not only the current one. Each says why it sits where it does. At the close of
+every milestone the remaining ones are reviewed — reordered, merged, split or
+dropped — against what the finished one taught.
+
+**This reverses the original rule**, which was that only the current milestone
+was written down because later ones are guesses and a roadmap of guesses goes
+stale. That reasoning was not wrong about the failure mode. It was wrong about
+the remedy.
+
+**Why the new version is better.** Not writing the path down avoids stale
+guesses by having no guesses to go stale — and pays for it by having no path at
+all. Nothing could be argued with, because nothing was written; the order lived
+only in whoever was asked next. Scheduling a review addresses the same failure
+directly: the guesses are written, so they can be attacked, and there is a fixed
+moment when attacking them is the job.
+
+It also turns finishing a milestone into a decision point rather than a
+handover. "What did this teach us, and what does it change about what comes
+next" is a question that gets asked at the close or never.
+
+**What is kept from the old rule.** Only the current milestone has its slices
+written as issues. A future milestone is one paragraph, because the slices for
+work that has not started are the part that really is guesswork. And status
+still lives on the GitHub milestones, never in the file — that rule is decision
+19's and is untouched.
+
+**Cost.** A written order acquires authority it has not earned. Six milestones
+in a file look considered whether or not they are, and the fourth one was
+written before the second one had started. The mitigation is in the document
+rather than in a habit: each entry states the argument for its position, and
+M4 carries the argument *against* its own position because that one looks most
+likely to win.
