@@ -77,13 +77,14 @@ existed to answer is answered. The token exchange was therefore written as real
 code (`src/book_watch/ebay/auth.py`) rather than throwaway spike code, and
 `spikes/` was removed.
 
-**Cause of the initial failure, now understood.** The issued keys returned
-`invalid_client`. The request shape was ruled out first — the same rejection
-comes back through httpx's own Basic-auth implementation — and the keyset
-turned out to be marked Non Compliant in eBay's console. eBay disables a
-production keyset until account-deletion compliance is settled, which is
-decision 16. `uv run python -m book_watch.ebay` reports the failure and lists
-what to check.
+**Resolved, 2026-09-22.** The issued keys initially returned `invalid_client`.
+The request shape was ruled out first — the same rejection comes back through
+httpx's own Basic-auth implementation — and the keyset turned out to be marked
+Non Compliant in eBay's console. eBay disables a production keyset until
+account-deletion compliance is settled, which is decision 16. Once the deletion
+endpoint was deployed and registered, the token exchange succeeded:
+a two-hour application token on the `api_scope` scope. The Browse API is
+available. `uv run python -m book_watch.ebay` is the check, and it passes.
 
 ---
 
@@ -185,6 +186,13 @@ machine at home is awake.
 Because it's containerised, this is cheap to reverse. Self-hosting the same
 image on owned hardware is the $0 fallback if the bill ever stops being worth
 it.
+
+**One machine, not Fly's default pair.** A first deploy creates a running
+machine and a stopped standby. The standby costs little — rootfs only, pennies
+a month — but it buys availability that a single user would never notice, and
+it is a second thing that can drift out of step with the first. The deploy
+workflow passes `--ha=false` and enforces `scale count 1`. Adding redundancy
+back should be a deliberate act, not a default nobody chose.
 
 ---
 
@@ -367,14 +375,21 @@ and every deploy leaves a log someone can read afterwards.
 in money. The real cost is that a credential able to deploy to Fly now lives in
 GitHub.
 
-The token is organisation-scoped rather than application-scoped, which is the
-weaker of the two options and was chosen deliberately. An app-scoped token
-cannot create the app it is scoped to, so using one means creating the app
-through Fly's dashboard first — and that flow sets up Fly's own GitHub
-deployment, a second pipeline building this repo from its own branch on its own
-schedule. Two pipelines deploying one app is a worse problem than a broader
-token on an organisation that contains exactly one app. Revisit if that
-organisation ever holds anything else.
+The token was organisation-scoped for the first deploy only, because an
+app-scoped token cannot create the app it is scoped to, and creating the app
+through Fly's dashboard instead would have set up Fly's own GitHub deployment —
+a second pipeline building this repo from its own branch. A short-lived broad
+token was the lesser problem.
+
+Once the app existed an app-scoped token became possible, so `FLY_API_TOKEN` is
+now one, and the organisation token was revoked. The workflow needs no change
+for this: its create-the-app step checks whether the app exists first, and with
+an app-scoped token simply skips.
+
+That token does not expire. Expiry is the wrong control here — a narrow token
+on a project that deploys rarely would fail months later looking exactly like a
+misconfiguration, and revocation from the dashboard is the control that
+actually matters.
 
 **A consequence worth stating.** The image builds on GitHub's runner
 (`--local-only`) rather than on a Fly builder machine, which would be billed as

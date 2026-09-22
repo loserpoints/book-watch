@@ -34,11 +34,11 @@ ranking.
 ## Status
 
 **Early.** Repository tooling, the eBay OAuth token exchange, and eBay's
-account-deletion compliance endpoint. Nothing else: no want-list, no polling,
-no UI. See `docs/` for the product brief and the decision record.
+account-deletion compliance endpoint — which is deployed, registered, and
+verified, so the production keyset is live and the Browse API is available.
 
-The production keyset is disabled until the deletion endpoint is deployed and
-registered with eBay — see decision 16 and the checklist below.
+Nothing else is built: no want-list, no resolution, no polling, no UI. See
+`docs/` for the product brief and the decision record.
 
 ## Sources
 
