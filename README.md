@@ -93,33 +93,39 @@ The endpoint URL is hashed into every response eBay validates against, so it
 must be settled first and must match eBay's copy exactly.
 
 Deployment runs from GitHub Actions rather than a local machine (decision 18),
-so the whole setup happens in a browser.
+so the whole setup happens in a browser. Three things to do once:
 
-**On Fly** — create the app, then set two secrets on it:
+**1. On Fly** — create a deploy token under *Account → Access Tokens*. It must
+be **organisation-scoped**: an app-scoped token cannot create the app it is
+scoped to (decision 18).
 
-| Secret | Value |
-|---|---|
-| `EBAY_VERIFICATION_TOKEN` | A string you invent: 32–80 chars, `[A-Za-z0-9_-]` |
-| `EBAY_DELETION_ENDPOINT_URL` | `https://<app>.fly.dev/ebay/deletion` |
-
-Then create a deploy token, **scoped to this app**, not the organisation.
-
-**On GitHub** — add two repository secrets under *Settings → Secrets and
+**2. On GitHub** — add two repository secrets under *Settings → Secrets and
 variables → Actions*:
 
 | Secret | Value |
 |---|---|
 | `FLY_API_TOKEN` | The Fly deploy token |
-| `EBAY_VERIFICATION_TOKEN` | The same token given to Fly |
+| `EBAY_VERIFICATION_TOKEN` | A string you invent: 32–80 chars, `[A-Za-z0-9_-]` |
 
-Set `app` in `fly.toml` to match, then run the **Deploy** workflow from the
-Actions tab. It deploys, then asks the live endpoint for a challenge response
-and compares it against one it computes itself — a mismatch fails the run
-rather than becoming a confusing rejection in eBay's console.
+**3. Set `app` in `fly.toml`** to the app name you want, then run the **Deploy**
+workflow from the Actions tab.
 
-**On eBay** — once that run is green, enter the URL and token under
-**Alerts & Notifications → Marketplace Account Deletion** and save. The keyset
-should stop reporting *Non Compliant*, after which
+One run does everything: creates the app if it does not exist, pushes its
+settings, deploys, and then asks the live endpoint for a challenge response and
+compares it against one it computes itself. A mismatch fails the run rather
+than becoming a confusing rejection in eBay's console.
+
+Dispatch is manual on purpose — a push-triggered deploy runs alongside CI
+rather than after it, so it could ship a build CI is about to reject.
+
+Nothing is typed into Fly's dashboard. The endpoint URL is derived from
+`fly.toml`, so Fly's copy of it cannot drift from the real one, and the app is
+created by the workflow rather than by Fly's own GitHub deployment flow — which
+would build this repo on its own schedule alongside ours.
+
+**Finally, on eBay** — once the run is green, enter the endpoint URL and the
+token under **Alerts & Notifications → Marketplace Account Deletion** and save.
+The keyset should stop reporting *Non Compliant*, after which
 `uv run python -m book_watch.ebay` is the check that it worked.
 
 ## License
