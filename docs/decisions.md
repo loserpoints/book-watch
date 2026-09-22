@@ -374,3 +374,10 @@ otherwise invisible — the deployed URL or token not matching what eBay was
 given — before eBay ever sees it, and keeps catching it on every future deploy.
 It was tested against both ways it can happen: a URL differing by one trailing
 slash, and a token differing between Fly and GitHub.
+
+**The general rule this is a case of.** Assume no usable local machine. Work
+should be drivable from a browser, privileged actions should run in CI with
+credentials held by GitHub or the service itself, and a tool that can only be
+driven from a local CLI is carrying a real cost that has to be justified. This
+constrains future choices as much as this one, so it is written into
+`CLAUDE.md` rather than living only here.

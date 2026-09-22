@@ -35,10 +35,28 @@ Don't claim something works without running it.
 
 ## Git
 
+- **Open a PR as soon as a branch has something reviewable, without being
+  asked.** Small and frequent beats one large one. If a branch has grown to
+  cover several unrelated things, that is a sign one should have been opened
+  already.
 - Check a PR is still **open** before pushing to its branch. A merged PR
   cannot track new work — start a fresh branch from the default branch.
 - Check prior PRs are merged before building anything that depends on them.
 - Never push directly to `main`.
+
+## Where work runs
+
+Assume no usable local machine. Alan is usually at a work computer, and a
+personal project's credentials and card do not belong on it.
+
+- Prefer anything runnable from a browser. No step should need a local
+  install, a local terminal, or a credential stored locally.
+- Deploys and other privileged actions run in CI, with credentials in
+  GitHub secrets. See `docs/decisions.md` entry 18.
+- When choosing a service, weigh whether it can be driven from a web UI.
+  A CLI-only tool is a real cost here, not a detail.
+- If something genuinely cannot be done from a browser, say so **before**
+  building on it.
 
 ## Secrets
 
