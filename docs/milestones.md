@@ -36,48 +36,19 @@ how the two start disagreeing — and only one of them updates itself.
 Only the current milestone gets its slices written as issues. The rest stay as
 one paragraph until they are next.
 
-**The numbers are names, not positions.** This file is ordered by what happens
-next, and that order changes at reviews — renumbering each time would break
-every reference to a milestone from a decision, an issue or a conversation. So
-M2 sits fourth and that is not a mistake. Read down the page.
+**The numbers are positions, and they move.** A number that does not match
+where a milestone sits is just a lie with a label on it, so reordering
+renumbers. Two rules keep that from costing anything:
+
+- A **delivered** milestone keeps its number for good. Numbers are never
+  reused, so M1 means one thing forever.
+- Everywhere outside this file — a decision entry, an issue, a conversation —
+  a milestone is referred to **by name**. Names do not move, so nothing has to
+  be rewritten when the order changes.
 
 ---
 
-## M1 · See what's for sale
-
-**Goal.** Add a book by ISBN and see the eBay listings for it right now.
-
-**Jobs advanced.**
-
-- **J1**, in part. The list remembers a title, though nothing re-runs on its
-  own yet.
-- **J3**, in part. Listings arrive with condition, cost and an image.
-- **J6.** An entry can be removed.
-
-**Why this first.** It turns the two biggest unknowns into facts: what eBay's
-search response actually contains, and whether shipping cost comes with it or
-needs a second call per item. The second answers whether ranking by landed cost
-is nearly free or an API budget problem, and that shapes every milestone after
-this one. It is also the smallest thing that is genuinely usable — one book, one
-list, real listings.
-
-**What it deliberately isn't.** No edition resolution: ISBNs are typed in by
-hand, which the brief already names as the escape hatch. No stored listings, no
-modes, no ranking, no email.
-
-Taking the escape hatch first inverts the brief, which calls resolution the hard
-part. That is the point. A working product in five slices instead of a dozen,
-and the shape of the resolution problem learned by being annoyed at typing
-ISBNs rather than guessed at up front. The cost is real and accepted: some of
-what M1 builds will be rewritten once resolution lands.
-
-**One temporary state worth naming.** M1 calls eBay when a page loads. At a
-handful of page views a day that is nothing against 5,000 calls, but it is a
-placeholder for the cache, not a design — M2 replaces it (decision 30).
-
----
-
-## M4 · The right book, in any edition
+## M2 · The right book, in any edition
 
 **Goal.** A want-list entry means a book rather than one ISBN. It can be added
 by title and author, not only by ISBN. The set of editions that count is known,
@@ -108,15 +79,15 @@ covering all of them looks like one search per edition — which is both slow on
 a page and wasteful of the call budget. Whether that is solved by caching the
 edition set hard, by covering only the editions that actually have inventory,
 or by a title-level search filtered on known product ids, is not known. This is
-what the first slice of M4 exists to settle, and it should settle it by
+what the first slice of *The right book* exists to settle, and it should settle it by
 measuring rather than by choosing.
 
 **It will pull storage forward.** Whatever the answer, re-searching every
-edition on every page view is not it — so some of M2's caching arrives here.
+edition on every page view is not it — so some of *Always current*'s caching arrives here.
 
 ---
 
-## M6 · What I will pay, and whether this is fair
+## M3 · What I will pay, and whether this is fair
 
 **Goal.** A price ceiling per book, and enough context to act on a listing
 without opening a second tab to sanity-check it.
@@ -128,7 +99,7 @@ without opening a second tab to sanity-check it.
 
 **Why here.** A threshold — "under $8 delivered" — and *is this a fair price*
 are the same question at two resolutions, and splitting them across milestones
-would mean building price judgement twice. Both also depend on M4: comparing a
+would mean building price judgement twice. Both also depend on *The right book*: comparing a
 listing against others of the same edition is only meaningful once editions are
 a thing the system understands.
 
@@ -137,16 +108,16 @@ are recorded against J5 and none is chosen. It is also the most open-ended
 thing in the project and the likeliest source of scope creep, which is why the
 concrete half (the threshold) is worth shipping first and on its own.
 
-**What M2 will quietly buy it.** Once listings are stored daily, the tool
+**What *Always current* will quietly buy it.** Once listings are stored daily, the tool
 accumulates its own record of what copies of *these* books have been listed at.
 In a year that is a price history nobody can revoke, specific to the books I
 actually watch, costing one table and no extra API calls. Useless on day one,
-compounding after — an argument for the storage being right in M2, not for
+compounding after — an argument for the storage being right in *Always current*, not for
 building anything here early.
 
 ---
 
-## M5 · Two kinds of hunt
+## M4 · Two kinds of hunt
 
 **Goal.** An entry is a reading copy or a collectible, and the mode changes what
 matches and how it ranks: lowest landed cost and a readable floor for one,
@@ -160,7 +131,7 @@ edition and condition quality for the other.
 **Why here.** The brief describes two use cases sharing a pipeline and differing
 only in matching and ranking — so the pipeline has to be right first. Collectible
 mode is also the one that most needs edition resolution: wanting *the 1973 Cape
-first* is an edition-level statement, and M4 is what makes editions a thing the
+first* is an edition-level statement, and The right book is what makes editions a thing the
 system understands.
 
 **The open question.** Condition is the collectible signal, and eBay's condition
@@ -170,7 +141,7 @@ is really "show me everything and let me read", is not yet known.
 
 ---
 
-## M2 · Always current, without my looking
+## M5 · Always current, without my looking
 
 **Goal.** The daily poll runs, listings are stored, and opening a book shows
 what is there — already fetched, already dated, with what is new since I last
@@ -186,15 +157,15 @@ looked marked as new.
 **Why here, rather than earlier.** The digest cannot exist without it: "new
 listings" needs a record of the old ones, and "new" has to mean new *to me*
 rather than new to eBay, which is a stored fact and not a computed one. So it
-sits immediately before M3 and could reasonably merge with it.
+sits immediately before *Tell me* and could reasonably merge with it.
 
 It is also the point at which the tool stops depending on my attention, which
 is the brief's whole argument for existing — and that is the argument for
 pulling it earlier. It loses to a simpler one: a tool that checks every day on
-my behalf is worth having only once it is checking for the right thing. M4, M6
-and M5 are what make it the right thing.
+my behalf is worth having only once it is checking for the right thing. *The right book*, *What I will pay*
+and *Two kinds of hunt* are what make it the right thing.
 
-**Some of this arrives early regardless.** M4 cannot re-search every edition of
+**Some of this arrives early regardless.** *The right book* cannot re-search every edition of
 a book on every page view, so caching turns up there whether or not the poll
 does. What is left here is the daily cadence and the memory it builds.
 
@@ -215,10 +186,10 @@ are five separable things.
 
 ---
 
-## M3 · Tell me, so I stop looking
+## M6 · Tell me, so I stop looking
 
 **Goal.** A daily email containing only listings that are new since the last
-one and inside the price ceiling set in M6. Nothing arrives on a day when
+one and inside the price ceiling set in *What I will pay*. Nothing arrives on a day when
 nothing qualifies.
 
 **Jobs advanced.**
@@ -251,3 +222,38 @@ Real, wanted, and not yet worth a position in the order.
 - **Relative dates** — [issue 22](https://github.com/loserpoints/book-watch/issues/22).
 - **Checking the library first**, which the brief names as the real first step
   in the workflow and puts out of scope for v1.
+
+---
+
+## Delivered
+
+Kept because what a milestone *taught* is the most useful thing it leaves
+behind, and because a path you cannot see the start of is half a path. These
+keep their numbers for good.
+
+### M1 · See what's for sale
+
+**Delivered 2026-09-22.** Add a book by ISBN, open it, see what is for sale
+with condition, seller and landed cost, click through to buy.
+
+**What it taught.**
+
+- Shipping cost is in eBay's search response, so ranking on landed cost costs
+  one call rather than one per listing (decision 22). The expensive branch was
+  the one we did not get.
+- Searching an ISBN as a keyword beats eBay's GTIN filter decisively, because
+  sellers fill in the title and not the structured fields (decision 21).
+- Descriptions are **not** in the search response, so J3's "read the condition
+  without clicking through" has a known price of one call per listing. Still
+  unscheduled.
+- Every listing carries an `epid`, and searching it finds copies the ISBN text
+  misses (decision 32). That finding is the reason *The right book* went first.
+- Taking the escape hatch first paid: a usable tool in five slices, and the
+  resolution problem now understood from use rather than imagined.
+
+**What it got wrong.** `fly.toml` claimed a persistent volume that decision 10
+had costed and nothing had ever mounted; a database written there would have
+vanished on the next deploy, silently. Found while writing the schema, not by a
+test. Three of the five slices turned up a defect of that shape — none of which
+any test would have caught, because each was a gap between what a document
+claimed and what existed.
