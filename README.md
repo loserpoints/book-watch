@@ -33,9 +33,12 @@ ranking.
 
 ## Status
 
-**Planning.** No application code yet. See `docs/` for the product brief and
-the decision record. The current gate is proving the data sources are
-obtainable before designing around them — see `spikes/`.
+**Early.** Repository tooling, the eBay OAuth token exchange, and eBay's
+account-deletion compliance endpoint. Nothing else: no want-list, no polling,
+no UI. See `docs/` for the product brief and the decision record.
+
+The production keyset is disabled until the deletion endpoint is deployed and
+registered with eBay — see decision 16 and the checklist below.
 
 ## Sources
 
@@ -60,9 +63,64 @@ Fly.io or self-hosted. Running cost is roughly $2–3/month, all of it hosting.
 ## Layout
 
 ```
-docs/     product brief and decision record
-spikes/   throwaway feasibility code — not the application
+docs/                  product brief and decision record
+src/book_watch/ebay/   eBay API client
+src/book_watch/web/    FastAPI app; currently just the compliance endpoint
+tests/                 offline by default; `-m network` opts into real requests
 ```
+
+## Running it
+
+Requires [uv](https://docs.astral.sh/uv/). It installs the right Python itself.
+
+```sh
+uv sync                              # create the environment
+cp .env.example .env                 # then fill in your eBay keys
+uv run ruff check . && uv run pytest # lint and the offline suite
+uv run python -m book_watch.ebay     # verify the eBay keys work (one request)
+```
+
+The last command makes a real call to eBay. Everything above it is offline.
+
+## eBay compliance endpoint
+
+eBay disables a production keyset until the application either receives
+marketplace account deletion notifications or is granted an exemption. This
+repo takes the first route (decision 16), which means the endpoint has to be
+live before the API works at all.
+
+The endpoint URL is hashed into every response eBay validates against, so it
+must be settled first and must match eBay's copy exactly.
+
+Deployment runs from GitHub Actions rather than a local machine (decision 18),
+so the whole setup happens in a browser.
+
+**On Fly** — create the app, then set two secrets on it:
+
+| Secret | Value |
+|---|---|
+| `EBAY_VERIFICATION_TOKEN` | A string you invent: 32–80 chars, `[A-Za-z0-9_-]` |
+| `EBAY_DELETION_ENDPOINT_URL` | `https://<app>.fly.dev/ebay/deletion` |
+
+Then create a deploy token, **scoped to this app**, not the organisation.
+
+**On GitHub** — add two repository secrets under *Settings → Secrets and
+variables → Actions*:
+
+| Secret | Value |
+|---|---|
+| `FLY_API_TOKEN` | The Fly deploy token |
+| `EBAY_VERIFICATION_TOKEN` | The same token given to Fly |
+
+Set `app` in `fly.toml` to match, then run the **Deploy** workflow from the
+Actions tab. It deploys, then asks the live endpoint for a challenge response
+and compares it against one it computes itself — a mismatch fails the run
+rather than becoming a confusing rejection in eBay's console.
+
+**On eBay** — once that run is green, enter the URL and token under
+**Alerts & Notifications → Marketplace Account Deletion** and save. The keyset
+should stop reporting *Non Compliant*, after which
+`uv run python -m book_watch.ebay` is the check that it worked.
 
 ## License
 

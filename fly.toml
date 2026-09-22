@@ -1,0 +1,32 @@
+# Fly.io deployment. See docs/decisions.md entries 10 and 16.
+#
+# The app name fixes the hostname, and the hostname is hashed into every
+# challenge response. Changing it later means updating EBAY_DELETION_ENDPOINT_URL
+# and re-saving the endpoint in eBay's developer console.
+app = "book-watch"
+primary_region = "iad"
+
+[build]
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_start_machines = true
+
+  # Deliberately not scaling to zero. eBay re-validates the deletion endpoint
+  # on its own schedule and marks the keyset non-compliant if the check fails,
+  # so a cold start that misses the timeout has a cost well beyond one slow
+  # request. A continuously running 256MB machine is what decision 10 costed.
+  auto_stop_machines = false
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    path = "/health"
+    timeout = "5s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
