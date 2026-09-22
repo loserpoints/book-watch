@@ -368,14 +368,21 @@ and every deploy leaves a log someone can read afterwards.
 in money. The real cost is that a credential able to deploy to Fly now lives in
 GitHub.
 
-The token is organisation-scoped rather than application-scoped, which is the
-weaker of the two options and was chosen deliberately. An app-scoped token
-cannot create the app it is scoped to, so using one means creating the app
-through Fly's dashboard first — and that flow sets up Fly's own GitHub
-deployment, a second pipeline building this repo from its own branch on its own
-schedule. Two pipelines deploying one app is a worse problem than a broader
-token on an organisation that contains exactly one app. Revisit if that
-organisation ever holds anything else.
+The token was organisation-scoped for the first deploy only, because an
+app-scoped token cannot create the app it is scoped to, and creating the app
+through Fly's dashboard instead would have set up Fly's own GitHub deployment —
+a second pipeline building this repo from its own branch. A short-lived broad
+token was the lesser problem.
+
+Once the app existed an app-scoped token became possible, so `FLY_API_TOKEN` is
+now one, and the organisation token was revoked. The workflow needs no change
+for this: its create-the-app step checks whether the app exists first, and with
+an app-scoped token simply skips.
+
+That token does not expire. Expiry is the wrong control here — a narrow token
+on a project that deploys rarely would fail months later looking exactly like a
+misconfiguration, and revocation from the dashboard is the control that
+actually matters.
 
 **A consequence worth stating.** The image builds on GitHub's runner
 (`--local-only`) rather than on a Fly builder machine, which would be billed as
