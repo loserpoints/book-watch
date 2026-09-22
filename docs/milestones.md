@@ -29,9 +29,12 @@ something is done.
 
 **Goal.** Add a book by ISBN and see the eBay listings for it right now.
 
-**Jobs advanced.** J1 in part — the list remembers a title, though nothing
-re-runs on its own yet. J3 in part — listings arrive with condition, cost and
-an image. J6 — an entry can be removed.
+**Jobs advanced.**
+
+- **J1**, in part. The list remembers a title, though nothing re-runs on its
+  own yet.
+- **J3**, in part. Listings arrive with condition, cost and an image.
+- **J6.** An entry can be removed.
 
 **Why this first.** It turns the two biggest unknowns into facts: what eBay's
 search response actually contains, and whether shipping cost comes with it or
