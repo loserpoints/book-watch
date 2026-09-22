@@ -1,22 +1,47 @@
 {% extends "base.html" %}
-{% block title %}{% if isbn %}{{ isbn }} · {% endif %}book-watch{% endblock %}
+{% block title %}
+  {%- if book %}{{ book.title or book.isbn }} · {% elif isbn %}{{ isbn }} · {% endif -%}
+  book-watch
+{% endblock %}
 
 {% block content %}
-{% if not isbn %}
+{% if error and not isbn %}
+  <h1>Not found</h1>
+  <p class="error">{{ error }}</p>
+  <p><a href="/">Back to the want list</a></p>
+{% elif not isbn %}
   <h1>Search</h1>
   <p class="muted">
     Add an ISBN to the address bar to see what is listed:
     <code>/search?isbn=9780099448396</code>
   </p>
 {% else %}
-  <h1>{{ isbn }}</h1>
+  {% if book %}
+    <p class="muted"><a href="/">← Want list</a></p>
+    <h1>{{ book.title or book.isbn }}</h1>
+    {% if book.title %}<p class="muted">{{ book.isbn }}</p>{% endif %}
+  {% else %}
+    <h1>{{ isbn }}</h1>
+  {% endif %}
+
+  {% if not is_isbn %}
+    {# An overridden entry. eBay gets a keyword search for the text as typed,
+       so "nothing listed" here is a much weaker statement than usual. #}
+    <p class="muted">
+      This entry is not an ISBN, so eBay is being searched for the text as
+      written. Expect worse matches than usual.
+    </p>
+  {% endif %}
 
   {% if error %}
     <p class="error">{{ error }}</p>
   {% elif not listings %}
-    <p class="muted">Nothing listed right now.</p>
+    <p class="muted">Nothing listed right now — checked {{ fetched_at }}.</p>
   {% else %}
-    <p class="muted">{{ listings | length }} listing{{ '' if listings | length == 1 else 's' }}, straight from eBay.</p>
+    <p class="muted">
+      {{ listings | length }} listing{{ '' if listings | length == 1 else 's' }},
+      fetched {{ fetched_at }}.
+    </p>
 
     {% for listing in listings %}
       <div class="listing">

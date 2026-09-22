@@ -846,3 +846,36 @@ downstream may assume that column parses. `wantlist.Book` says so where someone
 would look. The alternative — a column recording whether the value is really an
 ISBN — was rejected as more schema than a single-user list needs before it has
 been used once.
+
+---
+
+## 30. Listings are fetched per page view, until the poll exists
+
+**Decision.** Opening a book searches eBay then and there. Nothing about a
+listing is stored.
+
+**Alternatives.** Storing listings from the start, and reading the store.
+
+**Why this is fine now.** A handful of page views a day against 5,000 calls is
+nothing, and every listing on screen is certainly current — no cache, so no
+stale cache. Building the store first would have meant designing how listings
+are keyed, deduplicated across relists and expired before ever having seen a
+real response, which is the mistake decision 26 avoids for editions and this
+avoids for listings.
+
+**Why it cannot survive.** The brief's whole point is that the tool checks when
+I am not looking. A poll that runs daily across a want-list of dozens, storing
+what it finds, is what makes the digest possible — and the moment listings are
+polled, the page must read what the poll stored rather than search again. Two
+paths to the same data, one of them live, is how "new since you last looked"
+stops meaning anything.
+
+**The trigger, so it is a plan and not a hope.** The first slice that writes a
+listing to the database replaces this in the same change. Not afterwards: a
+page that still searches live while a poll is filling a table is a page that
+disagrees with the digest it is supposed to match.
+
+**What this already provides for.** The page states when it fetched. That line
+exists so there is somewhere for "last checked on Tuesday" to go, and a page
+with nowhere to say so is a page that quietly implies data is fresher than it
+is.

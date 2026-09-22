@@ -11,10 +11,12 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from book_watch import db
 from book_watch.config import DeletionEndpointConfig, MissingCredentialError
 from book_watch.ebay.errors import EbaySearchError
 from book_watch.ebay.search import Listing, Money
 from book_watch.web import listings as listings_module
+from book_watch.web import wantlist as web_wantlist
 from book_watch.web.app import create_app
 
 DELETION_CONFIG = DeletionEndpointConfig(
@@ -200,3 +202,122 @@ def test_the_results_page_and_the_deletion_endpoint_share_one_app():
 
     assert client.get("/search").status_code == 200
     assert client.get("/ebay/deletion?challenge_code=abc").status_code == 200
+
+
+# --- One book on the want-list, and what is for sale for it -----------------
+
+
+@pytest.fixture
+def book_client(tmp_path):
+    """A client whose want-list is real and whose eBay is not."""
+    path = tmp_path / "book-watch.db"
+
+    def connect():
+        connection = db.connect(path)
+        db.migrate(connection)
+        return connection
+
+    def make(search):
+        app = FastAPI()
+        app.include_router(listings_module.build_router(search, connect))
+        app.include_router(web_wantlist.build_router(connect))
+        return TestClient(app)
+
+    return make
+
+
+def add_book(client, isbn, title=""):
+    client.post("/books", data={"isbn": isbn, "title": title, "override": "1"})
+
+
+def test_a_book_on_the_list_shows_what_is_for_sale(book_client):
+    client = book_client(returning(a_listing()))
+    add_book(client, "9780099448396", "Crash")
+
+    page = client.get("/book/1")
+
+    assert page.status_code == 200
+    assert "Crash" in page.text
+    assert "12.98 USD delivered" in page.text
+    assert "https://www.ebay.com/itm/123" in page.text
+
+
+def test_the_book_page_searches_for_that_book(book_client):
+    seen = {}
+
+    def search(query, limit):
+        seen["query"] = query
+        return []
+
+    client = book_client(search)
+    add_book(client, "9780099448396", "Crash")
+    client.get("/book/1")
+
+    assert seen["query"] == "9780099448396"
+
+
+def test_the_page_says_when_it_fetched(book_client):
+    """So live data is never mistaken for stored data — and so there is
+    somewhere for "last checked on Tuesday" to go when the poll lands."""
+    client = book_client(returning(a_listing()))
+    add_book(client, "9780099448396", "Crash")
+
+    assert (
+        "fetched 20" in book_client(returning(a_listing())).get("/search?isbn=x").text
+    )
+    assert "fetched 20" in client.get("/book/1").text
+
+
+def test_an_empty_result_says_when_it_checked(book_client):
+    client = book_client(returning())
+    add_book(client, "9780099448396", "Crash")
+
+    page = client.get("/book/1").text
+
+    assert "Nothing listed right now" in page
+    assert "checked 20" in page
+
+
+def test_a_book_that_is_not_on_the_list_is_a_404(book_client):
+    client = book_client(returning())
+
+    page = client.get("/book/999")
+
+    assert page.status_code == 404
+    assert "not on the want-list" in page.text
+
+
+def test_an_overridden_entry_warns_that_it_is_not_an_isbn(book_client):
+    """Otherwise "nothing listed" reads as a fact about the market rather
+    than a consequence of searching eBay for a sentence."""
+    client = book_client(returning())
+    add_book(client, "The Riddle of the Sands")
+
+    page = client.get("/book/1").text
+
+    assert "not an ISBN" in page
+    assert "Expect worse matches" in page
+
+
+def test_a_real_isbn_carries_no_such_warning(book_client):
+    client = book_client(returning(a_listing()))
+    add_book(client, "9780099448396", "Crash")
+
+    assert "not an ISBN" not in client.get("/book/1").text
+
+
+def test_the_want_list_links_to_each_book(book_client):
+    client = book_client(returning())
+    add_book(client, "9780099448396", "Crash")
+
+    assert 'href="/book/1"' in client.get("/").text
+
+
+def test_an_ebay_failure_on_a_book_page_is_still_a_bad_gateway(book_client):
+    def search(query, limit):
+        raise EbaySearchError("HTTP 503 from the eBay Browse API")
+
+    client = book_client(search)
+    add_book(client, "9780099448396", "Crash")
+
+    assert client.get("/book/1").status_code == 502
