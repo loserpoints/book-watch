@@ -40,8 +40,8 @@ Never commit a key, token or password. Credentials come from environment
 variables; `.env` is gitignored, `.env.example` is committed with variable
 names and no values.
 
-This is not hypothetical — a database password sat in the adjacent
-`movie-analysis` repo for six years.
+Anything committed stays in git history after it is removed, so rotating
+the credential is the only real remedy. Get it right the first time.
 
 ## External services
 
