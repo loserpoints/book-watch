@@ -412,3 +412,90 @@ credentials held by GitHub or the service itself, and a tool that can only be
 driven from a local CLI is carrying a real cost that has to be justified. This
 constrains future choices as much as this one, so it is written into
 `CLAUDE.md` rather than living only here.
+
+---
+
+## 19. Work is tracked in the repo and in GitHub, split by what changes
+
+**Decision.** Three layers, with a hard rule about where each lives.
+
+| Layer | Lives in | Holds |
+|---|---|---|
+| Job | `docs/jobs.md` | Why work exists, and the test for whether it worked |
+| Milestone | `docs/milestones.md` + a GitHub milestone | A usable subset of value, and why it comes now |
+| Slice | One GitHub issue | Roughly one pull request of work |
+
+**Status is never written to a file.** A closed issue is the only record that
+something is done. The repo holds intent, which changes slowly; GitHub holds
+state, which changes constantly.
+
+A slice links to its milestone and nothing else. A milestone names the jobs it
+advances. A slice's relationship to a job is therefore transitive.
+
+**Alternatives.** Jira or Trello, rejected on sight — the point of this project
+is to work without the apparatus of an organisation. A GitHub Project board,
+which is genuinely good and is the obvious answer; rejected because its state
+lives outside the repository, and because it is the tool being escaped from
+wearing a different hat. A committed `ROADMAP.md` with checkboxes, which was
+the first design and is the one worth explaining.
+
+**Why not the roadmap file.** It duplicates state that GitHub already holds, so
+within about two weeks it disagrees with the issues and then quietly lies. This
+is the failure this record already warns about at the top of the file: a stale
+record is worse than none, because it gets trusted. The rule that falls out of
+it — never write status into a file — is what shaped everything above.
+
+**Why slices don't carry a job label.** They did in the first draft. The
+problem showed up immediately on the least interesting slice in M1: a `book`
+table and a migration runner serve whatever gets built next, not any one job,
+and labelling it `job:J1` would have polluted the "everything serving J1" view
+with infrastructure. A derived link is honest about being approximate; a
+declared one asserts a precision that isn't there. Losing the per-job view is
+the cost, and for one person and six jobs it is not worth much.
+
+**What the sections had to survive.** Two were cut for the same reason after
+being written. A "what this isn't" section on each job: the set of things
+something is not is unbounded, so what gets written is whatever the author
+happened to worry about that morning, and the one genuinely useful case — the
+boundary against a sibling job — belongs in the doneness test where it can
+actually fail. A "not in this slice" section: the milestone already lists the
+neighbouring slices, so the exclusion restates the boundary and then rots when
+the neighbour is re-cut. What bounds a slice is its acceptance list. Wanting to
+write an exclusion is a signal that list is too loose.
+
+**Cost.** Seeing where a job stands takes a query rather than a glance, since
+nothing aggregates it. Milestones beyond the current one aren't written down,
+so there is no roadmap to show anyone — deliberate, but it is a real thing
+given up. And the pattern itself is unproven: it is being built at the same
+time as the thing it tracks, which is the point but also the risk.
+
+---
+
+## 20. "No price history" is removed as a non-goal
+
+**Decision.** The brief's non-goal — *"Price history or trend charts. I want to
+know a copy exists at my price, not what copies have cost over time"* — is
+struck. It is replaced by J5 in `docs/jobs.md`: *buy without wondering if I
+overpaid*.
+
+**The mechanism is explicitly undecided, and is not committed to eBay's sold
+listings.** Four candidates are recorded against J5 with their costs; none is
+chosen. J5 remains a nice-to-have with no milestone.
+
+**Why the reversal.** The non-goal rejected a *solution* and lost a *job* on
+the way past. Price history charts genuinely aren't wanted. But the question
+underneath — *am I about to overpay?* — is real, and it bites hardest in
+collectible mode, where there is no reference price to work from. The failure
+is concrete: hesitate on a copy, go and check elsewhere, come back, it's sold.
+
+**Why this is recorded rather than quietly edited.** Reading decision 4 in six
+months against a brief that no longer agrees with itself is exactly the
+confusion this file exists to prevent. The non-goal was right about charts and
+wrong about the need.
+
+**Cost.** One fewer boundary. "Don't overpay" is open-ended in a way "find a
+copy under $8" is not, and it is the most plausible source of scope creep in
+the project. It stays unscheduled for that reason. The cheapest candidate
+answer — showing where a listing sits among current listings for the same
+edition — needs no new API and no new data, and is the one to reach for first
+if it ever gets built.
