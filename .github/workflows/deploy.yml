@@ -200,3 +200,32 @@ jobs:
           else
             echo "Search returned listings for ${isbn}."
           fi
+
+      # The want-list is the page a person actually opens, and it is the only
+      # one that touches the database — so it is the only check that can catch
+      # an unmounted volume, an unset BOOK_WATCH_DB_PATH, or a migration that
+      # failed on a volume mounted empty. Searching proves eBay works and says
+      # nothing about storage.
+      #
+      # Status only, again: a 500 is what all three of those look like, and
+      # asserting on the page's wording would make a copy edit able to fail a
+      # deploy.
+      - name: Verify the want-list works
+        run: |
+          set -euo pipefail
+          app=$(grep -E '^app *= *' fly.toml | head -1 | cut -d'"' -f2)
+
+          body=$(mktemp)
+          status=$(curl -sS --max-time 30 -o "${body}" -w '%{http_code}' \
+            "https://${app}.fly.dev/")
+
+          if [ "${status}" != "200" ]; then
+            echo "The want-list returned HTTP ${status}, not 200."
+            echo "That page is the only one that opens the database, so this"
+            echo "is most likely storage: an unset BOOK_WATCH_DB_PATH, a"
+            echo "volume that did not mount, or a failed migration."
+            echo "Check: flyctl volumes list, and the [mounts] block in fly.toml."
+            exit 1
+          fi
+
+          echo "The want-list is serving."

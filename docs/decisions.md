@@ -795,10 +795,19 @@ listings is measured in megabytes — but it is Fly's usual minimum and the
 smallest thing worth having. A volume also cannot be shrunk, only grown, so
 starting small costs nothing later.
 
-**What is not solved.** A volume is storage, not a backup: it is one copy, and
-deleting it or losing the machine loses the want-list. For a list that can be
-retyped in an evening that is an acceptable trade, and it is recorded so it is
-a trade rather than an assumption.
+**What is not solved.** A volume is storage, not a backup: deleting it or
+losing the machine loses the want-list. For a list that can be retyped in an
+evening that is an acceptable trade, and it is recorded so it is a trade rather
+than an assumption.
+
+**Amended, 2026-09-22, after the volume was actually created.** Fly turned on
+scheduled daily snapshots with five-day retention by default, which the entry
+above did not know about and was therefore more pessimistic than the truth.
+That is a real safety net and it was free. It is still not a backup anybody
+here controls — the retention is Fly's, the restore path is Fly's, and neither
+has been tested — so the trade stands. But "one copy and no recovery" was
+wrong, and a decision record that overstates a risk gets trusted exactly as
+much as one that understates it.
 
 ---
 
