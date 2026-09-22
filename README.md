@@ -76,7 +76,7 @@ Requires [uv](https://docs.astral.sh/uv/). It installs the right Python itself.
 ```sh
 uv sync                              # create the environment
 cp .env.example .env                 # then fill in your eBay keys
-uv run ruff check . && uv run pytest # lint and the offline suite
+scripts/check.sh                     # lint, formatting, offline tests
 uv run python -m book_watch.ebay     # verify the eBay keys work (one request)
 ```
 

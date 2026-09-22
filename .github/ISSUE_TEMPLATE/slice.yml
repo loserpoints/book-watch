@@ -30,7 +30,7 @@ body:
         write down what is *out* of scope, the list above is too loose.
       value: |
         - [ ] 
-        - [ ] `uv run ruff check . && uv run pytest` passes
+        - [ ] `scripts/check.sh` passes
     validations:
       required: true
 
