@@ -924,16 +924,36 @@ next" is a question that gets asked at the close or never.
 
 **What is kept from the old rule.** Only the current milestone has its slices
 written as issues. A future milestone is one paragraph, because the slices for
-work that has not started are the part that really is guesswork. And status
-still lives on the GitHub milestones, never in the file — that rule is decision
-19's and is untouched.
+work that has not started are the part that really is guesswork.
+
+**Amended, 2026-09-22, on two points the first reorder exposed.**
+
+*Numbering.* The file was ordered by what happens next while the numbers stayed
+put, so the second milestone in line was called M6. A number that does not match
+its position is a lie with a label on, so reordering now renumbers. Delivered
+milestones keep their number permanently and numbers are never reused, and
+everywhere outside `milestones.md` a milestone is referred to by name — names
+do not move, so a reorder rewrites nothing.
+
+*Delivered milestones stay in the file.* Decision 19 says status never goes in
+a file, and this is the narrow exception, so the reason matters. That rule
+exists to stop the file tracking things that change constantly and update
+themselves elsewhere — issue state, progress bars. A milestone closing is not
+that: it happens rarely, it is a deliberate ceremony that already has a ritual
+attached, and moving the entry to *Delivered* is part of that ritual rather
+than a second copy of something GitHub maintains.
+
+What makes it worth the exception is the archive's actual content: not that a
+milestone finished, but **what it taught**. That is the output of the close
+review and there is nowhere else it would live. A path you cannot see the
+beginning of is also only half a path.
 
 **Cost.** A written order acquires authority it has not earned. Six milestones
 in a file look considered whether or not they are, and the fourth one was
 written before the second one had started. The mitigation is in the document
 rather than in a habit: each entry states the argument for its position, and
-M4 carries the argument *against* its own position because that one looks most
-likely to win.
+*The right book* carries the argument *against* its own position because that
+one looks most likely to win.
 
 ---
 
@@ -968,8 +988,9 @@ of one.
 still looks like one search each — slow on a page, and wasteful against a
 budget that was chosen for headroom. Whether the answer is caching the edition
 set, covering only editions that actually have inventory, or a title-level
-search filtered by known product ids, is open. It is the first thing M4 has to
-settle, and it should settle it the way this entry was written: by measuring.
+search filtered by known product ids, is open. It is the first thing *The right
+book* has to settle, and it should settle it the way this entry was written: by
+measuring.
 
 **Cost.** A second identifier to hold and keep fresh, for a catalogue that is
 eBay's and could change under us. An `epid` also says nothing outside eBay, so
