@@ -187,6 +187,13 @@ Because it's containerised, this is cheap to reverse. Self-hosting the same
 image on owned hardware is the $0 fallback if the bill ever stops being worth
 it.
 
+**One machine, not Fly's default pair.** A first deploy creates a running
+machine and a stopped standby. The standby costs little — rootfs only, pennies
+a month — but it buys availability that a single user would never notice, and
+it is a second thing that can drift out of step with the first. The deploy
+workflow passes `--ha=false` and enforces `scale count 1`. Adding redundancy
+back should be a deliberate act, not a default nobody chose.
+
 ---
 
 ## 11. Secrets in environment variables, never in source

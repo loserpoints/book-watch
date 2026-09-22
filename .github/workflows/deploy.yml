@@ -69,10 +69,26 @@ jobs:
       # --local-only builds the image on GitHub's runner, which is free, rather
       # than on a Fly builder machine, which is billed as compute. For an image
       # this small the build time is much the same either way.
+      # --ha=false stops Fly pairing this with a standby machine. One user, one
+      # container, and a spare that nothing starts is cost and drift for no
+      # availability anyone would notice. Add it back deliberately if that
+      # changes.
       - name: Deploy
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-        run: flyctl deploy --local-only
+        run: flyctl deploy --local-only --ha=false
+
+      # --ha=false only governs machines this deploy creates, so the count is
+      # enforced separately. Idempotent, and permanent rather than a one-off
+      # cleanup: it keeps the invariant true instead of recording that it once
+      # was.
+      - name: Keep the app at one machine
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          app=$(grep -E '^app *= *' fly.toml | head -1 | cut -d'"' -f2)
+          flyctl scale count 1 --app "${app}" --yes
 
       # The point of this step: a challenge response that does not match is the
       # difference between a working keyset and a disabled one, and it fails
