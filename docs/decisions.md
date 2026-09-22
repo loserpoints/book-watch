@@ -342,9 +342,15 @@ deferral that looks harmless until the day it isn't.
 
 ## 18. Deploys run from GitHub Actions, not a laptop
 
-**Decision.** A `Deploy` workflow runs `flyctl deploy`, triggered manually or by
-a push to `main`. Fly's deploy token is a GitHub Actions secret. No deployment
+**Decision.** A `Deploy` workflow runs `flyctl deploy`, triggered manually from
+the Actions tab. Fly's deploy token is a GitHub Actions secret. No deployment
 tooling or credential is installed on any personal machine.
+
+Manual rather than on every push to `main`: a push-triggered deploy runs
+alongside CI rather than after it, so it can ship a build CI is about to
+reject. Deploys here are rare and the endpoint's uptime is load-bearing, so a
+button press after CI goes green is the better trade. Automating it later means
+making it wait for CI, not just adding the trigger back.
 
 **Alternatives.** Running `fly deploy` locally, which is the normal way.
 

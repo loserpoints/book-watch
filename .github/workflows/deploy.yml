@@ -8,10 +8,13 @@ name: Deploy
 #   FLY_API_TOKEN            a deploy token, scoped to this app only
 #   EBAY_VERIFICATION_TOKEN  the same value set as a secret on Fly
 
+# Manual only, deliberately. Deploying on every push to main had two problems:
+# before the secrets exist it fails and leaves main red, and it races CI rather
+# than waiting for it — a push could deploy a build CI was about to reject.
+# Clicking Run workflow after CI goes green avoids both, and suits a project
+# where deploys are rare and the endpoint's uptime is load-bearing.
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
 
 # One deploy at a time. Two overlapping ones can leave the machine running an
 # image neither run intended.

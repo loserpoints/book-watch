@@ -113,7 +113,8 @@ variables → Actions*:
 | `EBAY_VERIFICATION_TOKEN` | The same token given to Fly |
 
 Set `app` in `fly.toml` to match, then run the **Deploy** workflow from the
-Actions tab. It deploys, then asks the live endpoint for a challenge response
+Actions tab. It is manual on purpose — a push-triggered deploy races CI instead
+of waiting for it. It deploys, then asks the live endpoint for a challenge response
 and compares it against one it computes itself — a mismatch fails the run
 rather than becoming a confusing rejection in eBay's console.
 
