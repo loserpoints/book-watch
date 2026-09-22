@@ -12,7 +12,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from book_watch.config import DeletionEndpointConfig
-from book_watch.web.ebay_deletion import DELETION_PATH, challenge_response, create_app
+from book_watch.web.app import create_app
+from book_watch.web.ebay_deletion import DELETION_PATH, challenge_response
 
 TOKEN = "a" * 32
 ENDPOINT = "https://book-watch.fly.dev/ebay/deletion"
