@@ -1,0 +1,58 @@
+name: Slice
+description: One technical deliverable that gets a milestone closer to done
+title: "S?? · "
+labels: ["slice"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A slice is roughly one pull request. Set the **milestone** on this issue
+        after creating it — that is the only link a slice carries.
+
+        See `docs/milestones.md` for how slices, milestones and jobs relate.
+
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome
+      description: One sentence. What exists after this that didn't before?
+      placeholder: A function that takes a search query and returns parsed listings. No web, no database.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance
+      description: >
+        Mechanically checkable, ending in the command that demonstrates it.
+        This list is what bounds the slice — if you find yourself wanting to
+        write down what is *out* of scope, the list above is too loose.
+      value: |
+        - [ ] 
+        - [ ] `uv run ruff check . && uv run pytest` passes
+    validations:
+      required: true
+
+  - type: textarea
+    id: decisions
+    attributes:
+      label: Decisions it forces
+      description: >
+        What this slice settles that is currently unknown or assumed. Anything
+        expensive to reverse gets an entry in `docs/decisions.md` in the same PR.
+      value: |
+        - 
+    validations:
+      required: true
+
+  - type: textarea
+    id: external
+    attributes:
+      label: External calls
+      description: >
+        Requests to eBay, Open Library or anything else — how many, and when.
+        Anything in bulk gets asked about before it runs (CLAUDE.md).
+      placeholder: One, by hand, when I run the network test.
+    validations:
+      required: true

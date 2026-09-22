@@ -1,6 +1,10 @@
 # Product brief: book-watch
 
-*Last updated: 2026-09-21*
+*Last updated: 2026-09-22*
+
+`docs/jobs.md` is the companion to this file. This one says what the tool is
+and why it should exist; that one says what I am trying to get done and how
+I'll know each part works.
 
 ## Problem
 
@@ -50,8 +54,6 @@ A small web UI manages the want-list and shows current matches.
 
 ## Non-goals
 
-- **Price history or trend charts.** I want to know a copy exists at my price,
-  not what copies have cost over time.
 - **Buying.** It links out. It never transacts.
 - **New-book retail.** Amazon, Bookshop, publisher direct — all out of scope.
 - **Reselling or arbitrage.** This is for a reader. That framing is what makes
