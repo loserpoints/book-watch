@@ -499,3 +499,70 @@ the project. It stays unscheduled for that reason. The cheapest candidate
 answer — showing where a listing sits among current listings for the same
 edition — needs no new API and no new data, and is the one to reach for first
 if it ever gets built.
+
+---
+
+## 21. ISBN searches go in `q`, not `gtin`
+
+**Decision.** `item_summary/search` is called with the ISBN as a keyword in
+`q`. The `gtin` parameter is supported by the client but is not the default.
+
+**Alternatives.** `gtin`, which is the parameter eBay provides for exactly this
+purpose and is the obvious choice on paper.
+
+**Why.** Measured rather than assumed. Three ISBNs, each searched both ways
+against production, limit 50:
+
+| ISBN | `q` | `gtin` |
+|---|---|---|
+| 9780099448396 | 6 | 0 |
+| 9780141439518 | 50 (the limit) | 4 |
+| 9780307474278 | 50 (the limit) | 3 |
+
+Used-book sellers put the ISBN in the title and the description and mostly
+leave eBay's structured product fields empty. `gtin` searches the field they
+didn't fill in.
+
+**What this measures, and what it doesn't.** Recall, not precision. `q` finds
+far more listings; whether the extra ones are the right book is not
+established, and a keyword search for a number will happily match a different
+edition that happens to quote it. Precision is J2's problem and nothing here
+answers it.
+
+**Cost.** The default is now the noisy option, so matching and filtering have
+real work to do. The brief already said as much — it calls identity resolution
+the hard part — but this makes it concrete rather than anticipated. `gtin`
+stays available as the high-precision fallback for a title where keyword search
+turns out to be hopeless.
+
+---
+
+## 22. Landed cost comes from the search response, not a call per listing
+
+**Decision.** Shipping cost is read from `shippingOptions` in the search
+results, taking the cheapest stated option. No `getItem` call per listing.
+
+**Alternatives.** `getItem` for each result, which returns fuller shipping
+detail.
+
+**Why.** Shipping is already in the search response. It did not have to be, and
+the question this slice existed to settle was whether ranking on landed cost
+would cost one API call or fifty-one. At 5,000 calls a day against an expected
+~250 (decision 4), a per-item call would turn a single 50-result page into a
+tenth of the daily budget, and would make the eventual daily poll the dominant
+consumer of a quota that was chosen for having ample headroom.
+
+**The three-valued rule this forces.** A shipping option with no
+`shippingCost` means calculated at checkout — not free. `Listing.shipping_cost`
+is therefore `Money | None`, where zero and unknown are different answers, and
+`landed_cost` returns `None` rather than a number when shipping is unstated or
+is in a different currency from the price. Collapsing those cases would rank an
+expensive copy first and never look wrong on screen, which is the worst kind of
+bug this app can have: silent, plausible, and in the one number the brief says
+to optimise for.
+
+**Cost.** The cheapest stated option is not always the one a buyer would pick —
+it may be slow, or be local pickup that isn't usable. Good enough to rank on,
+and the brief optimises for landed cost rather than delivery speed. If a copy
+turns out to be worth buying, the real shipping detail is one click away on the
+listing itself.
