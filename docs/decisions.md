@@ -677,20 +677,87 @@ and must equal eBay's console copy exactly, so it is derived from `fly.toml`
 where it cannot drift. The eBay keys have one copy and nothing to drift
 against, so the rationale does not reach them.
 
-**An open question this raises, deliberately unanswered.** The deployed search
-page is publicly reachable and unauthenticated, and every request spends one of
-5,000 daily eBay calls. Nobody is likely to find the URL, but "unlikely to be
-found" is not "safe", and an exhausted quota breaks the tool quietly. The
-brief's non-goals rule out accounts and auth, which is right for a single user
-— but HTTP basic auth, a shared secret in the path, or Fly private networking
-are all far cheaper to add now than to retrofit. This needs settling before the
-want-list itself is deployed, and it is recorded here rather than left to be
-remembered.
+**An open question this raised, now settled.** The deployed search page is
+publicly reachable and unauthenticated, and every request spends one of 5,000
+daily eBay calls. Nobody is likely to find the URL, but "unlikely to be found"
+is not "safe", and an exhausted quota breaks the tool quietly.
+
+**Resolved, 2026-09-22: no authentication, for now.** The brief's non-goals
+rule out accounts and auth, and for one user behind an unadvertised hostname
+the realistic risk is close to nil. The deciding argument is that this is cheap
+to reverse: HTTP basic auth is roughly ten lines and one Fly secret, touches no
+schema, needs no migration, and can be added the day anything suggests it is
+wanted.
+
+What that day looks like, so it is recognised rather than rationalised: eBay
+reporting call volume nobody made, the search page answering slowly for no
+reason, or the hostname becoming discoverable — linked publicly, or indexed.
+Nothing links to it today, and search engines find pages by following links.
 
 **Cost.** Secrets set by hand are not in version control, so nothing reviews or
 recreates them: rebuilding the app from scratch means re-entering two values
 from eBay's console. `.env.example` is the record of which names are needed,
 which is what makes that recoverable rather than archaeology.
+
+---
+
+## 26. A want-list entry is one ISBN, not one book
+
+**Decision.** `book` holds one row per ISBN. A title I would accept in any
+edition is several rows until edition resolution exists.
+
+**Alternatives.** Modelling works and editions now — a `work` table with
+`edition` rows hanging off it — and typing a single ISBN into that shape.
+
+**Why.** Open Library's works-and-editions model is the intended backbone
+(decision 7), and building a local mirror of it before having called the API
+once would be guessing at a join whose shape is the very thing that makes
+resolution hard. The brief calls identity resolution the hard part and manual
+ISBN entry the escape hatch; M1 takes the escape hatch first deliberately, so
+that what resolution has to do is learned from using the thing rather than
+imagined.
+
+**What it costs, and the cost is real.** Searching by one ISBN finds copies of
+one edition. Someone hunting a cheap reading copy — who would happily take any
+of a dozen editions — sees a fraction of what is actually for sale. That is not
+a rough edge to polish; it is the gap that makes this a better saved search
+rather than the tool the brief describes, and closing it is what edition
+resolution is for.
+
+**No `mode` column either.** M1 does not distinguish reading from collectible,
+and a column nothing reads is a column that quietly stops meaning what its name
+says. It arrives in the migration that first needs it.
+
+---
+
+## 27. Removing a book deletes the row
+
+**Decision.** Removing a book from the want-list is a `DELETE`. No status
+column, no soft delete, no archive.
+
+**Alternatives.** A `status` column — wanted, bought, abandoned. Or a split:
+keep the rows for books that were bought, delete the ones simply given up on.
+
+**Why.** There is exactly one question that keeping rows would answer: *do I
+already own this?* It is a real question for a list of dozens of books that get
+read and donated. But it is a question about a **book**, and by decision 26 a
+row is an **edition**. Marking one ISBN bought leaves the other editions of the
+same title on the list, still wanted — so the answer is least reliable in
+precisely the situation where it would be asked. The feature is worth much less
+than it looks until resolution groups editions together.
+
+The third state is also the one that genuinely resists definition. *Bought* is
+obvious. *Didn't buy it and no longer want it listed* has no clear meaning yet,
+and inventing one now and then living with the invention is worse than using
+the simple version and finding out from use what the distinction should be.
+
+**Cost.** Removal is irreversible, so a mistaken tap loses the entry. Re-adding
+takes seconds, which is the brief's own bar for adding a book at all, so the
+loss is bounded and small.
+
+**Revisit when** edition resolution groups editions under a work. At that point
+*bought* becomes a statement about a book rather than about one ISBN among
+several, and starts being worth recording.
 
 ---
 
