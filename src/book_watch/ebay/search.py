@@ -75,6 +75,10 @@ class Listing:
     `Money` of zero means the seller ships free, `None` means eBay told us
     nothing. Collapsing those two is the kind of error that silently ranks an
     expensive copy first and never looks wrong on screen.
+
+    `seller` is a username rather than a required field: a listing with no
+    seller named is odd but still buyable, so it does not meet the bar that
+    makes a missing id or price fatal.
     """
 
     item_id: str
@@ -83,6 +87,7 @@ class Listing:
     item_web_url: str
     condition: str | None = None
     condition_id: str | None = None
+    seller: str | None = None
     shipping_cost: Money | None = None
     thumbnail_url: str | None = None
     listing_date: datetime | None = None
@@ -238,10 +243,24 @@ def _parse_listing(item: Any, index: int) -> Listing:
         item_web_url=_require_str(item, "itemWebUrl", index),
         condition=_optional_str(item.get("condition")),
         condition_id=_optional_str(item.get("conditionId")),
+        seller=_parse_seller(item.get("seller")),
         shipping_cost=_parse_shipping(item.get("shippingOptions"), index),
         thumbnail_url=_parse_thumbnail(item),
         listing_date=_parse_date(item.get("itemCreationDate")),
     )
+
+
+def _parse_seller(seller: Any) -> str | None:
+    """Pull the seller's username out of eBay's seller object.
+
+    Only the username. eBay also sends a feedback score and percentage, which
+    would be a genuine signal when judging a copy, but nothing asks for them
+    yet and an unused field is a field that goes stale without anyone
+    noticing.
+    """
+    if not isinstance(seller, dict):
+        return None
+    return _optional_str(seller.get("username"))
 
 
 def _parse_shipping(options: Any, index: int) -> Money | None:
@@ -410,6 +429,7 @@ def main(argv: list[str] | None = None) -> int:
         shipping = "not stated" if cost is None else str(cost)
         print(listing.title)
         print(f"  condition  {listing.condition or 'unstated'}")
+        print(f"  seller     {listing.seller or 'unstated'}")
         print(f"  price      {listing.price}")
         print(f"  shipping   {shipping}")
         print(f"  landed     {landed if landed is not None else 'unknown'}")

@@ -64,6 +64,11 @@ def a_summary(**overrides):
         "itemWebUrl": "https://www.ebay.com/itm/123456789",
         "condition": "Good",
         "conditionId": "5000",
+        "seller": {
+            "username": "betterworldbooks",
+            "feedbackPercentage": "98.9",
+            "feedbackScore": 2_400_000,
+        },
         "image": {"imageUrl": "https://i.ebayimg.com/images/g/abc/s-l225.jpg"},
         "shippingOptions": [
             {"shippingCost": {"value": "3.99", "currency": "USD"}},
@@ -120,6 +125,7 @@ def test_parses_a_listing_into_the_fields_the_app_ranks_on():
     assert listing.title == "Crash by J. G. Ballard"
     assert listing.condition == "Good"
     assert listing.condition_id == "5000"
+    assert listing.seller == "betterworldbooks"
     assert listing.price == Money(Decimal("8.99"), "USD")
     assert listing.shipping_cost == Money(Decimal("3.99"), "USD")
     assert listing.landed_cost == Money(Decimal("12.98"), "USD")
@@ -190,6 +196,25 @@ def test_shipping_options_in_mixed_currencies_are_not_compared():
     (listing,) = build_browse(responds_with(search_response(summary))).search("x")
 
     assert listing.shipping_cost is None
+
+
+def test_a_listing_with_no_seller_is_still_a_listing():
+    """A missing seller is odd, but the copy is still buyable."""
+    summary = a_summary(seller=None)
+    (listing,) = build_browse(responds_with(search_response(summary))).search("x")
+
+    assert listing.seller is None
+    assert listing.item_id
+
+
+def test_only_the_seller_username_is_kept():
+    """Feedback comes back in the same object and is deliberately dropped."""
+    summary = a_summary(
+        seller={"username": "a_bookshop", "feedbackPercentage": "12.0"}
+    )
+    (listing,) = build_browse(responds_with(search_response(summary))).search("x")
+
+    assert listing.seller == "a_bookshop"
 
 
 def test_a_thumbnail_falls_back_to_thumbnail_images():
@@ -340,5 +365,6 @@ def test_a_real_search_returns_listings():
     assert listings, "expected at least one listing for a common paperback"
     first = listings[0]
     assert first.item_id and first.title
+    assert first.seller, "eBay should name a seller on every real listing"
     assert first.price.amount >= 0
     assert first.item_web_url.startswith("https://")
