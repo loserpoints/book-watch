@@ -82,12 +82,33 @@ a { color: var(--link); }
 .costs { margin-top: 0.25rem; }
 .landed { font-weight: 600; }
 img { max-width: 100%; }
+.entry {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.entry .details { flex: 1 1 auto; }
+form.add { display: grid; gap: 0.35rem; margin-bottom: 1rem; }
+form.add label { font-size: 0.875rem; color: var(--muted); }
+input, button {
+  font: inherit;
+  padding: 0.5rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--fg);
+}
+button { cursor: pointer; }
+form.add button, button.secondary { font-weight: 600; }
+button.remove { padding: 0.35rem 0.6rem; font-size: 0.875rem; }
+form.override { margin-top: 0.5rem; }
 </style>
+<script src="/static/htmx-2.0.4.min.js" defer></script>
 </head>
 <body>
-<!-- Plain text rather than a link: the want-list it would point at does not
-     exist yet. It becomes a link to "/" when that page lands. -->
-<header>book-watch</header>
+<header><a href="/">book-watch</a></header>
 <main>
 {% block content %}{% endblock %}
 </main>

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Want list · book-watch{% endblock %}
+
+{% block content %}
+<h1>Want list</h1>
+
+<form method="post" action="/books" class="add">
+  <label for="isbn">ISBN</label>
+  <input id="isbn" name="isbn" value="{{ isbn }}" inputmode="numeric"
+         autocomplete="off" placeholder="9780099448396" required>
+
+  <label for="book-title">Title <span class="muted">(optional)</span></label>
+  <input id="book-title" name="title" value="{{ title }}" autocomplete="off"
+         placeholder="Crash">
+
+  <button type="submit">Add</button>
+</form>
+
+{% if error %}
+  <p class="error">{{ error }}</p>
+  {% if offer_override %}
+    {# Some books never had an ISBN. The check digit cannot tell that apart
+       from a typo, so the person holding the book decides. #}
+    <form method="post" action="/books" class="override">
+      <input type="hidden" name="isbn" value="{{ isbn }}">
+      <input type="hidden" name="title" value="{{ title }}">
+      <input type="hidden" name="override" value="1">
+      <p class="muted">
+        If this book has no ISBN, or the one printed on it is wrong, add it
+        anyway and it will be searched for as written.
+      </p>
+      <button type="submit" class="secondary">Add “{{ isbn }}” anyway</button>
+    </form>
+  {% endif %}
+{% endif %}
+
+{% include "_list.html" %}
+{% endblock %}
