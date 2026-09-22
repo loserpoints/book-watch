@@ -345,7 +345,9 @@ POST becomes a way to make this application destroy data on request. Signature
 verification has to land in the same change, before that code does.
 
 This is recorded rather than left implicit precisely because it is the kind of
-deferral that looks harmless until the day it isn't.
+deferral that looks harmless until the day it isn't. It is also tracked as
+[issue 6](https://github.com/loserpoints/book-watch/issues/6), because this
+record can say what was decided but not whether it is still owed.
 ---
 
 ## 18. Deploys run from GitHub Actions, not a laptop
