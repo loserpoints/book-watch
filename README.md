@@ -33,9 +33,12 @@ ranking.
 
 ## Status
 
-**Planning.** No application code yet. See `docs/` for the product brief and
-the decision record. The current gate is proving the data sources are
-obtainable before designing around them — see `spikes/`.
+**Early.** Repository tooling is in place and the eBay OAuth token exchange is
+written and tested. Nothing else is built: no want-list, no polling, no UI.
+See `docs/` for the product brief and the decision record.
+
+The eBay keys currently return `invalid_client` from the token endpoint. The
+client code is not the cause — see decision 4.
 
 ## Sources
 
@@ -60,9 +63,23 @@ Fly.io or self-hosted. Running cost is roughly $2–3/month, all of it hosting.
 ## Layout
 
 ```
-docs/     product brief and decision record
-spikes/   throwaway feasibility code — not the application
+docs/              product brief and decision record
+src/book_watch/    the application
+tests/             offline by default; `-m network` opts into real requests
 ```
+
+## Running it
+
+Requires [uv](https://docs.astral.sh/uv/). It installs the right Python itself.
+
+```sh
+uv sync                              # create the environment
+cp .env.example .env                 # then fill in your eBay keys
+uv run ruff check . && uv run pytest # lint and the offline suite
+uv run python -m book_watch.ebay     # verify the eBay keys work (one request)
+```
+
+The last command makes a real call to eBay. Everything above it is offline.
 
 ## License
 

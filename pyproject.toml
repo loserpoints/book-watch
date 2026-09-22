@@ -1,0 +1,45 @@
+[project]
+name = "book-watch"
+version = "0.1.0"
+description = "Watches a want-list of specific books across used-book marketplaces."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.27",
+    "python-dotenv>=1.0",
+]
+
+[project.scripts]
+book-watch-ebay-check = "book_watch.ebay.__main__:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/book_watch"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# Ruff's default set is only pyflakes plus a few pycodestyle errors. These add
+# import sorting (I), modern-syntax rewrites (UP), likely-bug checks (B) and
+# readability suggestions (SIM). See docs/decisions.md entry 13.
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-m 'not network' --strict-markers"
+markers = [
+    "network: makes a real request to an external service; deselected by default",
+]

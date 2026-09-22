@@ -1,0 +1,34 @@
+name: CI
+
+# Pull requests plus pushes to main. A PR branch would otherwise run twice for
+# the same commit, which buys nothing.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      # --locked fails if uv.lock disagrees with pyproject.toml, so a
+      # dependency change without a relock is caught here rather than later.
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Check formatting
+        run: uv run ruff format --check .
+
+      # No eBay keys here: tests marked `network` are deselected by default.
+      - name: Test
+        run: uv run pytest

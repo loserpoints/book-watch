@@ -3,7 +3,7 @@
 Short entries, one per decision that would be expensive to reverse or annoying
 to re-argue. Each states what was chosen, what else was considered, and why.
 
-*Last updated: 2026-09-21*
+*Last updated: 2026-09-22*
 
 ---
 
@@ -71,8 +71,17 @@ one user does not have; numbered migration files are enough.
 an expected ~250 is ample headroom. The Finding API was decommissioned in
 February 2025 — any tutorial referencing it is stale.
 
-**Risk.** Developer account registration is sometimes rejected. The Phase 1
-spike tests this before anything is built on top of it.
+**Risk, now resolved.** Developer account registration is sometimes rejected.
+It wasn't — production keys were issued, so the question the Phase 1 spike
+existed to answer is answered. The token exchange was therefore written as real
+code (`src/book_watch/ebay/auth.py`) rather than throwaway spike code, and
+`spikes/` was removed.
+
+**Open.** As of 2026-09-22 the issued keys return `invalid_client` from the
+token endpoint. The request shape was ruled out as the cause — the same
+rejection comes back through httpx's own Basic-auth implementation — so this is
+a keyset problem, not a client problem. `uv run python -m book_watch.ebay`
+reports it and lists what to check.
 
 ---
 
@@ -198,3 +207,72 @@ disproportionate for one app with three credentials.
 **Why.** Free for public repos and near-zero configuration. Partly it catches
 mistakes; partly a visible green check is what distinguishes a project from a
 folder of scripts, which matters for a repo that's public on purpose.
+
+---
+
+## 13. httpx as the HTTP client
+
+**Decision.** `httpx`, used synchronously.
+
+**Alternatives.** `requests`. `urllib` from the standard library. `aiohttp`.
+
+**Why.** Two reasons, both about testing and the future shape of the app.
+
+`httpx` ships `MockTransport`, a fake transport a client talks to instead of a
+socket. The eBay auth tests assert on the exact request that would have gone
+out — URL, headers, form body — without a network, a key, or a mocking library
+that monkeypatches the client's internals. `requests` needs `responses` or
+`requests-mock` to get there.
+
+And `httpx` offers the same API synchronously and asynchronously. FastAPI
+(decision 2) is async; when a request handler eventually needs to call eBay,
+that's `AsyncClient` with the same method names, not a second library.
+
+**Cost.** A dependency where the standard library would technically do, and a
+library with a faster-moving release cadence than `requests`. Sync was chosen
+over async now because nothing here is concurrent yet, and async colours every
+function that touches it.
+
+---
+
+## 14. Credentials loaded by hand, not by a settings framework
+
+**Decision.** A frozen dataclass reading `os.environ`, with `python-dotenv`
+loading `.env` in development. `src/book_watch/config.py`.
+
+**Alternatives.** `pydantic-settings`. Bare `os.environ` with no `.env` at all.
+
+**Why.** It is about twenty lines with no framework behaviour between the code
+and an environment variable, which suits a project whose stated point is
+feeling the trade-offs directly. `python-dotenv` does not overwrite variables
+that are already set, so a real environment variable always beats the file —
+which is what makes the same code correct locally and in production.
+
+The credential dataclasses suppress their own `repr`. Objects like these end up
+in tracebacks and log lines, and per decision 11 a secret that reaches one has
+to be rotated, not deleted.
+
+**Cost.** FastAPI will bring pydantic in anyway, so there will eventually be two
+ways of describing configuration in the repo. Accepted: the migration is one
+small file if it ever stops being worth it.
+
+---
+
+## 15. Tests that touch the network are opt-in, and CI holds no credentials
+
+**Decision.** Tests hitting a real service carry a `network` marker and are
+deselected by default. CI runs `ruff` and the offline suite only, and no eBay
+key is stored as a GitHub secret. The live check is run by hand:
+`uv run pytest -m network`, or `uv run python -m book_watch.ebay`.
+
+**Alternatives.** Storing the keys as repository secrets and verifying against
+the live API on every push.
+
+**Why.** Fewer places a credential exists is fewer places it can leak, and it
+keeps a green check from depending on eBay being up. It also honours the
+external-services rule in `CLAUDE.md`: every push to a branch would otherwise
+be an unrequested request to somebody else's API.
+
+**Cost, and it is a real one.** CI structurally cannot tell you that a key has
+been revoked or has expired — only the manual check can. That is the trade
+being made, not an oversight.
