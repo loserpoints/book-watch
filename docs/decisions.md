@@ -884,6 +884,14 @@ listing to the database replaces this in the same change. Not afterwards: a
 page that still searches live while a poll is filling a table is a page that
 disagrees with the digest it is supposed to match.
 
+**Amended, 2026-09-22.** "Replaces" was too strong a rule drawn from a correct
+reason. What must be true is that everything the page displays comes from the
+store — not that nothing may ever fetch on demand. A refresh that writes to the
+same store is the same path triggered by hand, and it creates no second version
+of the truth. So live-on-demand survives, and the milestone gains a memory
+rather than trading freshness for one. The rule is: one path in, one path out,
+and the page reads the store.
+
 **What this already provides for.** The page states when it fetched. That line
 exists so there is somewhere for "last checked on Tuesday" to go, and a page
 with nowhere to say so is a page that quietly implies data is fresher than it
@@ -926,3 +934,43 @@ written before the second one had started. The mitigation is in the document
 rather than in a habit: each entry states the argument for its position, and
 M4 carries the argument *against* its own position because that one looks most
 likely to win.
+
+---
+
+## 32. Editions are matched by eBay's product id, not by the ISBN as a string
+
+**Decision.** The unit a search targets is eBay's `epid` — its own product
+identifier — rather than the ISBN text. The ISBN is how an edition is first
+found; the `epid` is how its listings are found afterwards, and the mapping
+between them is worth storing.
+
+**Why, measured rather than assumed.** Searching for an ISBN only finds
+listings whose seller typed it. Plenty do not. Three books, limit 50, against
+production:
+
+| Book | `q=ISBN` | carry an `epid` | `epid=` search | found *only* by epid |
+|---|---|---|---|---|
+| Web of Deceit | 6 | 6 | 5 | 0 |
+| Pride and Prejudice (Penguin) | 50 | 43 | 50 | **9** |
+| The Girl with the Dragon Tattoo | 50 | 49 | 50 | **2** |
+
+Nearly every used-book listing is matched to eBay's catalogue, and searching
+the catalogue id finds copies the ISBN text misses. On a capped result set the
+miss was up to 18%, and those are real copies of exactly the edition wanted.
+
+**What a title-and-author search is, and is not.** It finds many editions and
+reaches any particular one badly. For *Pride and Prejudice* one result in fifty
+shared the target edition's `epid`; for *The Girl with the Dragon Tattoo*, none
+did. It is a tool for discovering which editions exist, not for finding copies
+of one.
+
+**What this does not settle.** A work has many editions and covering them all
+still looks like one search each — slow on a page, and wasteful against a
+budget that was chosen for headroom. Whether the answer is caching the edition
+set, covering only editions that actually have inventory, or a title-level
+search filtered by known product ids, is open. It is the first thing M4 has to
+settle, and it should settle it the way this entry was written: by measuring.
+
+**Cost.** A second identifier to hold and keep fresh, for a catalogue that is
+eBay's and could change under us. An `epid` also says nothing outside eBay, so
+a second marketplace needs its own answer to the same question.
