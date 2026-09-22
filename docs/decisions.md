@@ -642,3 +642,52 @@ against. Accepted here because the alternative is worse, and there is a test
 asserting that startup does not read the search credentials — "make it eager,
 it's tidier" is a very natural change for someone to make later, and it would
 be discovered in production.
+
+---
+
+## 25. Where each credential lives
+
+**Decision.** One table, because the answer was previously only inferable by
+reading three other entries.
+
+| Credential | GitHub secret | Fly secret | Read by |
+|---|---|---|---|
+| `FLY_API_TOKEN` | yes | no | the deploy workflow |
+| `EBAY_VERIFICATION_TOKEN` | yes | yes | the app, and the deploy workflow's verification step |
+| `EBAY_DELETION_ENDPOINT_URL` | no | yes, set by the workflow | the app |
+| `EBAY_CLIENT_ID` | **no** | yes, set by hand | the app |
+| `EBAY_CLIENT_SECRET` | **no** | yes, set by hand | the app |
+
+**Why the eBay keys are not in GitHub.** Nothing in GitHub reads them. Routing
+them through a GitHub secret so the deploy workflow could forward them to Fly
+would put a second copy in a second system that never uses it — leak surface
+for no benefit. Decision 15 stands untouched: CI holds no eBay key and still
+cannot run the network tests.
+
+**Why the verification token is in both, and that is not the same mistake.** It
+has to be. The deploy step computes the expected challenge response itself and
+compares it against the live endpoint's, which is only a meaningful check if
+GitHub holds the same token the app does. Two copies with a job to do, rather
+than two copies by habit.
+
+**Why typing the eBay keys into Fly's dashboard does not contradict decision
+18.** That entry says nothing is typed into Fly's dashboard, for one specific
+reason: `EBAY_DELETION_ENDPOINT_URL` is hashed into every challenge response
+and must equal eBay's console copy exactly, so it is derived from `fly.toml`
+where it cannot drift. The eBay keys have one copy and nothing to drift
+against, so the rationale does not reach them.
+
+**An open question this raises, deliberately unanswered.** The deployed search
+page is publicly reachable and unauthenticated, and every request spends one of
+5,000 daily eBay calls. Nobody is likely to find the URL, but "unlikely to be
+found" is not "safe", and an exhausted quota breaks the tool quietly. The
+brief's non-goals rule out accounts and auth, which is right for a single user
+— but HTTP basic auth, a shared secret in the path, or Fly private networking
+are all far cheaper to add now than to retrofit. This needs settling before the
+want-list itself is deployed, and it is recorded here rather than left to be
+remembered.
+
+**Cost.** Secrets set by hand are not in version control, so nothing reviews or
+recreates them: rebuilding the app from scratch means re-entering two values
+from eBay's console. `.env.example` is the record of which names are needed,
+which is what makes that recoverable rather than archaeology.
