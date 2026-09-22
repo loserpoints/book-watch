@@ -972,7 +972,7 @@ production:
 |---|---|---|---|---|
 | Web of Deceit | 6 | 6 | 5 | 0 |
 | Pride and Prejudice (Penguin) | 50 | 43 | 50 | **9** |
-| The Girl with the Dragon Tattoo | 50 | 49 | 50 | **2** |
+| The Da Vinci Code (Anchor) | 50 | 49 | 50 | **2** |
 
 Nearly every used-book listing is matched to eBay's catalogue, and searching
 the catalogue id finds copies the ISBN text misses. On a capped result set the
@@ -980,9 +980,8 @@ miss was up to 18%, and those are real copies of exactly the edition wanted.
 
 **What a title-and-author search is, and is not.** It finds many editions and
 reaches any particular one badly. For *Pride and Prejudice* one result in fifty
-shared the target edition's `epid`; for *The Girl with the Dragon Tattoo*, none
-did. It is a tool for discovering which editions exist, not for finding copies
-of one.
+shared the target edition's `epid`; for *The Da Vinci Code*, none did. It is a
+tool for discovering which editions exist, not for finding copies of one.
 
 **What this does not settle.** A work has many editions and covering them all
 still looks like one search each — slow on a page, and wasteful against a
@@ -995,3 +994,22 @@ measuring.
 **Cost.** A second identifier to hold and keep fresh, for a catalogue that is
 eBay's and could change under us. An `epid` also says nothing outside eBay, so
 a second marketplace needs its own answer to the same question.
+
+**Corrected, 2026-09-22.** The third row was first published as *The Girl with
+the Dragon Tattoo*. ISBN 9780307474278 is *The Da Vinci Code*. The number was
+picked as "a recent paperback", given a title from memory, and never checked
+against a catalogue — so every measurement taken from it was sound and every
+label on it was wrong.
+
+It surfaced only because a reference link to the real edition was wanted for
+something else, and the link resolved to a different book. Nothing in the
+process would otherwise have caught it: the ISBN is valid, its check digit
+passes, eBay returned fifty real listings for it, and the numbers in this table
+are genuine — they simply describe a different novel.
+
+**What follows from that, beyond the correction.** A valid ISBN that names the
+wrong book is invisible to every check this project has. The entry point in
+*The right book* must therefore confirm what an ISBN resolves to and show it
+back — a book added by number should display the title the catalogue returns,
+so a mistyped or misremembered ISBN is caught by the person who typed it rather
+than by a coincidence a week later.
