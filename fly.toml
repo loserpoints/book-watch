@@ -3,7 +3,7 @@
 # The app name fixes the hostname, and the hostname is hashed into every
 # challenge response. Changing it later means updating EBAY_DELETION_ENDPOINT_URL
 # and re-saving the endpoint in eBay's developer console.
-app = "book-watch"
+app = "book-watch-alan"
 primary_region = "iad"
 
 [build]

@@ -30,6 +30,42 @@ jobs:
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
+      # Creating the app here rather than through Fly's dashboard: that flow
+      # sets up Fly's own GitHub deployment, which would be a second pipeline
+      # building this repo on its own schedule and from its own branch.
+      # Idempotent, so it is a no-op on every deploy after the first.
+      - name: Create the Fly app if it does not exist
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          app=$(grep -E '^app *= *' fly.toml | head -1 | cut -d'"' -f2)
+          if flyctl status --app "${app}" > /dev/null 2>&1; then
+            echo "App ${app} already exists."
+          else
+            echo "Creating app ${app}..."
+            flyctl apps create "${app}" --org personal
+          fi
+
+      # Fly's copy of the settings is pushed from GitHub's rather than typed into
+      # Fly's dashboard, so there is one source of truth for the token and the
+      # endpoint URL is derived from the same fly.toml the check below reads.
+      # That makes the commonest failure — Fly's URL not matching the real one —
+      # impossible rather than merely detectable.
+      #
+      # --stage holds the values for the next deploy instead of triggering one
+      # of its own, so a single deploy applies both the settings and the image.
+      - name: Give the app its settings
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          EBAY_VERIFICATION_TOKEN: ${{ secrets.EBAY_VERIFICATION_TOKEN }}
+        run: |
+          set -euo pipefail
+          app=$(grep -E '^app *= *' fly.toml | head -1 | cut -d'"' -f2)
+          flyctl secrets set --app "${app}" --stage \
+            "EBAY_VERIFICATION_TOKEN=${EBAY_VERIFICATION_TOKEN}" \
+            "EBAY_DELETION_ENDPOINT_URL=https://${app}.fly.dev/ebay/deletion"
+
       # --local-only builds the image on GitHub's runner, which is free, rather
       # than on a Fly builder machine, which is billed as compute. For an image
       # this small the build time is much the same either way.

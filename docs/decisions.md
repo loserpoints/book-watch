@@ -365,8 +365,16 @@ and every deploy leaves a log someone can read afterwards.
 
 **What it costs.** Actions minutes are free on a public repository, so nothing
 in money. The real cost is that a credential able to deploy to Fly now lives in
-GitHub. Scoping the token to this one application rather than the whole
-organisation keeps that blast radius to a single $2/month container.
+GitHub.
+
+The token is organisation-scoped rather than application-scoped, which is the
+weaker of the two options and was chosen deliberately. An app-scoped token
+cannot create the app it is scoped to, so using one means creating the app
+through Fly's dashboard first — and that flow sets up Fly's own GitHub
+deployment, a second pipeline building this repo from its own branch on its own
+schedule. Two pipelines deploying one app is a worse problem than a broader
+token on an organisation that contains exactly one app. Revisit if that
+organisation ever holds anything else.
 
 **A consequence worth stating.** The image builds on GitHub's runner
 (`--local-only`) rather than on a Fly builder machine, which would be billed as
