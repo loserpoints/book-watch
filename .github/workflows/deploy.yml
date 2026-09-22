@@ -133,3 +133,42 @@ jobs:
             echo "or the token on Fly differs from the one in GitHub."
             exit 1
           fi
+
+      # The step above proves the compliance endpoint works. It proved nothing
+      # about search, which is how a deploy with no eBay keys on Fly looked
+      # perfectly green while the only page a person uses was broken.
+      #
+      # This asserts on the HTTP status and never on the page's wording. The
+      # route returns 500 when the credentials are missing and 502 when eBay
+      # refuses them (src/book_watch/web/listings.py), so a 200 means a search
+      # genuinely completed. Deliberately *not* asserting that listings came
+      # back: inventory is somebody else's and a title going out of stock must
+      # not turn a deploy red.
+      #
+      # One eBay call per deploy, and deploys are manual and rare.
+      - name: Verify search works
+        run: |
+          set -euo pipefail
+          app=$(grep -E '^app *= *' fly.toml | head -1 | cut -d'"' -f2)
+          isbn=9780141439518
+
+          body=$(mktemp)
+          status=$(curl -sS --max-time 30 -o "${body}" -w '%{http_code}' \
+            "https://${app}.fly.dev/search?isbn=${isbn}&limit=5")
+
+          if [ "${status}" != "200" ]; then
+            echo "Search returned HTTP ${status}, not 200."
+            echo "500 means EBAY_CLIENT_ID / EBAY_CLIENT_SECRET are unset on Fly."
+            echo "502 means eBay rejected them — check the Cert ID, and that the"
+            echo "keyset is production rather than sandbox."
+            echo "--- what the page said ---"
+            sed -n 's/.*class="error">\(.*\)<\/p>.*/\1/p' "${body}" | head -3
+            exit 1
+          fi
+
+          if grep -q "Nothing listed right now" "${body}"; then
+            echo "Search worked, but nothing is listed for ${isbn} today."
+            echo "The credentials are fine; this is a note, not a failure."
+          else
+            echo "Search returned listings for ${isbn}."
+          fi

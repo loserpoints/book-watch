@@ -110,10 +110,22 @@ variables → Actions*:
 **3. Set `app` in `fly.toml`** to the app name you want, then run the **Deploy**
 workflow from the Actions tab.
 
+**4. On Fly, once the app exists** — add the eBay search keys as secrets, under
+the app's *Secrets* page. These are deliberately **not** GitHub secrets:
+nothing in GitHub reads them, and a second copy in a second system is leak
+surface for no benefit. See decision 25.
+
+| Fly secret | Value |
+|---|---|
+| `EBAY_CLIENT_ID` | The **App ID** of your *production* keyset |
+| `EBAY_CLIENT_SECRET` | The **Cert ID** of the same keyset, not the Dev ID |
+
 One run does everything: creates the app if it does not exist, pushes its
-settings, deploys, and then asks the live endpoint for a challenge response and
-compares it against one it computes itself. A mismatch fails the run rather
-than becoming a confusing rejection in eBay's console.
+settings, deploys, then asks the live endpoint for a challenge response and
+compares it against one it computes itself, and finally searches eBay through
+the deployed app. Either check failing fails the run, rather than becoming a
+confusing rejection in eBay's console or a green deploy whose only useful page
+is broken.
 
 Dispatch is manual on purpose — a push-triggered deploy runs alongside CI
 rather than after it, so it could ship a build CI is about to reject.

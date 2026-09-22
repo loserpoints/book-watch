@@ -78,6 +78,10 @@ def build_router(search: SearchFn | None = None) -> APIRouter:
             # Keyword, not GTIN — decisions.md entry 21. Sellers put the ISBN
             # in the title and leave eBay's structured fields empty.
             context["listings"] = run_search(query, limit)
+        # These two status codes are a contract, not decoration: the deploy
+        # workflow's search smoke check reads them to tell a missing key from
+        # a rejected one. Changing either to 200 would make a broken deploy
+        # look green.
         except MissingCredentialError as exc:
             context["error"] = f"eBay is not configured: {exc}"
             return templates.TemplateResponse(
