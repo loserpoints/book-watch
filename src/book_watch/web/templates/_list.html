@@ -7,7 +7,9 @@
   {% for book in books %}
     <div class="entry">
       <div class="details">
-        <div class="title">{{ book.title or book.isbn }}</div>
+        <div class="title">
+          <a href="/book/{{ book.id }}">{{ book.title or book.isbn }}</a>
+        </div>
         <div class="muted">
           {%- if book.title %}{{ book.isbn }} · {% endif -%}
           added {{ book.added_on or book.added_at }}

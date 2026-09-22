@@ -33,12 +33,22 @@ ranking.
 
 ## Status
 
-**Early.** Repository tooling, the eBay OAuth token exchange, and eBay's
-account-deletion compliance endpoint — which is deployed, registered, and
-verified, so the production keyset is live and the Browse API is available.
+**Usable, narrowly.** You can add a book to a want-list by ISBN, open it, and
+see what is for sale on eBay right now — condition, seller, and what a copy
+actually costs delivered — then click through to buy it.
 
-Nothing else is built: no want-list, no resolution, no polling, no UI. See
-`docs/` for the product brief and the decision record.
+Built: the eBay Browse client, the account-deletion compliance endpoint
+(deployed and verified, which is what makes the production keyset work), the
+want-list with its SQLite schema, and the two screens.
+
+Not built, and each is the point of a later milestone: edition resolution, so
+a title means every edition of it rather than one ISBN; the daily poll, so
+listings are stored rather than fetched per page view; and the email digest,
+so finding a copy does not depend on remembering to look.
+
+See `docs/jobs.md` for what this is trying to get done, `docs/milestones.md`
+for what is being built now, and `docs/decisions.md` for why each choice was
+made.
 
 ## Sources
 
@@ -65,7 +75,7 @@ Fly.io or self-hosted. Running cost is roughly $2–3/month, all of it hosting.
 ```
 docs/                  product brief and decision record
 src/book_watch/ebay/   eBay API client
-src/book_watch/web/    FastAPI app; currently just the compliance endpoint
+src/book_watch/web/    FastAPI app: want-list, listings, compliance endpoint
 tests/                 offline by default; `-m network` opts into real requests
 ```
 

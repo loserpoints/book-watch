@@ -30,7 +30,7 @@ TEMPLATES_DIR = Path(__file__).parent / "templates"
 ConnectFn = Callable[[], sqlite3.Connection]
 
 
-def _open_configured_database() -> sqlite3.Connection:
+def open_configured_database() -> sqlite3.Connection:
     """Connect using the configured path, migrating if needed.
 
     Deferred to the first request for the same reason the eBay client is
@@ -46,7 +46,7 @@ def build_router(connect: ConnectFn | None = None) -> APIRouter:
     router = APIRouter()
     templates = Jinja2Templates(directory=TEMPLATES_DIR)
     open_database: ConnectFn = (
-        connect if connect is not None else _open_configured_database
+        connect if connect is not None else open_configured_database
     )
 
     def render_list(request: Request) -> HTMLResponse:
