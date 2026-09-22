@@ -1,0 +1,80 @@
+name: Deploy
+
+# Deploys run here rather than from a laptop, so Fly's credentials live in
+# GitHub's secret store and never sit on a personal machine. See
+# docs/decisions.md entry 18.
+#
+# Requires two repository secrets:
+#   FLY_API_TOKEN            a deploy token, scoped to this app only
+#   EBAY_VERIFICATION_TOKEN  the same value set as a secret on Fly
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+# One deploy at a time. Two overlapping ones can leave the machine running an
+# image neither run intended.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      # --local-only builds the image on GitHub's runner, which is free, rather
+      # than on a Fly builder machine, which is billed as compute. For an image
+      # this small the build time is much the same either way.
+      - name: Deploy
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: flyctl deploy --local-only
+
+      # The point of this step: a challenge response that does not match is the
+      # difference between a working keyset and a disabled one, and it fails
+      # silently — eBay just refuses to save. Catching it here means finding out
+      # from a red check rather than from a confusing error in eBay's console.
+      #
+      # It also re-checks on every future deploy, so a changed app name or a
+      # rotated token cannot quietly break compliance.
+      - name: Verify eBay challenge response
+        env:
+          EBAY_VERIFICATION_TOKEN: ${{ secrets.EBAY_VERIFICATION_TOKEN }}
+        run: |
+          set -euo pipefail
+          app=$(grep -E '^app *= *' fly.toml | head -1 | cut -d'"' -f2)
+          url="https://${app}.fly.dev/ebay/deletion"
+          code="ci-${GITHUB_RUN_ID}"
+
+          echo "Endpoint: ${url}"
+
+          # The machine may still be booting immediately after a deploy.
+          curl -sS --fail --retry 10 --retry-delay 3 --retry-all-errors --retry-connrefused \
+            "https://${app}.fly.dev/health" > /dev/null
+          echo "Health check passed."
+
+          actual=$(curl -sS --fail --retry 5 --retry-delay 3 --retry-all-errors --retry-connrefused \
+            "${url}?challenge_code=${code}" \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin)["challengeResponse"])')
+
+          # Values passed through the environment, not argv: argv is visible
+          # in the process list, and one of these is the verification token.
+          expected=$(EBAY_CODE="${code}" EBAY_URL="${url}" python3 -c 'import hashlib, os; print(hashlib.sha256((os.environ["EBAY_CODE"] + os.environ["EBAY_VERIFICATION_TOKEN"] + os.environ["EBAY_URL"]).encode()).hexdigest())')
+
+          # Hashes are safe to print: they are exactly what eBay receives.
+          echo "Returned: ${actual}"
+          echo "Expected: ${expected}"
+
+          if [ "${actual}" = "${expected}" ]; then
+            echo "MATCH — this endpoint will validate with eBay."
+          else
+            echo "MISMATCH — eBay will refuse to save this endpoint."
+            echo "Most likely EBAY_DELETION_ENDPOINT_URL on Fly does not equal ${url},"
+            echo "or the token on Fly differs from the one in GitHub."
+            exit 1
+          fi

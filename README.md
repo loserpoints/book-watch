@@ -92,29 +92,32 @@ live before the API works at all.
 The endpoint URL is hashed into every response eBay validates against, so it
 must be settled first and must match eBay's copy exactly.
 
-```sh
-# 1. Generate a verification token (32-80 chars, [A-Za-z0-9_-])
-python -c "import secrets; print(secrets.token_urlsafe(48))"
+Deployment runs from GitHub Actions rather than a local machine (decision 18),
+so the whole setup happens in a browser.
 
-# 2. Tell Fly about both values. The URL follows the app name in fly.toml.
-fly secrets set \
-  EBAY_VERIFICATION_TOKEN='<the token>' \
-  EBAY_DELETION_ENDPOINT_URL='https://<app>.fly.dev/ebay/deletion'
+**On Fly** — create the app, then set two secrets on it:
 
-# 3. Deploy
-fly deploy
+| Secret | Value |
+|---|---|
+| `EBAY_VERIFICATION_TOKEN` | A string you invent: 32–80 chars, `[A-Za-z0-9_-]` |
+| `EBAY_DELETION_ENDPOINT_URL` | `https://<app>.fly.dev/ebay/deletion` |
 
-# 4. Check the challenge response before touching eBay's console
-curl "https://<app>.fly.dev/ebay/deletion?challenge_code=test123"
-```
+Then create a deploy token, **scoped to this app**, not the organisation.
 
-That last response should equal:
+**On GitHub** — add two repository secrets under *Settings → Secrets and
+variables → Actions*:
 
-```sh
-python -c "import hashlib; print(hashlib.sha256(('test123' + '<the token>' + 'https://<app>.fly.dev/ebay/deletion').encode()).hexdigest())"
-```
+| Secret | Value |
+|---|---|
+| `FLY_API_TOKEN` | The Fly deploy token |
+| `EBAY_VERIFICATION_TOKEN` | The same token given to Fly |
 
-If it matches, enter the URL and the token in eBay's developer console under
+Set `app` in `fly.toml` to match, then run the **Deploy** workflow from the
+Actions tab. It deploys, then asks the live endpoint for a challenge response
+and compares it against one it computes itself — a mismatch fails the run
+rather than becoming a confusing rejection in eBay's console.
+
+**On eBay** — once that run is green, enter the URL and token under
 **Alerts & Notifications → Marketplace Account Deletion** and save. The keyset
 should stop reporting *Non Compliant*, after which
 `uv run python -m book_watch.ebay` is the check that it worked.

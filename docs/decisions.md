@@ -338,3 +338,39 @@ verification has to land in the same change, before that code does.
 
 This is recorded rather than left implicit precisely because it is the kind of
 deferral that looks harmless until the day it isn't.
+---
+
+## 18. Deploys run from GitHub Actions, not a laptop
+
+**Decision.** A `Deploy` workflow runs `flyctl deploy`, triggered manually or by
+a push to `main`. Fly's deploy token is a GitHub Actions secret. No deployment
+tooling or credential is installed on any personal machine.
+
+**Alternatives.** Running `fly deploy` locally, which is the normal way.
+
+**Why.** The immediate reason is practical: the work computer is the machine
+that is usually to hand, and a personal side project's credentials and payment
+method have no business on it. Waiting until a personal machine is free would
+gate the project on being at home, which is how hobby projects die.
+
+The durable reason is that it is simply better. Deploys stop depending on one
+correctly configured laptop, the deploy token can be revoked from a web page,
+and every deploy leaves a log someone can read afterwards.
+
+**What it costs.** Actions minutes are free on a public repository, so nothing
+in money. The real cost is that a credential able to deploy to Fly now lives in
+GitHub. Scoping the token to this one application rather than the whole
+organisation keeps that blast radius to a single $2/month container.
+
+**A consequence worth stating.** The image builds on GitHub's runner
+(`--local-only`) rather than on a Fly builder machine, which would be billed as
+compute. For an image this size the build time is much the same, and it keeps
+the bill to exactly the one machine decision 10 costed.
+
+**The verification step is the real payoff.** After each deploy the workflow
+asks the live endpoint for a challenge response and compares it against one it
+computes itself. A mismatch fails the build. This catches the failure that is
+otherwise invisible — the deployed URL or token not matching what eBay was
+given — before eBay ever sees it, and keeps catching it on every future deploy.
+It was tested against both ways it can happen: a URL differing by one trailing
+slash, and a token differing between Fly and GitHub.
