@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}{{ book.name }} · book-watch{% endblock %}
+
+{% block content %}
+<p class="muted"><a href="/">← Want list</a></p>
+<h1>{{ book.name }}</h1>
+{% if book.added_by %}<p class="muted">{{ book.added_by }}</p>{% endif %}
+
+{% if not is_isbn %}
+  {# An overridden entry. eBay gets a keyword search for the text as typed,
+     so "nothing listed" here is a much weaker statement than usual. #}
+  <p class="muted">
+    This entry is not an ISBN, so eBay is being searched for the text as
+    written. Expect worse matches than usual.
+  </p>
+{% endif %}
+
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+{% if not copies and not uncertain %}
+  <p class="muted">
+    Nothing listed right now — checked {{ fetched_at }}.
+    <a href="/book/{{ book.id }}?refresh=1">Look again</a>
+  </p>
+{% else %}
+  <p class="muted">
+    {{ copies | length }} match{{ '' if copies | length == 1 else 'es' }},
+    checked {{ fetched_at }}.
+    <a href="/book/{{ book.id }}?refresh=1">Look again</a>
+  </p>
+
+  {% if unlooked %}
+    {# Honest rather than hidden: the first look at a new book is genuinely
+       less certain than the second, and a spinner would claim otherwise.
+
+       The visible sentence is the whole fact. Only the reason sits on hover,
+       because `title` does not survive a touchscreen and is not reliably read
+       out — so nothing a reader needs may live there alone. #}
+    <p class="muted digging">
+      <span title="We ask the public catalogues slowly on purpose. They're free
+and we'd like them to stay that way.">Still digging through the shelves.</span>
+    </p>
+  {% endif %}
+
+  {% for copy in copies %}{% include "_copy.html" %}{% endfor %}
+
+  {% if uncertain %}
+    <details class="maybe">
+      <summary>
+        {{ uncertain | length }} more that might be this book
+      </summary>
+      <p class="muted">
+        These carry the title but nothing that proves the book — no ISBN from
+        the seller, and no product the catalogue recognises. Mostly other
+        books by the same author.
+      </p>
+      {% for copy in uncertain %}{% include "_copy.html" %}{% endfor %}
+    </details>
+  {% endif %}
+{% endif %}
+{% endblock %}

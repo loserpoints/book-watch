@@ -1,0 +1,40 @@
+{# One copy for sale. Shared by both tiers so a possible one is visibly the
+   same kind of thing as a certain one, only lower down. #}
+<div class="listing">
+  {% if copy.thumbnail %}
+    <img class="thumb" src="{{ copy.thumbnail }}" alt="" loading="lazy">
+  {% else %}
+    <div class="thumb empty">no image</div>
+  {% endif %}
+  <div class="details">
+    <div class="title">
+      <a href="{{ copy.url }}" rel="noopener noreferrer" target="_blank">{{ copy.title }}</a>
+    </div>
+    <div class="muted">
+      {{ copy.condition or 'condition unstated' }}
+      {%- if copy.seller %} · {{ copy.seller }}{% endif %}
+    </div>
+    {% if copy.declared_format or copy.declared_publisher or copy.declared_year %}
+      {# What the seller says it is. Decision 33: eBay prefills these where
+         its catalogue matched the listing and lets them be typed where it
+         did not, so this is a claim about the copy rather than a fact about
+         the edition. #}
+      <div class="muted declared">
+        seller states:
+        {{ [copy.declared_format, copy.declared_publisher, copy.declared_year]
+           | select | join(' · ') }}
+      </div>
+    {% endif %}
+    <div class="costs">
+      <span class="landed">
+        {%- if copy.landed_cost %}{{ copy.landed_cost }} delivered
+        {%- else %}{{ copy.price }} + shipping unknown{% endif -%}
+      </span>
+      <span class="muted">
+        ({{ copy.price }} +
+        {%- if copy.shipping %} {{ copy.shipping }} shipping
+        {%- else %} shipping calculated at checkout{% endif %})
+      </span>
+    </div>
+  </div>
+</div>
