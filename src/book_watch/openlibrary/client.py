@@ -6,10 +6,16 @@ Two questions and nothing else:
     identify_isbn("9781590171998")           -> what that number is
 
 Open Library is a non-profit that states its API is not intended as a backend
-for third-party services (decision 7). Everything here is shaped by that. The
-pause between requests is enforced *inside* this client rather than left to
-callers, because "remember to sleep in the loop" fails the first time somebody
-writes a loop.
+for third-party services (decision 7). Everything here is shaped by that.
+
+The pause between requests is enforced here rather than left to callers,
+because "remember to sleep in the loop" fails the first time somebody writes a
+loop. It is kept at **module** level rather than on the instance, because the
+limit Open Library enforces is one request per second per *IP* — it does not
+care how many client objects this process has made. Instance state cannot
+enforce an address-level rule, and the difference is not theoretical: a
+per-request client in the web layer once meant the pacing silently never
+happened at all.
 
 Run it directly to see what comes back:
 
@@ -19,6 +25,7 @@ Run it directly to see what comes back:
 
 from __future__ import annotations
 
+import threading
 import time
 from collections.abc import Callable
 from typing import Any
@@ -26,6 +33,7 @@ from typing import Any
 import httpx
 
 from book_watch.isbn import normalise
+from book_watch.openlibrary.budget import CallBudget
 from book_watch.openlibrary.errors import OpenLibraryUnavailable
 from book_watch.openlibrary.models import Candidate, EditionIdentity
 
@@ -33,10 +41,29 @@ BASE_URL = "https://openlibrary.org"
 
 DEFAULT_TIMEOUT_SECONDS = 30.0
 
-#: Seconds to leave between requests. Chosen to sit far inside anything Open
-#: Library would notice rather than close to a published limit, because there
-#: is no published limit to sit close to — only a request to keep volume low.
+#: Seconds to leave between requests.
+#:
+#: Open Library allows one request per second from an unidentified caller and
+#: three from one that names a contact address. This is 0.67 a second: about a
+#: third under the lower of those, which is what CLAUDE.md means by staying
+#: well inside a published limit rather than close to it.
 DEFAULT_MIN_INTERVAL_SECONDS = 1.5
+
+#: When this process last spoke to Open Library, and the lock that keeps two
+#: threads from deciding they may both go now.
+#:
+#: Module level on purpose. See the note at the top of this file: the limit is
+#: per address, so this has to be per process.
+_pace = threading.Lock()
+_last_request_at: float | None = None
+
+
+def forget_the_pace() -> None:
+    """Clear the shared timestamp. For tests, which must not inherit each other's."""
+    global _last_request_at
+    with _pace:
+        _last_request_at = None
+
 
 #: How many candidates a title search offers. Enough to tell a book from its
 #: omnibus and its sequels, few enough to read at a glance.
@@ -53,22 +80,27 @@ _Sleep = Callable[[float], None]
 
 
 class OpenLibraryClient:
-    """Talks to Open Library, slowly and on purpose.
+    """Talks to Open Library, slowly, on purpose, and countably.
 
-    Not thread-safe: two threads sharing one client would each see the other's
-    last-request time and could still collide. The enrichment worker runs one
-    job at a time (decision 8), so a lock would be machinery for a problem
-    this app does not have.
+    Safe to make several of. The pacing they share lives in this module rather
+    than in any one of them, so two clients in two threads cannot between them
+    go twice as fast — which is the only behaviour that matters, since the
+    limit is per address.
     """
 
     def __init__(
         self,
+        budget: CallBudget,
         *,
         client: httpx.Client | None = None,
         min_interval_seconds: float = DEFAULT_MIN_INTERVAL_SECONDS,
         clock: _Clock = time.monotonic,
         sleep: _Sleep = time.sleep,
     ) -> None:
+        # Required, with no default. A default here would be a way to opt out
+        # of being counted without noticing, which is how the test suite
+        # quietly started calling Open Library for real (decision 36).
+        self._budget = budget
         self._min_interval = min_interval_seconds
         # Monotonic rather than wall-clock: this measures a gap between two
         # requests, and a system clock adjustment should not be able to grant
@@ -142,8 +174,17 @@ class OpenLibraryClient:
         params: dict[str, Any] | None = None,
         allow_missing: bool = False,
     ) -> Any:
-        """One request, after waiting out the pause this client promises."""
+        """One request, once the pause has elapsed and the ceiling allows it."""
         self._wait_turn()
+        # Counted *after* the pause, so the recorded time is within
+        # milliseconds of the request itself. Counting before would make the
+        # ledger read as though requests went out faster than they did, which
+        # is exactly the question somebody reads it to answer.
+        #
+        # The cost is that a refusal arrives a second and a half late. Nothing
+        # is sent either way, and a loop being refused slowly is a loop doing
+        # less harm.
+        self._budget.spend(path)
         try:
             response = self._client.get(
                 f"{BASE_URL}{path}",
@@ -153,11 +194,6 @@ class OpenLibraryClient:
             )
         except httpx.HTTPError as exc:
             raise OpenLibraryUnavailable(f"GET {path} failed: {exc}") from exc
-        finally:
-            # Recorded even when the request raised. A request that timed out
-            # still reached them, and retrying it immediately is exactly the
-            # behaviour the pause exists to prevent.
-            self._last_request_at = self._clock()
 
         if allow_missing and response.status_code == 404:
             return None
@@ -174,12 +210,25 @@ class OpenLibraryClient:
             ) from exc
 
     def _wait_turn(self) -> None:
-        last = self._last_request_at
-        if last is None:
-            return
-        remaining = self._min_interval - (self._clock() - last)
-        if remaining > 0:
-            self._sleep(remaining)
+        """Block until this process is allowed to speak to them again.
+
+        The timestamp is stamped before the request rather than after, so the
+        gap measured is between one request starting and the next — which is
+        what "one request per second" means. Stamping afterwards would also
+        count however long they took to answer, and a slow reply is not a
+        reason to have been more polite than asked.
+
+        It is stamped whether or not the request then succeeds. A request that
+        timed out still reached them, and retrying it immediately is exactly
+        what this exists to prevent.
+        """
+        global _last_request_at
+        with _pace:
+            if _last_request_at is not None:
+                remaining = self._min_interval - (self._clock() - _last_request_at)
+                if remaining > 0:
+                    self._sleep(remaining)
+            _last_request_at = self._clock()
 
     def close(self) -> None:
         if self._owns_client:

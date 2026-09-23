@@ -1505,3 +1505,61 @@ that is not a laptop — there isn't one (CLAUDE.md). Storage for the
 projection, against a volume currently sized 1 GB and a budget of $2–3 a
 month. Neither is a reason not to; both are reasons it is a slice of its own
 rather than a detail.
+
+---
+
+## 39. What Open Library actually limits, and three controls for it
+
+**Decision.** Pace requests process-wide at one every 1.5 seconds, record every
+one, and refuse past 500 in a rolling day.
+
+**What they publish**, which nothing in this project had checked until now:
+
+| | |
+|---|---|
+| Unidentified requests | **1 per second** |
+| Identified — User-Agent naming the app and a contact address | **3 per second** |
+| Covers endpoint | **100 per IP per 5 minutes**, then 403 |
+
+They describe the intended use as "real-time, low-volume, high-value", say the
+API is "not intended as a backend", and that violations "may result in
+aggressive rate limiting or blocking".
+
+**1.5 seconds is now a number with a reason.** It was picked by feel in S7 and
+happened to be right: 0.67 requests a second is about a third under the lower
+published figure, which is what CLAUDE.md means by staying well inside a limit
+rather than close to it.
+
+**The pace is per process, not per client object, because the limit is per
+address.** Open Library does not care how many clients this process has built;
+instance state cannot enforce an address-level rule. This is not theoretical —
+S9 shipped a web layer that built a client per request, so each one forgot when
+the last had spoken and the pacing silently never happened. Sharing one
+instance fixed the symptom. Moving the timestamp to module level fixes the
+cause, and the next caller cannot opt out by constructing its own.
+
+**Everything is counted, because nothing could answer "how much have we
+used?"** Not the app, not its author, not anyone reading the code. One row per
+request, recorded after the pause so the times read as when requests actually
+went out rather than when they were decided on.
+
+**The ceiling is a bound on our own bugs, and is not compliance.** They publish
+no daily figure, so 500 is ours to justify. Adding a book costs one request;
+resolving the numbers in a book's listings costs ten to fifteen. A busy,
+entirely legitimate day — ten books added and enriched — is about 160. This is
+roughly three times that, and about a fifth of the 2,400 an unattended loop
+would manage at this pace. The failure it defends against is not a person
+adding books quickly. It is a loop that should have read the cache and didn't.
+
+**Refusing is not the same as being unavailable**, and they are different
+exception types. One means they could not answer; the other means we declined
+to ask. A caller retrying the second on a timer would be doing precisely what
+the ceiling exists to stop.
+
+**The budget is required, with no default.** A default would be a way to opt
+out of being counted without noticing, which is exactly how the test suite
+quietly started calling Open Library for real (decision 36).
+
+**What this does not cover.** Two machines would have two paces and two
+ceilings; the deploy runs `scale count 1`, so today there is one. If that ever
+changes, both controls need to move behind something shared.

@@ -1,8 +1,12 @@
 """See what Open Library says: `uv run python -m book_watch.openlibrary --isbn ...`.
 
-Makes exactly one request. Needs no configuration and no database — it keeps
-its notebook in memory and throws it away — so it works on a fresh checkout
-with nothing set up.
+Makes exactly one request. Needs no configuration and no database — it counts
+that request against a budget it keeps in memory and throws away — so it works
+on a fresh checkout with nothing set up.
+
+That budget therefore resets on every run, which is honest for a probe that
+makes one request and exits. Anything long-running must be given a budget
+backed by the real database, or the ceiling means nothing.
 
     uv run python -m book_watch.openlibrary --title stoner --author "john williams"
     uv run python -m book_watch.openlibrary --isbn 9781590171998
@@ -13,6 +17,8 @@ from __future__ import annotations
 import argparse
 import sys
 
+from book_watch import db
+from book_watch.openlibrary.budget import CallBudget
 from book_watch.openlibrary.client import OpenLibraryClient
 from book_watch.openlibrary.errors import OpenLibraryUnavailable
 
@@ -33,7 +39,7 @@ def main(argv: list[str] | None = None) -> int:
         return EXIT_MISUSE
 
     try:
-        with OpenLibraryClient() as client:
+        with OpenLibraryClient(CallBudget(_throwaway_database)) as client:
             if args.isbn:
                 return _report_isbn(client, args.isbn)
             return _report_title(client, args.title, args.author)
@@ -43,6 +49,13 @@ def main(argv: list[str] | None = None) -> int:
     except OpenLibraryUnavailable as exc:
         print(f"Could not reach Open Library: {exc}", file=sys.stderr)
         return EXIT_UNAVAILABLE
+
+
+def _throwaway_database():
+    """A migrated database in memory, discarded when the probe exits."""
+    connection = db.connect(":memory:")
+    db.migrate(connection)
+    return connection
 
 
 def _report_isbn(client: OpenLibraryClient, isbn: str) -> int:
