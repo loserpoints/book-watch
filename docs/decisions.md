@@ -1614,3 +1614,49 @@ things that used to be buyable.
 **Cost.** The store can be stale, and a reader cannot tell how stale without
 the timestamp — which is why the page carries one and always has. "Look
 again" is the manual version of the poll that *Always current* automates.
+
+---
+
+## 41. Examining a book happens after the page, not on a clock
+
+**Decision.** When a book page runs a search and finds copies nobody has
+examined, it schedules a background pass and returns. The pass asks eBay what
+each seller declared, asks Open Library what those numbers are, and records
+both. Nothing waits for it.
+
+**Why not on a clock.** Decision 8 chose in-process daily scheduling, and this
+is not that shape. The work exists because somebody just opened a book; a
+daily job would mean a new book stayed uncertain until tomorrow, which is the
+one moment the reader is actually looking.
+
+**Why not during the request.** Decision 40 measured it: fifty copies is
+twenty-five seconds of eBay alone, against a page that owes an answer in two.
+
+**Resumable by construction, not by design.** Every answer is written down the
+moment it arrives, so a pass that dies halfway — a restart, an outage, a
+ceiling — keeps what it learned and the next one continues. Nothing here is
+transactional because nothing here is a transaction. That is also what makes
+it safe to trigger from a page view: a second pass on the same book would ask
+nothing new, and an in-process guard stops it anyway.
+
+**The ceiling stops it and is never retried.** Decision 39: a caller that
+retries `BudgetExhausted` on a timer is the exact failure the ceiling exists
+to prevent. An unfinished pass leaves `enriched_at` unset, so the want-list
+keeps saying there is work outstanding, which is true.
+
+**Measured, on a real book.** Ten copies of *Crash*: the page answered in
+under three seconds with nothing certain, the pass took thirteen seconds — ten
+eBay calls and six Open Library ones — and the same page then read six
+matches. The want-list said "still digging" throughout and stopped when it
+stopped.
+
+**The tag means work outstanding, not work possible.** A book nobody has
+opened has no copies, so there is nothing to dig through and the list says
+nothing. Advertising work that has not started would be the same lie as a
+spinner.
+
+**Cost.** A pass dies with the machine, and nothing retries it on a schedule —
+it resumes the next time that book is opened. For a want-list of a few books
+read by one person that is fine, and it stops being fine the moment anything
+is expected to be current without somebody looking. That is *Always current*'s
+problem, and this is the piece it will schedule.

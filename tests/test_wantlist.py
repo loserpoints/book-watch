@@ -109,11 +109,26 @@ def test_a_new_entry_is_a_reader_looking_for_any_edition(connection):
     assert book.hunt == "reader"
 
 
-def test_a_new_entry_has_not_been_enriched_yet(connection):
-    """Decision 7: the Open Library questions happen afterwards, in the background."""
+def test_a_new_entry_claims_no_work_is_outstanding_yet(connection):
+    """Nothing has been found to examine, so there is nothing to dig through.
+
+    Decision 7: the Open Library questions happen afterwards. But "afterwards"
+    starts when copies exist, not when the book is added, and the want-list
+    must not advertise work that has not started.
+    """
     book = wantlist.add(connection, "9780099448396", "Crash")
 
-    assert book.being_enriched is True
+    assert book.being_enriched is False
+
+
+def test_an_entry_with_copies_and_no_answers_is_outstanding(connection):
+    book = wantlist.add(connection, "9780099448396", "Crash")
+    connection.execute(
+        "UPDATE work SET copies_fetched_at = datetime('now') WHERE id = ?",
+        (book.work_id,),
+    )
+
+    assert wantlist.get(connection, book.id).being_enriched is True
 
 
 def test_two_numbers_for_the_same_book_become_one_entry(connection):

@@ -13,6 +13,14 @@
         <div class="muted">
           {%- if book.added_by %}{{ book.added_by }} · {% endif -%}
           added {{ book.added_on or book.added_at }}
+          {%- if book.being_enriched %} ·
+            {# Only while there is work outstanding. A book nobody has opened
+               has no copies either, so there is nothing to dig through and
+               this says nothing — the app does not advertise work it has not
+               started. #}
+            <span class="digging" title="We ask the public catalogues slowly on
+purpose. They're free and we'd like them to stay that way.">still digging</span>
+          {%- endif %}
         </div>
       </div>
       <button class="remove"

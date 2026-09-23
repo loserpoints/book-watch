@@ -16,11 +16,11 @@ from contextlib import closing
 from datetime import UTC, datetime
 from pathlib import Path
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, BackgroundTasks, Query, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from book_watch import copies, wantlist
+from book_watch import copies, enrichment, wantlist
 from book_watch.config import MissingCredentialError, load_ebay_credentials
 from book_watch.ebay.auth import EbayTokenProvider
 from book_watch.ebay.errors import EbayError
@@ -36,6 +36,10 @@ TEMPLATES_DIR = Path(__file__).parent / "templates"
 #: Takes a query and a limit, returns listings. `BrowseClient.search` is the
 #: real one; tests pass a function that returns whatever they need.
 SearchFn = Callable[[str, int], list[Listing]]
+
+#: Start a background pass over one book's copies. Injected, like everything
+#: else that reaches a third party, so a test cannot reach one by omission.
+EnrichFn = Callable[[int], object]
 
 
 class LazyBrowseSearch:
@@ -61,14 +65,44 @@ class LazyBrowseSearch:
         return self._browse.search(query, limit=limit)
 
 
+def _configured_enrichment(connect: ConnectFn) -> EnrichFn:
+    """Wire an enrichment pass to real eBay and real Open Library.
+
+    Built lazily for the same reason everything else here is: nothing that
+    could fail for want of a credential may run while the compliance endpoint
+    is trying to boot (decision 24).
+    """
+
+    def start(work_id: int) -> object:
+        from book_watch.ebay.declarations import Declarations
+        from book_watch.ebay.detail import ItemDetailClient
+        from book_watch.openlibrary import CallBudget, OpenLibraryClient, Resolver
+
+        detail = ItemDetailClient(EbayTokenProvider(load_ebay_credentials()))
+        catalogue = OpenLibraryClient(CallBudget(connect))
+        return enrichment.enrich(
+            connect,
+            work_id,
+            lambda connection: Declarations(connection, detail),
+            lambda connection: Resolver(connection, catalogue),
+        )
+
+    return start
+
+
 def build_router(
-    search: SearchFn | None = None, connect: ConnectFn | None = None
+    search: SearchFn | None = None,
+    connect: ConnectFn | None = None,
+    enrich: EnrichFn | None = None,
 ) -> APIRouter:
     router = APIRouter()
     templates = Jinja2Templates(directory=TEMPLATES_DIR)
     run_search: SearchFn = search if search is not None else LazyBrowseSearch()
     open_database: ConnectFn = (
         connect if connect is not None else open_configured_database
+    )
+    start_enrichment: EnrichFn = (
+        enrich if enrich is not None else _configured_enrichment(open_database)
     )
 
     def search_and_render(
@@ -136,6 +170,7 @@ def build_router(
     @router.get(BOOK_PATH, response_class=HTMLResponse)
     def book_results(
         request: Request,
+        background: BackgroundTasks,
         book_id: int,
         limit: int = Query(DEFAULT_LIMIT, ge=1, le=MAX_LIMIT),
         refresh: int = 0,
@@ -178,6 +213,12 @@ def build_router(
                     error = (f"eBay could not be searched: {exc}", 502)
 
             for_sale = copies.for_entry(connection, book)
+
+        # Scheduled after the response is written, never before it. Decision
+        # 40: examining fifty copies is twenty-five seconds of eBay, and this
+        # page owes an answer in two.
+        if copies.unasked(for_sale):
+            background.add_task(start_enrichment, book.work_id)
 
         shown = [copy for copy in for_sale if copy.tier != "excluded"]
         context = {
