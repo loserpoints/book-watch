@@ -30,7 +30,11 @@ from fastapi.templating import Jinja2Templates
 from book_watch import db, wantlist
 from book_watch.config import load_database_path
 from book_watch.isbn import normalise
-from book_watch.openlibrary import OpenLibraryClient, OpenLibraryUnavailable
+from book_watch.openlibrary import (
+    CallBudget,
+    OpenLibraryClient,
+    OpenLibraryUnavailable,
+)
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
@@ -49,14 +53,19 @@ class LazyCatalogue:
     Built on first use for the same reason the eBay client is
     (`listings.LazyBrowseSearch`): nothing that could fail should run while
     the compliance endpoint is trying to boot.
+
+    The pause itself is not held here — it lives in the client's module, so
+    it survives however many of these exist. What this avoids is the *other*
+    half of that bug: an httpx client rebuilt per request.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, connect: ConnectFn) -> None:
+        self._connect = connect
         self._client: OpenLibraryClient | None = None
 
     def _open(self) -> OpenLibraryClient:
         if self._client is None:
-            self._client = OpenLibraryClient()
+            self._client = OpenLibraryClient(CallBudget(self._connect))
         return self._client
 
     def identify_isbn(self, isbn: str):
@@ -86,7 +95,7 @@ def build_router(
     open_database: ConnectFn = (
         connect if connect is not None else open_configured_database
     )
-    open_library = catalogue if catalogue is not None else LazyCatalogue()
+    open_library = catalogue if catalogue is not None else LazyCatalogue(open_database)
 
     def render_list(request: Request) -> HTMLResponse:
         with closing(open_database()) as connection:

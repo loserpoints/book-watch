@@ -13,6 +13,8 @@ import pytest
 
 from book_watch import db
 from book_watch.openlibrary import (
+    BudgetExhausted,
+    CallBudget,
     Candidate,
     OpenLibraryClient,
     OpenLibraryUnavailable,
@@ -70,11 +72,37 @@ SEARCH = {
 }
 
 
-def build_client(handler, **kwargs) -> OpenLibraryClient:
+def in_memory_budget(**kwargs) -> CallBudget:
+    """A budget against a database that lasts as long as the test."""
+    connection = db.connect(":memory:")
+    db.migrate(connection)
+    connection.commit()
+    # One connection, handed out repeatedly: an in-memory database belongs to
+    # its connection, so opening a second one would be a different, empty
+    # database and nothing would ever be counted.
+    return CallBudget(lambda: _Uncloseable(connection), **kwargs)
+
+
+class _Uncloseable:
+    """Passes everything through but ignores close(), so the memory db lives on."""
+
+    def __init__(self, connection):
+        self._connection = connection
+
+    def __getattr__(self, name):
+        return getattr(self._connection, name)
+
+    def close(self):
+        pass
+
+
+def build_client(handler, budget=None, **kwargs) -> OpenLibraryClient:
     """A client wired to a fake Open Library, with the pause disabled."""
     kwargs.setdefault("min_interval_seconds", 0)
     return OpenLibraryClient(
-        client=httpx.Client(transport=httpx.MockTransport(handler)), **kwargs
+        budget or in_memory_budget(),
+        client=httpx.Client(transport=httpx.MockTransport(handler)),
+        **kwargs,
     )
 
 
@@ -278,7 +306,7 @@ def test_every_request_says_who_is_calling():
 
 
 def test_requests_are_spaced_out_without_the_caller_remembering_to():
-    """The pause lives in the client because a loop that forgets it is the risk."""
+    """The pause is enforced here because a loop that forgets it is the risk."""
     slept = []
     # The clock is read once after each request, and once before each request
     # that has one to wait for. Laid out in the order they happen:
@@ -454,6 +482,116 @@ def test_knowing_whether_a_number_needs_asking_about(database):
 # --- one real request -------------------------------------------------------
 
 
+def test_two_clients_cannot_between_them_go_twice_as_fast():
+    """The whole point of the pace being process-wide.
+
+    Open Library limits requests per address, which does not care how many
+    client objects this process happens to have built. A per-instance pause
+    would let each of these go at the full rate.
+    """
+    slept = []
+    ticks = iter([0.0, 0.1, 1.5, 1.6, 3.0])
+
+    def spaced(handler):
+        return build_client(
+            handler,
+            min_interval_seconds=1.5,
+            clock=lambda: next(ticks),
+            sleep=slept.append,
+        )
+
+    first, second = spaced(responds_with(STONER)), spaced(responds_with(STONER))
+
+    first.identify_isbn("9781590171998")
+    second.identify_isbn("9780374524128")
+    first.identify_isbn("9781598537024")
+
+    # The second client waits for the first, and the first waits for the
+    # second. Neither knows the other exists.
+    assert slept == [pytest.approx(1.4), pytest.approx(1.4)]
+
+
+# --- the ceiling ------------------------------------------------------------
+
+
+def test_every_request_is_counted():
+    budget = in_memory_budget()
+    client = build_client(responds_with(STONER), budget)
+
+    client.identify_isbn("9781590171998")
+    client.identify_isbn("9780374524128")
+
+    assert budget.spent() == 2
+
+
+def test_a_request_that_failed_still_counts():
+    """It reached them. A version that counted only successes would let a loop
+    of failures run for ever."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectTimeout("too slow")
+
+    budget = in_memory_budget()
+    with pytest.raises(OpenLibraryUnavailable):
+        build_client(handler, budget).identify_isbn("9781590171998")
+
+    assert budget.spent() == 1
+
+
+def test_past_the_ceiling_nothing_is_sent():
+    asked = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        asked.append(request.url)
+        return httpx.Response(200, json=STONER)
+
+    budget = in_memory_budget(ceiling=2)
+    client = build_client(handler, budget)
+
+    client.identify_isbn("9781590171998")
+    client.identify_isbn("9780374524128")
+    with pytest.raises(BudgetExhausted):
+        client.identify_isbn("9781598537024")
+
+    assert len(asked) == 2
+
+
+def test_being_over_budget_is_not_the_same_as_open_library_being_down():
+    """One means they could not answer. The other means we declined to ask.
+
+    A caller that retried this on a timer would be doing the exact thing the
+    ceiling exists to stop, so it must not be catchable as an outage.
+    """
+    assert not issubclass(BudgetExhausted, OpenLibraryUnavailable)
+
+
+def test_requests_outside_the_window_do_not_count():
+    budget = in_memory_budget(ceiling=2, window=timedelta(seconds=1))
+    client = build_client(responds_with(STONER), budget)
+
+    client.identify_isbn("9781590171998")
+    client.identify_isbn("9780374524128")
+
+    # Age both rows out of the window by hand.
+    budget._connect().execute(
+        "UPDATE openlibrary_call SET at = datetime('now', '-1 hour')"
+    )
+
+    assert budget.spent() == 0
+    client.identify_isbn("9781598537024")
+
+
+def test_old_rows_can_be_dropped():
+    budget = in_memory_budget()
+    build_client(responds_with(STONER), budget).identify_isbn("9781590171998")
+    budget._connect().execute(
+        "UPDATE openlibrary_call SET at = datetime('now', '-400 days')"
+    )
+
+    assert budget.forget_older_than() == 1
+    assert budget.spent() == 0
+
+
 @pytest.mark.network
 def test_a_real_lookup_returns_an_identity():
     """One real request. Run with `uv run pytest -m network`.
@@ -461,7 +599,7 @@ def test_a_real_lookup_returns_an_identity():
     Deselected by default. This is the test that catches Open Library changing
     its response shape, which the recorded ones structurally cannot.
     """
-    with OpenLibraryClient() as client:
+    with OpenLibraryClient(in_memory_budget()) as client:
         identity = client.identify_isbn("9781590171998")
 
     assert identity is not None

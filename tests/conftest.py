@@ -15,6 +15,8 @@ one.
 import httpx
 import pytest
 
+from book_watch.openlibrary import forget_the_pace
+
 
 @pytest.fixture(autouse=True)
 def no_accidental_network(request, monkeypatch):
@@ -36,3 +38,17 @@ def no_accidental_network(request, monkeypatch):
         )
 
     monkeypatch.setattr(httpx.HTTPTransport, "handle_request", refuse)
+
+
+@pytest.fixture(autouse=True)
+def a_fresh_pace():
+    """Forget when Open Library was last spoken to, between tests.
+
+    The pacing is process-wide on purpose — the limit is per address, not per
+    client object — which means it is also test-wide unless something clears
+    it. Without this, a test that faked the clock would leave a timestamp for
+    the next one to wait behind.
+    """
+    forget_the_pace()
+    yield
+    forget_the_pace()
