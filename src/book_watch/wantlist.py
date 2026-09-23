@@ -63,11 +63,19 @@ class Entry:
     def name(self) -> str:
         """What to call this on screen.
 
-        A book added by number alone has no title yet. The number is not one,
-        and putting it in a heading would say we know less than we do — the
-        ISBN is the part we are sure of, and it shows on its own line.
+        A book added by number alone has no title, and the number is not one —
+        putting it in a heading would claim less than we know, since the ISBN
+        is the part we are sure of and it shows on its own line.
+
+        Which of the two missing-title cases this is matters, because they are
+        not the same news. Before enrichment has run we have simply not asked
+        yet. After it has run, a title still missing means Open Library had no
+        record of the number, which is usually a mistyped digit and is the
+        reader's to act on rather than ours.
         """
-        return self.title or "Unknown title"
+        if self.title:
+            return self.title
+        return "Looking this up…" if self.being_enriched else "Unrecognised ISBN"
 
     @property
     def search_query(self) -> str:

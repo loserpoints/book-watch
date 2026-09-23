@@ -27,9 +27,27 @@ def test_a_book_added_with_no_title_has_no_title(connection):
     book = wantlist.add(connection, "9780099448396")
 
     assert book.title is None
-    assert book.name == "Unknown title"
     # Still searchable: the entry knows what it was added with.
     assert book.search_query == "9780099448396"
+
+
+def test_a_book_nobody_has_looked_up_yet_says_so(connection):
+    book = wantlist.add(connection, "9780099448396")
+
+    assert book.name == "Looking this up…"
+
+
+def test_a_book_open_library_had_no_record_of_says_that_instead(connection):
+    """Different news: we asked, and the number is not in the catalogue.
+
+    Usually a mistyped digit, which is the reader's to fix rather than ours.
+    """
+    book = wantlist.add(connection, "9780099448396")
+    connection.execute(
+        "UPDATE work SET enriched_at = datetime('now') WHERE id = ?", (book.work_id,)
+    )
+
+    assert wantlist.get(connection, book.id).name == "Unrecognised ISBN"
 
 
 def test_a_blank_title_is_stored_as_no_title(connection):
