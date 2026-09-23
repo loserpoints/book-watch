@@ -1,0 +1,23 @@
+-- Has this book's identity been established?
+--
+-- Distinct from `enriched_at`, which 003 added, and the two are genuinely
+-- different facts about a work:
+--
+--   resolved_at  one lookup, inline, when the book is added. Did Open Library
+--                recognise the title or the number?
+--   enriched_at  ten to fifteen lookups, in the background, for the numbers
+--                sellers declared in its listings. What the want-list's
+--                "still digging" tag reads.
+--
+-- Collapsing them would make a book we just failed to find indistinguishable
+-- from one nobody has looked at yet, and those read as different news: the
+-- first is usually a mistyped digit and the reader's to act on.
+--
+-- Inferring it from whether `openlibrary_work_id` is set was the alternative,
+-- and is exactly what decision 33 forbids — that column is a reference for
+-- looking something up by hand, never identity and never a flag.
+--
+-- Null for the rows 003 carried across, which is true: nothing has looked
+-- them up.
+
+ALTER TABLE work ADD COLUMN resolved_at TEXT;
