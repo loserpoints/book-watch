@@ -1308,3 +1308,86 @@ printing of the same book is not a duplicate. And a `collector` value that
 nothing reads, which decision 26 rightly warned is how a column quietly stops
 meaning what its name says — accepted here only because the alternative is a
 second migration over live data, and recorded so the warning is not forgotten.
+
+---
+
+## 35. A book is identified before it goes on the list
+
+**Decision.** Adding a book makes one Open Library request. By title, it
+searches and the person picks from a short list. By ISBN, it looks the number
+up and puts **the title the catalogue returned** on the list, not the one that
+was typed.
+
+**Alternatives.** Adding first and resolving in the background, so nothing
+waits. Requiring a confirmation click on the ISBN path. Keeping a typed title
+when one was given.
+
+**Why the catalogue's title wins.** This is decision 32's correction, built.
+A valid ISBN that names the wrong book passes every check this project has —
+the check digit is fine, eBay returns fifty real listings, and nothing looks
+wrong. Keeping the typed title would hide the single signal that reveals it:
+a number believed to be one book coming back as another. Verified against the
+number that caused it: `9780307474278` now reads back as *The Da Vinci Code*
+before the entry is created.
+
+**Why it happens inline rather than in the background.** One request, about a
+second. The ten to fifteen a book eventually costs are for the numbers sellers
+declare in its *listings*, and those still cannot run while someone waits. A
+read-back that arrives a minute later is not a read-back.
+
+**Timed, because the brief set a bar.** Adding a book must take under thirty
+seconds. Title search 0.9s, ISBN lookup 1.9s including the client's own pause.
+Picking from five candidates is more steps than typing thirteen digits and
+still nowhere near the bar.
+
+**An ISBN Open Library does not hold is offered, not refused.** It is usually
+a mistyped digit and occasionally a real book the catalogue lacks — every
+unresolvable number in S6's sample was a non-English edition of the right book.
+The person holding it decides, through the same override decision 29 already
+built for a failed check digit. Overriding asks Open Library nothing: the
+decision has been made, and asking again would be noise on a service that
+asks for low volume.
+
+**`resolved_at` is separate from `enriched_at`.** Two different facts: has this
+book been identified, and have the numbers in its listings been resolved. One
+is a single lookup at add time; the other is ten to fifteen in the background.
+Collapsed into one column, a book we just failed to find would be
+indistinguishable from one nobody has looked at, and those read as different
+news — the first is usually a typo and the reader's to act on. Inferring it
+from whether `openlibrary_work_id` is set was the alternative and is what
+decision 33 forbids: that column is a reference, never a flag.
+
+**A picked candidate is trusted from the form it was rendered into** rather
+than fetched again. That saves a second request, and is safe only because
+there is one user and no authentication (decision 25). It is the kind of thing
+that stops being safe quietly, so it is written here rather than assumed.
+
+**Cost.** Adding a book now depends on a third party being reachable. When it
+is not, the page says so and offers to add anyway — so the dependency degrades
+rather than blocks, but a book added during an outage carries no title until
+something looks again.
+
+---
+
+## 36. A test that reaches the network fails loudly
+
+**Decision.** `tests/conftest.py` replaces httpx's real transport for every
+test not marked `network`. An accidental request raises rather than succeeding.
+
+**Why, and it is not hypothetical.** Adding the Open Library client to the
+want-list router gave it a real default. The want-list tests did not pass a
+stub. The suite began making live requests to a non-profit on every run, and
+**nothing failed** — the only symptom was the suite taking four times as long,
+which is not something anyone watches.
+
+Decision 7 calls low volume a constraint rather than a preference, and CI
+running on every push is exactly the volume that gets an address blocked. A
+mistake that cannot be seen is worse than one that breaks the build.
+
+**Why at the transport and not the client.** The two kinds of faking already
+in use — `httpx.MockTransport` and the test client's ASGI transport — are
+different classes, so patching `HTTPTransport.handle_request` leaves them
+working and stops only a socket that would really open.
+
+**Cost.** One more thing in the way when a test genuinely wants the network,
+which is what `@pytest.mark.network` already exists to say (decision 15).

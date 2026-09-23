@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import sqlite3
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from typing import Literal
 
 #: Which hunt an entry is on. A reader will take any edition of the book; a
@@ -50,6 +50,7 @@ class Entry:
     added_at: str
     search_text: str | None
     edition_count: int
+    resolved_at: str | None
     enriched_at: str | None
     _single_isbn: str | None
 
@@ -68,14 +69,15 @@ class Entry:
         is the part we are sure of and it shows on its own line.
 
         Which of the two missing-title cases this is matters, because they are
-        not the same news. Before enrichment has run we have simply not asked
-        yet. After it has run, a title still missing means Open Library had no
-        record of the number, which is usually a mistyped digit and is the
-        reader's to act on rather than ours.
+        not the same news. Before anything has looked, we have simply not
+        asked — true of the books migration 003 carried across. Once we have
+        looked, a title still missing means Open Library had no record of the
+        number, which is usually a mistyped digit and is the reader's to act
+        on rather than ours.
         """
         if self.title:
             return self.title
-        return "Looking this up…" if self.being_enriched else "Unrecognized ISBN"
+        return "Looking this up…" if self.resolved_at is None else "Unrecognized ISBN"
 
     @property
     def search_query(self) -> str:
@@ -125,6 +127,7 @@ SELECT entry.id,
        entry.added_at,
        work.title,
        work.author,
+       work.resolved_at,
        work.enriched_at,
        count(edition.id) AS edition_count,
        min(edition.isbn) AS single_isbn
@@ -134,31 +137,65 @@ SELECT entry.id,
 """
 
 
+def add_identified(
+    connection: sqlite3.Connection,
+    *,
+    title: str,
+    author: str | None = None,
+    openlibrary_work_id: str | None = None,
+    isbn: str | None = None,
+) -> Entry:
+    """Put a book on the list that Open Library has already told us about.
+
+    Both resolved paths arrive here: a candidate picked from a title search,
+    and an ISBN whose record came back. The work is marked resolved, so a
+    missing title afterwards can only mean the lookup found nothing.
+    """
+    work_id = _existing_work(connection, isbn) if isbn else None
+    if work_id is None:
+        cursor = connection.execute(
+            """
+            INSERT INTO work (title, author, openlibrary_work_id, resolved_at)
+            VALUES (?, ?, ?, datetime('now'))
+            """,
+            (title, author, openlibrary_work_id),
+        )
+        work_id = int(cursor.lastrowid)
+        if isbn:
+            connection.execute(
+                "INSERT INTO edition (work_id, isbn) VALUES (?, ?)", (work_id, isbn)
+            )
+    return _add_reader_entry(
+        connection, work_id, search_text=None, duplicate=isbn or title
+    )
+
+
 def add(connection: sqlite3.Connection, isbn: str, title: str | None = None) -> Entry:
-    """Put a book on the list as a reader entry, to be found in any edition.
+    """Put a book on the list without anything having recognised it.
 
-    `isbn` is a normalised ISBN-13 for almost every call. It can also be text
-    that is not an ISBN at all, for the books that never had one (decision
-    29), in which case it becomes the entry's search text rather than an
-    edition.
+    Two callers, both deliberate. A number Open Library has no record of,
+    added anyway because the person holding the book says it is real. And
+    decision 29's override: text that is not an ISBN at all, for the books
+    that never had one, searched exactly as written.
 
-    Adding a number we already hold an edition for joins that edition's work
-    rather than making a second one — so two ISBNs of the same book, added by
-    hand, collapse into one entry once resolution has connected them.
-
-    Raises `DuplicateBook` if this book already has a reader entry.
+    `resolved_at` is set for the first and left null for the second. Asking
+    about something that is not a number would be asking a question with no
+    answer, so no claim is made about it either way.
     """
     title = (title or "").strip() or None
     is_isbn = len(isbn) == 13 and isbn.isdigit()
 
     work_id = _existing_work(connection, isbn) if is_isbn else None
     if work_id is None:
-        # No title, no invention. A book added by number alone stays untitled
-        # until Open Library or a person supplies one; an override entry takes
-        # the text typed, because that text is the only name it has.
+        # No title, no invention. A number that was looked up and not found
+        # stays untitled; an override entry takes the text typed, because that
+        # text is the only name it has.
         cursor = connection.execute(
-            "INSERT INTO work (title) VALUES (?)",
-            (title if is_isbn else title or isbn,),
+            "INSERT INTO work (title, resolved_at) VALUES (?, ?)",
+            (
+                title if is_isbn else title or isbn,
+                datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S") if is_isbn else None,
+            ),
         )
         work_id = int(cursor.lastrowid)
         if is_isbn:
@@ -166,18 +203,30 @@ def add(connection: sqlite3.Connection, isbn: str, title: str | None = None) -> 
                 "INSERT INTO edition (work_id, isbn) VALUES (?, ?)", (work_id, isbn)
             )
 
+    return _add_reader_entry(
+        connection, work_id, search_text=None if is_isbn else isbn, duplicate=isbn
+    )
+
+
+def _add_reader_entry(
+    connection: sqlite3.Connection,
+    work_id: int,
+    *,
+    search_text: str | None,
+    duplicate: str,
+) -> Entry:
     try:
         cursor = connection.execute(
             """
             INSERT INTO entry (work_id, hunt, edition_id, search_text)
-            VALUES (?, ?, NULL, ?)
+            VALUES (?, 'reader', NULL, ?)
             """,
-            (work_id, "reader", None if is_isbn else isbn),
+            (work_id, search_text),
         )
     except sqlite3.IntegrityError as exc:
         # The partial unique index is the only constraint this insert can
         # break: one reader entry per work.
-        raise DuplicateBook(isbn) from exc
+        raise DuplicateBook(duplicate) from exc
     return get(connection, int(cursor.lastrowid))
 
 
@@ -214,7 +263,9 @@ def remove(connection: sqlite3.Connection, entry_id: int) -> bool:
     return cursor.rowcount > 0
 
 
-def _existing_work(connection: sqlite3.Connection, isbn: str) -> int | None:
+def _existing_work(connection: sqlite3.Connection, isbn: str | None) -> int | None:
+    if isbn is None:
+        return None
     row = connection.execute(
         "SELECT work_id FROM edition WHERE isbn = ?", (isbn,)
     ).fetchone()
@@ -231,6 +282,7 @@ def _to_entry(row: sqlite3.Row) -> Entry:
         added_at=row["added_at"],
         search_text=row["search_text"],
         edition_count=row["edition_count"],
+        resolved_at=row["resolved_at"],
         enriched_at=row["enriched_at"],
         _single_isbn=row["single_isbn"],
     )
