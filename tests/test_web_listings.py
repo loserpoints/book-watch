@@ -257,15 +257,102 @@ def test_the_book_page_searches_for_that_book(book_client):
 
 
 def test_the_page_says_when_it_fetched(book_client):
-    """So live data is never mistaken for stored data — and so there is
-    somewhere for "last checked on Tuesday" to go when the poll lands."""
+    """So live data is never mistaken for stored data.
+
+    The ad-hoc search is always live and says "fetched". The book page reads
+    the store and says when the store was filled, which after S12 is a
+    different claim and deserves a different word.
+    """
     client = book_client(returning(a_listing()))
     add_book(client, "9780099448396", "Crash")
 
     assert (
         "fetched 20" in book_client(returning(a_listing())).get("/search?isbn=x").text
     )
-    assert "fetched 20" in client.get("/book/1").text
+    assert "checked 20" in client.get("/book/1").text
+
+
+# --- the page reads the store ----------------------------------------------
+
+
+def test_a_second_view_does_not_search_ebay_again(book_client):
+    """Decision 30 as amended. Measured: one search is 1.8 seconds."""
+    searches = []
+
+    def search(query, limit):
+        searches.append(query)
+        return [a_listing()]
+
+    client = book_client(search)
+    add_book(client, "9780099448396", "Crash")
+
+    client.get("/book/1")
+    client.get("/book/1")
+    client.get("/book/1")
+
+    assert len(searches) == 1
+
+
+def test_looking_again_searches_again(book_client):
+    searches = []
+
+    def search(query, limit):
+        searches.append(query)
+        return [a_listing()]
+
+    client = book_client(search)
+    add_book(client, "9780099448396", "Crash")
+
+    client.get("/book/1")
+    client.get("/book/1?refresh=1")
+
+    assert len(searches) == 2
+
+
+def test_a_copy_that_has_stopped_appearing_stops_being_shown(book_client):
+    """It was sold or withdrawn. Keeping it would make this a list of things
+    that used to be buyable."""
+    listings = [a_listing()]
+    client = book_client(lambda query, limit: list(listings))
+    add_book(client, "9780099448396", "Crash")
+    assert "https://www.ebay.com/itm/123" in client.get("/book/1").text
+
+    listings.clear()
+
+    assert "https://www.ebay.com/itm/123" not in client.get("/book/1?refresh=1").text
+
+
+def test_the_page_never_fetches_a_listings_details(book_client):
+    """Measured at 0.51s each: fifty of them is twenty-five seconds.
+
+    There is no detail client wired to this router at all, so the assertion is
+    that the page renders without one — if it ever needs one, this fails by
+    raising rather than by being slow.
+    """
+    client = book_client(returning(a_listing()))
+    add_book(client, "9780099448396", "Crash")
+
+    assert client.get("/book/1").status_code == 200
+
+
+def test_copies_nobody_has_examined_yet_are_said_to_be_unexamined(book_client):
+    client = book_client(returning(a_listing()))
+    add_book(client, "9780099448396", "Crash")
+
+    page = client.get("/book/1").text
+
+    assert "Still going through the shelves" in page
+
+
+def test_a_copy_only_the_title_matches_goes_below_the_fold(book_client):
+    """Text alone never reaches certain. Decision 33: 36% precision on the
+    edition question, 12% on one book."""
+    client = book_client(returning(a_listing(title="Crash by J. G. Ballard")))
+    add_book(client, "9780099448396", "Crash")
+
+    page = client.get("/book/1").text
+
+    assert "might be this book" in page
 
 
 def test_an_empty_result_says_when_it_checked(book_client):

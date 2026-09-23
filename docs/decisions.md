@@ -1563,3 +1563,47 @@ quietly started calling Open Library for real (decision 36).
 **What this does not cover.** Two machines would have two paces and two
 ceilings; the deploy runs `scale count 1`, so today there is one. If that ever
 changes, both controls need to move behind something shared.
+
+---
+
+## 40. A page view spends one search and nothing else
+
+**Decision.** Opening a book runs at most one eBay search, and only when that
+book has never been searched for or the reader asks to look again. It never
+fetches a listing's details. Everything else it shows was written down
+earlier.
+
+**Measured, which is what makes this a constraint rather than a preference.**
+
+| | |
+|---|---|
+| One eBay search | ~1.8s |
+| One per-listing detail call | ~0.51s |
+| Fifty listings' details | **25.5s** |
+
+The bar is a couple of seconds and the search alone spends most of it. There
+is no bounded number of detail calls that fits — even two is over. So the
+question S11 left open, whether to fetch details for every result or only the
+ones shown, has no version that belongs on a page at all. It belongs in the
+background.
+
+**What that costs, honestly.** The first view of a new book grades everything
+on its listing name alone, so almost nothing reaches *certain*. Verified on a
+real book: twelve copies of *Stoner*, first view nine seconds too slow to
+fetch and therefore **0 matches, 12 that might be**. After the same twelve
+were examined — six distinct numbers, seven Open Library requests — the same
+page read **9 matches, 3 that might be**.
+
+The page says so rather than hiding it. A spinner would claim the list is
+still arriving; it is not, it is arriving *less certain than it will be*, and
+those are different promises.
+
+**Copies are replaced, not merged.** A copy that has stopped appearing has
+been sold or withdrawn, and keeping it would turn the store into a list of
+things that used to be buyable.
+
+**Second views cost nothing.** Measured at 11ms against 2.6s for the first.
+
+**Cost.** The store can be stale, and a reader cannot tell how stale without
+the timestamp — which is why the page carries one and always has. "Look
+again" is the manual version of the poll that *Always current* automates.
