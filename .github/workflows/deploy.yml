@@ -8,12 +8,27 @@ name: Deploy
 #   FLY_API_TOKEN            a deploy token, scoped to this app only
 #   EBAY_VERIFICATION_TOKEN  the same value set as a secret on Fly
 
-# Manual only, deliberately. Deploying on every push to main had two problems:
-# before the secrets exist it fails and leaves main red, and it races CI rather
-# than waiting for it — a push could deploy a build CI was about to reject.
-# Clicking Run workflow after CI goes green avoids both, and suits a project
-# where deploys are rare and the endpoint's uptime is load-bearing.
+# Deploys when CI goes green on main, and on demand.
+#
+# This was manual only, for two reasons. One has expired: the Fly and eBay
+# secrets now exist, so a deploy no longer fails for want of them. The other
+# was real and is handled here rather than avoided — chaining to CI's
+# *completion* rather than to the push means this cannot deploy a build CI was
+# about to reject.
+#
+# What changed the balance was measuring the cost of not doing it. Deploys
+# being manual let production sit twelve slices behind main, so the next one
+# carried six migrations at once — including the one that rewrites every
+# want-list row. Six boring deploys with one suspect each are worth more than
+# one interesting deploy with six.
+#
+# `workflow_dispatch` stays. Redeploying without a commit is worth having when
+# a machine needs restarting or a secret has changed.
 on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
 
 # One deploy at a time. Two overlapping ones can leave the machine running an
@@ -24,6 +39,12 @@ concurrency:
 
 jobs:
   deploy:
+    # A finished CI run is not a passing one. Without this, a red build on
+    # main would deploy itself — which is worse than the manual process this
+    # replaces, not better.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
