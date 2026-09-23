@@ -74,13 +74,19 @@ search misses, because plenty of sellers never type the ISBN at all. Decision
 32 has the numbers. Searching by title and author instead finds many editions
 but reaches any *specific* one poorly.
 
-**The open question, and it is the real one.** A work has many editions, and
-covering all of them looks like one search per edition — which is both slow on
-a page and wasteful of the call budget. Whether that is solved by caching the
-edition set hard, by covering only the editions that actually have inventory,
-or by a title-level search filtered on known product ids, is not known. This is
-what the first slice of *The right book* exists to settle, and it should settle it by
-measuring rather than by choosing.
+**The open question is now settled, by measurement.** A work has many editions
+— 4,042 of *Pride and Prejudice* — so one search per edition was never merely
+expensive, it was incoherent. Decision 33 has the answer and the numbers behind
+it: one wide, cheap search on title and author, then every listing **graded**
+into confidence tiers by identifier rather than filtered. Nothing uncertain is
+discarded; it is labelled and shown lower down. Against 227 hand-classified
+listings, nothing true was hidden on either of the two use cases.
+
+**What that decision leaves for this milestone to decide.** Reading mode wants
+an entry to mean a work; collectible mode wants it to mean one edition, because
+the listings it rejects are precisely the ones another entry would want. The
+entry therefore needs to carry which hunt it is — which is *Two kinds of hunt*
+arriving early, and worth confronting here rather than designing around.
 
 **It will pull storage forward.** Whatever the answer, re-searching every
 edition on every page view is not it — so some of *Always current*'s caching arrives here.
