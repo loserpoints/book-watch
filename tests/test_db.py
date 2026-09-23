@@ -27,7 +27,10 @@ def table_names(connection) -> set[str]:
 def test_migrating_a_fresh_database_creates_the_schema(database):
     applied = db.migrate(database)
 
-    assert applied == ["001_initial.sql"]
+    # Every migration on disk, in filename order. Asserting the exact list
+    # rather than a prefix means adding one to the package without adding it
+    # here is a failing test rather than a silent gap.
+    assert applied == [f.name for f in sorted(db.MIGRATIONS_DIR.glob("*.sql"))]
     assert "book" in table_names(database)
 
 
@@ -46,8 +49,11 @@ def test_a_migration_already_recorded_is_not_run_again(database, tmp_path):
     db.pending(database)  # creates the ledger
     database.execute("INSERT INTO schema_migration (name) VALUES ('001_initial.sql')")
 
-    assert db.migrate(database) == []
-    # Nothing ran, so the table the migration would have created is absent.
+    applied = db.migrate(database)
+
+    assert "001_initial.sql" not in applied
+    # It did not run, so the table it would have created is absent — while
+    # the ones after it ran normally.
     assert "book" not in table_names(database)
 
 

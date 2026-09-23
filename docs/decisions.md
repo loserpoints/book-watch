@@ -139,6 +139,57 @@ states its APIs are not intended as a backend for third-party services and asks
 for caching and low volume. The daily polling loop must read the cache and
 never call Open Library directly. Violating this risks being blocked.
 
+**Amended, 2026-09-23.** "Resolves into an edition set, refreshed monthly" is
+no longer what happens, and with the edition set gone there is nothing left
+that goes stale monthly. This entry now describes two questions:
+
+1. **What is this book?** Asked once, when a book is added. One request
+   returns a handful of candidates for a person to choose from.
+2. **What is this number?** Asked once, the first time a seller-declared ISBN
+   is seen in a listing. The answer is written down and never asked for again.
+
+**The edition set was dropped because it was measured.** The plan was to pull
+every edition of a book when it was added. Against what sellers actually
+declared:
+
+| | Editions fetched | Numbers sellers typed | Overlap | Fetched, never seen |
+|---|---|---|---|---|
+| Crash | 15 | 10 | **4** | 11 |
+| Stoner | 46 | 15 | **7** | 39 |
+
+It covered under half of what we met and about 80% of it was dead weight.
+Worse, Open Library returns editions in record-creation order, so any cap on
+the download is an arbitrary slice — *Pride and Prejudice* has 4,042 and there
+is no way to ask for the ones likely to be for sale. And the same book is filed
+under several works, so the set is incomplete at any cap. The numbers we care
+about accumulate from listings instead: roughly 10–15 per book on its first
+search, then almost nothing.
+
+**Two lifetimes, not one.** What a number *is* cannot change, so a found
+answer never expires. A **miss** can, because Open Library gains records — but
+slowly, and every miss measured was a non-English edition, the population it is
+weakest on. Ninety days: four questions a year per unknown number rather than
+one a day. Decision 33 requires a miss and a failure to reach Open Library stay
+distinguishable, so a miss is recorded and an outage writes nothing.
+
+**No author is resolved, and that leaves a known gap.** Open Library holds
+authors as internal references and files one person under several of them, so
+turning them into names costs a request per author. Removing the author check
+entirely changed zero answers out of 227 hand-labelled listings, because the
+eBay search has already filtered by author before anything is looked up. The
+gap it leaves: a *different* book with the same title, whose ISBN a seller
+declared, would pass. Never seen in the sample, unmeasured beyond it, and
+catching it means an author lookup per record. Worth revisiting only if it is
+ever actually observed.
+
+**What this costs, and why enrichment cannot run while someone waits.** A new
+book's first search is 10–15 Open Library requests in quick succession. A
+want-list filled in one evening would be two to three hundred in a few minutes,
+which is precisely the volume this entry calls a constraint. So a book is added
+and shown immediately, and its numbers are looked up in the background with a
+pause between them. The want-list says so while that is happening, and listings
+firm up from *possible* to *certain* as it completes.
+
 ---
 
 ## 8. In-process scheduling, daily
