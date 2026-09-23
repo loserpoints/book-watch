@@ -85,6 +85,12 @@ class Listing:
     title: str
     price: Money
     item_web_url: str
+    #: eBay's own product id, where its catalogue matched this listing to one.
+    #: Decision 33: it is one of three identifier signals and the least
+    #: trustworthy — it over-merges, so distinct Crash editions share one —
+    #: but it finds 80% of the copies of a given edition, which nothing else
+    #: does. Absent on about a fifth of used-book listings.
+    epid: str | None = None
     condition: str | None = None
     condition_id: str | None = None
     seller: str | None = None
@@ -240,6 +246,7 @@ def _parse_listing(item: Any, index: int) -> Listing:
         item_id=_require_str(item, "itemId", index),
         title=_require_str(item, "title", index),
         price=_require_money(item.get("price"), "price", index),
+        epid=_optional_str(item.get("epid")),
         item_web_url=_require_str(item, "itemWebUrl", index),
         condition=_optional_str(item.get("condition")),
         condition_id=_optional_str(item.get("conditionId")),
