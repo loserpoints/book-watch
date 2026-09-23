@@ -1216,6 +1216,39 @@ change.
   *The Disaster Area* all match "crash" and "ballard". None carries a declared
   ISBN, which is exactly why it falls to the text tier.
 
+> **Corrected, 2026-09-23: a title is not a book.** The rule compared titles
+> alone. The author was dropped twice — in S7 and again in S10 — each time on
+> a measurement saying it changed no answers, taken across three books whose
+> titles are effectively unique in the catalogue. **The sample could not show
+> the failure**, which is the same methodological error the corpus caught over
+> the text threshold, made again.
+>
+> In production, three different books called *Breaking and Entering* graded
+> certain against each other: Joy Williams's novel, Don Gillmor's novel, and
+> Philip Carlson's manual for working actors. Open Library confirmed each
+> number was something by that name, because it was. Decision 7 records this
+> exact gap and calls it "never seen in the sample" — it has now been seen, by
+> the first book added with a common title.
+>
+> The author eBay's aspects already carry now rejects a match, and only ever
+> rejects: two names agreeing proves nothing, since every listing for a famous
+> title names its famous author. It rejects only when the listing's own name
+> also fails to mention the author, because requiring less hid a real copy of
+> *Stoner* whose seller had typed the translator into that field, and a copy
+> of *Crash* whose seller had typed "NA".
+>
+> Scored against the corpus with the declared author added to all 227 rows:
+> every tier unchanged, recall still 100% on both hunts on all three books.
+> The change costs nothing measurable and fixes what was observed.
+>
+> **The worse half was in enrichment, not here.** A pass learning which
+> numbers belong to a book used the same title-only rule, so Gillmor's ISBN
+> became an *edition* of Joy Williams's book — and a known edition makes every
+> future listing declaring it certain ahead of any other evidence. That check
+> is now the strictest in the app, and deliberately stricter than this one: a
+> wrong edition contaminates everything after it, while a rejected right one
+> merely has to be recognised the ordinary way.
+
 **An ISBN that does not resolve is absence of evidence, not evidence of
 absence.** A declared ISBN that Open Library resolves to a *different* book
 excludes the listing. One it cannot resolve at all must not — it falls through

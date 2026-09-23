@@ -48,6 +48,10 @@ class Declared:
 
     item_id: str
     isbn: str | None = None
+    #: Enough to rule a listing out, never enough to rule one in. A title is
+    #: not a book: three different books called "Breaking and Entering" graded
+    #: certain against each other until this was read.
+    author: str | None = None
     format: str | None = None
     publisher: str | None = None
     published: str | None = None
@@ -136,6 +140,7 @@ def _declared(item_id: str, payload: Any) -> Declared:
     return Declared(
         item_id=item_id,
         isbn=declared_isbn(aspects),
+        author=aspects.get("Author"),
         format=aspects.get("Format"),
         publisher=aspects.get("Publisher"),
         published=aspects.get("Publication Year"),

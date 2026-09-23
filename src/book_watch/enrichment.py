@@ -28,7 +28,7 @@ from dataclasses import dataclass
 
 from book_watch.ebay.declarations import Declarations
 from book_watch.ebay.errors import EbayError
-from book_watch.matching import names_the_same_book
+from book_watch.matching import names_the_same_book, surnames
 from book_watch.openlibrary import BudgetExhausted, OpenLibraryUnavailable, Resolver
 
 logger = logging.getLogger(__name__)
@@ -51,6 +51,8 @@ class Pass:
     examined: int = 0
     resolved: int = 0
     editions_learned: int = 0
+    #: Whether this pass gave the book itself a title it had been missing.
+    identified: bool = False
     completed: bool = False
     stopped_because: str | None = None
 
@@ -93,6 +95,9 @@ def _run(
 
     declarations = declarations_for(connection)
     examined = 0
+    identified = False
+    #: Every number seen, and an author some seller attached to it.
+    claimed_by: dict[str, str | None] = {}
     numbers: set[str] = set()
 
     item_ids = [
@@ -114,11 +119,23 @@ def _run(
             examined += 1
         if declared.isbn:
             numbers.add(declared.isbn)
+            claimed_by.setdefault(declared.isbn, declared.author)
     connection.commit()
 
     resolver = resolver_for(connection)
     resolved = learned = 0
     wanted = title["title"]
+
+    # A book added before there was anything to identify it with never got a
+    # title, and nothing since would ever give it one: only the add path
+    # writes `resolved_at`, and these rows predate it. They sit on the
+    # want-list reading "Looking this up…" for ever.
+    #
+    # Its own number is already in `edition`, so the answer costs one lookup
+    # that this pass was going to make anyway. Healing it here rather than in
+    # a one-off backfill means the next such gap heals itself too.
+    if wanted is None:
+        wanted, identified = _identify_the_book(connection, work_id, resolver)
     for isbn in sorted(numbers):
         already = resolver.known(isbn)
         try:
@@ -137,7 +154,16 @@ def _run(
             resolved += 1
         # A number the catalogue says is this book becomes one of its editions,
         # so the next copy declaring it is certain without asking anything.
+        #
+        # Which is exactly why this is the strictest check in the app. An
+        # edition learned wrongly is not one bad listing — it is a number that
+        # makes every future listing declaring it *certain*, ahead of any
+        # other evidence. Three books called "Breaking and Entering" got in
+        # this way: the catalogue agreed each number was something by that
+        # name, because it was.
         if wanted and identity and names_the_same_book(identity.title, wanted):
+            if _by_someone_else(connection, work_id, claimed_by.get(isbn)):
+                continue
             learned += _remember_edition(connection, work_id, identity)
     connection.commit()
 
@@ -145,7 +171,51 @@ def _run(
         "UPDATE work SET enriched_at = datetime('now') WHERE id = ?", (work_id,)
     )
     connection.commit()
-    return Pass(examined, resolved, learned, completed=True)
+    return Pass(examined, resolved, learned, completed=True, identified=identified)
+
+
+def _by_someone_else(
+    connection: sqlite3.Connection, work_id: int, claimed: str | None
+) -> bool:
+    """Does a seller say this number is by an author this book does not have?
+
+    Stricter than the grader's version, deliberately. The grader lets a
+    listing's own name vouch for the author, because one mistyped field should
+    not hide a real copy. Here the cost is reversed: admitting a wrong number
+    contaminates every future listing that declares it, while rejecting a
+    right one only means it has to be recognised the ordinary way.
+    """
+    if not claimed:
+        return False
+    row = connection.execute(
+        "SELECT author FROM work WHERE id = ?", (work_id,)
+    ).fetchone()
+    wanted = surnames(row["author"]) if row and row["author"] else set()
+    return bool(wanted) and not (wanted & surnames(claimed))
+
+
+def _identify_the_book(
+    connection: sqlite3.Connection, work_id: int, resolver: Resolver
+) -> tuple[str | None, bool]:
+    """Give an untitled book its title, from a number already on its shelf."""
+    for row in connection.execute(
+        "SELECT isbn FROM edition WHERE work_id = ? AND isbn IS NOT NULL ORDER BY id",
+        (work_id,),
+    ):
+        identity = resolver.identify(row["isbn"])
+        if identity is None:
+            continue
+        connection.execute(
+            "UPDATE work SET title = ?, resolved_at = datetime('now') WHERE id = ?",
+            (identity.title, work_id),
+        )
+        return identity.title, True
+    # Asked, and the catalogue has nothing. Recording that stops the want-list
+    # claiming somebody is still looking, which would no longer be true.
+    connection.execute(
+        "UPDATE work SET resolved_at = datetime('now') WHERE id = ?", (work_id,)
+    )
+    return None, True
 
 
 def _remember_edition(connection: sqlite3.Connection, work_id: int, identity) -> int:

@@ -16,7 +16,7 @@ import sqlite3
 
 from book_watch.ebay.detail import Declared, ItemDetailClient
 
-_COLUMNS = "item_id, isbn, format, publisher, published, category"
+_COLUMNS = "item_id, isbn, author, format, publisher, published, category"
 
 
 class Declarations:
@@ -74,12 +74,13 @@ class Declarations:
         self._connection.execute(
             f"""
             INSERT INTO listing_declaration ({_COLUMNS})
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT (item_id) DO NOTHING
             """,
             (
                 declared.item_id,
                 declared.isbn,
+                declared.author,
                 declared.format,
                 declared.publisher,
                 declared.published,
@@ -92,6 +93,7 @@ def _to_declared(row: sqlite3.Row) -> Declared:
     return Declared(
         item_id=row["item_id"],
         isbn=row["isbn"],
+        author=row["author"],
         format=row["format"],
         publisher=row["publisher"],
         published=row["published"],

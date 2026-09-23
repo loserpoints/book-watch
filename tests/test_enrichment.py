@@ -287,3 +287,108 @@ def test_a_book_that_is_gone_is_not_an_error(database):
     result = enrichment.enrich(connect, 999, lambda c: None, lambda c: None)
 
     assert result.stopped_because == "no such book"
+
+
+# --- a book that was never identified --------------------------------------
+#
+# Every book added by number during M1 sits in this state: migration 003
+# carried it across with no title, migration 004 gave it a null `resolved_at`,
+# and only the *add* path ever writes that column. The want-list reads
+# "Looking this up…" for ever, and nobody is.
+
+
+def an_untitled_book(connection, isbn="9780679726197"):
+    connection.execute("INSERT INTO work (id) VALUES (2)")
+    connection.execute("INSERT INTO entry (work_id, hunt) VALUES (2, 'reader')")
+    connection.execute("INSERT INTO edition (work_id, isbn) VALUES (2, ?)", (isbn,))
+    connection.commit()
+
+
+def test_a_pass_gives_an_untitled_book_its_title(database):
+    connect, connection = database
+    an_untitled_book(connection)
+    resolver = CountingResolver(connection, {"9780679726197": STONER})
+
+    result = enrichment.enrich(
+        connect, 2, lambda c: Declarations(c, CountingDetail({})), lambda c: resolver
+    )
+
+    assert result.identified
+    row = connection.execute(
+        "SELECT title, resolved_at FROM work WHERE id = 2"
+    ).fetchone()
+    assert row["title"] == "Stoner"
+    assert row["resolved_at"] is not None
+
+
+def test_a_book_the_catalogue_cannot_identify_stops_saying_it_is_being_looked_up(
+    database,
+):
+    """Asked, and there is no answer. Claiming somebody is still looking
+    would no longer be true."""
+    connect, connection = database
+    an_untitled_book(connection, "9788925538297")
+    resolver = CountingResolver(connection, {"9788925538297": None})
+
+    enrichment.enrich(
+        connect, 2, lambda c: Declarations(c, CountingDetail({})), lambda c: resolver
+    )
+
+    row = connection.execute(
+        "SELECT title, resolved_at FROM work WHERE id = 2"
+    ).fetchone()
+    assert row["title"] is None
+    assert row["resolved_at"] is not None
+
+
+def test_a_book_that_already_has_a_title_is_left_alone(database):
+    _, connection = database
+    a_copy(connection, "v1|1|0")
+
+    result, _ = run(database, CountingDetail({}), {})
+
+    assert not result.identified
+
+
+def test_a_number_a_seller_attributes_to_someone_else_is_not_learned(database):
+    """The strictest check in the app, and the reason is asymmetric.
+
+    An edition learned wrongly is not one bad listing — it is a number that
+    makes every future listing declaring it *certain*, ahead of any other
+    evidence. That is how Don Gillmor's *Breaking and Entering* became an
+    edition of Joy Williams's.
+    """
+    _, connection = database
+    connection.execute("UPDATE work SET author = 'Joy Williams' WHERE id = 1")
+    connection.execute("UPDATE work SET title = 'Breaking and Entering' WHERE id = 1")
+    a_copy(connection, "v1|1|0")
+    connection.commit()
+    detail = CountingDetail(
+        {"v1|1|0": Declared("v1|1|0", isbn="9781771965231", author="Don Gillmor")}
+    )
+    gillmor = EditionIdentity(
+        isbn="9781771965231",
+        title="Breaking and Entering",
+        work_id="OL00000W",
+        publisher="Biblioasis",
+        published="2023",
+        physical_format="Trade Paperback",
+    )
+
+    result, _ = run(database, detail, {"9781771965231": gillmor})
+
+    assert result.editions_learned == 0
+    assert connection.execute("SELECT count(*) AS n FROM edition").fetchone()["n"] == 0
+
+
+def test_a_number_nobody_attributed_is_still_learned(database):
+    """The check can only reject on a disagreement, never on an absence."""
+    _, connection = database
+    connection.execute("UPDATE work SET author = 'John Williams' WHERE id = 1")
+    a_copy(connection, "v1|1|0")
+    connection.commit()
+    detail = CountingDetail({"v1|1|0": Declared("v1|1|0", isbn="9781590171998")})
+
+    result, _ = run(database, detail, {"9781590171998": STONER})
+
+    assert result.editions_learned == 1

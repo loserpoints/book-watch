@@ -137,6 +137,7 @@ def scored(book: str, hunt: str, truth: str):
     meta = CORPUS["books"][book]
     target = Target(
         title=meta["title"],
+        author=meta["author"],
         isbns=frozenset({meta["isbn"]}),
         epids=frozenset({meta["epid"]}),
     )
@@ -151,6 +152,7 @@ def scored(book: str, hunt: str, truth: str):
                 row["epid"],
                 row["declared_isbn"],
                 row["identity_title"],
+                row.get("declared_author"),
             ),
             target,
             hunt=hunt,
@@ -236,3 +238,91 @@ def test_identifiers_beat_text_where_it_matters_most():
 
     assert precision(tiers, "certain") >= 90
     assert precision(tiers, "possible") <= 40
+
+
+# --- a title is not a book --------------------------------------------------
+
+
+BREAKING = Target(title="Breaking and Entering", author="Joy Williams")
+
+
+def test_a_same_titled_book_by_someone_else_is_excluded():
+    """Found in production, not in the corpus.
+
+    Three different books are called *Breaking and Entering*. Open Library
+    confirms each number is something by that name, which it is, so comparing
+    titles alone graded all three certain against each other.
+    """
+    gillmor = Evidence(
+        "Breaking and Entering - paperback Gillmor, Don",
+        declared_isbn="9781771965231",
+        identity="Breaking and Entering",
+        declared_author="Don Gillmor",
+    )
+
+    assert grade(gillmor, BREAKING) == "excluded"
+
+
+def test_the_right_book_by_the_right_author_still_passes():
+    williams = Evidence(
+        "Breaking and Entering - Paperback By Williams, Joy",
+        declared_isbn="9780394757735",
+        identity="Breaking and entering",
+        declared_author="Joy Williams",
+    )
+
+    assert grade(williams, BREAKING) == "certain"
+
+
+def test_a_seller_who_typed_the_translator_does_not_lose_the_listing():
+    """The listing's own name vouches for the author, so one wrong field
+    cannot hide it. This cost a real copy of *Stoner* before the rule
+    required two independent signals to disagree."""
+    italian = Evidence(
+        "John Edward Williams Stefano Tummolini Stoner (Paperback) (UK IMPORT)",
+        declared_isbn="9788804732495",
+        declared_author="Stefano Tummolini",
+    )
+    stoner = Target(title="Stoner", author="John Williams")
+
+    assert grade(italian, stoner) != "excluded"
+
+
+def test_a_seller_who_typed_nothing_useful_does_not_lose_the_listing():
+    """ "NA" is a placeholder, and the title says Ballard plainly."""
+    crash = Evidence("Crash J.G. Ballard", declared_author="NA")
+
+    assert grade(crash, Target(title="Crash", author="J. G. Ballard")) != "excluded"
+
+
+def test_the_number_being_watched_survives_a_wrong_author():
+    """A seller who typed the wrong author has mistyped, not sold another book."""
+    listing = Evidence(
+        "Crash",
+        declared_isbn="9780374524128",
+        declared_author="Somebody Else",
+    )
+
+    assert (
+        grade(
+            listing,
+            Target(
+                title="Crash",
+                author="J. G. Ballard",
+                isbns=frozenset({"9780374524128"}),
+            ),
+        )
+        == "certain"
+    )
+
+
+def test_an_entry_with_no_author_rejects_nothing_on_that_basis():
+    """Entries added before authors were asked for must not start failing."""
+    gillmor = Evidence(
+        "Breaking and Entering by Gillmor, Don",
+        declared_isbn="9781771965231",
+        identity="Breaking and Entering",
+        declared_author="Don Gillmor",
+    )
+
+    assert grade(gillmor, Target(title="Breaking and Entering")) == "certain"
