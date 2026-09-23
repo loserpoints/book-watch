@@ -1449,6 +1449,65 @@ adjusted until green.
 
 ---
 
+## 38. Open Library's data dump is the right answer for a second user, and the wrong one for the first
+
+**Decision.** Keep asking Open Library about numbers one at a time, and cache
+every answer. Take the monthly editions dump instead the moment this app
+serves anybody but its author.
+
+**The numbers for one user.** Measured from the 36 lookups S6 actually made:
+
+| | |
+|---|---|
+| Average `/isbn/` response | 1,332 bytes |
+| Editions dump | 9.2 GB, monthly |
+| One dump, in lookups' worth of bytes | **7.4 million** |
+
+A twenty-book want-list costs about 240 lookups **ever** — 312 KB — and then
+effectively nothing, because a number's identity does not change and the
+answer is written down. Taking the dump to avoid that would replace 312 KB
+with 9.2 GB, or 110 GB a year refreshed monthly. Open Library asks people not
+to use the API for bulk because it affects their ability to serve patrons;
+for a single user, downloading the dump *is* the bulk they are asking us to
+avoid, wearing the right hat.
+
+**Why that reverses with a second user, and it is not about bytes.** The
+published limit is **1 request per second per IP** (3 if identified). Per IP,
+not per user. So every cache miss for every user queues behind the same
+one-per-second door, and the ceiling does not move no matter how well the
+cache works. Open Library's own guidance draws the same line: the API is for
+"real-time, low-volume, high-value use" and is "not intended as a backend."
+One person looking a number up now and then is not a backend. A service is,
+whatever it weighs.
+
+Byte counts are the right measure for one user and the wrong one for a
+service. This entry originally argued the first case and treated it as
+settling the second, which it does not.
+
+**The trigger, so it is a condition rather than a judgement.** The second
+person to use this app. Not a request count, not a traffic threshold — the
+moment a lookup happens on behalf of somebody who is not the author, the
+API is being used as a backend.
+
+**What changes when it fires.**
+
+- The notebook stops being a cache of answers and becomes a local catalogue.
+- The API becomes the fallback for genuine misses only: editions catalogued
+  since the last dump, which is a small and shrinking tail.
+- The monthly refresh starts being worth its cost, because it is amortised
+  across every user rather than paid by one.
+- **Decision 7's dropped edition pre-fetch becomes viable again.** S7 measured
+  that fetching every edition of a work through the API is about 80% waste;
+  from a local dump it is free, and it is what the collector path wants.
+
+**Cost when it fires.** 9.2 GB downloaded and projected monthly, somewhere
+that is not a laptop — there isn't one (CLAUDE.md). Storage for the
+projection, against a volume currently sized 1 GB and a budget of $2–3 a
+month. Neither is a reason not to; both are reasons it is a slice of its own
+rather than a detail.
+
+---
+
 ## 39. What Open Library actually limits, and three controls for it
 
 **Decision.** Pace requests process-wide at one every 1.5 seconds, record every
