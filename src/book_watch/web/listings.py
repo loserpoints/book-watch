@@ -76,7 +76,7 @@ def build_router(
         query: str,
         limit: int,
         *,
-        book: wantlist.Book | None = None,
+        book: wantlist.Entry | None = None,
     ) -> HTMLResponse:
         """Run one search and render it, or render why it could not run."""
         context: dict[str, object] = {
@@ -156,6 +156,6 @@ def build_router(
                     status_code=404,
                 )
 
-        return search_and_render(request, book.isbn, limit, book=book)
+        return search_and_render(request, book.search_query, limit, book=book)
 
     return router

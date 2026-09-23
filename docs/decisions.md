@@ -779,6 +779,20 @@ resolution is for.
 and a column nothing reads is a column that quietly stops meaning what its name
 says. It arrives in the migration that first needs it.
 
+**Superseded, 2026-09-23, by decision 34.** Migration 003 makes an entry name a
+work and say which hunt it is on. The cost this entry named — that a reader who
+would take any printing sees a fraction of what is for sale — is what decision
+33 measured the way out of, and this is the shape it needs.
+
+The stopgap did its job. What resolution has to do was learned from using the
+thing: it was the labelling of 227 real listings, not the model, that showed
+`epid` over-merges and Open Library's work ids over-split.
+
+**The `mode` column arrived in the migration that first needed it**, exactly as
+this entry said it would — though for a reason it did not anticipate. Nothing
+reads `collector` yet. It is there because it is the one thing that cannot be
+added later without migrating live rows a second time.
+
 ---
 
 ## 27. Removing a book deletes the row
@@ -809,6 +823,14 @@ loss is bounded and small.
 **Revisit when** edition resolution groups editions under a work. At that point
 *bought* becomes a statement about a book rather than about one ISBN among
 several, and starts being worth recording.
+
+**Still nothing is stored about bought, 2026-09-23.** Migration 003 met the
+condition above, and this entry stands unchanged: no column, no code, no plan.
+
+Removing an entry now deletes the entry and leaves the work and its editions,
+which are what was learned from Open Library and eBay rather than something a
+person put there. The removal is still irreversible, which is what this entry
+chose.
 
 ---
 
@@ -1217,3 +1239,72 @@ was measured; collectible mode's was not, and should not be assumed from it.
 editions of *Pride and Prejudice* against 21 for *Crash*, so one search per
 edition is not expensive, it is incoherent. The edition set is a matching
 resource, not a search plan.
+
+---
+
+## 34. A want-list entry names a work and says which hunt it is on
+
+**Decision.** Three tables where there was one. A **work** is the book in the
+abstract, an **edition** is one printing of it, and an **entry** is a row on
+the want-list pointing at one or the other depending on the hunt: a reader
+takes any edition, a collector wants one. Migration 003.
+
+**Alternatives.** Keeping one row per ISBN and grouping in the application.
+Two separate features, reader and collector, with their own tables. Modelling
+only the reader case now and adding the collector later.
+
+**Why now, and why both hunts at once.** Decision 33 measured that the two
+hunts are one pipeline with two parameters — the same search, the same
+resolution, the same grading — differing only in what an entry points at and
+how results are shown. Building only the reader case would mean migrating live
+rows from ISBN to work now, and from work to work-or-edition again later. The
+`hunt` column is the single thing that cannot be added afterwards without a
+second migration over real data. Everything else the collector path needs is
+deferred, and deliberately: its surface waits on its own labelling exercise,
+because decision 33 measured it on six listings and first-edition points — a
+number line, a price on a dust jacket — live in photographs rather than in any
+catalogue.
+
+That is the rule this project now uses for building ahead: **pay now only for
+what a later change would have to migrate.** It is why `hunt` is here and why
+the listing-aspects table is not, though S10 will need it — a new table costs
+nothing to add later, a column on live rows costs a migration.
+
+**A collector entry points at an edition row, not at an ISBN.** This looked
+like over-modelling until the obvious case: a 1965 first edition of *Stoner*
+predates ISBNs entirely, and pre-1970 books are exactly what a collector
+wants. `edition.isbn` is therefore nullable, and SQLite's rule that NULLs do
+not collide in a UNIQUE index gives one row per real number and any quantity of
+editions that never had one.
+
+**Editions exist only for printings seen in the wild.** Decision 7 as amended
+measured that about 80% of a downloaded edition list is never offered for sale.
+This table fills from listings instead.
+
+**`work.openlibrary_work_id` is a reference and never identity**, and is
+deliberately not UNIQUE. Decision 33: *Crash* is filed under five Open Library
+works, *Stoner* under five, and a title search returns two separate *Pride and
+Prejudice* works. Anything that joined on it would be quietly wrong.
+
+**`work.title` is nullable, and a book added with only a number has no title
+until something learns one.** Writing the ISBN into the title field would have
+kept every work searchable by construction, which was tempting, and it would
+have been a lie stored in a column named `title` — one that leaks straight onto
+the page as a thirteen-digit heading.
+
+The invariant that actually matters is that every **entry** is searchable, not
+every work, and an entry always knows what it was added with. So the search
+falls back to that, the screen says the title is unknown rather than inventing
+one, and enrichment fills it in.
+
+**Ids are preserved through the migration.** The want-list links to
+`/book/{id}`, and renumbering would break every bookmark for every book on the
+list.
+
+**Cost.** Three tables and a join where there was one table and a SELECT, on a
+list of dozens of books. Two partial unique indexes doing work a single UNIQUE
+column used to do, because wanting both a reading copy and a particular
+printing of the same book is not a duplicate. And a `collector` value that
+nothing reads, which decision 26 rightly warned is how a column quietly stops
+meaning what its name says — accepted here only because the alternative is a
+second migration over live data, and recorded so the warning is not forgotten.

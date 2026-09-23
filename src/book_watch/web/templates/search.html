@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}
-  {%- if book %}{{ book.title or book.isbn }} · {% elif isbn %}{{ isbn }} · {% endif -%}
+  {%- if book %}{{ book.name }} · {% elif isbn %}{{ isbn }} · {% endif -%}
   book-watch
 {% endblock %}
 
@@ -18,8 +18,8 @@
 {% else %}
   {% if book %}
     <p class="muted"><a href="/">← Want list</a></p>
-    <h1>{{ book.title or book.isbn }}</h1>
-    {% if book.title %}<p class="muted">{{ book.isbn }}</p>{% endif %}
+    <h1>{{ book.name }}</h1>
+    {% if book.added_by %}<p class="muted">{{ book.added_by }}</p>{% endif %}
   {% else %}
     <h1>{{ isbn }}</h1>
   {% endif %}

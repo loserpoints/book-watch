@@ -31,7 +31,9 @@ def test_migrating_a_fresh_database_creates_the_schema(database):
     # rather than a prefix means adding one to the package without adding it
     # here is a failing test rather than a silent gap.
     assert applied == [f.name for f in sorted(db.MIGRATIONS_DIR.glob("*.sql"))]
-    assert "book" in table_names(database)
+    assert {"work", "edition", "entry"} <= table_names(database)
+    # 003 replaced it. A leftover would be a second place to add a book to.
+    assert "book" not in table_names(database)
 
 
 def test_running_twice_changes_nothing(database):
@@ -44,17 +46,24 @@ def test_running_twice_changes_nothing(database):
     assert recorded["n"] == len(first)
 
 
-def test_a_migration_already_recorded_is_not_run_again(database, tmp_path):
-    """The half-migrated case: some applied, some not."""
+def test_a_migration_already_recorded_is_not_run_again(database, monkeypatch, tmp_path):
+    """The half-migrated case: some applied, some not.
+
+    Against a throwaway pair rather than the real migrations, which depend on
+    each other — 003 reads the table 001 creates, so skipping 001 for real
+    would be testing an impossible database.
+    """
+    two = tmp_path / "migrations"
+    two.mkdir()
+    (two / "001_first.sql").write_text("CREATE TABLE first (id INTEGER);")
+    (two / "002_second.sql").write_text("CREATE TABLE second (id INTEGER);")
+    monkeypatch.setattr(db, "MIGRATIONS_DIR", two)
     db.pending(database)  # creates the ledger
-    database.execute("INSERT INTO schema_migration (name) VALUES ('001_initial.sql')")
+    database.execute("INSERT INTO schema_migration (name) VALUES ('001_first.sql')")
 
-    applied = db.migrate(database)
-
-    assert "001_initial.sql" not in applied
-    # It did not run, so the table it would have created is absent — while
-    # the ones after it ran normally.
-    assert "book" not in table_names(database)
+    assert db.migrate(database) == ["002_second.sql"]
+    assert "first" not in table_names(database)
+    assert "second" in table_names(database)
 
 
 def test_the_parent_directory_is_created(tmp_path):
@@ -62,33 +71,106 @@ def test_the_parent_directory_is_created(tmp_path):
     connection = db.connect(tmp_path / "data" / "nested" / "book-watch.db")
     db.migrate(connection)
 
-    assert "book" in table_names(connection)
+    assert "entry" in table_names(connection)
     connection.close()
 
 
-def test_a_book_needs_an_isbn(database):
+def test_a_work_can_have_no_title_yet(database):
+    """A book added by number alone is untitled until something learns one.
+
+    Writing the number into the title column would have made every work
+    searchable by construction, and put a thirteen-digit heading on the page.
+    """
     db.migrate(database)
 
-    with pytest.raises(sqlite3.IntegrityError):
-        database.execute("INSERT INTO book (title) VALUES ('no isbn')")
+    database.execute("INSERT INTO work (id) VALUES (1)")
 
-
-def test_the_same_isbn_cannot_be_added_twice(database):
-    db.migrate(database)
-    database.execute("INSERT INTO book (isbn) VALUES ('9780099448396')")
-
-    with pytest.raises(sqlite3.IntegrityError):
-        database.execute("INSERT INTO book (isbn) VALUES ('9780099448396')")
-
-
-def test_a_book_records_when_it_was_added_without_being_told(database):
-    db.migrate(database)
-    database.execute("INSERT INTO book (isbn) VALUES ('9780099448396')")
-
-    row = database.execute("SELECT added_at, title FROM book").fetchone()
-    assert row["added_at"]
-    # Title is optional: resolution fills it in later.
+    row = database.execute("SELECT title FROM work WHERE id = 1").fetchone()
     assert row["title"] is None
+
+
+def test_the_same_isbn_cannot_be_two_editions(database):
+    db.migrate(database)
+    database.execute("INSERT INTO work (id, title) VALUES (1, 'Crash')")
+    database.execute("INSERT INTO edition (work_id, isbn) VALUES (1, '9780099448396')")
+
+    with pytest.raises(sqlite3.IntegrityError):
+        database.execute(
+            "INSERT INTO edition (work_id, isbn) VALUES (1, '9780099448396')"
+        )
+
+
+def test_editions_without_an_isbn_do_not_collide(database):
+    """A 1965 first edition has no number, and neither does the next one."""
+    db.migrate(database)
+    database.execute("INSERT INTO work (id, title) VALUES (1, 'Stoner')")
+
+    database.execute("INSERT INTO edition (work_id, publisher) VALUES (1, 'Viking')")
+    database.execute("INSERT INTO edition (work_id, publisher) VALUES (1, 'Longmans')")
+
+    rows = database.execute("SELECT count(*) AS n FROM edition").fetchone()
+    assert rows["n"] == 2
+
+
+def test_a_book_can_only_be_on_the_list_once_as_a_reader_entry(database):
+    db.migrate(database)
+    database.execute("INSERT INTO work (id, title) VALUES (1, 'Crash')")
+    database.execute("INSERT INTO entry (work_id, hunt) VALUES (1, 'reader')")
+
+    with pytest.raises(sqlite3.IntegrityError):
+        database.execute("INSERT INTO entry (work_id, hunt) VALUES (1, 'reader')")
+
+
+def test_a_reader_entry_may_not_name_an_edition(database):
+    """A reader will take any printing. Naming one would mean the other hunt."""
+    db.migrate(database)
+    database.execute("INSERT INTO work (id, title) VALUES (1, 'Crash')")
+    database.execute("INSERT INTO edition (id, work_id) VALUES (7, 1)")
+
+    with pytest.raises(sqlite3.IntegrityError):
+        database.execute(
+            "INSERT INTO entry (work_id, hunt, edition_id) VALUES (1, 'reader', 7)"
+        )
+
+
+def test_a_collector_entry_must_name_an_edition(database):
+    db.migrate(database)
+    database.execute("INSERT INTO work (id, title) VALUES (1, 'Crash')")
+
+    with pytest.raises(sqlite3.IntegrityError):
+        database.execute("INSERT INTO entry (work_id, hunt) VALUES (1, 'collector')")
+
+
+def test_both_hunts_can_want_the_same_book(database):
+    """A reading copy and a particular printing are not a duplicate."""
+    db.migrate(database)
+    database.execute("INSERT INTO work (id, title) VALUES (1, 'Stoner')")
+    database.execute("INSERT INTO edition (id, work_id) VALUES (7, 1)")
+
+    database.execute("INSERT INTO entry (work_id, hunt) VALUES (1, 'reader')")
+    database.execute(
+        "INSERT INTO entry (work_id, hunt, edition_id) VALUES (1, 'collector', 7)"
+    )
+
+    rows = database.execute("SELECT count(*) AS n FROM entry").fetchone()
+    assert rows["n"] == 2
+
+
+def test_an_entry_records_when_it_was_added_without_being_told(database):
+    db.migrate(database)
+    database.execute("INSERT INTO work (id, title) VALUES (1, 'Crash')")
+    database.execute("INSERT INTO entry (work_id, hunt) VALUES (1, 'reader')")
+
+    row = database.execute("SELECT added_at FROM entry").fetchone()
+    assert row["added_at"]
+
+
+def test_a_hunt_has_to_be_one_of_the_two(database):
+    db.migrate(database)
+    database.execute("INSERT INTO work (id, title) VALUES (1, 'Crash')")
+
+    with pytest.raises(sqlite3.IntegrityError):
+        database.execute("INSERT INTO entry (work_id, hunt) VALUES (1, 'browsing')")
 
 
 def test_a_failing_migration_leaves_no_trace(database, monkeypatch, tmp_path):
@@ -146,3 +228,130 @@ def test_the_database_path_comes_from_the_environment(monkeypatch):
     monkeypatch.setenv("BOOK_WATCH_DB_PATH", "/data/book-watch.db")
 
     assert str(load_database_path(use_dotenv=False)) == "/data/book-watch.db"
+
+
+# --- 003 over a database that already has books in it -----------------------
+#
+# The case that matters. There are real rows on the mounted volume, and this
+# is the first migration in this project that could destroy any of them.
+
+
+def at_the_shape_before_003(connection) -> None:
+    """Bring a fresh database up to where it stood before 003, and no further."""
+    db.pending(connection)  # creates the ledger
+    for migration in sorted(db.MIGRATIONS_DIR.glob("*.sql")):
+        if migration.name.startswith("003"):
+            break
+        connection.executescript(migration.read_text())
+        connection.execute(
+            "INSERT INTO schema_migration (name) VALUES (?)", (migration.name,)
+        )
+
+
+@pytest.fixture
+def old_shape_with_rows(database):
+    at_the_shape_before_003(database)
+    database.executescript(
+        """
+        INSERT INTO book (id, isbn, title, added_at)
+        VALUES (1, '9780099448396', 'Crash', '2026-09-01 10:00:00');
+
+        -- No title: it was going to be filled in by resolution.
+        INSERT INTO book (id, isbn, title, added_at)
+        VALUES (2, '9781590171998', NULL, '2026-09-02 10:00:00');
+
+        -- An override under decision 29: a book that never had an ISBN.
+        INSERT INTO book (id, isbn, title, added_at)
+        VALUES (3, 'The Riddle of the Sands 1903', 'Childers',
+                '2026-09-03 10:00:00');
+        """
+    )
+    return database
+
+
+def test_every_existing_book_survives_003(old_shape_with_rows):
+    db.migrate(old_shape_with_rows)
+
+    rows = old_shape_with_rows.execute(
+        "SELECT id, hunt, added_at FROM entry ORDER BY id"
+    ).fetchall()
+    assert [row["id"] for row in rows] == [1, 2, 3]
+    assert {row["hunt"] for row in rows} == {"reader"}
+    # Not re-stamped with today. When it went on the list is the fact.
+    assert rows[0]["added_at"] == "2026-09-01 10:00:00"
+
+
+def test_ids_are_preserved_so_bookmarks_still_work(old_shape_with_rows):
+    """The want-list links to /book/{id}. Renumbering breaks every one."""
+    db.migrate(old_shape_with_rows)
+
+    row = old_shape_with_rows.execute(
+        "SELECT work.title FROM entry JOIN work ON work.id = entry.work_id "
+        "WHERE entry.id = 1"
+    ).fetchone()
+    assert row["title"] == "Crash"
+
+
+def test_a_book_with_no_title_does_not_acquire_a_fake_one(old_shape_with_rows):
+    """It had no title before 003 and it has none after. Its ISBN is elsewhere."""
+    db.migrate(old_shape_with_rows)
+
+    row = old_shape_with_rows.execute("SELECT title FROM work WHERE id = 2").fetchone()
+    assert row["title"] is None
+
+    edition = old_shape_with_rows.execute(
+        "SELECT isbn FROM edition WHERE work_id = 2"
+    ).fetchone()
+    assert edition["isbn"] == "9781590171998"
+
+
+def test_a_real_isbn_becomes_an_edition(old_shape_with_rows):
+    db.migrate(old_shape_with_rows)
+
+    rows = old_shape_with_rows.execute(
+        "SELECT work_id, isbn FROM edition ORDER BY work_id"
+    ).fetchall()
+    assert [(row["work_id"], row["isbn"]) for row in rows] == [
+        (1, "9780099448396"),
+        (2, "9781590171998"),
+    ]
+
+
+def test_an_override_survives_as_text_rather_than_a_fake_edition(old_shape_with_rows):
+    """Decision 29's escape hatch. It is not an ISBN, so it does not become one."""
+    db.migrate(old_shape_with_rows)
+
+    entry = old_shape_with_rows.execute(
+        "SELECT search_text FROM entry WHERE id = 3"
+    ).fetchone()
+    assert entry["search_text"] == "The Riddle of the Sands 1903"
+
+    editions = old_shape_with_rows.execute(
+        "SELECT count(*) AS n FROM edition WHERE work_id = 3"
+    ).fetchone()
+    assert editions["n"] == 0
+
+
+def test_a_migrated_book_has_not_been_enriched_yet(old_shape_with_rows):
+    """True, and the want-list says so. Nothing has asked Open Library about these."""
+    db.migrate(old_shape_with_rows)
+
+    rows = old_shape_with_rows.execute(
+        "SELECT count(*) AS n FROM work WHERE enriched_at IS NULL"
+    ).fetchone()
+    assert rows["n"] == 3
+
+
+def test_the_notebook_is_left_alone_by_003(old_shape_with_rows):
+    """What we already learned from Open Library is not schema churn to redo."""
+    old_shape_with_rows.execute(
+        "INSERT INTO openlibrary_edition (isbn, found, title) "
+        "VALUES ('9781590171998', 1, 'Stoner')"
+    )
+
+    db.migrate(old_shape_with_rows)
+
+    row = old_shape_with_rows.execute(
+        "SELECT title FROM openlibrary_edition WHERE isbn = '9781590171998'"
+    ).fetchone()
+    assert row["title"] == "Stoner"

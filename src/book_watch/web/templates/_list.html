@@ -8,10 +8,10 @@
     <div class="entry">
       <div class="details">
         <div class="title">
-          <a href="/book/{{ book.id }}">{{ book.title or book.isbn }}</a>
+          <a href="/book/{{ book.id }}">{{ book.name }}</a>
         </div>
         <div class="muted">
-          {%- if book.title %}{{ book.isbn }} · {% endif -%}
+          {%- if book.added_by %}{{ book.added_by }} · {% endif -%}
           added {{ book.added_on or book.added_at }}
         </div>
       </div>
@@ -19,7 +19,7 @@
               hx-delete="/books/{{ book.id }}"
               hx-target="#want-list"
               hx-swap="outerHTML"
-              hx-confirm="Remove {{ book.title or book.isbn }} from the list?">
+              hx-confirm="Remove {{ book.name }} from the list?">
         Remove
       </button>
     </div>
