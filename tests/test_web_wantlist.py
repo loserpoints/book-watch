@@ -80,6 +80,8 @@ def build_client(tmp_path, catalogue):
 
     app = FastAPI()
     app.include_router(web_wantlist.build_router(connect, catalogue))
+    # So a test can set up a state the routes cannot reach on their own.
+    app.state.connect = connect
     return TestClient(app)
 
 
@@ -347,3 +349,40 @@ def test_the_app_does_not_open_the_database_at_startup(monkeypatch):
     app_client = TestClient(create_app(DELETION_CONFIG))
 
     assert app_client.get("/health").status_code == 200
+
+
+# --- the tag that says work is outstanding ---------------------------------
+
+
+def test_a_book_with_copies_nobody_has_examined_says_so(client):
+    """The tag the page renders, not just the property behind it.
+
+    Asserted here because it once did not render at all: the property was
+    right, the template edit silently did not apply, and nothing failed.
+    """
+    add(client, "9780099448396", "Crash")
+    with client.app.state.connect() as connection:
+        connection.execute("UPDATE work SET copies_fetched_at = datetime('now')")
+        connection.commit()
+
+    assert "still digging" in client.get("/").text
+
+
+def test_a_book_nobody_has_opened_does_not_claim_to_be_working(client):
+    """No copies means nothing to dig through. The app does not advertise
+    work it has not started."""
+    add(client, "9780099448396", "Crash")
+
+    assert "still digging" not in client.get("/").text
+
+
+def test_a_finished_book_stops_saying_it(client):
+    add(client, "9780099448396", "Crash")
+    with client.app.state.connect() as connection:
+        connection.execute(
+            "UPDATE work SET copies_fetched_at = datetime('now'), "
+            "enriched_at = datetime('now')"
+        )
+        connection.commit()
+
+    assert "still digging" not in client.get("/").text

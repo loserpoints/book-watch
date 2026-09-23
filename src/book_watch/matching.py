@@ -102,7 +102,7 @@ def grade(evidence: Evidence, target: Target, *, hunt: Hunt = "reader") -> Tier:
         # that is the strongest negative signal available — it is the only
         # thing that catches an omnibus, whose title contains the book's and
         # whose author is the right one.
-        if not _names_the_same_book(evidence.identity, target.title):
+        if not names_the_same_book(evidence.identity, target.title):
             return "excluded"
         # It named this book, under a number we had not connected to it yet.
         # For a reader that settles it. For a collector it is the wrong
@@ -131,7 +131,7 @@ def _epid_matches(evidence: Evidence, target: Target) -> bool:
     return evidence.epid is not None and evidence.epid in target.epids
 
 
-def _names_the_same_book(identity: str, wanted: str) -> bool:
+def names_the_same_book(identity: str, wanted: str) -> bool:
     """Is what the catalogue called this number the book we are after?
 
     Equal, or the wanted title followed by more words: *Crash: A Novel* and

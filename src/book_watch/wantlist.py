@@ -96,13 +96,18 @@ class Entry:
 
     @property
     def being_enriched(self) -> bool:
-        """Whether Open Library still has questions to answer about this book.
+        """Whether there is known work outstanding on this book.
 
-        Decision 7 as amended: a new book costs 10-15 requests that cannot run
-        while someone waits, so it is added and shown before they have been
-        made. The want-list says so rather than pretending the list is final.
+        Copies have been found and not yet examined. A book nobody has opened
+        has no copies either, so there is nothing to dig through and the
+        want-list says nothing — the app does not advertise work it has not
+        started.
+
+        Decision 7 as amended: examining a book costs ten to fifteen Open
+        Library requests that cannot run while somebody waits, so it happens
+        afterwards and the list says so while it does.
         """
-        return self.enriched_at is None
+        return self.copies_fetched_at is not None and self.enriched_at is None
 
     @property
     def added_on(self) -> date | None:

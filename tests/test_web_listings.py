@@ -217,9 +217,19 @@ def book_client(tmp_path):
         db.migrate(connection)
         return connection
 
-    def make(search):
+    def make(search, enrich=None):
+        """`enrich` defaults to doing nothing, never to doing it for real.
+
+        A test that forgot to pass one would otherwise call eBay and Open
+        Library from a background task — which `tests/conftest.py` would
+        catch, but only after the request had already returned 200.
+        """
         app = FastAPI()
-        app.include_router(listings_module.build_router(search, connect))
+        app.include_router(
+            listings_module.build_router(
+                search, connect, enrich or (lambda work_id: None)
+            )
+        )
         app.include_router(web_wantlist.build_router(connect))
         return TestClient(app)
 
