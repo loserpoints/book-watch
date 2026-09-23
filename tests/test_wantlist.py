@@ -47,7 +47,7 @@ def test_a_book_open_library_had_no_record_of_says_that_instead(connection):
         "UPDATE work SET enriched_at = datetime('now') WHERE id = ?", (book.work_id,)
     )
 
-    assert wantlist.get(connection, book.id).name == "Unrecognised ISBN"
+    assert wantlist.get(connection, book.id).name == "Unrecognized ISBN"
 
 
 def test_a_blank_title_is_stored_as_no_title(connection):

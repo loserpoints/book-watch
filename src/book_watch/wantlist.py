@@ -75,7 +75,7 @@ class Entry:
         """
         if self.title:
             return self.title
-        return "Looking this up…" if self.being_enriched else "Unrecognised ISBN"
+        return "Looking this up…" if self.being_enriched else "Unrecognized ISBN"
 
     @property
     def search_query(self) -> str:
