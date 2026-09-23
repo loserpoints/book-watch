@@ -5,7 +5,8 @@ This file loads into every session, so keep it short.
 ## Start here
 
 Read `docs/product-brief.md` and `docs/decisions.md` before doing anything
-else. They carry the scope, the two use cases, and why each technical choice
+else. `docs/operating.md` is the third one — read it before touching the
+deploy, and when something in production is wrong. They carry the scope, the two use cases, and why each technical choice
 was made. If something here contradicts them, they win — and say so.
 
 Then **stop and propose a plan.** Say what you intend to do, what it buys, and

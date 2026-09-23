@@ -250,3 +250,44 @@ jobs:
           fi
 
           echo "The want-list is serving."
+
+      # The book page is the feature, and until now nothing checked it. It has
+      # its own template, its own query across four tables, and a migration
+      # behind it — which is exactly the shape of the defects this project has
+      # actually had: things that work locally and 500 in the image.
+      #
+      # It finds a book rather than assuming one. An empty want-list is a
+      # perfectly good state and must not fail a deploy.
+      - name: Verify the book page works
+        run: |
+          set -euo pipefail
+          app=$(grep -E '^app *= *' fly.toml | head -1 | cut -d'"' -f2)
+
+          list=$(mktemp)
+          curl -sS --max-time 30 -o "${list}" "https://${app}.fly.dev/"
+          path=$(sed -n 's|.*href="\(/book/[0-9]*\)".*|\1|p' "${list}" | head -1)
+
+          if [ -z "${path}" ]; then
+            echo "Nothing on the want-list, so there is no book page to check."
+            echo "Not a failure — add a book and the next deploy will check it."
+            exit 0
+          fi
+
+          body=$(mktemp)
+          # Generous timeout: a book whose copies have never been fetched
+          # spends one eBay search here, measured at about 1.8 seconds.
+          status=$(curl -sS --max-time 45 -o "${body}" -w '%{http_code}' \
+            "https://${app}.fly.dev${path}")
+
+          if [ "${status}" != "200" ]; then
+            echo "${path} returned HTTP ${status}, not 200."
+            echo "The want-list is serving, so the database itself is fine."
+            echo "This is the book page: its template, its query across copy /"
+            echo "listing_declaration / openlibrary_edition / edition, or a"
+            echo "migration that did not reach the image."
+            echo "--- what the page said ---"
+            sed -n 's/.*class="error">\(.*\)<\/p>.*/\1/p' "${body}" | head -3
+            exit 1
+          fi
+
+          echo "${path} is serving."
