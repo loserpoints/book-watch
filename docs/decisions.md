@@ -1228,6 +1228,20 @@ population it is weakest on.
 **One grader, not two.** Reading and collectible are the same function with two
 parameters: which ISBNs count as the target — every ISBN of the work, or the
 single ISBN of one edition — and how weak a text match is worth showing.
+
+> **Corrected, 2026-09-23: one parameter, not two.** The text threshold was
+> never real. It was asserted from a measurement that could not see it:
+> *Pride and Prejudice* was labelled before aspects were fetched, so it had no
+> declared numbers and was never scored on the collectible hunt at all. With
+> the labels committed as a test corpus it was, and the stricter floor hid two
+> genuine matches — both listings named as plainly as "Pride and Prejudice",
+> with no author, no product id and no number. Loosening it hid nothing and
+> raised that book's *possible*-tier precision from 10% to 12%, because the
+> listings it admits are mostly ones already shown.
+>
+> So the hunts differ only in which numbers count as the target. This is the
+> first thing the committed corpus caught that the original measurement could
+> not, which is most of the argument for committing it.
 Verified against the labels: the parameterised grader reproduces the reading
 numbers exactly and leaves the collectible *certain* tier unchanged, widening
 only its *possible* tier by two listings. What genuinely differs between the two
@@ -1308,3 +1322,44 @@ printing of the same book is not a duplicate. And a `collector` value that
 nothing reads, which decision 26 rightly warned is how a column quietly stops
 meaning what its name says — accepted here only because the alternative is a
 second migration over live data, and recorded so the warning is not forgotten.
+
+---
+
+## 37. The labelled listings live in the repository
+
+**Decision.** The 227 hand-classified eBay listings from S6 are committed to
+`tests/data/labelled_listings.json`, and `tests/test_matching.py` asserts the
+numbers they produce.
+
+**Alternatives.** Keeping them in a scratch directory, as they were. Keeping
+only the summary numbers in decision 33. Regenerating them on demand.
+
+**Why.** Decision 33's entire argument is a set of measurements, and until now
+those lived in a prose record and in one session's memory. A change that
+quietly degraded matching would have shipped: nothing in the project could
+tell that the rule still did what the rule was chosen for.
+
+They are also irreplaceable in a way that is easy to underrate. Regenerating
+them means several hundred eBay calls and, more to the point, a person sitting
+down and judging 227 listings twice each — and the judgement is the data.
+Leaving that in a temporary directory was one `rm` from gone.
+
+**What is asserted, and what is deliberately not.** The tests pin the *claims*,
+with thresholds a little below what the rule achieves: nothing true is ever
+hidden, the certain tier can be trusted, the certain tier is large enough to
+be worth reading, and identifiers beat text on the edition question. Pinning
+exact percentages would fail on every harmless change and get loosened until
+it meant nothing.
+
+*Crash* is excluded from the collectible precision test on purpose. Six
+right-edition listings is not a sample, and decision 33 already records that
+its `epid` over-merges. Pinning a number to it would be pinning noise.
+
+**It paid for itself immediately.** The first run disproved decision 33's claim
+that the two hunts differ in two parameters. See the correction there.
+
+**Cost.** 54 KB in the repository, and a corpus that ages: it is a snapshot of
+what was for sale on one day in September 2026. It measures whether the rule
+still behaves as it did, not whether it works on today's inventory. When the
+rule changes on purpose, the expectations have to be re-read rather than
+adjusted until green.

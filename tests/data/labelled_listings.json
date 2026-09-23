@@ -1,0 +1,2071 @@
+{
+ "_": "227 eBay listings for three books, each hand-classified twice by the person who would buy them: is this the book, and is this that edition. Gathered and labelled during S6; see decision 33. The numbers this corpus produces are asserted in test_matching.py, so a change that quietly degrades matching fails the build.",
+ "books": {
+  "pride-and-prejudice": {
+   "title": "Pride and Prejudice",
+   "author": "Jane Austen",
+   "isbn": "9780141439518",
+   "epid": "2429835",
+   "edition": "Penguin Classics paperback"
+  },
+  "crash": {
+   "title": "Crash",
+   "author": "J. G. Ballard",
+   "isbn": "9780374524128",
+   "epid": "139663",
+   "edition": "Farrar, Straus & Giroux paperback"
+  },
+  "stoner": {
+   "title": "Stoner",
+   "author": "John Williams",
+   "isbn": "9781590171998",
+   "epid": "51588409",
+   "edition": "NYRB Classics paperback"
+  }
+ },
+ "listings": [
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "1940 rare PRIDE AND PREJUDICE Jane Austen GIFT FOR HER Vtg Complete UNABRIDGED",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Jane Austen - Pride And Prejudice",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "JANE AUSTEN 8 Cranford Collection Classics: Pride & Prejudice and 7 More *NEW",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "no",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Jane Austen Pride and Prejudice",
+   "epid": "161783057",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Jane Austen Pride and Prejudice (Paperback)",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Jane Austen Pride and Prejudice Penguin Classics UK-B Paperback  Revised",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Jane Austen Pride and Prejudice Penguin Classics UK-B Paperback 2002 Notes Rev",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Jane Austen Pride and Prejudice second printing Scholastic Library Edition 1962",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Jane Austen's Pride and Prejudice",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Lot of 2 Classics, Pride and Prejudice, Bleak House Austen/Dickens Trade PBs",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "no",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Lot of 7 JANE AUSTEN Books~Pride and Prejudice~Sense Sensibility~Emma~Persuasion",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "no",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "NEW PRIDE and PREJUDICE By Jane Austen Brand Soft Leather Bound  Collectible ",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Penguin Classics  (Black Binding - Various Titles) Save On Bundles - New Added",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "no",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Penguin Classics Pride and Prejudice Jane Austen 2002 UK-B PB Revised Ed.",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Penguin Classics Pride and Prejudice Jane Austen PB Illustrated Edited 2003",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Penguin Classics Pride and Prejudice Jane Austen UK Paperback 2002",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Penguin Classics Pride and Prejudice Jane Austen UK-B Paperback 2002 Rev Notes",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Penguin Classics | Virago | Other Penguin Publishing - $4.99 Flat Shipping",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "no",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride & Prejudice by Jane Austen",
+   "epid": "228942972",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride & Prejudice by Jane Austen NEW Paperback",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice",
+   "epid": "50798",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride And Prejudice",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice (Barnes & Noble Classics) - Hardcover By Austen, Jane - GOOD",
+   "epid": "43829381",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice (Barnes & Noble Classics) - Paperback - VERY GOOD",
+   "epid": "43982850",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice (Barnes & Noble Classics) - Paperback By Austen, Jane - GOOD",
+   "epid": "43982850",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice (Jane Austen Collection)",
+   "epid": "9057244918",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice (Modern Library Classics) - Paperback By Jane Austen - GOOD",
+   "epid": "1697650",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice (Paperback or Softback)",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice (Penguin Classics)",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice (Penguin Classics) (Penguin Classics S.) by Austen New=-",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice (Penguin Classics) by Austen, Jane",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice (Penguin Classics) by Austen, Jane Paperback Book The Fast",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice (Penguin Classics) by Jane Austen",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice (Penguin Classics) by Jane Austen",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice (Penguin Classics) by Jane Austen VG",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice (Penguin Classics), Jane Austen, Very Good Book",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice - Jane Austen - Paperback - Brand New",
+   "epid": "94806048",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice - Paperback By Austen, Jane - GOOD",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice - Paperback By Austen, Jane - GOOD",
+   "epid": "22038473232",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice - Paperback By Jane Austen - VERY GOOD",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Austen  New 9780141439518 Fast Free Shipping..",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "unsure"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Austen, Jane",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Austen, Jane",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Austen, Jane",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Austen, Jane",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Austen, Jane",
+   "epid": "74177463",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Austen, Jane",
+   "epid": "46732",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by AUSTEN, JANE, paperback, New",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Jane Austen  (0593622456) Hardcover",
+   "epid": "26060635105",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Jane Austen (2002, Uk-B Format Paperback)",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Jane Austen (2002, Uk-B Format Paperback)",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Jane Austen (2002, Uk-B Format Paperback)",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Jane Austen (2002, Uk-B Format Paperback)",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Jane Austen (2002, Uk-B Format Paperback)",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Jane Austen (2002, Uk-B Format Paperback)",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Jane Austen (2002, Uk-B Format Paperback)",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Jane Austen (English) Paperback Book",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Jane Austen a paperback book FREE USA SHIPPING austin",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Jane Austen Cranford Collection Classic *New*",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Jane Austen Cranford Collection Classic *New*",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "PRIDE AND PREJUDICE by Jane Austen Deluxe Illustrated Classic Edition *New*",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Jane Austen Hardcover (Barnes & Noble Exclusive)",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Jane Austen Hardcover Book",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "PRIDE AND PREJUDICE By Jane Austen New Collectible Special Edition Hardcover",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Jane Austen PAPERBACK 2002",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Jane Austen Penguin Classics NEW!",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Jane Austen Penguin Classics Paperback",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Jane Austen Penguin Classics Paperback 2014",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Jane Austen |  Penguin Classics | Paperback",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Jane Austen |  Penguin Classics | Paperback",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice By Jane Austen. 9780140238211",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Jane Austen: New",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice by Jane Austen: Used",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice ISBN 9780141439518",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice Jane Austen",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice Jane Austen 1980 Franklin Library 100 Geatest Appears Unread",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice Jane Austen 1980 Leatherette Franklin Library HC",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice Jane Austen 1980 Leatherette Franklin Library HC",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice Jane Austen 2003 Collector's Library Barnes & Noble",
+   "epid": "1401865230",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice Jane Austen 2011 Barnes & Noble Collectible Edition Classic",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice Jane Austen Classic Novel, (Love, Life and Emotional Dev...",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride And Prejudice Jane Austen Easton Press Leather Collectors Edition 1977",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice Jane Austen Franklin Library 1980 Gilt Hardcover",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice Jane Austen Hardcover",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice Jane Austen Hardcover",
+   "epid": "2640253",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice Jane Austen HC 1950 Harper's Modern Classics Illus Thomson",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice Jane Austen paperback Used - Good",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice Multicolor",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice PAPERBACK 2002 by Jane Austen",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "PRIDE AND PREJUDICE PERSUASION SENSE AND SENSIBILITY EMMA ~ Jane Austen 4 Books~",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "no",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice | Jane Austen | Barnes & Noble Flexibound Edition | 2015",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice | Jane Austen, 1995 ⭐⭐⭐⭐⭐",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice — Jane Austen | Easton Press Peacock Ed Leather NEW SEALED",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice — Jane Austen | Easton Press Peacock Ed Leather w/ slipcase",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice, Austen, Jane Book",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice, by Jane Austen, Paperback, ISBN: 978-0141439518",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice, First Peacock Edition 1894: Preface by George Saintsbury",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice, Jane Austen",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "PRIDE AND PREJUDICE, Jane Austen Unabridged Audio Book MP3 CD",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "no",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice, Paperback by Austen, Jane; Jones, Vivien (EDT); Tanner, ...",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice: Jane Austen (Penguin Classics)",
+   "epid": "2429835",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Pride and Prejudice: Peacock Edition (Truth & Tradition Publishing)",
+   "epid": "4077818656",
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Rare - PRIDE And PREJUDICE by Jane Austen Cranford Collection Classic Deluxe ed.",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "Vintage 1945 Pride and Prejudice Jane Austen Hardcover Illustrated Robert Ball",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "pride-and-prejudice",
+   "listing_title": "🪞Franklin Library Pride and Prejudice Jane Austen Leather FACTORY SEALED IN BOX",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "1979-2014 11vols Agent's Reference Collection of 'Crash' by J. G. Ballard Signed",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "no",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Author J G Ballard who wrote famous novels Crash Empire Sun th- 1965 Old Photo",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "no",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash",
+   "epid": "237803156",
+   "declared_isbn": "9781250171511",
+   "identity_title": "Crash: A Novel",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash",
+   "epid": "1238604",
+   "declared_isbn": "9780394741093",
+   "identity_title": "Crash",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "CRASH - 1ST. AMERICAN ED. BY J.G. BALLARD ",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash - Paperback, by Ballard J. G. - Very Good",
+   "epid": "1920028",
+   "declared_isbn": "9780312420338",
+   "identity_title": "Crash",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash a Novel by J. G. Ballard 1997 Ninth Printing The Noonday Press Book PB",
+   "epid": null,
+   "declared_isbn": "9780374524128",
+   "identity_title": "Crash",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash by Ballard, J G Paperback Book The Fast Free Shipping",
+   "epid": null,
+   "declared_isbn": "9780099762911",
+   "identity_title": "Crash",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash by Ballard, J. G.|Smith, Zadie [Royal Edition]",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash by J G Ballard: New",
+   "epid": "2309544340",
+   "declared_isbn": "9781947856967",
+   "identity_title": "Crash",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash by J G Ballard: New",
+   "epid": "237803156",
+   "declared_isbn": "9781250171511",
+   "identity_title": "Crash: A Novel",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash by J G Ballard: Used",
+   "epid": "139663",
+   "declared_isbn": "9780374524128",
+   "identity_title": "Crash",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash by J. G. Ballard",
+   "epid": null,
+   "declared_isbn": "9780099762911",
+   "identity_title": "Crash",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash by J. G. Ballard (1974)",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash by J. G. Ballard (1985) First Vintage Books Paperback Edition 1985",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash by J. G. Ballard (1994, Trade Paperback)",
+   "epid": "139663",
+   "declared_isbn": "9780374524128",
+   "identity_title": "Crash",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash by J. G. Ballard - 1973, 1st American Printing, No Dustjacket",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash By J. G. Ballard. 9780099762911",
+   "epid": null,
+   "declared_isbn": "9780099762911",
+   "identity_title": "Crash",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash by J.G. Ballard (English) Paperback Book",
+   "epid": null,
+   "declared_isbn": "9780007287024",
+   "identity_title": "Crash",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "CRASH by J.G. Ballard - 1st/1st HCDJ 1973 - film movie - fine",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash by J.G. Ballard Paperback Fiction Novel 1990s Vintage English",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash by J.G. Ballard, Vintage Books 1985",
+   "epid": "1238604",
+   "declared_isbn": "9780394741093",
+   "identity_title": "Crash",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash By J.G. Ballard. 9780099466895",
+   "epid": null,
+   "declared_isbn": "9780099466895",
+   "identity_title": "Crash (Vintage Blue)",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash by JG Ballard (2019, Hardcover) Deluxe Edition, First Printing, VG+",
+   "epid": "2309544340",
+   "declared_isbn": "9781947856967",
+   "identity_title": "Crash",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash J.G. Ballard",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "CRASH J.G. Ballard 1973 True First Edition American Hardcover FSG Price Intact",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "CRASH J.G. BALLARD 1973/1997 10TH PRINT MOVIE TIE IN PB PLUS DVD 1998 NEAR MINT",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash J.G. Ballard Kawade Shobo Japanese Softcover Edition Book",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash J.G. Ballard Vintage Books 1985 Sci-Fi Cult Classic Transgressive Fiction",
+   "epid": "1238604",
+   "declared_isbn": "9780394741093",
+   "identity_title": "Crash",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash Paperback by J G Ballard",
+   "epid": "237803156",
+   "declared_isbn": "9781250171511",
+   "identity_title": "Crash: A Novel",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash, Hardcover by Ballard, J. G.; Smith, Zadie (INT), Like New Used, Free s...",
+   "epid": "2309544340",
+   "declared_isbn": "9781947856967",
+   "identity_title": "Crash",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash: A Novel - paperback Ballard, J. G.",
+   "epid": "139663",
+   "declared_isbn": "9780374524128",
+   "identity_title": "Crash",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "CRASH: A NOVEL By J. G. Ballard **Mint Condition**",
+   "epid": "139663",
+   "declared_isbn": "9780374524128",
+   "identity_title": "Crash",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash: A Novel by J.G. Ballard (English) Paperback Book",
+   "epid": null,
+   "declared_isbn": "9781250171511",
+   "identity_title": "Crash: A Novel",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash: A Novel, Ballard, J. G., 9780374524128",
+   "epid": "139663",
+   "declared_isbn": "9780374524128",
+   "identity_title": "Crash",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "crash",
+   "listing_title": "CRASH: Homage to JG Ballard Exhibition Catalog Gagosian Gallery London 2010",
+   "epid": null,
+   "declared_isbn": "9781935263074",
+   "identity_title": "Crash",
+   "is_book": "no",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash: Rare Vintage 1975 J.G. Ballard 1st Panther Paperback  Chris Foss Cover",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "Crash; J.G. Ballard; Edition Phantasia; Limited edition n 996/1000;",
+   "epid": null,
+   "declared_isbn": "9783924959029",
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "First Edition Crash by J.G. Ballard, 1973, hardcover, 1st US printing",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "j g ballard / crash 1st Edition 1973",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "J G Ballard Concrete Island First Edition UK Cape 1974 Hardback DJ Crash",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "no",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "J G Ballard Crash (Hardback)",
+   "epid": "2309544340",
+   "declared_isbn": "9781947856967",
+   "identity_title": "Crash",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "J G Ballard CRASH Paladin/Triad Panther 1990 PB Edition with James Marsh Cover",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "J G Ballard The Atrocity Exhibition Triad Panther 1979 New Worlds SF Crash",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "no",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "J G Ballard The Disaster Area 1967 first edition 1st/1st Crash High Rise sci-fi",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "no",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "J. G. Ballard - The Crystal World Crash Concrete Island - QPBC 1991",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "no",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "J. G. Ballard Crash",
+   "epid": null,
+   "declared_isbn": "9780007287024",
+   "identity_title": "Crash",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "J. G. Ballard CRASH  1st Edition Thus 9th Printing",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "crash",
+   "listing_title": "J. G. Ballard Crash (Paperback)",
+   "epid": "237803156",
+   "declared_isbn": "9781250171511",
+   "identity_title": "Crash: A Novel",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "J. G. Ballard Crash (Paperback) (UK IMPORT)",
+   "epid": null,
+   "declared_isbn": "9780007287024",
+   "identity_title": "Crash",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "J. G. Ballard Crash Pinnacle Books First Printing Paperback 1973",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "J.G. Ballard / Crash / First Edition in DJ / London: Jonathan Cape, 1973",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "crash",
+   "listing_title": "J.G. Ballard Three Novels: Crystal World, Crash, Concrete Island 1991 QPB Sci-Fi",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "no",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "1972 STONER JOHN WILLIAMS POCKET BOOKS PAPERBACK EARLY 1ST PRINTING VERY RARE VG",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "1972 STONER JOHN WILLIAMS POCKET BOOKS PB 1ST PRINTING VERY RARE VG",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "book HC John Williams Stoner in Italian Peter Cameron Fazi Edition",
+   "epid": null,
+   "declared_isbn": "9788864112367",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "John Edward Williams Stefano Tummolini Stoner (Paperback) (UK IMPORT)",
+   "epid": null,
+   "declared_isbn": "9788804732495",
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "John Williams Collected Novels : Butcher's Crossing / Stoner / Augustus, Hard...",
+   "epid": "20050095046",
+   "declared_isbn": "9781598537024",
+   "identity_title": "John Williams : Collected Novels",
+   "is_book": "no",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "John Williams Collected Novels : Butcher's Crossing / Stoner / Augustus, Hard...",
+   "epid": "20050095046",
+   "declared_isbn": "9781598537024",
+   "identity_title": "John Williams : Collected Novels",
+   "is_book": "no",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "John Williams Collected Novels, Butcher's Crossing Stoner Augustus Hardcover VG+",
+   "epid": "20050095046",
+   "declared_isbn": "9781598537024",
+   "identity_title": "John Williams : Collected Novels",
+   "is_book": "no",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "John Williams Stoner",
+   "epid": "67241632",
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "John Williams Stoner (Hardback)",
+   "epid": "20038792193",
+   "declared_isbn": "9781681374574",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "John Williams Stoner (Paperback)",
+   "epid": "51588409",
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "John Williams Stoner (Paperback) (UK IMPORT)",
+   "epid": null,
+   "declared_isbn": "9780099561545",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner",
+   "epid": "51588409",
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner",
+   "epid": null,
+   "declared_isbn": "9788416334445",
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner (Chinese Edition) - VERY GOOD",
+   "epid": null,
+   "declared_isbn": "9787208130500",
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner (New York Review Books Classics)",
+   "epid": "51588409",
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner (New York Review Books Classics)",
+   "epid": null,
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner (New York Review Books Classics)",
+   "epid": null,
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner (New York Review Books Classics)",
+   "epid": null,
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner (New York Review Books Classics) - Paperback By John Williams - VERY GOOD",
+   "epid": "51588409",
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner (New York Review Books Classics) Black",
+   "epid": "51588409",
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner (New York Review Books Classics) by John Williams",
+   "epid": "51588409",
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner (New York Review Books Classics) by John Williams [Paperback]",
+   "epid": "51588409",
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner (New York Review Books Classics) by Williams, John Book The Fast Free",
+   "epid": "51588409",
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner (New York Review Books Classics) John Williams paperback Used - Like New",
+   "epid": "51588409",
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner (University of Arkansas - Paperback, by Williams John Edward - Acceptable",
+   "epid": "701016",
+   "declared_isbn": "9781557280299",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner (University of Arkansas - Paperback, by Williams John Edward - Very RARE",
+   "epid": "701016",
+   "declared_isbn": "9781557280299",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "stoner - ACCEPTABLE",
+   "epid": null,
+   "declared_isbn": "9780099595793",
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner - GOOD",
+   "epid": null,
+   "declared_isbn": "9781784877309",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner : 50th Anniversary Edition Hardcover John Williams",
+   "epid": "20038792193",
+   "declared_isbn": "9781681374574",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner By John L. Williams",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner by John Williams (2006, Trade Paperback)",
+   "epid": "51588409",
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner by John Williams (2013, Hardcover) First Vintage Edition/1st Print OOP VG",
+   "epid": null,
+   "declared_isbn": "9780099595168",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner by John Williams (English) Paperback Book",
+   "epid": "51588409",
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner by John Williams (English) Paperback Book",
+   "epid": "95828133",
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner by John Williams Book The Fast Free Shipping",
+   "epid": null,
+   "declared_isbn": "9781784877309",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner by John Williams: New",
+   "epid": "51588409",
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner by John Williams: Used",
+   "epid": "51588409",
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner John Williams 2006 First NYRB Classics Literary Fiction",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner John Williams Korean Book 스토너 초판본 존 윌리엄스 Famous Hot Legend Story",
+   "epid": null,
+   "declared_isbn": "9788925538297",
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner John Williams Novel Korean Book Fun Famous Legend Hot",
+   "epid": null,
+   "declared_isbn": "9788925554990",
+   "identity_title": "Stoner (Korean Edition)",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner John Williams Vintage Pulp Paperback 1972 Pocket 1st VG+",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner New York Review Books Classics",
+   "epid": "51588409",
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner New York Review Books Classics",
+   "epid": "51588409",
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner Novel Literary Fiction Classic Paperback Book",
+   "epid": "51588409",
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner Paperback by John Williams",
+   "epid": "51588409",
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner Stoner",
+   "epid": null,
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner, Hardcover by Williams, John; McGahern, John (INT), Like New Used, Fre...",
+   "epid": "20038792193",
+   "declared_isbn": "9781681374574",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner, John Williams",
+   "epid": "51588409",
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner, John Williams, First Edition, First Printing, Viking, 1965",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner, Paperback - by John Williams (Author)",
+   "epid": null,
+   "declared_isbn": "9780099561545",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner, Paperback by Williams, John Edward; McGahern, John (INT), Brand New, ...",
+   "epid": "51588409",
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "unsure"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner, Paperback by Williams, John Edward; McGahern, John (INT), Like New Us...",
+   "epid": "51588409",
+   "declared_isbn": "9781590171998",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "yes"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner, Paperback by Williams, John, Brand New, Free shipping in the US",
+   "epid": null,
+   "declared_isbn": "9780099561545",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner, Paperback by Williams, John, Like New Used, Free shipping in the US",
+   "epid": null,
+   "declared_isbn": "9780099561545",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner: 50th Anniversary Edition",
+   "epid": "20038792193",
+   "declared_isbn": "9781681374574",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner: 50th Anniversary Edition (Hardback or Cased Book)",
+   "epid": "20038792193",
+   "declared_isbn": "9781681374574",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner: 50th Anniversary Edition (New York Review Books Classics)",
+   "epid": "210246831",
+   "declared_isbn": "9781590179284",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner: 50th Anniversary Edition - Hardcover By Williams, John - GOOD",
+   "epid": "20038792193",
+   "declared_isbn": "9781681374574",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner: 50th Anniversary Edition - Hardcover, by Williams John - Acceptable",
+   "epid": "20038792193",
+   "declared_isbn": "9781681374574",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner: 50th Anniversary Edition by John Williams (English) Hardcover Book",
+   "epid": "20038792193",
+   "declared_isbn": "9781681374574",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner: 50th Anniversary Edition by John Williams: New",
+   "epid": "20038792193",
+   "declared_isbn": "9781681374574",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner: 50th Anniversary Edition Hardcover by John Williams",
+   "epid": "20038792193",
+   "declared_isbn": "9781681374574",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner: A Novel (Vintage Classics) by Williams, John Book The Fast Free Shipping",
+   "epid": null,
+   "declared_isbn": "9780099561545",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "Stoner: A Novel by John Williams Paperback**",
+   "epid": null,
+   "declared_isbn": null,
+   "identity_title": null,
+   "is_book": "yes",
+   "is_edition": "no"
+  },
+  {
+   "book": "stoner",
+   "listing_title": "stoner: a novel. john williams",
+   "epid": null,
+   "declared_isbn": "9780099561545",
+   "identity_title": "Stoner",
+   "is_book": "yes",
+   "is_edition": "no"
+  }
+ ]
+}
