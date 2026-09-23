@@ -105,7 +105,12 @@ form.add button, button.secondary { font-weight: 600; }
 button.remove { padding: 0.35rem 0.6rem; font-size: 0.875rem; }
 form.override { margin-top: 0.5rem; }
 .declared { font-size: 0.8125rem; margin-top: 0.15rem; }
-.still-looking { border-left: 2px solid var(--line); padding-left: 0.75rem; }
+/* The dotted underline is the only thing telling a reader there is more to
+   read. Without it the hover is a secret. */
+.digging span[title] {
+  border-bottom: 1px dotted currentColor;
+  cursor: help;
+}
 details.maybe { margin-top: 1.5rem; }
 details.maybe summary { cursor: pointer; font-weight: 600; padding: 0.5rem 0; }
 /* The candidate picker reuses .entry's row shape, so a book being chosen and
