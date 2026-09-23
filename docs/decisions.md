@@ -3,7 +3,7 @@
 Short entries, one per decision that would be expensive to reverse or annoying
 to re-argue. Each states what was chosen, what else was considered, and why.
 
-*Last updated: 2026-09-22*
+*Last updated: 2026-09-23*
 
 ---
 
@@ -1013,3 +1013,137 @@ wrong book is invisible to every check this project has. The entry point in
 back — a book added by number should display the title the catalogue returns,
 so a mistyped or misremembered ISBN is caught by the person who typed it rather
 than by a coincidence a week later.
+
+**Superseded in part, 2026-09-23.** Decision 33 measured this against hand
+labels and `epid` did not survive as *the* unit. It over-merges: distinct
+editions of *Crash* share one `epid`, so a match is evidence, not proof. It is
+now one of three identifier signals rather than the identifier.
+
+---
+
+## 33. A listing is graded, not filtered — and the grade comes from identifiers, never from text alone
+
+**Decision.** Search wide and cheap on title and author, then grade every
+listing into confidence tiers using identifiers. Nothing is thrown away for
+being uncertain; it is labelled uncertain and shown lower down. Three signals
+produce a **certain** grade, in this order of trust:
+
+1. The seller's declared ISBN is the one on the want-list entry.
+2. The seller's declared ISBN belongs to this work — either it is in the
+   cached ISBN set for the work, or Open Library resolves it to this title
+   and a shared author.
+3. The listing's `epid` matches the edition's.
+
+Anything tied to the book only by its listing text is **possible**. In
+collectible mode a listing whose `epid` matches but whose declared ISBN names a
+*different* edition of the same work is **probable** — the two identifiers
+disagree and neither wins.
+
+**Measured against 227 hand labels** across *Pride and Prejudice*, *Crash* and
+*Stoner*, classified twice each: is this the book, and is this that edition.
+
+| Reading mode — any edition | listings | certain | possible | recall |
+|---|---|---|---|---|
+| Crash | 53 | 27 at 96% | 26 at 73% | 100% |
+| Stoner | 65 | 51 at 100% | 11 at 100% | 100% |
+
+| Collectible mode — this edition | listings | certain | possible | recall |
+|---|---|---|---|---|
+| Crash | 53 | 6 at 67% | 25 at 8% | 100% |
+| Stoner | 65 | 26 at 96% | 7 at 14% | 100% |
+
+Nothing true was hidden in either mode on either book. The tiers carry the
+uncertainty instead.
+
+**Why grading rather than filtering.** Every rule measured was good at one
+question and bad at the other. Listing text finds the book at 92–94% precision
+and cannot find the edition at all — 12% on *Crash*. `epid` finds the edition
+at 92% and misses two thirds of the copies of the book. They fail in opposite
+directions, which makes them layers rather than candidates.
+
+**Neither catalogue has an identity key, and they fail in opposite
+directions.** eBay's `epid` **over-merges** — several *Crash* editions sit
+behind one id, which is what drops its edition precision to 60% on that book.
+Open Library's work id **over-splits** — *Crash* is filed under five separate
+work ids and *Stoner* under five, and its author keys split too, with John
+Williams appearing as both `OL328495A` and `OL587370A` on editions of the same
+work. A first version of this rule tested the declared ISBN against the target
+work id and threw away 21 of the 45 true *Crash* listings. Resolving the ISBN
+to a **title and author** instead took recall to 100%.
+
+**What Open Library is for, then.** Not matching — resolving. It turns a
+seller-declared ISBN into a catalogued title, author, publisher, format and
+year. Three *Stoner* listings are the Library of America omnibus, *Butcher's
+Crossing / Stoner / Augustus*; their titles contain "Stoner", their author is
+John Williams, and every eBay signal admits them. Only resolving the declared
+ISBN excludes them. eBay has no equivalent signal.
+
+The division that holds: **Open Library describes editions, eBay describes
+copies.** Format, publisher, year and page count are edition facts. Condition,
+price, signed, inscribed and the photographs are copy facts that exist only on
+eBay, and collectible mode lives almost entirely on that side.
+
+**Open Library is not the better source for edition attributes**, which was
+worth testing because it looked likely. Its `physical_format` is present on
+43–69% of the editions of our three works against eBay's 74%, its values are
+uncontrolled — `paperback`, `Paperback`, `Trade Paperback`, `mass market
+paperback`, `Brossura`, `gebundene Ausgabe` — and it does not know the target
+*Crash* edition is a paperback at all. It is cleaner on publisher and year, and
+resolves 31 of 36 declared ISBNs; the five misses are all non-English. Show its
+values where it has them, fall back to eBay's aspects, and mark which is which:
+Open Library's "Paperback" describes the edition, eBay's describes the object
+in the photograph, and the seller can be wrong.
+
+**Ordering follows from the mode, and the two are not the same.**
+
+*Reading* sorts the certain tier by landed cost and collapses **possible**
+beneath it. The top ten by price were correct for both books. The errors sink
+on their own: the one thing the identifier tier cannot catch — a Gagosian
+Gallery exhibition catalogue titled *Crash*, credited to Ballard, with a valid
+ISBN — sorts last of 27 at $399.95, because everything we confuse with a cheap
+paperback is expensive. That is luck worth taking, not a principle to lean on.
+
+*Collectible* groups by tier first and sorts by price or newness only **within**
+a tier. Price-ascending stops protecting anything here: the cheapest certain
+*Crash* listing is wrong, and a genuine NYRB first printing sits in **possible**
+at $134.99 below three wrong cheaper ones. Inventory is scarce — 6 right copies
+in 53 listings — so nothing can be hidden, and the tier label is what makes the
+list readable.
+
+**eBay's category is informational and never a rule.** The categories are
+sprawling and overlapping, they are localised in the response — `Bücher`,
+`Libri antichi e da collezione` — and `Antiquarian & Collectible` is where
+collectible inventory actually lives. An early version of this rule excluded on
+category and lost seven true listings. Display it; never include or exclude on
+it.
+
+**Cost.** The declared ISBN comes from `localizedAspects`, which needs a
+`getItem` call per listing — the search response does not carry it. That is
+affordable only because an item's aspects never change, so it is one call per
+listing ever and the steady state is new listings only, against 5,000 calls a
+day. Open Library costs one editions call per work per month plus one lookup
+per newly seen ISBN, cached permanently, since an ISBN's identity does not
+change.
+
+**What stays broken, and is not a bug to fix later.**
+
+- Three listings declare the exact target ISBN, with eBay's catalogue agreeing
+  on format and year, that were labelled *not* that edition. By every
+  machine-readable signal they are it. The seller declares one thing and
+  photographs another, and no data source reaches that.
+- A human cannot reliably tell a hardcover from a paperback in listing
+  photographs when the two share a cover. That was established the expensive
+  way: 86 labels on *The Girl with the Dragon Tattoo* were discarded because
+  its hardcover and paperback carry the same artwork. If a person holding the
+  photographs cannot decide, the app must not claim to — collectible mode has
+  to surface the ambiguity rather than resolve it.
+- Errors in the **possible** tier are almost all the same error: another book
+  by the same author whose listing name mentions the target. Sellers list an
+  author's famous titles, so *Concrete Island*, *The Atrocity Exhibition* and
+  *The Disaster Area* all match "crash" and "ballard". None carries a declared
+  ISBN, which is exactly why it falls to the text tier.
+
+**What this rules out.** A per-edition search. Open Library returns 4,042
+editions of *Pride and Prejudice* against 21 for *Crash*, so one search per
+edition is not expensive, it is incoherent. The edition set is a matching
+resource, not a search plan.
