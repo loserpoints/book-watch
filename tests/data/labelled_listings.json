@@ -1,5 +1,5 @@
 {
- "_": "227 eBay listings for three books, each hand-classified twice by the person who would buy them: is this the book, and is this that edition. Gathered and labelled during S6; see decision 33. The numbers this corpus produces are asserted in test_matching.py, so a change that quietly degrades matching fails the build.",
+ "_": "227 eBay listings for three books, each hand-classified twice by the person who would buy them: is this the book, and is this that edition. `declared_author` is absent for Pride and Prejudice, which was labelled before aspects were fetched. Gathered and labelled during S6; see decision 33. The numbers this corpus produces are asserted in test_matching.py, so a change that quietly degrades matching fails the build.",
  "books": {
   "pride-and-prejudice": {
    "title": "Pride and Prejudice",
@@ -31,7 +31,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -40,7 +41,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -49,7 +51,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "no",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -58,7 +61,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -67,7 +71,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -76,7 +81,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -85,7 +91,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -94,7 +101,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -103,7 +111,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -112,7 +121,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "no",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -121,7 +131,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "no",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -130,7 +141,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -139,7 +151,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "no",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -148,7 +161,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -157,7 +171,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -166,7 +181,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -175,7 +191,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -184,7 +201,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "no",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -193,7 +211,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -202,7 +221,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -211,7 +231,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -220,7 +241,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -229,7 +251,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -238,7 +261,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -247,7 +271,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -256,7 +281,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -265,7 +291,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -274,7 +301,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -283,7 +311,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -292,7 +321,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -301,7 +331,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -310,7 +341,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -319,7 +351,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -328,7 +361,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -337,7 +371,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -346,7 +381,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -355,7 +391,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -364,7 +401,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -373,7 +411,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -382,7 +421,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -391,7 +431,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -400,7 +441,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -409,7 +451,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -418,7 +461,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -427,7 +471,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "unsure"
+   "is_edition": "unsure",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -436,7 +481,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -445,7 +491,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -454,7 +501,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -463,7 +511,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -472,7 +521,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -481,7 +531,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -490,7 +541,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -499,7 +551,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -508,7 +561,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -517,7 +571,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -526,7 +581,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -535,7 +591,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -544,7 +601,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -553,7 +611,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -562,7 +621,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -571,7 +631,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -580,7 +641,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -589,7 +651,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -598,7 +661,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -607,7 +671,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -616,7 +681,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -625,7 +691,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -634,7 +701,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -643,7 +711,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -652,7 +721,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -661,7 +731,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -670,7 +741,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -679,7 +751,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -688,7 +761,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -697,7 +771,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -706,7 +781,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -715,7 +791,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -724,7 +801,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -733,7 +811,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -742,7 +821,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -751,7 +831,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -760,7 +841,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -769,7 +851,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -778,7 +861,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -787,7 +871,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -796,7 +881,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -805,7 +891,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -814,7 +901,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -823,7 +911,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -832,7 +921,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -841,7 +931,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -850,7 +941,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -859,7 +951,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -868,7 +961,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "no",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -877,7 +971,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -886,7 +981,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -895,7 +991,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -904,7 +1001,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -913,7 +1011,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -922,7 +1021,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -931,7 +1031,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -940,7 +1041,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -949,7 +1051,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "no",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -958,7 +1061,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -967,7 +1071,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -976,7 +1081,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -985,7 +1091,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -994,7 +1101,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "pride-and-prejudice",
@@ -1003,7 +1111,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "crash",
@@ -1012,7 +1121,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "no",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1021,7 +1131,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "no",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "crash",
@@ -1030,7 +1141,8 @@
    "declared_isbn": "9781250171511",
    "identity_title": "Crash: A Novel",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1039,7 +1151,8 @@
    "declared_isbn": "9780394741093",
    "identity_title": "Crash",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1048,7 +1161,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J.G. Ballard"
   },
   {
    "book": "crash",
@@ -1057,7 +1171,8 @@
    "declared_isbn": "9780312420338",
    "identity_title": "Crash",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1066,7 +1181,8 @@
    "declared_isbn": "9780374524128",
    "identity_title": "Crash",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1075,7 +1191,8 @@
    "declared_isbn": "9780099762911",
    "identity_title": "Crash",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "Ballard, J G"
   },
   {
    "book": "crash",
@@ -1084,7 +1201,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "Ballard, J. G., Smith, Zadie"
   },
   {
    "book": "crash",
@@ -1093,7 +1211,8 @@
    "declared_isbn": "9781947856967",
    "identity_title": "Crash",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1102,7 +1221,8 @@
    "declared_isbn": "9781250171511",
    "identity_title": "Crash: A Novel",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1111,7 +1231,8 @@
    "declared_isbn": "9780374524128",
    "identity_title": "Crash",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1120,7 +1241,8 @@
    "declared_isbn": "9780099762911",
    "identity_title": "Crash",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1129,7 +1251,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1138,7 +1261,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J.G. Ballard"
   },
   {
    "book": "crash",
@@ -1147,7 +1271,8 @@
    "declared_isbn": "9780374524128",
    "identity_title": "Crash",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1156,7 +1281,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1165,7 +1291,8 @@
    "declared_isbn": "9780099762911",
    "identity_title": "Crash",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1174,7 +1301,8 @@
    "declared_isbn": "9780007287024",
    "identity_title": "Crash",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J.G. Ballard, Zadie Smith"
   },
   {
    "book": "crash",
@@ -1183,7 +1311,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "crash",
@@ -1192,7 +1321,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": "j.g. ballard"
   },
   {
    "book": "crash",
@@ -1201,7 +1331,8 @@
    "declared_isbn": "9780394741093",
    "identity_title": "Crash",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1210,7 +1341,8 @@
    "declared_isbn": "9780099466895",
    "identity_title": "Crash (Vintage Blue)",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J.G. Ballard"
   },
   {
    "book": "crash",
@@ -1219,7 +1351,8 @@
    "declared_isbn": "9781947856967",
    "identity_title": "Crash",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1228,7 +1361,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "NA"
   },
   {
    "book": "crash",
@@ -1237,7 +1371,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1246,7 +1381,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1255,7 +1391,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J.G. Ballard"
   },
   {
    "book": "crash",
@@ -1264,7 +1401,8 @@
    "declared_isbn": "9780394741093",
    "identity_title": "Crash",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1273,7 +1411,8 @@
    "declared_isbn": "9781250171511",
    "identity_title": "Crash: A Novel",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1282,7 +1421,8 @@
    "declared_isbn": "9781947856967",
    "identity_title": "Crash",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1291,7 +1431,8 @@
    "declared_isbn": "9780374524128",
    "identity_title": "Crash",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1300,7 +1441,8 @@
    "declared_isbn": "9780374524128",
    "identity_title": "Crash",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1309,7 +1451,8 @@
    "declared_isbn": "9781250171511",
    "identity_title": "Crash: A Novel",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J.G. Ballard"
   },
   {
    "book": "crash",
@@ -1318,7 +1461,8 @@
    "declared_isbn": "9780374524128",
    "identity_title": "Crash",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1327,7 +1471,8 @@
    "declared_isbn": "9781935263074",
    "identity_title": "Crash",
    "is_book": "no",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1336,7 +1481,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J G Ballard"
   },
   {
    "book": "crash",
@@ -1345,7 +1491,8 @@
    "declared_isbn": "9783924959029",
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "crash",
@@ -1354,7 +1501,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J.G. Ballard"
   },
   {
    "book": "crash",
@@ -1363,7 +1511,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "j.g. ballard"
   },
   {
    "book": "crash",
@@ -1372,7 +1521,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "no",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J G Ballard"
   },
   {
    "book": "crash",
@@ -1381,7 +1531,8 @@
    "declared_isbn": "9781947856967",
    "identity_title": "Crash",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1390,7 +1541,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "JG Ballard"
   },
   {
    "book": "crash",
@@ -1399,7 +1551,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "no",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "Ballard, J. G."
   },
   {
    "book": "crash",
@@ -1408,7 +1561,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "no",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J G Ballard"
   },
   {
    "book": "crash",
@@ -1417,7 +1571,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "no",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1426,7 +1581,8 @@
    "declared_isbn": "9780007287024",
    "identity_title": "Crash",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": null
   },
   {
    "book": "crash",
@@ -1435,7 +1591,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "crash",
@@ -1444,7 +1601,8 @@
    "declared_isbn": "9781250171511",
    "identity_title": "Crash: A Novel",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1453,7 +1611,8 @@
    "declared_isbn": "9780007287024",
    "identity_title": "Crash",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1462,7 +1621,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J. G. Ballard"
   },
   {
    "book": "crash",
@@ -1471,7 +1631,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J.G. Ballard"
   },
   {
    "book": "crash",
@@ -1480,7 +1641,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "no",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "J.G. Ballard"
   },
   {
    "book": "stoner",
@@ -1489,7 +1651,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1498,7 +1661,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1507,7 +1671,8 @@
    "declared_isbn": "9788864112367",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "Unknown, John Williams"
   },
   {
    "book": "stoner",
@@ -1516,7 +1681,8 @@
    "declared_isbn": "9788804732495",
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "Stefano Tummolini"
   },
   {
    "book": "stoner",
@@ -1525,7 +1691,8 @@
    "declared_isbn": "9781598537024",
    "identity_title": "John Williams : Collected Novels",
    "is_book": "no",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1534,7 +1701,8 @@
    "declared_isbn": "9781598537024",
    "identity_title": "John Williams : Collected Novels",
    "is_book": "no",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1543,7 +1711,8 @@
    "declared_isbn": "9781598537024",
    "identity_title": "John Williams : Collected Novels",
    "is_book": "no",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1552,7 +1721,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "stoner",
@@ -1561,7 +1731,8 @@
    "declared_isbn": "9781681374574",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1570,7 +1741,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1579,7 +1751,8 @@
    "declared_isbn": "9780099561545",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1588,7 +1761,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": "Williams, John, Torrescasana Flotats, Albert"
   },
   {
    "book": "stoner",
@@ -1597,7 +1771,8 @@
    "declared_isbn": "9788416334445",
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "Williams, John, Torrescasana Flotats, Albert"
   },
   {
    "book": "stoner",
@@ -1606,7 +1781,8 @@
    "declared_isbn": "9787208130500",
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "Williams John"
   },
   {
    "book": "stoner",
@@ -1615,7 +1791,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "stoner",
@@ -1624,7 +1801,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "stoner",
@@ -1633,7 +1811,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "stoner",
@@ -1642,7 +1821,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "stoner",
@@ -1651,7 +1831,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1660,7 +1841,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1669,7 +1851,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1678,7 +1861,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1687,7 +1871,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1696,7 +1881,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1705,7 +1891,8 @@
    "declared_isbn": "9781557280299",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John E. Williams"
   },
   {
    "book": "stoner",
@@ -1714,7 +1901,8 @@
    "declared_isbn": "9781557280299",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John E. Williams"
   },
   {
    "book": "stoner",
@@ -1723,7 +1911,8 @@
    "declared_isbn": "9780099595793",
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "john williams"
   },
   {
    "book": "stoner",
@@ -1732,7 +1921,8 @@
    "declared_isbn": "9781784877309",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1741,7 +1931,8 @@
    "declared_isbn": "9781681374574",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1750,7 +1941,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1759,7 +1951,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1768,7 +1961,8 @@
    "declared_isbn": "9780099595168",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "Williams, John; Introduction by John McGahern"
   },
   {
    "book": "stoner",
@@ -1777,7 +1971,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "stoner",
@@ -1786,7 +1981,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "stoner",
@@ -1795,7 +1991,8 @@
    "declared_isbn": "9781784877309",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1804,7 +2001,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1813,7 +2011,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1822,7 +2021,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1831,7 +2031,8 @@
    "declared_isbn": "9788925538297",
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1840,7 +2041,8 @@
    "declared_isbn": "9788925554990",
    "identity_title": "Stoner (Korean Edition)",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1849,7 +2051,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1858,7 +2061,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1867,7 +2071,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1876,7 +2081,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1885,7 +2091,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1894,7 +2101,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": null
   },
   {
    "book": "stoner",
@@ -1903,7 +2111,8 @@
    "declared_isbn": "9781681374574",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1912,7 +2121,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1921,7 +2131,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1930,7 +2141,8 @@
    "declared_isbn": "9780099561545",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1939,7 +2151,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "unsure"
+   "is_edition": "unsure",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1948,7 +2161,8 @@
    "declared_isbn": "9781590171998",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "yes"
+   "is_edition": "yes",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1957,7 +2171,8 @@
    "declared_isbn": "9780099561545",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "Williams, John"
   },
   {
    "book": "stoner",
@@ -1966,7 +2181,8 @@
    "declared_isbn": "9780099561545",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "Williams, John"
   },
   {
    "book": "stoner",
@@ -1975,7 +2191,8 @@
    "declared_isbn": "9781681374574",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1984,7 +2201,8 @@
    "declared_isbn": "9781681374574",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -1993,7 +2211,8 @@
    "declared_isbn": "9781590179284",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -2002,7 +2221,8 @@
    "declared_isbn": "9781681374574",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -2011,7 +2231,8 @@
    "declared_isbn": "9781681374574",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -2020,7 +2241,8 @@
    "declared_isbn": "9781681374574",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -2029,7 +2251,8 @@
    "declared_isbn": "9781681374574",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -2038,7 +2261,8 @@
    "declared_isbn": "9781681374574",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -2047,7 +2271,8 @@
    "declared_isbn": "9780099561545",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "Williams, John"
   },
   {
    "book": "stoner",
@@ -2056,7 +2281,8 @@
    "declared_isbn": null,
    "identity_title": null,
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams"
   },
   {
    "book": "stoner",
@@ -2065,7 +2291,8 @@
    "declared_isbn": "9780099561545",
    "identity_title": "Stoner",
    "is_book": "yes",
-   "is_edition": "no"
+   "is_edition": "no",
+   "declared_author": "John Williams, John McGahern"
   }
  ]
 }

@@ -53,12 +53,16 @@ class Target:
     decision 7 as amended measured that about 80% of a downloaded edition list
     is never offered for sale.
 
-    No author. It narrows the *search* — an entry looks a marketplace up by
-    title and author together — but by the time a listing is being graded that
-    filtering has already happened, and adding it here changed no answers.
+    `author` is used only to rule a listing **out**. It was left out entirely
+    at first, on a measurement saying it changed no answers — taken across
+    three books whose titles are effectively unique in the catalogue, so the
+    sample could not show the failure. Three different books called *Breaking
+    and Entering* then graded certain against each other in production. A
+    title is not a book.
     """
 
     title: str
+    author: str | None = None
     isbns: frozenset[str] = field(default_factory=frozenset)
     epids: frozenset[str] = field(default_factory=frozenset)
 
@@ -83,6 +87,10 @@ class Evidence:
     epid: str | None = None
     declared_isbn: str | None = None
     identity: str | None = None
+    #: The author the seller declared. Present on about nine listings in ten,
+    #: prefilled by eBay where its catalogue matched the listing and typed
+    #: otherwise — a claim about the copy, not a fact about the edition.
+    declared_author: str | None = None
 
 
 def grade(evidence: Evidence, target: Target, *, hunt: Hunt = "reader") -> Tier:
@@ -95,7 +103,12 @@ def grade(evidence: Evidence, target: Target, *, hunt: Hunt = "reader") -> Tier:
     declared = evidence.declared_isbn
 
     if declared and declared in target.isbns:
+        # The number being watched. A seller who also typed the wrong author
+        # has made a typing mistake, not sold a different book.
         return "certain"
+
+    if _author_contradicts(evidence, target):
+        return "excluded"
 
     if declared and evidence.identity is not None:
         # We asked, and the catalogue answered. If it named a different book,
@@ -127,6 +140,62 @@ def grade(evidence: Evidence, target: Target, *, hunt: Hunt = "reader") -> Tier:
     return "excluded"
 
 
+def _author_contradicts(evidence: Evidence, target: Target) -> bool:
+    """Does the seller say this is by somebody else?
+
+    Only ever a negative. Two names agreeing proves nothing — every listing
+    for a famous title names its famous author — but two disagreeing is the
+    one cheap signal that a matching title is a different book.
+
+    Both sides have to be known. A listing that declared no author contradicts
+    nothing, and neither does a want-list entry added before authors were
+    asked for.
+
+    **And the listing's own name must not vouch for the author either.** The
+    corpus insisted on this: requiring only that the two names agree hid a
+    real copy of *Stoner* whose seller had typed the translator's name into
+    the author field, and a real copy of *Crash* whose seller had typed "NA".
+    Both listings said "Williams" and "Ballard" plainly in their titles.
+
+    So this rejects only when two independent things fail to mention the
+    author — which is what the three books called *Breaking and Entering*
+    looked like, and what a mistyped author field does not.
+    """
+    if not target.author or not evidence.declared_author:
+        return False
+    wanted = surnames(target.author)
+    claimed = surnames(evidence.declared_author)
+    if not wanted or not claimed or wanted & claimed:
+        return False
+    return _surname(target.author) not in _flatten(evidence.listing_title)
+
+
+def surnames(names: str) -> set[str]:
+    """Every word of a name field, which may hold several names.
+
+    Sellers write "Williams, John Edward; McGahern, John (INT)" where eBay's
+    catalogue writes "Joy Williams", so positions cannot be relied on. Keeping
+    every word is deliberately generous, because this decides whether to
+    *reject*: a false agreement costs one wrong listing shown, a false
+    disagreement costs a right one hidden.
+
+    Single letters go, so "J. G. Ballard" does not agree with "J. K. Rowling".
+    """
+    return {word for word in _flatten(names).split() if len(word) > 1}
+
+
+def _surname(author: str) -> str:
+    """The last word of a name — the part a listing carries intact.
+
+    "J. G. Ballard" appears as Ballard, J G Ballard, JG Ballard and
+    J.G. Ballard across the measured sample, and only the last word survives
+    all of them.
+    """
+    parts = surnames(author)
+    ordered = [w for w in _flatten(author).split() if w in parts]
+    return ordered[-1] if ordered else ""
+
+
 def _epid_matches(evidence: Evidence, target: Target) -> bool:
     return evidence.epid is not None and evidence.epid in target.epids
 
@@ -147,29 +216,22 @@ def names_the_same_book(identity: str, wanted: str) -> bool:
     return found == looking_for or found.startswith(looking_for + " ")
 
 
-def _text_matches(
-    listing_title: str, target: Target, *, with_author: bool = False
-) -> bool:
+def _text_matches(listing_title: str, target: Target) -> bool:
+    """Does the listing name carry every significant word of the title?
+
+    The weakest signal there is, and the reason text alone never reaches
+    `certain`: on the edition question it scored 36% precision overall and 12%
+    on *Crash*, because sellers list an author's famous titles and every
+    Ballard listing mentions *Crash*.
+
+    No author here. The stricter version was dropped in S10 when the corpus
+    showed it hid true matches — listings named as plainly as "Pride and
+    Prejudice" — and the author now does its work in `_author_contradicts`,
+    where a *disagreement* rejects rather than an absence failing to admit.
+    """
     text = _flatten(listing_title)
     words = [w for w in _flatten(target.title).split() if w not in _NOISE]
-    if not words or not all(word in text for word in words):
-        return False
-    if not with_author:
-        return True
-    if not target.author:
-        return True
-    return _surname(target.author) in text
-
-
-def _surname(author: str) -> str:
-    """The last word of a name, which is the part a listing reliably carries.
-
-    "J. G. Ballard" appears as Ballard, J G Ballard, JG Ballard and
-    J.G. Ballard across the measured sample. Only the surname survives all of
-    them.
-    """
-    parts = _flatten(author).split()
-    return parts[-1] if parts else ""
+    return bool(words) and all(word in text for word in words)
 
 
 def _flatten(text: str) -> str:

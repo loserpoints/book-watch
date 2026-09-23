@@ -39,6 +39,7 @@ SELECT copy.item_id,
        copy.seen_at,
        declaration.item_id AS asked_ebay,
        declaration.isbn    AS declared_isbn,
+       declaration.author  AS declared_author,
        declaration.format  AS declared_format,
        declaration.publisher AS declared_publisher,
        declaration.published AS declared_year,
@@ -67,6 +68,7 @@ class Copy:
     seller: str | None = None
     thumbnail: str | None = None
     category: str | None = None
+    declared_author: str | None = None
     declared_format: str | None = None
     declared_publisher: str | None = None
     declared_year: str | None = None
@@ -180,6 +182,9 @@ def _target(connection: sqlite3.Connection, entry: Entry) -> Target:
     }
     return Target(
         title=entry.title or entry.search_query,
+        # Only ever used to reject. An entry added before authors were asked
+        # for has none, and then nothing is rejected on this basis.
+        author=entry.author,
         isbns=frozenset(isbns),
         epids=frozenset(epids),
     )
@@ -191,6 +196,7 @@ def _to_copy(row: sqlite3.Row, target: Target, entry: Entry) -> Copy:
         epid=row["epid"],
         declared_isbn=row["declared_isbn"],
         identity=row["identity_title"],
+        declared_author=row["declared_author"],
     )
     return Copy(
         item_id=row["item_id"],
@@ -205,6 +211,7 @@ def _to_copy(row: sqlite3.Row, target: Target, entry: Entry) -> Copy:
         seller=row["seller"],
         thumbnail=row["thumbnail"],
         category=row["category"],
+        declared_author=row["declared_author"],
         declared_format=row["declared_format"],
         declared_publisher=row["declared_publisher"],
         declared_year=row["declared_year"],
