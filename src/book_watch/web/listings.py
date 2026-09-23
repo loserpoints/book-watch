@@ -20,7 +20,7 @@ from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from book_watch import wantlist
+from book_watch import copies, wantlist
 from book_watch.config import MissingCredentialError, load_ebay_credentials
 from book_watch.ebay.auth import EbayTokenProvider
 from book_watch.ebay.errors import EbayError
@@ -138,8 +138,16 @@ def build_router(
         request: Request,
         book_id: int,
         limit: int = Query(DEFAULT_LIMIT, ge=1, le=MAX_LIMIT),
+        refresh: int = 0,
     ) -> HTMLResponse:
-        """What is for sale, right now, for one book on the want-list."""
+        """What is for sale for one book, graded by how sure we are.
+
+        The page reads the store. It searches eBay only when this book has
+        never been searched for, or when asked to refresh — decision 30 as
+        amended. It never fetches a listing's detail: measured at 0.51s each,
+        fifty of them is twenty-five seconds, and that work belongs to the
+        background.
+        """
         with closing(open_database()) as connection:
             try:
                 book = wantlist.get(connection, book_id)
@@ -156,6 +164,36 @@ def build_router(
                     status_code=404,
                 )
 
-        return search_and_render(request, book.search_query, limit, book=book)
+            error = None
+            if refresh or book.copies_fetched_at is None:
+                try:
+                    copies.store(
+                        connection, book.work_id, run_search(book.search_query, limit)
+                    )
+                    connection.commit()
+                    book = wantlist.get(connection, book_id)
+                except MissingCredentialError as exc:
+                    error = (f"eBay is not configured: {exc}", 500)
+                except EbayError as exc:
+                    error = (f"eBay could not be searched: {exc}", 502)
+
+            for_sale = copies.for_entry(connection, book)
+
+        shown = [copy for copy in for_sale if copy.tier != "excluded"]
+        context = {
+            "isbn": book.search_query,
+            "book": book,
+            "copies": [copy for copy in shown if copy.tier == "certain"],
+            "uncertain": [copy for copy in shown if copy.tier != "certain"],
+            "hidden": len(for_sale) - len(shown),
+            "unlooked": len(copies.unasked(for_sale)),
+            "listings": [],
+            "error": error[0] if error else None,
+            "fetched_at": book.copies_fetched_at or "never",
+            "is_isbn": normalise(book.search_query) is not None,
+        }
+        return templates.TemplateResponse(
+            request, "book.html", context, status_code=error[1] if error else 200
+        )
 
     return router

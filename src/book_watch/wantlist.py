@@ -52,6 +52,7 @@ class Entry:
     edition_count: int
     resolved_at: str | None
     enriched_at: str | None
+    copies_fetched_at: str | None
     _single_isbn: str | None
 
     @property
@@ -129,6 +130,7 @@ SELECT entry.id,
        work.author,
        work.resolved_at,
        work.enriched_at,
+       work.copies_fetched_at,
        count(edition.id) AS edition_count,
        min(edition.isbn) AS single_isbn
   FROM entry
@@ -284,5 +286,6 @@ def _to_entry(row: sqlite3.Row) -> Entry:
         edition_count=row["edition_count"],
         resolved_at=row["resolved_at"],
         enriched_at=row["enriched_at"],
+        copies_fetched_at=row["copies_fetched_at"],
         _single_isbn=row["single_isbn"],
     )
