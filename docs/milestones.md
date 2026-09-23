@@ -48,51 +48,6 @@ renumbers. Two rules keep that from costing anything:
 
 ---
 
-## M2 · The right book, in any edition
-
-**Goal.** A want-list entry means a book rather than one ISBN. It can be added
-by title and author, not only by ISBN. The set of editions that count is known,
-and listings that are not one of them are rejected.
-
-**Jobs advanced.**
-
-- **J1**, properly. "Ballard, *Crash*, any copy" becomes one entry rather than
-  a dozen.
-- **J2**, completed. Precision, not just ranking: the wrong book stops
-  appearing.
-
-**Why first.** Automating something that returns the wrong books only sends the
-wrong books daily. Matching is what everything after this is worth doing on top
-of, and it is the part that is genuinely hard rather than merely unbuilt. It is
-also the biggest change to the data model, since decision 26 currently makes a
-row an ISBN.
-
-**What is already measured.** Searching eBay for an ISBN string is not the same
-as finding copies of that edition. Nearly every used-book listing carries an
-`epid` — eBay's own product id — and searching by it finds listings the ISBN
-search misses, because plenty of sellers never type the ISBN at all. Decision
-32 has the numbers. Searching by title and author instead finds many editions
-but reaches any *specific* one poorly.
-
-**The open question is now settled, by measurement.** A work has many editions
-— 4,042 of *Pride and Prejudice* — so one search per edition was never merely
-expensive, it was incoherent. Decision 33 has the answer and the numbers behind
-it: one wide, cheap search on title and author, then every listing **graded**
-into confidence tiers by identifier rather than filtered. Nothing uncertain is
-discarded; it is labelled and shown lower down. Against 227 hand-classified
-listings, nothing true was hidden on either of the two use cases.
-
-**What that decision leaves for this milestone to decide.** Reading mode wants
-an entry to mean a work; collectible mode wants it to mean one edition, because
-the listings it rejects are precisely the ones another entry would want. The
-entry therefore needs to carry which hunt it is — which is *Two kinds of hunt*
-arriving early, and worth confronting here rather than designing around.
-
-**It will pull storage forward.** Whatever the answer, re-searching every
-edition on every page view is not it — so some of *Always current*'s caching arrives here.
-
----
-
 ## M3 · What I will pay, and whether this is fair
 
 **Goal.** A price ceiling per book, and enough context to act on a listing
@@ -105,21 +60,53 @@ without opening a second tab to sanity-check it.
 
 **Why here.** A threshold — "under $8 delivered" — and *is this a fair price*
 are the same question at two resolutions, and splitting them across milestones
-would mean building price judgement twice. Both also depend on *The right book*: comparing a
-listing against others of the same edition is only meaningful once editions are
-a thing the system understands.
+would mean building price judgement twice. Both also depend on *The right
+book*, which is now delivered: comparing a listing against others of the same
+edition is only meaningful once editions are a thing the system understands,
+and they are.
 
 **The open question.** The mechanism is genuinely undecided — four candidates
 are recorded against J5 and none is chosen. It is also the most open-ended
 thing in the project and the likeliest source of scope creep, which is why the
 concrete half (the threshold) is worth shipping first and on its own.
 
-**What *Always current* will quietly buy it.** Once listings are stored daily, the tool
-accumulates its own record of what copies of *these* books have been listed at.
-In a year that is a price history nobody can revoke, specific to the books I
-actually watch, costing one table and no extra API calls. Useless on day one,
-compounding after — an argument for the storage being right in *Always current*, not for
-building anything here early.
+**Re-read after *The right book*, 2026-09-23.** Four things changed, and one of
+them is urgent.
+
+**The threshold is now nearly free.** Landed cost is already computed, stored
+and sorted on, and a copy already carries the condition and what its seller
+declared. "Under $8 delivered" is a filter over data that exists, not a feature
+that needs data built for it.
+
+**Price judgement may only use the certain tier, and that is measured rather
+than cautious.** The *possible* tier ran at 8–14% precision on the edition
+question. An average asking price computed across it would be an average of
+mostly other books — the wrong number, confidently displayed, which is worse
+than no number. Whatever mechanism wins, its input is the certain tier alone.
+
+**The samples are smaller than they look.** *Crash* had six right-edition
+copies among fifty-three listings. A fairness judgement on six observations is
+a feeling with a decimal point on it. This milestone has to be able to say "not
+enough copies to tell" and mean it, and that is a design requirement rather
+than an edge case.
+
+**The price history is being deleted, right now, on every refresh.** This is
+the urgent one. J5's fourth candidate — our own observed history, "one table
+and zero extra API calls", useless on day one and compounding after — assumed
+listings would be recorded from the first poll onward. The table exists as of
+*The right book*. But a refresh **replaces** a book's copies rather than adding
+to them (decision 40), because the page's job is to show what is buyable now,
+and a copy that stopped appearing has been sold.
+
+So the clock on that candidate has not started. Every refresh since the page
+shipped has thrown away what the previous one saw. Keeping it means a second,
+append-only table — the same rows, never deleted — which is genuinely one table
+and no extra calls, and which is worth nothing until it is worth a great deal.
+
+**That makes one decision urgent and the rest not.** Whether to start recording
+is worth deciding now, because the cost of deciding later is measured in months
+of data that will not exist. What to *do* with the record can wait, and should:
+J5's mechanism is still four candidates and none of them is chosen.
 
 ---
 
@@ -263,3 +250,60 @@ vanished on the next deploy, silently. Found while writing the schema, not by a
 test. Three of the five slices turned up a defect of that shape — none of which
 any test would have caught, because each was a gap between what a document
 claimed and what existed.
+
+---
+
+### M2 · The right book, in any edition
+
+**Delivered 2026-09-23.** Add a book by title and pick it from the catalogue,
+or by number and read back what that number actually is. Open it and see every
+copy for sale, grouped by how sure we are that it is the book, cheapest first.
+The uncertain ones are shown, not hidden. What is still being worked out says
+so, and stops saying so when it stops being true.
+
+**What it taught.**
+
+- **The hard problem was measurable, and measuring it changed the answer three
+  times.** One search per edition turned out to be incoherent rather than
+  expensive — *Pride and Prejudice* has 4,042 of them. `epid` turned out to
+  over-merge. The stricter text floor for a collector turned out not to exist.
+  None of those were arguable in advance and all three were cheap to check.
+- **Neither catalogue has an identity key, and they fail in opposite
+  directions.** eBay's product id over-merges; Open Library files one book
+  under five work ids. That single finding shaped every slice after it, and a
+  rule built on either would have been quietly wrong rather than loudly broken.
+- **Grading beats filtering.** Nothing is discarded for being uncertain, which
+  is why recall was 100% on both hunts on all three books. The uncertainty went
+  into a label instead of into a judgement call.
+- **Committing 227 hand labels turned a study into a regression net**, and it
+  disproved a published decision on its first run. The labelling was a day's
+  work; leaving it in a temporary directory would have thrown that away.
+- **A stopwatch settled a design argument.** "Should the page fetch each
+  listing's details?" had no version that fit a two-second page — even two
+  calls was over — so the question dissolved rather than being compromised on.
+- **Open Library's data dump is the wrong answer for one user and the right
+  one for two**, and the reason flips from bytes to a per-address rate limit.
+  Worth knowing that an argument can invert on scale rather than degrade.
+
+**What it got wrong.** Five things, and four of them are the same thing:
+
+- `docs/decisions.md` carried a claim nobody had measured — that the two hunts
+  differ in two parameters — for several slices. **The decision record was the
+  check, and it did not check.**
+- The test suite called Open Library for real on every CI run. **Nothing
+  failed**; the only symptom was the suite getting four times slower.
+- `/health` answered `ok` without opening the database, so a machine with no
+  storage reported itself well. Still true, tracked as its own issue.
+- Two edits in the last slice silently did nothing. Tests passed, and the
+  feature was simply absent from the page.
+- And separately: production sat twelve slices behind `main`, so the migration
+  that rewrote every want-list row shipped alongside five others instead of
+  alone.
+
+The pattern in the first four is worth more than the list: **a check that
+exists is not a check that checks.** Each was caught by looking at the real
+thing — the running page, the clock, the committed data — rather than by the
+mechanism meant to catch it. Deploying on every merge, the network guard in
+`conftest.py`, and asserting on rendered HTML rather than on the property
+behind it are all responses to that, and none of them would have been obvious
+before.
