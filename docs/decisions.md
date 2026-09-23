@@ -1143,6 +1143,25 @@ change.
   *The Disaster Area* all match "crash" and "ballard". None carries a declared
   ISBN, which is exactly why it falls to the text tier.
 
+**An ISBN that does not resolve is absence of evidence, not evidence of
+absence.** A declared ISBN that Open Library resolves to a *different* book
+excludes the listing. One it cannot resolve at all must not — it falls through
+to the text tier like a listing that declared nothing. The five unresolvable
+ISBNs in the sample are the German, Italian, Catalan, Chinese and Korean
+editions, and all five are genuinely the book. Treating an Open Library miss as
+a rejection would systematically hide non-English editions, which is the one
+population it is weakest on.
+
+**One grader, not two.** Reading and collectible are the same function with two
+parameters: which ISBNs count as the target — every ISBN of the work, or the
+single ISBN of one edition — and how weak a text match is worth showing.
+Verified against the labels: the parameterised grader reproduces the reading
+numbers exactly and leaves the collectible *certain* tier unchanged, widening
+only its *possible* tier by two listings. What genuinely differs between the two
+hunts is not the pipeline but the surface: what a want-list entry points at, how
+the results are ordered, and what zero results means. Reading mode's ordering
+was measured; collectible mode's was not, and should not be assumed from it.
+
 **What this rules out.** A per-edition search. Open Library returns 4,042
 editions of *Pride and Prejudice* against 21 for *Crash*, so one search per
 edition is not expensive, it is incoherent. The edition set is a matching
