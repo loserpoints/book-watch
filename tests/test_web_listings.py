@@ -341,11 +341,10 @@ def test_copies_nobody_has_examined_yet_are_said_to_be_unexamined(book_client):
 
     page = client.get("/book/1").text
 
-    assert "Still digging" in page
-    # The short version has to say the fact by itself: `title` does not
-    # survive a touchscreen, so what hover adds is context, never the news.
-    assert "not looked at closely yet" in page
-    assert 'title="A copy has to declare its ISBN' in page
+    # The visible sentence is the whole fact. Only the reason is on hover,
+    # because `title` does not survive a touchscreen.
+    assert "Still digging through the shelves." in page
+    assert 'title="We ask the public catalogues slowly on purpose.' in page
 
 
 def test_a_copy_only_the_title_matches_goes_below_the_fold(book_client):

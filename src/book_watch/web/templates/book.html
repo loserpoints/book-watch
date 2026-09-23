@@ -33,16 +33,12 @@
     {# Honest rather than hidden: the first look at a new book is genuinely
        less certain than the second, and a spinner would claim otherwise.
 
-       Three words on the page, the reasoning on hover. The short version has
-       to stand on its own, because `title` does not survive a touchscreen
-       and is not reliably read out — so what is hidden here is context, never
-       the fact itself. #}
+       The visible sentence is the whole fact. Only the reason sits on hover,
+       because `title` does not survive a touchscreen and is not reliably read
+       out — so nothing a reader needs may live there alone. #}
     <p class="muted digging">
-      <span title="A copy has to declare its ISBN, or match a product the
-catalogue knows, before we call it a match. Checking that means asking eBay
-and Open Library about each one — slowly, on purpose. They are free, and we
-would like them to stay that way.">Still digging…</span>
-      {{ unlooked }} not looked at closely yet.
+      <span title="We ask the public catalogues slowly on purpose. They're free
+and we'd like them to stay that way.">Still digging through the shelves.</span>
     </p>
   {% endif %}
 

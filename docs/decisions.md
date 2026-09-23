@@ -1598,13 +1598,12 @@ The page says so rather than hiding it. A spinner would claim the list is
 still arriving; it is not, it is arriving *less certain than it will be*, and
 those are different promises.
 
-**Three words on the page, the reasoning on hover.** The visible line is
-"Still digging… 6 not looked at closely yet." Why that is worth waiting for —
-that a copy has to declare its number or match a known product before it
-counts, and that the catalogues are asked slowly on purpose because they are
-free — sits in a `title`. What is hidden is context, never the fact: `title`
-does not survive a touchscreen and is not reliably read out, so the short
-version has to stand alone.
+**One sentence on the page, the reason on hover.** The page says "Still
+digging through the shelves." Why it is slow — that the public catalogues are
+asked slowly on purpose, because they are free and we would like them to stay
+that way — sits in a `title`. Only the reason may live there: `title` does not
+survive a touchscreen and is not reliably read out, so nothing a reader needs
+can be hidden behind it.
 
 **Copies are replaced, not merged.** A copy that has stopped appearing has
 been sold or withdrawn, and keeping it would turn the store into a list of
