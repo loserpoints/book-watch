@@ -32,22 +32,68 @@ def test_a_book_added_with_no_title_has_no_title(connection):
 
 
 def test_a_book_nobody_has_looked_up_yet_says_so(connection):
-    book = wantlist.add(connection, "9780099448396")
+    """True of the rows migration 003 carried across, and nothing else now."""
+    connection.execute("INSERT INTO work (id) VALUES (99)")
+    connection.execute("INSERT INTO entry (work_id, hunt) VALUES (99, 'reader')")
+    entry_id = connection.execute("SELECT id FROM entry").fetchone()["id"]
 
-    assert book.name == "Looking this up…"
+    assert wantlist.get(connection, entry_id).name == "Looking this up…"
 
 
-def test_a_book_open_library_had_no_record_of_says_that_instead(connection):
-    """Different news: we asked, and the number is not in the catalogue.
+def test_a_number_we_looked_up_and_did_not_find_says_that_instead(connection):
+    """Different news: we asked, just now, and it is not in the catalogue.
 
     Usually a mistyped digit, which is the reader's to fix rather than ours.
     """
     book = wantlist.add(connection, "9780099448396")
-    connection.execute(
-        "UPDATE work SET enriched_at = datetime('now') WHERE id = ?", (book.work_id,)
+
+    assert book.name == "Unrecognized ISBN"
+
+
+def test_an_override_claims_nothing_about_a_lookup(connection):
+    """Asking Open Library about text that is not a number has no answer."""
+    book = wantlist.add(connection, "The Riddle of the Sands 1903")
+
+    assert book.resolved_at is None
+
+
+def test_a_book_open_library_recognised_keeps_what_it_said(connection):
+    book = wantlist.add_identified(
+        connection,
+        title="Stoner",
+        author="John Williams",
+        openlibrary_work_id="OL3511459W",
+        isbn="9781590171998",
     )
 
-    assert wantlist.get(connection, book.id).name == "Unrecognized ISBN"
+    assert book.name == "Stoner"
+    assert book.author == "John Williams"
+    assert book.added_by == "9781590171998"
+    assert book.resolved_at is not None
+
+
+def test_a_book_added_by_title_alone_has_no_edition(connection):
+    """S7 dropped the edition pre-fetch. Editions arrive from listings."""
+    book = wantlist.add_identified(
+        connection,
+        title="Pride and Prejudice",
+        author="Jane Austen",
+        openlibrary_work_id="OL66554W",
+    )
+
+    assert book.edition_count == 0
+    assert book.search_query == "Pride and Prejudice Jane Austen"
+
+
+def test_the_same_book_by_title_then_by_number_is_one_entry(connection):
+    wantlist.add_identified(
+        connection, title="Stoner", author="John Williams", isbn="9781590171998"
+    )
+
+    with pytest.raises(wantlist.DuplicateBook):
+        wantlist.add_identified(
+            connection, title="Stoner", author="John Williams", isbn="9781590171998"
+        )
 
 
 def test_a_blank_title_is_stored_as_no_title(connection):

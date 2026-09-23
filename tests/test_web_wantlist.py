@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from book_watch import db
 from book_watch.config import DeletionEndpointConfig
+from book_watch.openlibrary import Candidate, EditionIdentity, OpenLibraryUnavailable
 from book_watch.web import wantlist as web_wantlist
 from book_watch.web.app import create_app
 
@@ -15,8 +16,61 @@ DELETION_CONFIG = DeletionEndpointConfig(
 )
 
 
-@pytest.fixture
-def client(tmp_path):
+CRASH = EditionIdentity(
+    isbn="9780099448396",
+    title="Crash",
+    work_id="OL2745977W",
+    publisher="Vintage",
+    published="1995",
+    physical_format="Paperback",
+)
+
+CANDIDATES = [
+    Candidate(
+        work_id="OL3511459W",
+        title="Stoner",
+        authors=("John Williams",),
+        first_published=1965,
+        edition_count=49,
+    ),
+    Candidate(
+        work_id="OL26589081W",
+        title="John Williams : Collected Novels",
+        authors=("John Williams",),
+        first_published=2021,
+        edition_count=2,
+    ),
+]
+
+
+class FakeCatalogue:
+    """Stands in for Open Library, and records what it was asked.
+
+    Every test gets one of these. `tests/conftest.py` makes a real request a
+    loud failure, so forgetting to pass a stub cannot quietly turn the suite
+    into traffic against a non-profit.
+    """
+
+    def __init__(self, *, identities=None, candidates=(), unavailable=False):
+        self.identities = identities if identities is not None else {CRASH.isbn: CRASH}
+        self.candidates = list(candidates)
+        self.unavailable = unavailable
+        self.asked = []
+
+    def identify_isbn(self, isbn):
+        if self.unavailable:
+            raise OpenLibraryUnavailable("open library is down")
+        self.asked.append(isbn)
+        return self.identities.get(isbn)
+
+    def search_works(self, title, author=None, **_):
+        if self.unavailable:
+            raise OpenLibraryUnavailable("open library is down")
+        self.asked.append((title, author))
+        return self.candidates
+
+
+def build_client(tmp_path, catalogue):
     path = tmp_path / "book-watch.db"
 
     def connect():
@@ -25,8 +79,18 @@ def client(tmp_path):
         return connection
 
     app = FastAPI()
-    app.include_router(web_wantlist.build_router(connect))
+    app.include_router(web_wantlist.build_router(connect, catalogue))
     return TestClient(app)
+
+
+@pytest.fixture
+def catalogue():
+    return FakeCatalogue()
+
+
+@pytest.fixture
+def client(tmp_path, catalogue):
+    return build_client(tmp_path, catalogue)
 
 
 def add(client, isbn, title="", override=""):
@@ -101,7 +165,7 @@ def test_an_empty_isbn_is_refused(client):
     response = add(client, "   ")
 
     assert response.status_code == 400
-    assert "Enter an ISBN" in response.text
+    assert "Enter a title, or an ISBN" in response.text
 
 
 def test_a_book_can_be_removed(client):
@@ -135,11 +199,140 @@ def test_removing_something_already_gone_is_not_an_error(client):
 
 
 def test_a_title_cannot_inject_markup(client):
-    add(client, "9780099448396", "<script>alert('xss')</script>")
+    """Through the override, which is the only path that stores text as typed."""
+    add(client, "<script>alert('xss')</script>", override="1")
     page = client.get("/").text
 
     assert "<script>alert" not in page
     assert "&lt;script&gt;" in page
+
+
+# --- adding by number, which now says what the number is --------------------
+
+
+def test_the_catalogue_title_is_shown_rather_than_the_one_typed(client):
+    """Decision 32, and the reason this slice touches the ISBN path at all.
+
+    A valid ISBN that names the wrong book is invisible to every check this
+    project has. Keeping the typed title would hide the one thing that reveals
+    it — an ISBN believed to be one book coming back as another.
+    """
+    response = add(client, "9780099448396", "The Girl with the Dragon Tattoo")
+
+    assert "Crash" in response.text
+    assert "Dragon Tattoo" not in response.text
+
+
+def test_a_number_open_library_does_not_hold_is_offered_not_refused(client):
+    """Usually a mistyped digit, occasionally a real book it does not hold."""
+    response = add(client, "9781590171998")
+
+    assert response.status_code == 404
+    assert "no record of" in response.text
+    assert 'name="override"' in response.text
+    assert "Nothing on the list yet" in response.text
+
+
+def test_a_number_added_anyway_says_it_was_not_recognized(client):
+    add(client, "9781590171998", override="1")
+
+    assert "Unrecognized ISBN" in client.get("/").text
+
+
+def test_open_library_being_down_is_a_message_and_an_offer(tmp_path):
+    """Not a 500, and not a silent add either — the check simply did not happen."""
+    client = build_client(tmp_path, FakeCatalogue(unavailable=True))
+
+    response = add(client, "9780099448396")
+
+    assert response.status_code == 503
+    assert "could not be reached" in response.text
+    assert 'name="override"' in response.text
+
+
+def test_an_override_asks_open_library_nothing(catalogue, client):
+    """The person has already decided. Asking again would be noise on a service
+    that asks for low volume."""
+    add(client, "9781590171998", override="1")
+
+    assert catalogue.asked == []
+
+
+# --- adding by title --------------------------------------------------------
+
+
+def find(client, title, author=""):
+    return client.post("/books", data={"title": title, "author": author})
+
+
+def test_a_title_search_offers_candidates_to_choose_from(tmp_path):
+    client = build_client(tmp_path, FakeCatalogue(candidates=CANDIDATES))
+
+    response = find(client, "stoner", "john williams")
+
+    assert "Which one?" in response.text
+    assert "Stoner" in response.text
+    # The omnibus is in the list too, which is the point of choosing.
+    assert "Collected Novels" in response.text
+    assert "Nothing on the list yet" in response.text
+
+
+def test_candidates_carry_enough_to_tell_them_apart(tmp_path):
+    client = build_client(tmp_path, FakeCatalogue(candidates=CANDIDATES))
+
+    page = find(client, "stoner").text
+
+    assert "John Williams" in page
+    assert "1965" in page
+    assert "49 editions" in page
+
+
+def test_picking_a_candidate_puts_it_on_the_list(tmp_path):
+    client = build_client(tmp_path, FakeCatalogue(candidates=CANDIDATES))
+
+    response = client.post(
+        "/books/chosen",
+        data={"title": "Stoner", "author": "John Williams", "work_id": "OL3511459W"},
+    )
+
+    assert response.status_code == 200
+    assert "Stoner" in response.text
+    assert "Nothing on the list yet" not in response.text
+
+
+def test_a_title_search_finding_nothing_says_so_and_suggests_the_isbn(tmp_path):
+    client = build_client(tmp_path, FakeCatalogue(candidates=[]))
+
+    response = find(client, "a book that does not exist")
+
+    assert response.status_code == 404
+    assert "Nothing found" in response.text
+    assert "by ISBN" in response.text
+
+
+def test_a_title_search_sends_the_author_along(catalogue, client):
+    catalogue.candidates = CANDIDATES
+    find(client, "stoner", "john williams")
+
+    assert catalogue.asked == [("stoner", "john williams")]
+
+
+def test_open_library_being_down_during_a_search_says_so(tmp_path):
+    client = build_client(tmp_path, FakeCatalogue(unavailable=True))
+
+    response = find(client, "stoner")
+
+    assert response.status_code == 503
+    assert "could not be reached" in response.text
+    # The escape hatch still exists while it is down.
+    assert "ISBN" in response.text
+
+
+def test_adding_a_book_costs_one_request(catalogue, client):
+    """Decision 7: the ten to fifteen a book eventually costs are its listings'."""
+    add(client, "9780099448396")
+
+    assert len(catalogue.asked) == 1
 
 
 def test_the_app_does_not_open_the_database_at_startup(monkeypatch):
