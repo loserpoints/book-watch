@@ -22,29 +22,27 @@ def test_a_book_can_be_added_and_read_back(connection):
     assert book.added_at
 
 
-def test_a_book_added_with_no_title_is_still_searchable(connection):
-    """A work has to have something to search for, so the number stands in.
-
-    It reads the same on the page as it did when the title was simply null,
-    and enrichment replaces it with the real one.
-    """
+def test_a_book_added_with_no_title_has_no_title(connection):
+    """The number is not one. The screen says so rather than inventing it."""
     book = wantlist.add(connection, "9780099448396")
 
-    assert book.title == "9780099448396"
+    assert book.title is None
+    assert book.name == "Unknown title"
+    # Still searchable: the entry knows what it was added with.
     assert book.search_query == "9780099448396"
 
 
-def test_a_blank_title_is_not_stored_as_a_title(connection):
+def test_a_blank_title_is_stored_as_no_title(connection):
     """So the list never shows an empty string where a title should be."""
     book = wantlist.add(connection, "9780099448396", "")
 
-    assert book.title == "9780099448396"
+    assert book.title is None
 
 
 def test_a_new_entry_is_a_reader_looking_for_any_edition(connection):
     book = wantlist.add(connection, "9780099448396", "Crash")
 
-    assert book.hunt == wantlist.READER
+    assert book.hunt == "reader"
 
 
 def test_a_new_entry_has_not_been_enriched_yet(connection):

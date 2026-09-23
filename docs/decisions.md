@@ -824,17 +824,13 @@ loss is bounded and small.
 *bought* becomes a statement about a book rather than about one ISBN among
 several, and starts being worth recording.
 
-**That condition is now met, 2026-09-23.** Migration 003 groups editions under
-a work, so *bought* has become a statement about a book. This entry is left as
-it stands deliberately — the trigger firing is not the same as the feature
-being worth building, and nothing about the want-list has asked for it yet.
-Noted here so that when it is wanted, it is recognised as a decision already
-half-made rather than a new idea.
+**Still nothing is stored about bought, 2026-09-23.** Migration 003 met the
+condition above, and this entry stands unchanged: no column, no code, no plan.
 
-One thing did change: removing an entry deletes the entry, and leaves the work
-and its editions. They are what was learned from Open Library and eBay rather
-than something a person put there, so re-adding a book costs no requests at
-all. The removal itself is still irreversible, which is what this entry chose.
+Removing an entry now deletes the entry and leaves the work and its editions,
+which are what was learned from Open Library and eBay rather than something a
+person put there. The removal is still irreversible, which is what this entry
+chose.
 
 ---
 
@@ -1290,11 +1286,16 @@ deliberately not UNIQUE. Decision 33: *Crash* is filed under five Open Library
 works, *Stoner* under five, and a title search returns two separate *Pride and
 Prejudice* works. Anything that joined on it would be quietly wrong.
 
-**`work.title` is NOT NULL, so a book added with no title stores its number
-there.** Every work has to be searchable by construction. It reads on the page
-exactly as it did when the title was simply null, and enrichment replaces it.
-The alternative — a nullable title with a fallback at every display site — is
-the same compromise moved somewhere harder to see.
+**`work.title` is nullable, and a book added with only a number has no title
+until something learns one.** Writing the ISBN into the title field would have
+kept every work searchable by construction, which was tempting, and it would
+have been a lie stored in a column named `title` — one that leaks straight onto
+the page as a thirteen-digit heading.
+
+The invariant that actually matters is that every **entry** is searchable, not
+every work, and an entry always knows what it was added with. So the search
+falls back to that, the screen says the title is unknown rather than inventing
+one, and enrichment fills it in.
 
 **Ids are preserved through the migration.** The want-list links to
 `/book/{id}`, and renumbering would break every bookmark for every book on the

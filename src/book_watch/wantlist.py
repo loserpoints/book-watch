@@ -16,13 +16,13 @@ from __future__ import annotations
 import sqlite3
 from dataclasses import dataclass
 from datetime import date, datetime
+from typing import Literal
 
-#: The only hunt written today. See migration 003.
-READER = "reader"
-
-#: Storable, and nothing reads it yet. Decision 33: the collector surface waits
-#: on its own labelling exercise.
-COLLECTOR = "collector"
+#: Which hunt an entry is on. A reader will take any edition of the book; a
+#: collector wants one particular printing. Every entry is one or the other,
+#: and only "reader" is written today — decision 33 leaves the collector
+#: surface waiting on its own labelling exercise.
+Hunt = Literal["reader", "collector"]
 
 
 class DuplicateBook(Exception):
@@ -37,12 +37,15 @@ class Entry:
     for a book that never had one. It is the ISBN only while the work has
     exactly one known edition; once listings have taught us about others,
     naming one of them would be picking arbitrarily.
+
+    `title` is genuinely absent for a book added by number alone, until
+    something learns one. Screens use `name`.
     """
 
     id: int
     work_id: int
-    hunt: str
-    title: str
+    hunt: Hunt
+    title: str | None
     author: str | None
     added_at: str
     search_text: str | None
@@ -57,6 +60,16 @@ class Entry:
         return self._single_isbn if self.edition_count == 1 else None
 
     @property
+    def name(self) -> str:
+        """What to call this on screen.
+
+        A book added by number alone has no title yet. The number is not one,
+        and putting it in a heading would say we know less than we do — the
+        ISBN is the part we are sure of, and it shows on its own line.
+        """
+        return self.title or "Unknown title"
+
+    @property
     def search_query(self) -> str:
         """What to search a marketplace for.
 
@@ -68,7 +81,7 @@ class Entry:
         """
         return self.added_by or " ".join(
             part for part in (self.title, self.author) if part
-        )
+        )  # an entry always has one or the other
 
     @property
     def being_enriched(self) -> bool:
@@ -132,8 +145,12 @@ def add(connection: sqlite3.Connection, isbn: str, title: str | None = None) -> 
 
     work_id = _existing_work(connection, isbn) if is_isbn else None
     if work_id is None:
+        # No title, no invention. A book added by number alone stays untitled
+        # until Open Library or a person supplies one; an override entry takes
+        # the text typed, because that text is the only name it has.
         cursor = connection.execute(
-            "INSERT INTO work (title) VALUES (?)", (title or isbn,)
+            "INSERT INTO work (title) VALUES (?)",
+            (title if is_isbn else title or isbn,),
         )
         work_id = int(cursor.lastrowid)
         if is_isbn:
@@ -147,7 +164,7 @@ def add(connection: sqlite3.Connection, isbn: str, title: str | None = None) -> 
             INSERT INTO entry (work_id, hunt, edition_id, search_text)
             VALUES (?, ?, NULL, ?)
             """,
-            (work_id, READER, None if is_isbn else isbn),
+            (work_id, "reader", None if is_isbn else isbn),
         )
     except sqlite3.IntegrityError as exc:
         # The partial unique index is the only constraint this insert can

@@ -75,11 +75,18 @@ def test_the_parent_directory_is_created(tmp_path):
     connection.close()
 
 
-def test_a_work_needs_something_to_search_for(database):
+def test_a_work_can_have_no_title_yet(database):
+    """A book added by number alone is untitled until something learns one.
+
+    Writing the number into the title column would have made every work
+    searchable by construction, and put a thirteen-digit heading on the page.
+    """
     db.migrate(database)
 
-    with pytest.raises(sqlite3.IntegrityError):
-        database.execute("INSERT INTO work (author) VALUES ('Ballard')")
+    database.execute("INSERT INTO work (id) VALUES (1)")
+
+    row = database.execute("SELECT title FROM work WHERE id = 1").fetchone()
+    assert row["title"] is None
 
 
 def test_the_same_isbn_cannot_be_two_editions(database):
@@ -285,12 +292,17 @@ def test_ids_are_preserved_so_bookmarks_still_work(old_shape_with_rows):
     assert row["title"] == "Crash"
 
 
-def test_a_book_with_no_title_is_searchable_by_its_number(old_shape_with_rows):
-    """`work.title` is NOT NULL, so something had to go there."""
+def test_a_book_with_no_title_does_not_acquire_a_fake_one(old_shape_with_rows):
+    """It had no title before 003 and it has none after. Its ISBN is elsewhere."""
     db.migrate(old_shape_with_rows)
 
     row = old_shape_with_rows.execute("SELECT title FROM work WHERE id = 2").fetchone()
-    assert row["title"] == "9781590171998"
+    assert row["title"] is None
+
+    edition = old_shape_with_rows.execute(
+        "SELECT isbn FROM edition WHERE work_id = 2"
+    ).fetchone()
+    assert edition["isbn"] == "9781590171998"
 
 
 def test_a_real_isbn_becomes_an_edition(old_shape_with_rows):

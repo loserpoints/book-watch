@@ -19,9 +19,13 @@
 CREATE TABLE work (
     id       INTEGER PRIMARY KEY,
 
-    -- Not null: something has to be searchable. For a book added by hand
-    -- before it has been resolved, this is whatever was typed.
-    title    TEXT NOT NULL,
+    -- Nullable. A book added by number alone has no title until Open Library
+    -- or a person supplies one, and writing the number here instead would put
+    -- a thirteen-digit heading on the want-list.
+    --
+    -- What has to be searchable is an entry, not a work, and an entry always
+    -- knows what it was added with. See `Entry.search_query`.
+    title    TEXT,
 
     -- Null until Open Library or a person supplies one. Decision 33: the eBay
     -- search uses title and author together, so this is worth having.
@@ -121,7 +125,7 @@ CREATE UNIQUE INDEX one_collector_entry_per_edition ON entry (edition_id)
 -- text and gets no edition row, because it is not one.
 
 INSERT INTO work (id, title)
-SELECT id, COALESCE(NULLIF(TRIM(title), ''), isbn) FROM book;
+SELECT id, NULLIF(TRIM(title), '') FROM book;
 
 INSERT INTO edition (work_id, isbn)
 SELECT id, isbn FROM book
