@@ -1893,3 +1893,80 @@ is a rate-limit ledger where the time *is* the fact; `sweep.at` exists so a
 price history can be read by a human. All fine. The rule is about **identity
 and ordering** — never join on a time, compare on a time, or decide which row
 is current from a time.
+
+## 46. Every observation says what captured it
+
+**Decision.** `listing_declaration` and `openlibrary_edition` each carry a
+`captured_by` integer, compared against a `CAPTURE` constant sitting next to
+the code that reads those fields. A row below it is **stale, not absent**: it
+still answers, and is re-asked about when there is a pass to do it in.
+Migration 013.
+
+**The case it exists for already happened.** *The right book* added a rule
+reading the author eBay declares. Migration 008 added the column, every row
+predating it was null, and `Declarations.of()` never re-asks by design — so
+the rule was dead code in production while passing every test. Migration 009
+fixed it by deleting every declaration and asking again, because nothing
+distinguished a row captured before the author from one whose seller left it
+blank, which is about one listing in ten.
+
+At two books and forty calls, deleting everything was right. At fifty books
+it is not, and re-asking is the only part of a logic change that is not free.
+Decision 43 made deriving cost nothing; this makes the remainder as small as
+it can be.
+
+**By hand, not derived from the fields read.** Derived is wrong in both
+directions. It **under**-bumps: the author bug would have recurred if we had
+merely started reading an existing column *more carefully*, which no
+field-list hash notices, and the failure would again be silent. It
+**over**-bumps: renaming a field cosmetically would invalidate every row and
+spend thousands of requests on nothing. Each constant is pinned by a test, so
+bumping one is a deliberate two-line diff rather than something that happens
+by accident or does not happen at all.
+
+**Two constants, not one.** Bumping what we read from a listing must not
+re-ask Open Library about numbers whose answers cannot have changed. One
+shared version would double the price of every rule change in the currency we
+have least of.
+
+**Lazy, inside the pass that already exists.** Eager re-asking fires a burst
+across the whole want-list the moment a rule ships — the runaway shape
+decision 39 exists to prevent. Lazy means a book nobody opens costs nothing.
+That degrades gracefully *because a stale row still answers*; it would not be
+acceptable if staleness meant silence.
+
+**What happens when a re-ask returns less than what is stored.** The answer
+turns on a distinction the detail client already had and was throwing away:
+eBay answers **404** for a listing that has ended and **200** for one that is
+live. `Declared.present` now carries it.
+
+- **Live**: the seller's current declaration replaces ours outright, cleared
+  fields included. They are the authority on their own listing and an edit is
+  a fact about it.
+- **Ended**: everything stored survives and only the stamp moves. Its
+  emptiness says nothing about the book.
+
+This is sharper than the rule first proposed here, which was "never overwrite
+a non-null with a null" — that would also have ignored a live seller genuinely
+removing a value, which is real information. The 404 is the actual signal and
+the heuristic was standing in for it.
+
+It matters more after S16 than it would have before. Copies are kept for ever
+now, so the rows most likely to be re-asked about belong to listings that have
+ended. Without this rule, a recapture pass would have systematically destroyed
+good declarations.
+
+**Only copies in the newest sweep are re-asked about.** A copy that stopped
+appearing is not buyable, so a better answer about it changes nothing on the
+page, and since S16 there are more of those than live ones. Their stored
+answer stays stale and goes on being useful — it still contributes to which
+numbers count as this book (decision 43).
+
+**A pass reports `stale_remaining`**, so the price of a rule change is a
+number somebody can see before spending it.
+
+**Zero requests on deploy.** Migration 009 emptied the declarations, so every
+surviving row was written by code that already read everything the current
+code reads. Both tables stamp at 1 and nothing is stale on day one. Verified
+against a copy of production: 12 declarations, 3 editions, 0 stale, 0
+requests.

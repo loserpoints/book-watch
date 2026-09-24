@@ -91,7 +91,12 @@ def test_an_item_that_has_gone_is_not_an_error():
     """It was a real listing a moment ago. No longer buyable is not a failure."""
     declared = build_client(responds_with({}, 404)).declared_by("v1|111|0")
 
-    assert declared == Declared(item_id="v1|111|0")
+    assert declared == Declared(item_id="v1|111|0", present=False)
+    assert not declared.present, (
+        "A 404 has to stay distinguishable from a live listing whose seller "
+        "declared nothing. Re-asking overwrites the second and must not touch "
+        "the first."
+    )
 
 
 def test_an_ebay_failure_is_an_error():

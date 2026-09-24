@@ -34,6 +34,21 @@ _Now = Callable[[], datetime]
 
 _COLUMNS = "isbn, found, title, work_id, publisher, published, physical_format"
 
+#: Which fields the code above reads out of an Open Library edition.
+#:
+#: **Bump this whenever that changes**, including when the same field starts
+#: being read differently. See the note on `ebay.declarations.CAPTURE`: a rule
+#: shipped against rows captured before the field it needs is dead code that
+#: passes every test.
+#:
+#: Separate from eBay's on purpose. Bumping what we read from a listing must
+#: not re-ask Open Library about numbers whose answers are unaffected — that
+#: would double the price of every rule change, in the currency we have least
+#: of.
+#:
+#: 1: title, work_id, publisher, published, physical_format.
+CAPTURE = 1
+
 
 def _utcnow() -> datetime:
     return datetime.now(UTC)
@@ -106,10 +121,11 @@ class Resolver:
     def _remember(self, isbn: str, identity: EditionIdentity | None) -> None:
         self._connection.execute(
             f"""
-            INSERT INTO openlibrary_edition ({_COLUMNS}, asked_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+            INSERT INTO openlibrary_edition ({_COLUMNS}, captured_by, asked_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
             ON CONFLICT (isbn) DO UPDATE SET
                 found           = excluded.found,
+                captured_by     = excluded.captured_by,
                 title           = excluded.title,
                 work_id         = excluded.work_id,
                 publisher       = excluded.publisher,
@@ -125,8 +141,45 @@ class Resolver:
                 identity.publisher if identity else None,
                 identity.published if identity else None,
                 identity.physical_format if identity else None,
+                CAPTURE,
             ),
         )
+
+    def outdated(self, isbns: list[str]) -> list[str]:
+        """Which of these were captured by code that read less than this one.
+
+        Distinct from `_stale`, which is about a recorded *miss* going out of
+        date because Open Library gains records. This is about our own code
+        having learned to read more. A miss expires on a timer; a capture
+        never expires on its own, only when we change what we ask for.
+        """
+        wanted = [n for n in (normalise(i) for i in isbns) if n is not None]
+        if not wanted:
+            return []
+        placeholders = ",".join("?" * len(wanted))
+        rows = self._connection.execute(
+            "SELECT isbn FROM openlibrary_edition "
+            f"WHERE isbn IN ({placeholders}) AND captured_by < ?",
+            [*wanted, CAPTURE],
+        )
+        behind = {row["isbn"] for row in rows}
+        return [isbn for isbn in wanted if isbn in behind]
+
+    def recapture(self, isbn: str) -> EditionIdentity | None:
+        """Ask again about a number we already have an older answer for.
+
+        Unlike a listing, a catalogue record has no "ended" state — Open
+        Library either holds this number or does not, and that answer is about
+        the book rather than about somebody's willingness to sell it. So the
+        new answer replaces the old one outright, and `_remember` already
+        stamps it.
+        """
+        normalised = normalise(isbn)
+        if normalised is None:
+            raise ValueError(f"{isbn!r} is not a valid ISBN.")
+        identity = self._client.identify_isbn(normalised)
+        self._remember(normalised, identity)
+        return identity
 
 
 def _row_to_identity(row: sqlite3.Row) -> EditionIdentity | None:

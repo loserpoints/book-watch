@@ -8,10 +8,11 @@ asked rather than only what came back.
 import pytest
 
 from book_watch import db, enrichment
+from book_watch.ebay import declarations as declarations_module
 from book_watch.ebay.declarations import Declarations
 from book_watch.ebay.detail import Declared
 from book_watch.ebay.errors import EbaySearchError
-from book_watch.openlibrary import BudgetExhausted, OpenLibraryUnavailable
+from book_watch.openlibrary import BudgetExhausted, OpenLibraryUnavailable, resolution
 from book_watch.openlibrary.models import EditionIdentity
 
 STONER = EditionIdentity(
@@ -78,6 +79,7 @@ class CountingResolver:
         self.raises = raises
         self.raise_after = raise_after
         self.asked = []
+        self.recaptured = []
 
     def known(self, isbn):
         row = self._connection.execute(
@@ -96,6 +98,28 @@ class CountingResolver:
             "INSERT OR IGNORE INTO openlibrary_edition (isbn, found, title) "
             "VALUES (?, ?, ?)",
             (isbn, 1 if found else 0, found.title if found else None),
+        )
+        return found
+
+    def outdated(self, isbns):
+        """Mirrors the real resolver: rows stamped below the current capture."""
+        if not isbns:
+            return []
+        placeholders = ",".join("?" * len(isbns))
+        rows = self._connection.execute(
+            f"SELECT isbn FROM openlibrary_edition WHERE isbn IN ({placeholders}) "
+            "AND captured_by < ?",
+            [*isbns, resolution.CAPTURE],
+        )
+        behind = {row["isbn"] for row in rows}
+        return [isbn for isbn in isbns if isbn in behind]
+
+    def recapture(self, isbn):
+        self.recaptured.append(isbn)
+        found = self.identify(isbn)
+        self._connection.execute(
+            "UPDATE openlibrary_edition SET captured_by = ? WHERE isbn = ?",
+            (resolution.CAPTURE, isbn),
         )
         return found
 
@@ -320,3 +344,161 @@ def test_a_book_that_already_has_a_title_is_left_alone(database):
     result, _ = run(database, CountingDetail({}), {})
 
     assert not result.identified
+
+
+# --- capture versions --------------------------------------------------------
+
+
+def captured_long_ago(connection, item_id=None, isbn=None):
+    """Pretend a row was written by code that read less than this code does."""
+    if item_id is not None:
+        connection.execute(
+            "UPDATE listing_declaration SET captured_by = 0 WHERE item_id = ?",
+            (item_id,),
+        )
+    if isbn is not None:
+        connection.execute(
+            "UPDATE openlibrary_edition SET captured_by = 0 WHERE isbn = ?", (isbn,)
+        )
+    connection.commit()
+
+
+def declaration(connection, item_id):
+    return connection.execute(
+        "SELECT * FROM listing_declaration WHERE item_id = ?", (item_id,)
+    ).fetchone()
+
+
+def test_a_row_at_the_current_capture_is_never_re_asked(database):
+    """Nothing is stale on the day this ships, so nothing is spent."""
+    _, connection = database
+    a_copy(connection, "v1|1|0")
+    detail = CountingDetail({"v1|1|0": Declared("v1|1|0", isbn="9781590171998")})
+    run(database, detail, {"9781590171998": STONER})
+    before = list(detail.asked)
+
+    result, _ = run(database, detail, {"9781590171998": STONER})
+
+    assert detail.asked == before
+    assert result.recaptured == 0
+    assert result.stale_remaining == 0
+
+
+def test_a_stale_declaration_on_a_live_listing_is_replaced(database):
+    """A seller is the authority on their own listing, edits included."""
+    _, connection = database
+    a_copy(connection, "v1|1|0")
+    detail = CountingDetail({"v1|1|0": Declared("v1|1|0", isbn="9781590171998")})
+    run(database, detail, {"9781590171998": STONER})
+    captured_long_ago(connection, item_id="v1|1|0")
+
+    detail.answers["v1|1|0"] = Declared(
+        "v1|1|0", isbn="9781590171998", author="John Williams"
+    )
+    result, _ = run(database, detail, {"9781590171998": STONER})
+
+    assert result.recaptured == 1
+    assert declaration(connection, "v1|1|0")["author"] == "John Williams"
+    assert result.stale_remaining == 0
+
+
+def test_a_seller_clearing_a_field_on_a_live_listing_clears_ours(database):
+    """The other half of the same rule, and the reason it is not "keep the
+    non-null one": a live seller removing a value is telling us something."""
+    _, connection = database
+    a_copy(connection, "v1|1|0")
+    detail = CountingDetail(
+        {"v1|1|0": Declared("v1|1|0", isbn="9781590171998", author="J. Williams")}
+    )
+    run(database, detail, {"9781590171998": STONER})
+    captured_long_ago(connection, item_id="v1|1|0")
+
+    detail.answers["v1|1|0"] = Declared("v1|1|0", isbn="9781590171998")
+    run(database, detail, {"9781590171998": STONER})
+
+    assert declaration(connection, "v1|1|0")["author"] is None
+
+
+def test_an_ended_listing_keeps_everything_it_declared(database):
+    """The case that makes this a merge rather than an overwrite.
+
+    eBay answers 404 for a listing that has gone, and copies are kept for
+    ever now, so this is ordinary rather than rare. Letting that emptiness
+    overwrite a good record would lose data quietly, for exactly the rows
+    most likely to be re-asked about.
+    """
+    _, connection = database
+    a_copy(connection, "v1|1|0")
+    detail = CountingDetail(
+        {"v1|1|0": Declared("v1|1|0", isbn="9781590171998", author="John Williams")}
+    )
+    run(database, detail, {"9781590171998": STONER})
+    captured_long_ago(connection, item_id="v1|1|0")
+
+    detail.answers["v1|1|0"] = Declared("v1|1|0", present=False)
+    result, _ = run(database, detail, {"9781590171998": STONER})
+
+    kept = declaration(connection, "v1|1|0")
+    assert kept["author"] == "John Williams"
+    assert kept["isbn"] == "9781590171998"
+    # Asked, at this version, and there is nothing further to learn.
+    assert kept["captured_by"] == declarations_module.CAPTURE
+    assert result.stale_remaining == 0
+
+
+def test_a_copy_that_is_no_longer_on_sale_is_not_re_asked_about(database):
+    """Its answer cannot change what the page shows, and since S16 there are
+    more of these than live ones. Stale and still useful beats spent."""
+    _, connection = database
+    a_copy(connection, "v1|1|0")
+    detail = CountingDetail({"v1|1|0": Declared("v1|1|0", isbn="9781590171998")})
+    run(database, detail, {"9781590171998": STONER})
+    captured_long_ago(connection, item_id="v1|1|0")
+    # A later sweep that did not include this copy.
+    connection.execute("INSERT INTO sweep (work_id) VALUES (1)")
+    connection.commit()
+    asked_before = len(detail.asked)
+
+    result, _ = run(database, detail, {"9781590171998": STONER})
+
+    assert len(detail.asked) == asked_before
+    assert result.recaptured == 0
+
+
+def test_a_stale_number_is_asked_about_again(database):
+    _, connection = database
+    a_copy(connection, "v1|1|0")
+    detail = CountingDetail({"v1|1|0": Declared("v1|1|0", isbn="9781590171998")})
+    run(database, detail, {"9781590171998": STONER})
+    captured_long_ago(connection, isbn="9781590171998")
+
+    result, resolver = run(database, detail, {"9781590171998": STONER})
+
+    assert resolver.recaptured == ["9781590171998"]
+    assert result.stale_remaining == 0
+
+
+def test_what_is_left_stale_is_reported_when_a_pass_stops_early(database):
+    """The price of a rule change, visible before it is spent."""
+    _, connection = database
+    a_copy(connection, "v1|1|0")
+    detail = CountingDetail({"v1|1|0": Declared("v1|1|0", isbn="9781590171998")})
+    run(database, detail, {"9781590171998": STONER})
+    captured_long_ago(connection, item_id="v1|1|0")
+    detail.fail_after = len(detail.asked)
+
+    result, _ = run(database, detail, {"9781590171998": STONER})
+
+    assert result.stopped_because == "ebay unavailable"
+    assert result.stale_remaining == 1
+
+
+def test_the_capture_versions_are_pinned():
+    """Bumping one has to be a deliberate, visible edit.
+
+    Forgetting is the failure mode this whole slice exists for, so the
+    constants are pinned rather than left to be changed silently alongside
+    the code that reads a new field.
+    """
+    assert declarations_module.CAPTURE == 1
+    assert resolution.CAPTURE == 1
