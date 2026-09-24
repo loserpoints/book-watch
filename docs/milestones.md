@@ -48,7 +48,78 @@ renumbers. Two rules keep that from costing anything:
 
 ---
 
-## M3 · What I will pay, and whether this is fair
+## M3 · Keep what we saw, derive the rest
+
+**Goal.** One invariant: **observations are kept and never rewritten;
+everything else is derived on read.** A change to the matching rules then
+applies to every book already on the list, for free, without a migration and
+without asking anybody for anything twice.
+
+**Jobs advanced.**
+
+- **J2**, permanently rather than once. Every future improvement to precision
+  reaches the books already on the list instead of only new ones.
+- **J5**, by starting its clock. Its cheapest candidate — our own record of
+  what copies have been listed at — needs observations to accumulate, and they
+  currently do not.
+
+**Why this exists.** *The right book* shipped a matching fix that did nothing
+in production. A pass had earlier concluded that a number belonged to a book,
+stored that conclusion in `edition`, and the grader reads a known edition
+ahead of every other signal — so Don Gillmor's novel stayed matched to Joy
+Williams's, behind the check written to reject it. Nothing could clean it up,
+because `edition` holds two kinds of row with nothing to tell them apart: an
+ISBN a person typed, and an ISBN a rule inferred.
+
+The shape of that is the milestone. The system stores **conclusions** as
+though they were facts, and discards **observations** as though they were
+disposable:
+
+| | | |
+|---|---|---|
+| **Observations** | what a seller declared · what Open Library says a number is · what was for sale | cost a request, cannot be re-derived, should only ever be appended to |
+| **Conclusions** | which ISBNs are this book's editions · what tier a copy is · whether a book has been identified | derived by rules that will keep changing, and should be recomputed rather than kept |
+
+Confidence tiers already work this way — `grade()` runs on every page view, so
+a rule change reaches every book instantly. This milestone is that treatment
+applied everywhere it is missing.
+
+**Why before *What I will pay*.** Because it is the same bug pointing the other
+way. A refresh **deletes** a book's copies and replaces them, so the price
+history J5 depends on has never started accumulating: we are throwing away
+observations while carefully preserving conclusions. Fixing that here settles
+*What I will pay*'s one urgent question as a consequence rather than as a
+separate decision, which is the sign the boundary is in the right place.
+
+**What it changes, roughly three slices.**
+
+- **The edition set is derived, not stored.** It is already a pure function of
+  things on disk: which numbers declared on this book's copies does the
+  catalogue call this title, by an author the sellers do not contradict. A
+  join over data we have already paid for — **zero requests** — so a rule
+  change re-derives every book on the next page view.
+- **Copies are appended, not replaced.** What is for sale *now* stays a
+  question the page answers; what was seen stops being destroyed to answer it.
+- **Observations record what was captured.** The one genuinely expensive case
+  is a rule needing a field we never fetched — which just happened with the
+  seller's author, and cost re-asking about *every* listing because there was
+  no way to tell a row captured before the field from one whose seller left it
+  blank. A capture version makes that exact: re-ask only the rows that are
+  actually stale.
+
+**What this is not.** A way to edit the database by hand. That was the first
+answer reached for and it is a diagnostic, not a fix — optimising the matching
+is the main way this product improves, so the logic changing is the normal
+case and has to be cheap by design rather than repairable by exception.
+
+**Cost.** Kept observations grow without bound, on a volume of 1 GB — small
+per row and worth watching rather than solving now. Deriving on read costs a
+join per page view against tens of rows, which is nothing at this size and is
+a real question at a thousand books.
+
+---
+
+## M4 · What I will pay, and whether this is fair
 
 **Goal.** A price ceiling per book, and enough context to act on a listing
 without opening a second tab to sanity-check it.
@@ -103,14 +174,20 @@ shipped has thrown away what the previous one saw. Keeping it means a second,
 append-only table — the same rows, never deleted — which is genuinely one table
 and no extra calls, and which is worth nothing until it is worth a great deal.
 
-**That makes one decision urgent and the rest not.** Whether to start recording
-is worth deciding now, because the cost of deciding later is measured in months
-of data that will not exist. What to *do* with the record can wait, and should:
-J5's mechanism is still four candidates and none of them is chosen.
+**That urgency is what put *Keep what we saw* in front of this one.** Whether
+to start recording was worth deciding immediately, because the cost of
+deciding later is measured in months of data that will not exist — and it
+turned out to be the same bug as the one that made a matching fix do nothing
+in production, pointing the other way. Copies stop being deleted there, so by
+the time this milestone starts the record has been accumulating for however
+long it took to get here.
+
+What to *do* with the record still waits, and should: J5's mechanism is four
+candidates and none of them is chosen.
 
 ---
 
-## M4 · Two kinds of hunt
+## M5 · Two kinds of hunt
 
 **Goal.** An entry is a reading copy or a collectible, and the mode changes what
 matches and how it ranks: lowest landed cost and a readable floor for one,
@@ -134,7 +211,7 @@ is really "show me everything and let me read", is not yet known.
 
 ---
 
-## M5 · Always current, without my looking
+## M6 · Always current, without my looking
 
 **Goal.** The daily poll runs, listings are stored, and opening a book shows
 what is there — already fetched, already dated, with what is new since I last
@@ -179,7 +256,7 @@ are five separable things.
 
 ---
 
-## M6 · Tell me, so I stop looking
+## M7 · Tell me, so I stop looking
 
 **Goal.** A daily email containing only listings that are new since the last
 one and inside the price ceiling set in *What I will pay*. Nothing arrives on a day when
@@ -210,8 +287,11 @@ Real, wanted, and not yet worth a position in the order.
   question.
 - **Seller descriptions in the app.** J3 wants condition detail without clicking
   through, and S1 established the price: descriptions are not in the search
-  response, so this costs one `getItem` call per listing. That is an API budget
-  decision, and it wants making after M2 shows what the poll actually spends.
+  response, so this costs one `getItem` call per listing. *The right book* has
+  since made that call anyway, for the seller's declared number — so the
+  marginal cost of a description is now zero requests and one more stored
+  field. What it still wants is *Always current* showing what a poll actually
+  spends per day before anything else is added to it.
 - **Relative dates** — [issue 22](https://github.com/loserpoints/book-watch/issues/22).
 - **Checking the library first**, which the brief names as the real first step
   in the workflow and puts out of scope for v1.
