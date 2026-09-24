@@ -1970,3 +1970,46 @@ surviving row was written by code that already read everything the current
 code reads. Both tables stamp at 1 and nothing is stale on day one. Verified
 against a copy of production: 12 declarations, 3 editions, 0 stale, 0
 requests.
+
+## 47. We observe asking prices, and cannot observe sale prices
+
+**Decision.** Nothing in this project may state or imply that a copy sold, or
+sold at a price. What a sweep observes is that a listing was present at a
+price, and later was not. Why it went is not available to us.
+
+**Checked rather than assumed.** eBay's Browse API answers 404 for an item that
+has ended and carries no reason. Sold, ended unsold, cancelled by the seller,
+and relisted under a new id are indistinguishable from outside. The
+`ItemUnsold` notification that would separate two of those is sent to the
+*seller*, and we are not the seller.
+
+The one official source of sold data is the **Marketplace Insights API**,
+which returns 90 days of sales. It is a Limited Release requiring Business
+approval, eBay's own documentation says it is not open to new users, and
+independent developers report being refused. Treat it as unavailable rather
+than as a thing to apply for.
+
+**Why this is written down as a decision.** The M4 re-read said "a copy that
+sold for $6 last month is the best evidence there is" — a conclusion written
+as though it were an observation, three days after shipping a milestone whose
+entire purpose was separating those two. The error is easy and the wording is
+where it enters: "sold for" and "went for" are conclusions, "was listed at"
+and "stopped appearing" are observations. Say the second.
+
+**What is observable, and is enough to be worth having.**
+
+- A listing was present at a price, in these sweeps.
+- **Time on market**: a copy that has sat through twelve sweeps at $30 is
+  evidence that $30 is too high, and needs no sale data at all. This is the
+  strongest thing the history gives us.
+- What the cheapest available copy has ranged over.
+- **One true sale signal, rarely**: a listing with quantity above one exposes
+  its remaining availability, so quantity falling while the listing stays live
+  is a real sale at a known price. Used books are mostly unique copies, so this
+  will seldom fire — it costs nothing to record and is the only such signal
+  there is.
+
+**The cost, stated plainly.** J5's "our own observed history" candidate yields
+what sellers *ask*, not what books *fetch*, and the gap between those is most
+of what "is this fair" means. It is still the cheapest candidate and still
+worth accumulating. It is not the candidate the milestone thought it was.

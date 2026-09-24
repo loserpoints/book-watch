@@ -140,12 +140,48 @@ copy today, and which is the shape *Tell me* will want. Worth deciding
 deliberately rather than drifting into: the threshold and the history are two
 features that look like one.
 
+**We record asking prices, and we cannot record sale prices. This is the
+constraint the whole milestone has to be designed around.**
+
+What a sweep observes is that a listing was there at a price, and later that it
+was not there. **Why it went is not observable.** Sold, ended unsold, cancelled
+by the seller and relisted all look identical: eBay's Browse API answers 404
+for the item and says nothing about which happened. The one official source of
+sold data is the Marketplace Insights API, which is a Limited Release restricted
+to approved partners and closed to new users — so it is not available to this
+project, and no amount of polling substitutes for it.
+
+An earlier draft of this section said "a copy that sold for $6 last month is the
+best evidence there is". That was a conclusion written as though it were an
+observation, which is the exact error *Keep what we saw* existed to fix. It is
+recorded here rather than quietly deleted.
+
+**So J5's fourth candidate is weaker than it looked, and still worth having.**
+It yields the distribution of *asking* prices over time, which is what sellers
+want rather than what the book is worth — and the gap between those two is
+precisely the question "is this fair". What it does give, for free and
+reliably:
+
+- **Time on market**, which is a genuine negative signal. A copy listed at $30
+  that has sat through twelve sweeps is evidence that $30 is too high, and it
+  needs no knowledge of sales at all.
+- **What the cheapest available copy has ranged over**, which answers "is today
+  unusually expensive" without claiming anything about value.
+- **Disappearance rates by price band**, in aggregate and only at volume this
+  project does not have yet. Worth noting as a maybe, not planning on.
+
+**One narrow case where a sale is observable.** A listing with a quantity above
+one exposes its remaining availability, so quantity dropping between sweeps
+while the listing stays live is a real sale at a known price. Used books are
+mostly unique copies, so this will be rare — but it is the only true sale
+signal available and costs nothing to record.
+
 **Only the newest sweep is shown, but every sweep is stored.** Price judgement
-should read all sightings of certain-tier copies, not just the ones currently
-buyable — a copy that sold for $6 last month is the most relevant evidence
-there is about what this book costs, and it is exactly the row the page no
-longer displays. The distinction between "what the page shows" and "what the
-judgement reads" is new and needs stating in whatever mechanism wins.
+should read all sightings of certain-tier copies rather than only the ones
+currently buyable — a copy that was listed at $6 and is now gone is still
+evidence about asking prices, and it is exactly the row the page no longer
+displays. The distinction between "what the page shows" and "what the judgement
+reads" is new and needs stating in whatever mechanism wins.
 
 **The one caution carried forward.** The growth bound in decision 44 rests on an
 assumption about listing turnover, not on the schema. A price-history feature
