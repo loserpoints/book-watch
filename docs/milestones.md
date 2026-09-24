@@ -170,11 +170,14 @@ reliably:
 - **Disappearance rates by price band**, in aggregate and only at volume this
   project does not have yet. Worth noting as a maybe, not planning on.
 
-**One narrow case where a sale is observable.** A listing with a quantity above
-one exposes its remaining availability, so quantity dropping between sweeps
-while the listing stays live is a real sale at a known price. Used books are
-mostly unique copies, so this will be rare — but it is the only true sale
-signal available and costs nothing to record.
+**The one narrow case where a sale looked observable, and is not worth having.**
+A listing with quantity above one exposes its remaining availability, so a
+quantity falling while the listing stays live would be a real sale at a known
+price. It was scoped as a slice and then dropped: quantity above one means bulk
+inventory, and the books this project watches are single copies from individual
+sellers. The signal fires on a different population than the one being watched.
+Decision 47 carries the reasoning. **There is no sale signal available to this
+milestone at all.**
 
 **Only the newest sweep is shown, but every sweep is stored.** Price judgement
 should read all sightings of certain-tier copies rather than only the ones

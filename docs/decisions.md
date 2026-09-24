@@ -2003,13 +2003,40 @@ and "stopped appearing" are observations. Say the second.
   evidence that $30 is too high, and needs no sale data at all. This is the
   strongest thing the history gives us.
 - What the cheapest available copy has ranged over.
-- **One true sale signal, rarely**: a listing with quantity above one exposes
-  its remaining availability, so quantity falling while the listing stays live
-  is a real sale at a known price. Used books are mostly unique copies, so this
-  will seldom fire — it costs nothing to record and is the only such signal
-  there is.
+- ~~**One true sale signal, rarely**: a listing with quantity above one
+  exposes its remaining availability, so quantity falling while the listing
+  stays live is a real sale at a known price.~~ **Looked at and declined** —
+  see below. It is left struck through rather than deleted because it is the
+  kind of clever exception that will get re-proposed.
 
-**The cost, stated plainly.** J5's "our own observed history" candidate yields
-what sellers *ask*, not what books *fetch*, and the gap between those is most
-of what "is this fair" means. It is still the cheapest candidate and still
-worth accumulating. It is not the candidate the milestone thought it was.
+**Why the quantity exception was declined, 2026-09-24.** It survived one
+round and did not survive the second, and the reason is worth keeping.
+
+A used-book listing with quantity above one is almost always bulk inventory —
+the large sellers who carry many identical copies. The books this project
+exists for are the ones a library does not have, which are overwhelmingly
+single copies from individual sellers. So the signal does not merely fire
+rarely; it fires **on a different population than the one being watched**, and
+the two are anti-correlated.
+
+That makes it worse than useless. A detected sale would be a directly observed
+fact — the strongest provenance anything in this system can have — biased
+toward bulk and new-ish copies, with no way to correct for the bias. A
+statistic fed by it would drift toward the wrong number while looking like the
+right one, and would drift further the more data arrived.
+
+That inverts the "cheap and compounding" argument that justified keeping
+copies (decision 44). Compounding only helps when the sample is the population.
+A biased sample compounds into a more confident error.
+
+Displaying the quantity without drawing any conclusion from it was considered
+too, and also declined: a quantity is asked for once, at declaration time, and
+goes stale immediately, so the only honest versions are a dated number (clutter)
+or a vaguer "multiple copies" marker (which says little). It can come back if
+using the app makes it real.
+
+**The cost, stated plainly.** So there is no sale signal at all, not even a
+rare one. J5's "our own observed history" candidate yields what sellers *ask*,
+not what books *fetch*, and the gap between those is most of what "is this
+fair" means. It is still the cheapest candidate and still worth accumulating.
+It is not the candidate the milestone thought it was.
