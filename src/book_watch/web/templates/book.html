@@ -21,20 +21,44 @@
    The pill says which, because a soft "now" is fine only while the page never
    pretends otherwise. The button ignores the gate on purpose: one that did
    nothing for fifty-nine minutes would be worse than no button. #}
+{% set here = '?everywhere=1' if scope == 'everywhere' else '' %}
 {% set checked_pill %}
   <span class="checked">Checked {{ checked | ago }}</span>
-  <a href="/book/{{ book.id }}?refresh=1">Re-run search</a>
+  <a href="/book/{{ book.id }}{{ here }}{{ '&' if here else '?' }}refresh=1">Re-run search</a>
+{% endset %}
+
+{# Copies are shown from the newest sweep of *this* scope. The two are
+   different questions rather than one filtered from the other: searching
+   everywhere finds fewer US copies, because imports take up slots. #}
+{% set toggle %}
+  {% if scope == 'everywhere' %}
+    Showing copies from anywhere.
+    <a href="/book/{{ book.id }}">Only show US sellers</a>
+  {% else %}
+    Showing copies in the US.
+    <a href="/book/{{ book.id }}?everywhere=1">Look everywhere</a>
+  {% endif %}
 {% endset %}
 
 {% if not copies and not uncertain %}
   <p class="muted">
-    Nothing listed right now. {{ checked_pill }}
+    {% if scope == 'everywhere' %}
+      Nothing listed anywhere right now. {{ checked_pill }}
+    {% else %}
+      {# The empty US list is the whole reason the toggle exists, so it says
+         what to do next rather than leaving a blank page. #}
+      Nothing listed in the US right now.
+      <a href="/book/{{ book.id }}?everywhere=1">Look everywhere</a> —
+      an overseas copy takes longer and may cost more to land.
+      {{ checked_pill }}
+    {% endif %}
   </p>
 {% else %}
   <p class="muted">
     {{ copies | length }} match{{ '' if copies | length == 1 else 'es' }}.
     {{ checked_pill }}
   </p>
+  <p class="muted">{{ toggle }}</p>
 
   {% if unlooked %}
     {# Honest rather than hidden: the first look at a new book is genuinely

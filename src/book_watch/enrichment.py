@@ -235,13 +235,22 @@ def _run(
 
 
 def _on_sale_now(connection: sqlite3.Connection, work_id: int) -> list[str]:
-    """Item ids in this book's newest sweep."""
+    """Item ids in the newest sweep of *any* scope.
+
+    Any scope rather than one, because the question this answers is "can
+    somebody buy this today" — and a copy found by looking everywhere is
+    buyable even when the US-only view does not show it. Re-asking eBay about
+    it is worth a request; a copy that has stopped appearing in every scope is
+    not.
+    """
     return [
         row["item_id"]
         for row in connection.execute(
-            "SELECT item_id FROM copy WHERE work_id = ? AND last_sweep_id IS ("
-            "  SELECT id FROM sweep WHERE work_id = ? ORDER BY id DESC LIMIT 1)",
-            (work_id, work_id),
+            "SELECT DISTINCT seen.item_id FROM copy_seen AS seen "
+            " WHERE seen.work_id = ? AND seen.sweep_id IS ("
+            "   SELECT id FROM sweep WHERE work_id = seen.work_id "
+            "    AND scope = seen.scope ORDER BY id DESC LIMIT 1)",
+            (work_id,),
         )
     ]
 

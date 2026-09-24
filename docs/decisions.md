@@ -2103,7 +2103,19 @@ is the price of the page meaning what it says.
 
 **A sweep now records how much it saw.** We ask for 50 and eBay ranks by
 relevance, so a copy at rank 48 today can be at rank 53 tomorrow while sitting
-untouched. A copy missing from a sweep therefore means *it ended* or *we did
+untouched.
+
+> **Corrected 2026-09-24, from a real response.** `total` is scoped to the
+> query, not a count of the market. Searching *State of Grace* unfiltered
+> returned 17 with `total=17`, while the same search filtered to US item
+> location returned 17 US listings — one of which the unfiltered search never
+> returned at all. So at least 18 listings existed and `total` said 17.
+>
+> The rule below still holds, because what it compares is one sweep against
+> the previous sweep of the *same* query. "Complete" means "we saw everything
+> this query returns", which is the right basis for deciding whether a copy's
+> absence means anything. It does not mean "we saw every copy for sale", and
+> nothing should read it that way. A copy missing from a sweep therefore means *it ended* or *we did
 not look far enough*, and nothing could tell those apart.
 
 That barely mattered while a book was searched once. It matters now that every
@@ -2134,3 +2146,80 @@ ten searches and a ten-second page, and its job is "what am I watching" rather
 than "what is for sale". The gate is per book; it becomes per book and scope
 when the US-only default lands, because a recent US sweep must not block a
 first look at everything.
+
+## 49. Searches ask for copies in the US, and the other scope is a peek
+
+**Decision.** The eBay search sends `filter=itemLocationCountry:US` by default.
+A `?everywhere=1` link runs the same search with no location filter. Each sweep
+records which of the two it asked, and which copies it saw is recorded per
+scope. Nothing is persisted about the toggle. Migration 015.
+
+**Confirmed against eBay before anything was built**, because the whole design
+rested on a filter I could not verify from the documentation — eBay serves a
+403 bot page to anything that is not a browser. Two real searches for *State of
+Grace*, same query, same moment:
+
+| | total | returned | non-US |
+|---|---|---|---|
+| unfiltered | 17 | 17 | 1 (GB) |
+| `itemLocationCountry:US` | 17 | 17 | 0 |
+
+Exactly one swap: a British "(UK IMPORT)" listing out, and a US copy in that
+the unfiltered search **never returned at all**.
+
+That is the justification for filtering at the API rather than on read,
+measured rather than argued. The import did not merely add a row to scroll
+past; it displaced a US copy out of the fifty slots a search gets. Filtering on
+read would have kept the noise and lost that copy.
+
+**Three things called "US", and we want the third.** `EBAY_US` is the US
+*site*, which lists overseas sellers who ship here — that is why imports appear
+at all. "Ships to the US" is nearly everything on that site. Item location is
+where the book physically is, and it is the one that decides shipping time,
+customs, and what a copy really lands at.
+
+**The toggle is US-only ↔ Everywhere, not US ↔ International.** eBay's filters
+are positive: there is no "not located in the US", so the other position is no
+filter, which returns both. That is the better model anyway — "show me
+everything" is what you want when the US turns up nothing.
+
+**A peek costs one search, once.** Its copies are stored like any others, so
+flipping back and forth afterwards reads the store. The hour gate of decision
+48 is per scope, because a recent US sweep must not block a first look at
+everything: they are different questions.
+
+**The two scopes are different data, and neither contains the other.** An
+everywhere sweep finds *fewer* US copies, because imports take slots. So a view
+reads the newest sweep of its own scope rather than filtering one out of the
+other.
+
+**Which forced a schema correction, found by a test rather than by thinking.**
+`copy.last_sweep_id` held a single pointer, which was right while every sweep
+asked the same question and silently wrong the moment two scopes existed: a US
+sweep overwrote the pointer and the copy then vanished from the everywhere
+view, although that sweep had seen it. Membership is per scope and cannot live
+in one column, so it moved to `copy_seen`, and the column was dropped rather
+than left to rot beside it — decision 42's lesson.
+
+One row per copy per scope, not per copy per sweep. Keeping every sighting of
+membership would cost a row on every visit for every copy, which is the
+unbounded growth decision 44 avoided. What a page needs is the latest per
+scope, which is two rows a copy at most.
+
+**A copy is marked, never hidden.** Where it is decides shipping time and
+whether customs is involved, so an overseas copy in the everywhere view says
+"ships from GB". A missing country says nothing at all rather than implying
+abroad — the usual three-valued rule.
+
+**Enrichment reads any scope.** A copy found by looking everywhere is buyable
+even when the US view does not show it, so it is still worth a request. A copy
+that has stopped appearing in every scope is not.
+
+**The empty state is the point.** A book with nothing listed in the US says so
+and offers the peek, because that is the whole reason the toggle exists; a
+blank list would make the reader guess.
+
+**Hardcoded, deliberately.** The default lives in one named place
+(`ebay.search._LOCATION_FILTER` and the route's scope). Making it configurable
+is issue #72 — a settings table for one user is furniture, and what makes that
+change cheap later is the value having one home, not the table existing now.

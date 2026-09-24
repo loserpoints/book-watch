@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 
-from book_watch.ebay.search import Listing, Money
+from book_watch.ebay.search import Listing, Money, Scope
 from book_watch.isbn import normalise
 from book_watch.matching import Evidence, Target, Tier, grade, is_this_book
 from book_watch.wantlist import Entry
@@ -28,8 +28,12 @@ from book_watch.wantlist import Entry
 #: asked eBay about, and a number nobody has asked Open Library about, are
 #: both ordinary states rather than missing data.
 #:
-#: Restricted to the newest sweep, because copies are kept now rather than
-#: deleted and the page's question is still "what is buyable today". The
+#: Restricted to the newest sweep **of one scope**, because copies are kept
+#: now rather than deleted and the page's question is still "what is buyable
+#: today". Scope matters: a US-only sweep and an everywhere sweep are
+#: different questions, and an everywhere sweep finds *fewer* US copies
+#: because imports displace them. So a view reads the newest sweep of its own
+#: scope rather than filtering one out of the other. The
 #: comparison is on a sweep id rather than a time: two sweeps a second apart
 #: are different sweeps and a timestamp cannot say so. `IS` rather than `=`
 #: so that a book with no sweep at all matches its copies instead of
@@ -45,6 +49,7 @@ SELECT copy.item_id,
        copy.seller,
        copy.thumbnail,
        copy.epid,
+       copy.located_in,
        copy.seen_at,
        declaration.item_id AS asked_ebay,
        declaration.isbn    AS declared_isbn,
@@ -60,9 +65,14 @@ SELECT copy.item_id,
   LEFT JOIN openlibrary_edition AS identity
          ON identity.isbn = declaration.isbn AND identity.found = 1
  WHERE copy.work_id = ?
-   AND copy.last_sweep_id IS (
-       SELECT sweep.id FROM sweep WHERE sweep.work_id = ?
-     ORDER BY sweep.id DESC LIMIT 1
+   AND copy.item_id IN (
+       SELECT seen.item_id FROM copy_seen AS seen
+        WHERE seen.work_id = ? AND seen.scope = ?
+          AND seen.sweep_id IS (
+              SELECT sweep.id FROM sweep
+               WHERE sweep.work_id = seen.work_id AND sweep.scope = seen.scope
+            ORDER BY sweep.id DESC LIMIT 1
+          )
    )
 """
 
@@ -85,6 +95,11 @@ class Copy:
     declared_format: str | None = None
     declared_publisher: str | None = None
     declared_year: str | None = None
+    #: Two-letter country code, or None when eBay did not say. Only ever used
+    #: to mark a copy as coming from abroad, never to hide one: US-only is a
+    #: property of the *search*, and by the time a copy is on this page it is
+    #: one we asked for.
+    located_in: str | None = None
     #: Whether eBay has been asked what this seller declared. False means the
     #: copy is graded on its listing name alone and may firm up later.
     looked_at: bool = True
@@ -137,6 +152,7 @@ def due_for_sweep(
     connection: sqlite3.Connection,
     work_id: int,
     *,
+    scope: Scope = "us",
     current_for: timedelta | None = None,
 ) -> bool:
     """Should opening this book spend a search?
@@ -158,8 +174,8 @@ def due_for_sweep(
     if current_for is None:
         current_for = CURRENT_FOR
     row = connection.execute(
-        "SELECT at FROM sweep WHERE work_id = ? ORDER BY id DESC LIMIT 1",
-        (work_id,),
+        "SELECT at FROM sweep WHERE work_id = ? AND scope = ? ORDER BY id DESC LIMIT 1",
+        (work_id, scope),
     ).fetchone()
     if row is None:
         return True
@@ -169,11 +185,13 @@ def due_for_sweep(
     return datetime.now(UTC) - swept_at >= current_for
 
 
-def swept_at(connection: sqlite3.Connection, work_id: int) -> datetime | None:
-    """When this book was last searched for, or None if it never was."""
+def swept_at(
+    connection: sqlite3.Connection, work_id: int, *, scope: Scope = "us"
+) -> datetime | None:
+    """When this book was last searched for in this scope, or None if never."""
     row = connection.execute(
-        "SELECT at FROM sweep WHERE work_id = ? ORDER BY id DESC LIMIT 1",
-        (work_id,),
+        "SELECT at FROM sweep WHERE work_id = ? AND scope = ? ORDER BY id DESC LIMIT 1",
+        (work_id, scope),
     ).fetchone()
     return _parse_timestamp(row["at"]) if row else None
 
@@ -195,6 +213,7 @@ def store(
     listings: list[Listing],
     *,
     asked_for: int | None = None,
+    scope: Scope = "us",
 ) -> int:
     """Record what eBay just returned, keeping everything seen before it.
 
@@ -210,23 +229,28 @@ def store(
     sweep that saw it. Returns the sweep id.
     """
     sweep_id = connection.execute(
-        "INSERT INTO sweep (work_id, asked_for, total_matching) "
-        "VALUES (?, ?, ?) RETURNING id",
-        (work_id, asked_for, getattr(listings, "total", None)),
+        "INSERT INTO sweep (work_id, asked_for, total_matching, scope) "
+        "VALUES (?, ?, ?, ?) RETURNING id",
+        (work_id, asked_for, getattr(listings, "total", None), scope),
     ).fetchone()["id"]
 
     previous = {
         row["item_id"]: row
         for row in connection.execute(
-            "SELECT item_id, price, currency, shipping, condition, last_sweep_id "
-            "FROM copy WHERE work_id = ?",
-            (work_id,),
+            "SELECT copy.item_id, copy.price, copy.currency, copy.shipping, "
+            "       copy.condition, seen.sweep_id AS last_sweep_id "
+            "  FROM copy "
+            "  LEFT JOIN copy_seen AS seen "
+            "         ON seen.item_id = copy.item_id "
+            "        AND seen.work_id = copy.work_id AND seen.scope = ? "
+            " WHERE copy.work_id = ?",
+            (scope, work_id),
         )
     }
     latest_before = connection.execute(
         "SELECT id, asked_for, total_matching FROM sweep "
-        "WHERE work_id = ? AND id < ? ORDER BY id DESC LIMIT 1",
-        (work_id, sweep_id),
+        "WHERE work_id = ? AND scope = ? AND id < ? ORDER BY id DESC LIMIT 1",
+        (work_id, scope, sweep_id),
     ).fetchone()
     was_current = latest_before["id"] if latest_before else None
     # Whether absence from that sweep was evidence of anything at all.
@@ -242,10 +266,10 @@ def store(
             """
             INSERT INTO copy (
                 item_id, work_id, title, url, price, currency, shipping,
-                condition, seller, thumbnail, epid, listed_at,
-                first_seen_at, last_seen_at, last_sweep_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                      datetime('now'), datetime('now'), ?)
+                condition, seller, thumbnail, epid, listed_at, located_in,
+                first_seen_at, last_seen_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                      datetime('now'), datetime('now'))
             ON CONFLICT (item_id, work_id) DO UPDATE SET
                 title = excluded.title,
                 url = excluded.url,
@@ -257,8 +281,8 @@ def store(
                 thumbnail = excluded.thumbnail,
                 epid = excluded.epid,
                 listed_at = excluded.listed_at,
-                last_seen_at = datetime('now'),
-                last_sweep_id = excluded.last_sweep_id
+                located_in = excluded.located_in,
+                last_seen_at = datetime('now')
             """,
             (
                 listing.item_id,
@@ -273,8 +297,15 @@ def store(
                 listing.thumbnail_url,
                 listing.epid,
                 listing.listing_date.isoformat() if listing.listing_date else None,
-                sweep_id,
+                listing.located_in,
             ),
+        )
+        connection.execute(
+            "INSERT INTO copy_seen (item_id, work_id, scope, sweep_id) "
+            "VALUES (?, ?, ?, ?) "
+            "ON CONFLICT (item_id, work_id, scope) DO UPDATE SET "
+            "    sweep_id = excluded.sweep_id",
+            (listing.item_id, work_id, scope, sweep_id),
         )
         if _worth_recording(before, listing, shipping, was_current, saw_everything):
             connection.execute(
@@ -393,7 +424,9 @@ def price_history(
     ]
 
 
-def for_entry(connection: sqlite3.Connection, entry: Entry) -> list[Copy]:
+def for_entry(
+    connection: sqlite3.Connection, entry: Entry, *, scope: Scope = "us"
+) -> list[Copy]:
     """Every stored copy for this book, graded and cheapest first within a tier.
 
     Sorting happens **inside** a tier and never across one. A reader sees one
@@ -404,7 +437,7 @@ def for_entry(connection: sqlite3.Connection, entry: Entry) -> list[Copy]:
     target = _target(connection, entry)
     copies = [
         _to_copy(row, target, entry)
-        for row in connection.execute(_SELECT, (entry.work_id, entry.work_id))
+        for row in connection.execute(_SELECT, (entry.work_id, entry.work_id, scope))
     ]
     order = {"certain": 0, "probable": 1, "possible": 2, "excluded": 3}
     copies.sort(key=lambda copy: (order[copy.tier], copy.sort_key))
@@ -514,6 +547,7 @@ def _to_copy(row: sqlite3.Row, target: Target, entry: Entry) -> Copy:
         declared_format=row["declared_format"],
         declared_publisher=row["declared_publisher"],
         declared_year=row["declared_year"],
+        located_in=row["located_in"],
         looked_at=row["asked_ebay"] is not None,
     )
 

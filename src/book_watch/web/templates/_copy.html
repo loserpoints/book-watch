@@ -13,6 +13,13 @@
     <div class="muted">
       {{ copy.condition or 'condition unstated' }}
       {%- if copy.seller %} · {{ copy.seller }}{% endif %}
+      {#- Marked, never hidden. Where a copy is decides shipping time and
+          whether customs is involved, which is worth seeing on a copy you
+          asked to be shown. A missing country says nothing rather than
+          implying it is abroad. -#}
+      {%- if copy.located_in and copy.located_in != 'US' %}
+        · <span class="abroad">ships from {{ copy.located_in }}</span>
+      {%- endif %}
     </div>
     {% if copy.declared_format or copy.declared_publisher or copy.declared_year %}
       {# What the seller says it is. Decision 33: eBay prefills these where
