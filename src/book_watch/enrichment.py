@@ -50,6 +50,12 @@ class Pass:
 
     examined: int = 0
     resolved: int = 0
+    #: Rows re-asked about because this code reads more than the code that
+    #: captured them.
+    recaptured: int = 0
+    #: Rows still below the current capture when this pass ended. The price of
+    #: a rule change, visible before it is spent.
+    stale_remaining: int = 0
     #: Whether this pass gave the book itself a title it had been missing.
     identified: bool = False
     completed: bool = False
@@ -118,6 +124,31 @@ def _run(
             numbers.add(declared.isbn)
     connection.commit()
 
+    # Only copies in the newest sweep are re-asked about. A copy that has
+    # stopped appearing is not buyable, so a better answer about it changes
+    # nothing on the page — and since S16 keeps copies for ever, re-asking
+    # about all of them would spend most of the budget on listings that have
+    # ended. Their stored answer stays as it is, stale and still useful: it
+    # goes on contributing to which numbers count as this book.
+    recaptured = 0
+    behind = declarations.outdated(_on_sale_now(connection, work_id))
+    for item_id in behind:
+        try:
+            declared = declarations.refresh(item_id)
+        except EbayError as exc:
+            connection.commit()
+            logger.warning("Recapturing %s stopped: %s", work_id, exc)
+            return Pass(
+                examined=examined,
+                recaptured=recaptured,
+                stale_remaining=len(behind) - recaptured,
+                stopped_because="ebay unavailable",
+            )
+        recaptured += 1
+        if declared.isbn:
+            numbers.add(declared.isbn)
+    connection.commit()
+
     resolver = resolver_for(connection)
     resolved = 0
     wanted = title["title"]
@@ -153,11 +184,83 @@ def _run(
             resolved += 1
     connection.commit()
 
+    # The same queue on the other side. A catalogue record has no ended state,
+    # so every outdated number is worth re-asking about, and the pace and
+    # ceiling of decision 39 apply here exactly as they do to a first ask —
+    # this goes through the same resolver and spends the same budget.
+    for isbn in resolver.outdated(sorted(numbers)):
+        try:
+            resolver.recapture(isbn)
+        except BudgetExhausted as exc:
+            connection.commit()
+            logger.warning("Recapturing %s stopped at the ceiling: %s", work_id, exc)
+            return Pass(
+                examined,
+                resolved,
+                recaptured=recaptured,
+                stale_remaining=_still_behind(
+                    declarations, resolver, connection, work_id, numbers
+                ),
+                stopped_because="over budget",
+            )
+        except OpenLibraryUnavailable as exc:
+            connection.commit()
+            logger.warning("Recapturing %s stopped: %s", work_id, exc)
+            return Pass(
+                examined,
+                resolved,
+                recaptured=recaptured,
+                stale_remaining=_still_behind(
+                    declarations, resolver, connection, work_id, numbers
+                ),
+                stopped_because="open library",
+            )
+        recaptured += 1
+    connection.commit()
+
     connection.execute(
         "UPDATE work SET enriched_at = datetime('now') WHERE id = ?", (work_id,)
     )
     connection.commit()
-    return Pass(examined, resolved, completed=True, identified=identified)
+    return Pass(
+        examined,
+        resolved,
+        recaptured=recaptured,
+        stale_remaining=_still_behind(
+            declarations, resolver, connection, work_id, numbers
+        ),
+        completed=True,
+        identified=identified,
+    )
+
+
+def _on_sale_now(connection: sqlite3.Connection, work_id: int) -> list[str]:
+    """Item ids in this book's newest sweep."""
+    return [
+        row["item_id"]
+        for row in connection.execute(
+            "SELECT item_id FROM copy WHERE work_id = ? AND last_sweep_id IS ("
+            "  SELECT id FROM sweep WHERE work_id = ? ORDER BY id DESC LIMIT 1)",
+            (work_id, work_id),
+        )
+    ]
+
+
+def _still_behind(
+    declarations: Declarations,
+    resolver: Resolver,
+    connection: sqlite3.Connection,
+    work_id: int,
+    numbers: set[str],
+) -> int:
+    """How many rows this book still has below the current capture.
+
+    Reported rather than logged quietly, because the cost of a rule change is
+    a number somebody should be able to see before spending it.
+    """
+    return len(declarations.outdated(_on_sale_now(connection, work_id))) + len(
+        resolver.outdated(sorted(numbers))
+    )
 
 
 def _identify_the_book(

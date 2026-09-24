@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import quote
 
@@ -47,6 +48,15 @@ class Declared:
     """
 
     item_id: str
+    #: Whether eBay still has this listing. False means it has ended, sold or
+    #: been withdrawn, and every other field on this object is empty because
+    #: eBay said nothing — not because the seller did.
+    #:
+    #: The difference matters when re-asking about a listing we already know
+    #: something about. A live seller who has cleared a field is telling us
+    #: something; a 404 is not, and overwriting a good answer with its silence
+    #: is how a record gets quietly lost.
+    present: bool = True
     isbn: str | None = None
     #: Enough to rule a listing out, never enough to rule one in. A title is
     #: not a book: three different books called "Breaking and Entering" graded
@@ -97,7 +107,7 @@ class ItemDetailClient:
             raise EbaySearchError(f"Fetching {item_id} failed: {exc}") from exc
 
         if response.status_code == 404:
-            return Declared(item_id=item_id)
+            return Declared(item_id=item_id, present=False)
         if response.status_code >= 400:
             raise EbaySearchError(
                 f"Fetching {item_id} returned {response.status_code}: "
@@ -139,6 +149,7 @@ def _declared(item_id: str, payload: Any) -> Declared:
     aspects = _aspects(payload.get("localizedAspects"))
     return Declared(
         item_id=item_id,
+        present=not _has_ended(payload),
         isbn=declared_isbn(aspects),
         author=aspects.get("Author"),
         format=aspects.get("Format"),
@@ -185,3 +196,26 @@ def declared_isbn(aspects: dict[str, str]) -> str | None:
 def _optional(value: str) -> str | None:
     stripped = value.strip()
     return stripped or None
+
+
+def _has_ended(payload: dict[str, Any]) -> bool:
+    """Whether a 200 response is describing a listing that is already over.
+
+    404 is the case we have seen and the one the caller mostly relies on. This
+    covers the other shape, because eBay is not required to be consistent
+    about it and the cost of being wrong here is silently overwriting a good
+    declaration with an ended listing's emptiness.
+
+    Anything unparseable counts as still running: a malformed date is not
+    evidence that a listing has ended.
+    """
+    raw = payload.get("itemEndDate")
+    if not isinstance(raw, str):
+        return False
+    try:
+        ended = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    if ended.tzinfo is None:
+        ended = ended.replace(tzinfo=UTC)
+    return ended <= datetime.now(UTC)
