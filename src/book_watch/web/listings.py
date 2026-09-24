@@ -217,7 +217,15 @@ def build_router(
         # Scheduled after the response is written, never before it. Decision
         # 40: examining fifty copies is twenty-five seconds of eBay, and this
         # page owes an answer in two.
-        if copies.unasked(for_sale):
+        #
+        # The condition is "has a pass finished", not "is there a copy eBay
+        # has never been asked about". The second was the original and it was
+        # wrong in a way nothing caught: after the first pass there is never
+        # an unasked copy, so enrichment ran once per book and never again —
+        # and every later fix to what a pass does was dead code in production
+        # while passing every test, because tests start from an empty
+        # database and production does not.
+        if book.enriched_at is None:
             background.add_task(start_enrichment, book.work_id)
 
         shown = [copy for copy in for_sale if copy.tier != "excluded"]

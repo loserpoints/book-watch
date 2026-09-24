@@ -231,7 +231,11 @@ def book_client(tmp_path):
             )
         )
         app.include_router(web_wantlist.build_router(connect))
-        return TestClient(app)
+        client = TestClient(app)
+        # So a test can set up a state the routes cannot reach on their own —
+        # a database with history, which is what production has.
+        client.app.state.connect = connect
+        return client
 
     return make
 
@@ -421,3 +425,71 @@ def test_an_ebay_failure_on_a_book_page_is_still_a_bad_gateway(book_client):
     add_book(client, "9780099448396", "Crash")
 
     assert client.get("/book/1").status_code == 502
+
+
+# --- when a pass gets scheduled --------------------------------------------
+#
+# The original condition was "is there a copy eBay has never been asked
+# about". After the first pass there never is, so enrichment ran once per book
+# and never again — and every later fix to what a pass does was dead code in
+# production while passing every test. These start from a database with
+# history, which is what production has and what the other tests do not.
+
+
+def enriching_client(book_client):
+    """A client that records which books a pass was scheduled for."""
+    scheduled = []
+    client = book_client(returning(a_listing()), scheduled.append)
+    return client, scheduled
+
+
+def test_a_book_with_no_finished_pass_is_scheduled_even_with_nothing_unasked(
+    book_client,
+):
+    """The State of grace case: every copy already examined, no pass ever
+    finished, and the only thing that could finish one never ran."""
+    client, scheduled = enriching_client(book_client)
+    add_book(client, "9780099448396", "Crash")
+    client.get("/book/1")
+    scheduled.clear()
+
+    with client.app.state.connect() as connection:
+        # Every copy asked about, exactly as production had it.
+        connection.execute(
+            "INSERT INTO listing_declaration (item_id) SELECT item_id FROM copy"
+        )
+        connection.commit()
+
+    client.get("/book/1")
+
+    assert scheduled == [1]
+
+
+def test_a_finished_pass_stops_scheduling(book_client):
+    client, scheduled = enriching_client(book_client)
+    add_book(client, "9780099448396", "Crash")
+    client.get("/book/1")
+    with client.app.state.connect() as connection:
+        connection.execute("UPDATE work SET enriched_at = datetime('now')")
+        connection.commit()
+    scheduled.clear()
+
+    client.get("/book/1")
+    client.get("/book/1")
+
+    assert scheduled == []
+
+
+def test_looking_again_makes_the_book_need_a_pass_again(book_client):
+    """New copies are new work, whatever happened to the old ones."""
+    client, scheduled = enriching_client(book_client)
+    add_book(client, "9780099448396", "Crash")
+    client.get("/book/1")
+    with client.app.state.connect() as connection:
+        connection.execute("UPDATE work SET enriched_at = datetime('now')")
+        connection.commit()
+    scheduled.clear()
+
+    client.get("/book/1?refresh=1")
+
+    assert scheduled == [1]

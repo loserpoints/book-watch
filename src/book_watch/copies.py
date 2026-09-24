@@ -134,8 +134,12 @@ def store(
             for listing in listings
         ],
     )
+    # New copies are new work, so the book stops counting as enriched. That is
+    # what schedules the next pass, and what makes the want-list say so again.
     connection.execute(
-        "UPDATE work SET copies_fetched_at = datetime('now') WHERE id = ?", (work_id,)
+        "UPDATE work SET copies_fetched_at = datetime('now'), enriched_at = NULL "
+        "WHERE id = ?",
+        (work_id,),
     )
 
 
