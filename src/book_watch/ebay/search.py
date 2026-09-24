@@ -145,7 +145,7 @@ class BrowseClient:
         *,
         limit: int = DEFAULT_LIMIT,
         search_by: SearchBy = "keyword",
-    ) -> list[Listing]:
+    ) -> Results:
         """Return the listings matching `query`, newest-first ordering unset.
 
         Ordering is left to eBay here. Ranking is a decision for the app, and
@@ -214,19 +214,44 @@ def search_listings(
         return browse.search(query, limit=limit, search_by=search_by)
 
 
-def _parse_listings(response: httpx.Response) -> list[Listing]:
+class Results(list[Listing]):
+    """The listings that came back, and how many eBay says matched in all.
+
+    A list, so every caller that only wants the listings is unaffected. The
+    extra fact matters to exactly one of them: we ask for 50 and eBay ranks by
+    relevance, so a copy can sit at rank 51 today and rank 49 tomorrow without
+    anything about it changing. A sweep that saw a window is not evidence about
+    what is outside the window, and `total` is how a sweep knows which it was.
+
+    `total` is None when eBay did not say. Not zero, and not "we saw
+    everything" — unknown, which the reader treats as the window case.
+    """
+
+    __slots__ = ("total",)
+
+    def __init__(self, listings: list[Listing], total: int | None = None) -> None:
+        super().__init__(listings)
+        self.total = total
+
+
+def _parse_listings(response: httpx.Response) -> Results:
     payload = _decode_json(response)
     summaries = payload.get("itemSummaries")
+    total = payload.get("total")
+    if not isinstance(total, int) or isinstance(total, bool) or total < 0:
+        total = None
 
     # No matches at all: eBay omits the key rather than sending an empty list.
     if summaries is None:
-        return []
+        return Results([], total)
     if not isinstance(summaries, list):
         raise EbaySearchError(
             f"Expected itemSummaries to be a list, got {type(summaries).__name__}"
         )
 
-    return [_parse_listing(item, index) for index, item in enumerate(summaries)]
+    return Results(
+        [_parse_listing(item, index) for index, item in enumerate(summaries)], total
+    )
 
 
 def _parse_listing(item: Any, index: int) -> Listing:

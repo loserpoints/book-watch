@@ -17,16 +17,23 @@
 
 {% if error %}<p class="error">{{ error }}</p>{% endif %}
 
+{# Opening this page searched eBay, unless it was searched within the hour.
+   The pill says which, because a soft "now" is fine only while the page never
+   pretends otherwise. The button ignores the gate on purpose: one that did
+   nothing for fifty-nine minutes would be worse than no button. #}
+{% set checked_pill %}
+  <span class="checked">Checked {{ checked | ago }}</span>
+  <a href="/book/{{ book.id }}?refresh=1">Re-run search</a>
+{% endset %}
+
 {% if not copies and not uncertain %}
   <p class="muted">
-    Nothing listed right now — checked {{ fetched_at }}.
-    <a href="/book/{{ book.id }}?refresh=1">Look again</a>
+    Nothing listed right now. {{ checked_pill }}
   </p>
 {% else %}
   <p class="muted">
-    {{ copies | length }} match{{ '' if copies | length == 1 else 'es' }},
-    checked {{ fetched_at }}.
-    <a href="/book/{{ book.id }}?refresh=1">Look again</a>
+    {{ copies | length }} match{{ '' if copies | length == 1 else 'es' }}.
+    {{ checked_pill }}
   </p>
 
   {% if unlooked %}

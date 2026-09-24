@@ -4,13 +4,14 @@ No network: the router takes its search function as an argument, so these
 drive the real templates against listings the test made up.
 """
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from book_watch import copies as copies_module
 from book_watch import db
 from book_watch.config import DeletionEndpointConfig, MissingCredentialError
 from book_watch.ebay.errors import EbaySearchError
@@ -276,6 +277,10 @@ def test_the_page_says_when_it_fetched(book_client):
     The ad-hoc search is always live and says "fetched". The book page reads
     the store and says when the store was filled, which after S12 is a
     different claim and deserves a different word.
+
+    Since S18 that word is relative. The page's whole claim is about how
+    current its results are, and a timestamp makes the reader do arithmetic to
+    find out.
     """
     client = book_client(returning(a_listing()))
     add_book(client, "9780099448396", "Crash")
@@ -283,20 +288,31 @@ def test_the_page_says_when_it_fetched(book_client):
     assert (
         "fetched 20" in book_client(returning(a_listing())).get("/search?isbn=x").text
     )
-    assert "checked 20" in client.get("/book/1").text
+    page = client.get("/book/1").text
+    assert "Checked just now" in page
+    assert "Re-run search" in page
 
 
 # --- the page reads the store ----------------------------------------------
 
 
-def test_a_second_view_does_not_search_ebay_again(book_client):
-    """Decision 30 as amended. Measured: one search is 1.8 seconds."""
-    searches = []
+def counting_search(results=None):
+    """A search that records every time it was asked."""
+    asked = []
 
     def search(query, limit):
-        searches.append(query)
-        return [a_listing()]
+        asked.append(query)
+        return [a_listing()] if results is None else list(results)
 
+    return search, asked
+
+
+def test_views_inside_the_window_do_not_search_again(book_client):
+    """Not about the API budget — ten books at the ceiling is 240 searches a
+    day against 5,000. It is about results holding still long enough to act
+    on: if the list reorders while you check another book, you can lose the
+    copy you had decided to buy."""
+    search, asked = counting_search()
     client = book_client(search)
     add_book(client, "9780099448396", "Crash")
 
@@ -304,7 +320,40 @@ def test_a_second_view_does_not_search_ebay_again(book_client):
     client.get("/book/1")
     client.get("/book/1")
 
-    assert len(searches) == 1
+    assert len(asked) == 1
+
+
+def test_a_view_after_the_window_searches_again(book_client):
+    """The whole point of the slice. Opening a book is a request to see what
+    is listed *now*; before this it showed a snapshot from the first-ever view
+    and never refreshed it."""
+    search, asked = counting_search()
+    client = book_client(search)
+    add_book(client, "9780099448396", "Crash")
+    client.get("/book/1")
+
+    with client.app.state.connect() as connection:
+        connection.execute(
+            "UPDATE sweep SET at = datetime('now', '-2 hours')",
+        )
+        connection.commit()
+    client.get("/book/1")
+
+    assert len(asked) == 2
+
+
+def test_the_window_is_one_place_and_the_route_obeys_it(book_client, monkeypatch):
+    """The value is read from `copies.CURRENT_FOR` rather than inlined, so
+    #72 can read it from somewhere else later without hunting for it."""
+    search, asked = counting_search()
+    client = book_client(search)
+    add_book(client, "9780099448396", "Crash")
+    client.get("/book/1")
+
+    monkeypatch.setattr(copies_module, "CURRENT_FOR", timedelta(0))
+    client.get("/book/1")
+
+    assert len(asked) == 2
 
 
 def test_looking_again_searches_again(book_client):
@@ -379,7 +428,7 @@ def test_an_empty_result_says_when_it_checked(book_client):
     page = client.get("/book/1").text
 
     assert "Nothing listed right now" in page
-    assert "checked 20" in page
+    assert "Checked just now" in page
 
 
 def test_a_book_that_is_not_on_the_list_is_a_404(book_client):
