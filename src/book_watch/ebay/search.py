@@ -39,6 +39,20 @@ SEARCH_URL = "https://api.ebay.com/buy/browse/v1/item_summary/search"
 #: one; there is no "everywhere".
 DEFAULT_MARKETPLACE_ID = "EBAY_US"
 
+#: Where a copy may physically be. Not the same question as the marketplace:
+#: `EBAY_US` is the US *site*, which lists overseas sellers shipping here, and
+#: is why a "(UK IMPORT)" copy from a British seller turns up in results.
+#:
+#: Measured on a real search for *State of Grace*: unfiltered returned 17
+#: listings of which one was in Great Britain; filtered returned 17 US
+#: listings, one of which the unfiltered search never returned at all. The
+#: import did not merely add a row — it displaced a US copy out of the results.
+Scope = Literal["us", "everywhere"]
+
+#: eBay's filters are positive. There is no "not located in the US", so the
+#: other scope is simply no filter, which returns both.
+_LOCATION_FILTER = {"us": "itemLocationCountry:US", "everywhere": None}
+
 DEFAULT_LIMIT = 50
 
 #: eBay rejects anything larger on `item_summary/search`.
@@ -85,6 +99,10 @@ class Listing:
     title: str
     price: Money
     item_web_url: str
+    #: Two-letter country code for where the book physically is, or None when
+    #: eBay did not say. Absent is not "overseas" — it is unknown, and a copy
+    #: is never called an import on the strength of a missing field.
+    located_in: str | None = None
     #: eBay's own product id, where its catalogue matched this listing to one.
     #: Decision 33: it is one of three identifier signals and the least
     #: trustworthy — it over-merges, so distinct Crash editions share one —
@@ -145,6 +163,7 @@ class BrowseClient:
         *,
         limit: int = DEFAULT_LIMIT,
         search_by: SearchBy = "keyword",
+        scope: Scope = "us",
     ) -> Results:
         """Return the listings matching `query`, newest-first ordering unset.
 
@@ -162,6 +181,9 @@ class BrowseClient:
 
         params: dict[str, str | int] = {"limit": limit}
         params["gtin" if search_by == "gtin" else "q"] = term
+        location = _LOCATION_FILTER[scope]
+        if location is not None:
+            params["filter"] = location
 
         try:
             response = self._client.get(
@@ -279,6 +301,25 @@ def _parse_listing(item: Any, index: int) -> Listing:
         shipping_cost=_parse_shipping(item.get("shippingOptions"), index),
         thumbnail_url=_parse_thumbnail(item),
         listing_date=_parse_date(item.get("itemCreationDate")),
+        located_in=_parse_country(item.get("itemLocation")),
+    )
+
+
+def _parse_country(location: Any) -> str | None:
+    """The country out of eBay's item location object.
+
+    Confirmed against a real response: `{"country": "US", "postalCode":
+    "904**"}`. The postcode is partial and not stored — it is not a fact we
+    have any use for and it is closer to somebody's address than anything else
+    in this database.
+    """
+    if not isinstance(location, dict):
+        return None
+    country = location.get("country")
+    return (
+        country.strip().upper()
+        if isinstance(country, str) and country.strip()
+        else None
     )
 
 

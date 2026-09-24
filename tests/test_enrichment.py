@@ -56,7 +56,29 @@ def a_copy(connection, item_id):
         "VALUES (?, 1, 'Stoner', 'https://ebay/x', '9.99', 'USD')",
         (item_id,),
     )
+    # A copy exists because a sweep found it. Enrichment only re-asks about
+    # copies in the newest sweep, so a fixture that skipped this would be
+    # testing a state that cannot occur.
+    connection.execute(
+        "INSERT OR REPLACE INTO copy_seen (item_id, work_id, scope, sweep_id) "
+        "VALUES (?, 1, 'us', ?)",
+        (item_id, _a_sweep(connection)),
+    )
     connection.commit()
+
+
+def _a_sweep(connection, scope="us"):
+    row = connection.execute(
+        "SELECT id FROM sweep WHERE work_id = 1 AND scope = ? ORDER BY id DESC LIMIT 1",
+        (scope,),
+    ).fetchone()
+    if row:
+        return row["id"]
+    return connection.execute(
+        "INSERT INTO sweep (work_id, scope, asked_for, total_matching) "
+        "VALUES (1, ?, 50, 0) RETURNING id",
+        (scope,),
+    ).fetchone()["id"]
 
 
 class CountingDetail:
@@ -454,8 +476,11 @@ def test_a_copy_that_is_no_longer_on_sale_is_not_re_asked_about(database):
     detail = CountingDetail({"v1|1|0": Declared("v1|1|0", isbn="9781590171998")})
     run(database, detail, {"9781590171998": STONER})
     captured_long_ago(connection, item_id="v1|1|0")
-    # A later sweep that did not include this copy.
-    connection.execute("INSERT INTO sweep (work_id) VALUES (1)")
+    # A later sweep, in the same scope, that did not include this copy.
+    connection.execute(
+        "INSERT INTO sweep (work_id, scope, asked_for, total_matching) "
+        "VALUES (1, 'us', 50, 0)"
+    )
     connection.commit()
     asked_before = len(detail.asked)
 

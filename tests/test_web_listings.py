@@ -49,7 +49,7 @@ def client_for(search) -> TestClient:
 
 
 def returning(*results):
-    return lambda query, limit: list(results)
+    return lambda query, limit, **_: list(results)
 
 
 def test_a_listing_shows_everything_needed_to_judge_it_without_clicking():
@@ -95,7 +95,7 @@ def test_no_results_says_so_rather_than_showing_an_empty_page():
 def test_no_isbn_explains_itself_and_does_not_search():
     calls = []
 
-    def search(query, limit):
+    def search(query, limit, **_):
         calls.append(query)
         return []
 
@@ -109,7 +109,7 @@ def test_no_isbn_explains_itself_and_does_not_search():
 def test_a_blank_isbn_is_treated_as_no_isbn():
     calls = []
 
-    def search(query, limit):
+    def search(query, limit, **_):
         calls.append(query)
         return []
 
@@ -121,7 +121,7 @@ def test_a_blank_isbn_is_treated_as_no_isbn():
 def test_the_limit_reaches_the_search():
     seen = {}
 
-    def search(query, limit):
+    def search(query, limit, **_):
         seen["query"] = query
         seen["limit"] = limit
         return []
@@ -135,7 +135,7 @@ def test_the_limit_reaches_the_search():
 def test_an_out_of_range_limit_is_rejected_before_ebay_is_asked(limit):
     calls = []
 
-    def search(query, limit):
+    def search(query, limit, **_):
         calls.append(limit)
         return []
 
@@ -146,7 +146,7 @@ def test_an_out_of_range_limit_is_rejected_before_ebay_is_asked(limit):
 
 
 def test_an_ebay_failure_is_reported_on_the_page_as_a_bad_gateway():
-    def search(query, limit):
+    def search(query, limit, **_):
         raise EbaySearchError("HTTP 503 from the eBay Browse API")
 
     response = client_for(search).get("/search?isbn=x")
@@ -157,7 +157,7 @@ def test_an_ebay_failure_is_reported_on_the_page_as_a_bad_gateway():
 
 
 def test_missing_credentials_are_reported_as_a_configuration_problem():
-    def search(query, limit):
+    def search(query, limit, **_):
         raise MissingCredentialError("EBAY_CLIENT_ID is not set.")
 
     response = client_for(search).get("/search?isbn=x")
@@ -260,7 +260,7 @@ def test_a_book_on_the_list_shows_what_is_for_sale(book_client):
 def test_the_book_page_searches_for_that_book(book_client):
     seen = {}
 
-    def search(query, limit):
+    def search(query, limit, **_):
         seen["query"] = query
         return []
 
@@ -300,7 +300,7 @@ def counting_search(results=None):
     """A search that records every time it was asked."""
     asked = []
 
-    def search(query, limit):
+    def search(query, limit, **_):
         asked.append(query)
         return [a_listing()] if results is None else list(results)
 
@@ -359,7 +359,7 @@ def test_the_window_is_one_place_and_the_route_obeys_it(book_client, monkeypatch
 def test_looking_again_searches_again(book_client):
     searches = []
 
-    def search(query, limit):
+    def search(query, limit, **_):
         searches.append(query)
         return [a_listing()]
 
@@ -376,7 +376,7 @@ def test_a_copy_that_has_stopped_appearing_stops_being_shown(book_client):
     """It was sold or withdrawn. Keeping it would make this a list of things
     that used to be buyable."""
     listings = [a_listing()]
-    client = book_client(lambda query, limit: list(listings))
+    client = book_client(lambda query, limit, **_: list(listings))
     add_book(client, "9780099448396", "Crash")
     assert "https://www.ebay.com/itm/123" in client.get("/book/1").text
 
@@ -427,8 +427,11 @@ def test_an_empty_result_says_when_it_checked(book_client):
 
     page = client.get("/book/1").text
 
-    assert "Nothing listed right now" in page
+    assert "Nothing listed in the US right now" in page
     assert "Checked just now" in page
+    # The empty US list is the whole reason the toggle exists, so it has to
+    # say what to do next rather than leave a blank page.
+    assert "Look everywhere" in page
 
 
 def test_a_book_that_is_not_on_the_list_is_a_404(book_client):
@@ -467,7 +470,7 @@ def test_the_want_list_links_to_each_book(book_client):
 
 
 def test_an_ebay_failure_on_a_book_page_is_still_a_bad_gateway(book_client):
-    def search(query, limit):
+    def search(query, limit, **_):
         raise EbaySearchError("HTTP 503 from the eBay Browse API")
 
     client = book_client(search)
@@ -557,7 +560,7 @@ def test_looking_again_and_finding_a_new_copy_does_schedule_one(book_client):
     """A copy nobody has examined is the thing a pass exists for."""
     scheduled = []
     results = [a_listing()]
-    client = book_client(lambda query, limit: list(results), scheduled.append)
+    client = book_client(lambda query, limit, **_: list(results), scheduled.append)
     add_book(client, "9780099448396", "Crash")
     client.get("/book/1")
     _finish_the_pass(client)

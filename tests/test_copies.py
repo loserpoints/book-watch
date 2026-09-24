@@ -52,6 +52,28 @@ def a_copy_declaring(connection, work_id, item_id, declared, *, epid=None, title
         "VALUES (?, 1, ?)",
         (isbn, catalogue_title),
     )
+    # A real copy only exists because a sweep found it, and the page shows the
+    # newest sweep of a scope. Registering that here keeps these fixtures
+    # honest rather than relying on a query that happened to match orphans.
+    sweep = connection.execute(
+        "SELECT id FROM sweep WHERE work_id = ? AND scope = 'us' "
+        "ORDER BY id DESC LIMIT 1",
+        (work_id,),
+    ).fetchone()
+    sweep_id = (
+        sweep["id"]
+        if sweep
+        else connection.execute(
+            "INSERT INTO sweep (work_id, scope, asked_for, total_matching) "
+            "VALUES (?, 'us', 50, 0) RETURNING id",
+            (work_id,),
+        ).fetchone()["id"]
+    )
+    connection.execute(
+        "INSERT OR REPLACE INTO copy_seen (item_id, work_id, scope, sweep_id) "
+        "VALUES (?, ?, 'us', ?)",
+        (item_id, work_id, sweep_id),
+    )
     connection.commit()
 
 
@@ -166,11 +188,11 @@ def a_listing(item_id="v1|1|0", price="9.99", *, shipping=None, condition="Good"
     )
 
 
-def on_sale(connection, entry):
-    return {copy.item_id for copy in copies.for_entry(connection, entry)}
+def on_sale(connection, entry, *, scope="us"):
+    return {copy.item_id for copy in copies.for_entry(connection, entry, scope=scope)}
 
 
-def swept(connection, work_id, listings, *, total=None, asked_for=50):
+def swept(connection, work_id, listings, *, total=None, asked_for=50, scope="us"):
     """A sweep that knows how much it saw.
 
     `total` defaults to what came back, which is the ordinary case: a book with
@@ -178,7 +200,7 @@ def swept(connection, work_id, listings, *, total=None, asked_for=50):
     a bigger number for a book whose results eBay truncated.
     """
     found = Results(list(listings), len(listings) if total is None else total)
-    return copies.store(connection, work_id, found, asked_for=asked_for)
+    return copies.store(connection, work_id, found, asked_for=asked_for, scope=scope)
 
 
 def test_a_copy_seen_again_keeps_what_it_was(database):
@@ -287,3 +309,76 @@ def test_a_sweep_records_what_it_asked_for_and_what_matched(database):
 
     row = database.execute("SELECT asked_for, total_matching FROM sweep").fetchone()
     assert (row["asked_for"], row["total_matching"]) == (50, 400)
+
+
+# --- where a copy is ---------------------------------------------------------
+
+
+def abroad(item_id="v1|9|0", country="GB"):
+    return Listing(
+        item_id=item_id,
+        title="State of Grace (UK IMPORT)",
+        price=Money(Decimal("21.06"), "USD"),
+        item_web_url="https://www.ebay.com/itm/9",
+        condition="Brand New",
+        seller="rarewaves",
+        shipping_cost=Money(Decimal("0.00"), "USD"),
+        thumbnail_url=None,
+        listing_date=None,
+        located_in=country,
+    )
+
+
+def test_a_us_sweep_does_not_bury_what_an_everywhere_sweep_found(database):
+    """The reason a sweep records its scope.
+
+    A copy absent from the newest sweep is no longer shown, and that only
+    holds while consecutive sweeps ask eBay the same question. Without the
+    scope, the first US-only sweep after an everywhere sweep would bury every
+    overseas copy — and they went nowhere, we stopped asking.
+    """
+    book = a_book(database, "State of grace", "Joy Williams")
+    swept(database, book.work_id, [a_listing(), abroad()], scope="everywhere")
+    swept(database, book.work_id, [a_listing()], scope="us")
+    database.commit()
+
+    assert on_sale(database, book, scope="us") == {"v1|1|0"}
+    assert on_sale(database, book, scope="everywhere") == {"v1|1|0", "v1|9|0"}
+
+
+def test_a_copy_vanishing_within_one_scope_still_stops_being_shown(database):
+    """Scope must not become an excuse that keeps sold copies on the page."""
+    book = a_book(database, "State of grace", "Joy Williams")
+    swept(database, book.work_id, [a_listing(), abroad()], scope="everywhere")
+    swept(database, book.work_id, [a_listing()], scope="everywhere")
+    database.commit()
+
+    assert on_sale(database, book, scope="everywhere") == {"v1|1|0"}
+
+
+def test_where_a_copy_is_comes_back_out(database):
+    book = a_book(database, "State of grace", "Joy Williams")
+    swept(database, book.work_id, [abroad()], scope="everywhere")
+    database.commit()
+
+    (copy,) = copies.for_entry(database, book, scope="everywhere")
+    assert copy.located_in == "GB"
+
+
+def test_an_unstated_country_is_not_treated_as_abroad(database):
+    book = a_book(database, "State of grace", "Joy Williams")
+    swept(database, book.work_id, [abroad(country=None)], scope="everywhere")
+    database.commit()
+
+    (copy,) = copies.for_entry(database, book, scope="everywhere")
+    assert copy.located_in is None
+
+
+def test_the_gate_is_per_scope(database):
+    """A recent US sweep must not block a first look at everything."""
+    book = a_book(database, "State of grace", "Joy Williams")
+    swept(database, book.work_id, [a_listing()], scope="us")
+    database.commit()
+
+    assert not copies.due_for_sweep(database, book.work_id, scope="us")
+    assert copies.due_for_sweep(database, book.work_id, scope="everywhere")

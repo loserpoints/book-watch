@@ -24,7 +24,13 @@ from book_watch import copies, enrichment, wantlist
 from book_watch.config import MissingCredentialError, load_ebay_credentials
 from book_watch.ebay.auth import EbayTokenProvider
 from book_watch.ebay.errors import EbayError
-from book_watch.ebay.search import DEFAULT_LIMIT, MAX_LIMIT, BrowseClient, Listing
+from book_watch.ebay.search import (
+    DEFAULT_LIMIT,
+    MAX_LIMIT,
+    BrowseClient,
+    Listing,
+    Scope,
+)
 from book_watch.isbn import normalise
 from book_watch.web.wantlist import ConnectFn, open_configured_database
 
@@ -35,7 +41,9 @@ TEMPLATES_DIR = Path(__file__).parent / "templates"
 
 #: Takes a query and a limit, returns listings. `BrowseClient.search` is the
 #: real one; tests pass a function that returns whatever they need.
-SearchFn = Callable[[str, int], list[Listing]]
+#: `scope` is keyword-only and defaulted, so the ad-hoc search route —
+#: which has no scope of its own — can ignore it.
+SearchFn = Callable[..., list[Listing]]
 
 #: Start a background pass over one book's copies. Injected, like everything
 #: else that reaches a third party, so a test cannot reach one by omission.
@@ -58,11 +66,11 @@ class LazyBrowseSearch:
     def __init__(self) -> None:
         self._browse: BrowseClient | None = None
 
-    def __call__(self, query: str, limit: int) -> list[Listing]:
+    def __call__(self, query: str, limit: int, *, scope: Scope = "us") -> list[Listing]:
         if self._browse is None:
             tokens = EbayTokenProvider(load_ebay_credentials())
             self._browse = BrowseClient(tokens)
-        return self._browse.search(query, limit=limit)
+        return self._browse.search(query, limit=limit, scope=scope)
 
 
 def _configured_enrichment(connect: ConnectFn) -> EnrichFn:
@@ -175,6 +183,7 @@ def build_router(
         book_id: int,
         limit: int = Query(DEFAULT_LIMIT, ge=1, le=MAX_LIMIT),
         refresh: int = 0,
+        everywhere: int = 0,
     ) -> HTMLResponse:
         """What is for sale for one book, graded by how sure we are.
 
@@ -184,6 +193,10 @@ def build_router(
         fifty of them is twenty-five seconds, and that work belongs to the
         background.
         """
+        # Nothing is persisted. A toggle that quietly changed what every later
+        # visit searched for would be a setting wearing a link's clothes, and
+        # settings are #72.
+        scope: Scope = "everywhere" if everywhere else "us"
         with closing(open_database()) as connection:
             try:
                 book = wantlist.get(connection, book_id)
@@ -206,13 +219,18 @@ def build_router(
             # only on a book's first-ever view, so the page showed copies that
             # may have sold days earlier and hid copies listed since. Decision
             # 40, amended.
-            if refresh or copies.due_for_sweep(connection, book.work_id):
+            # The gate is per scope. A recent US sweep must not block a
+            # first look at everything: they are different questions, and an
+            # everywhere sweep finds fewer US copies because imports displace
+            # them out of the fifty slots.
+            if refresh or copies.due_for_sweep(connection, book.work_id, scope=scope):
                 try:
                     copies.store(
                         connection,
                         book.work_id,
-                        run_search(book.search_query, limit),
+                        run_search(book.search_query, limit, scope=scope),
                         asked_for=limit,
+                        scope=scope,
                     )
                     connection.commit()
                     book = wantlist.get(connection, book_id)
@@ -221,8 +239,8 @@ def build_router(
                 except EbayError as exc:
                     error = (f"eBay could not be searched: {exc}", 502)
 
-            for_sale = copies.for_entry(connection, book)
-            checked = copies.swept_at(connection, book.work_id)
+            for_sale = copies.for_entry(connection, book, scope=scope)
+            checked = copies.swept_at(connection, book.work_id, scope=scope)
 
         # Scheduled after the response is written, never before it. Decision
         # 40: examining fifty copies is twenty-five seconds of eBay, and this
@@ -250,6 +268,7 @@ def build_router(
             "error": error[0] if error else None,
             "fetched_at": book.copies_fetched_at or "never",
             "checked": checked,
+            "scope": scope,
             "is_isbn": normalise(book.search_query) is not None,
         }
         return templates.TemplateResponse(
