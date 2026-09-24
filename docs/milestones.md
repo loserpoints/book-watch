@@ -48,77 +48,6 @@ renumbers. Two rules keep that from costing anything:
 
 ---
 
-## M3 · Keep what we saw, derive the rest
-
-**Goal.** One invariant: **observations are kept and never rewritten;
-everything else is derived on read.** A change to the matching rules then
-applies to every book already on the list, for free, without a migration and
-without asking anybody for anything twice.
-
-**Jobs advanced.**
-
-- **J2**, permanently rather than once. Every future improvement to precision
-  reaches the books already on the list instead of only new ones.
-- **J5**, by starting its clock. Its cheapest candidate — our own record of
-  what copies have been listed at — needs observations to accumulate, and they
-  currently do not.
-
-**Why this exists.** *The right book* shipped a matching fix that did nothing
-in production. A pass had earlier concluded that a number belonged to a book,
-stored that conclusion in `edition`, and the grader reads a known edition
-ahead of every other signal — so Don Gillmor's novel stayed matched to Joy
-Williams's, behind the check written to reject it. Nothing could clean it up,
-because `edition` holds two kinds of row with nothing to tell them apart: an
-ISBN a person typed, and an ISBN a rule inferred.
-
-The shape of that is the milestone. The system stores **conclusions** as
-though they were facts, and discards **observations** as though they were
-disposable:
-
-| | | |
-|---|---|---|
-| **Observations** | what a seller declared · what Open Library says a number is · what was for sale | cost a request, cannot be re-derived, should only ever be appended to |
-| **Conclusions** | which ISBNs are this book's editions · what tier a copy is · whether a book has been identified | derived by rules that will keep changing, and should be recomputed rather than kept |
-
-Confidence tiers already work this way — `grade()` runs on every page view, so
-a rule change reaches every book instantly. This milestone is that treatment
-applied everywhere it is missing.
-
-**Why before *What I will pay*.** Because it is the same bug pointing the other
-way. A refresh **deletes** a book's copies and replaces them, so the price
-history J5 depends on has never started accumulating: we are throwing away
-observations while carefully preserving conclusions. Fixing that here settles
-*What I will pay*'s one urgent question as a consequence rather than as a
-separate decision, which is the sign the boundary is in the right place.
-
-**What it changes, roughly three slices.**
-
-- **The edition set is derived, not stored.** It is already a pure function of
-  things on disk: which numbers declared on this book's copies does the
-  catalogue call this title, by an author the sellers do not contradict. A
-  join over data we have already paid for — **zero requests** — so a rule
-  change re-derives every book on the next page view.
-- **Copies are appended, not replaced.** What is for sale *now* stays a
-  question the page answers; what was seen stops being destroyed to answer it.
-- **Observations record what was captured.** The one genuinely expensive case
-  is a rule needing a field we never fetched — which just happened with the
-  seller's author, and cost re-asking about *every* listing because there was
-  no way to tell a row captured before the field from one whose seller left it
-  blank. A capture version makes that exact: re-ask only the rows that are
-  actually stale.
-
-**What this is not.** A way to edit the database by hand. That was the first
-answer reached for and it is a diagnostic, not a fix — optimising the matching
-is the main way this product improves, so the logic changing is the normal
-case and has to be cheap by design rather than repairable by exception.
-
-**Cost.** Kept observations grow without bound, on a volume of 1 GB — small
-per row and worth watching rather than solving now. Deriving on read costs a
-join per page view against tens of rows, which is nothing at this size and is
-a real question at a thousand books.
-
----
-
 ## M4 · What I will pay, and whether this is fair
 
 **Goal.** A price ceiling per book, and enough context to act on a listing
@@ -185,6 +114,81 @@ long it took to get here.
 What to *do* with the record still waits, and should: J5's mechanism is four
 candidates and none of them is chosen.
 
+**Re-read after *Keep what we saw*, 2026-09-24.** The urgent item above is
+resolved, and doing it changed what this milestone starts from.
+
+**The clock has started, and the read path already exists.** Copies accumulate,
+price changes are logged, and `copies.price_history()` returns what one copy
+has cost over time. J5's fourth candidate no longer needs anything built before
+it can be evaluated — it needs *elapsed time*, which is now passing rather than
+being thrown away. That moves the question from "should we start recording" to
+"how long before the record says anything", which is a much better question to
+be stuck on.
+
+**History does not fix the small-sample problem, and it is worth being explicit
+that it looks like it does.** *Crash* had six right-edition copies. Observing
+those six weekly for three months gives seventy-eight rows and still six
+copies. Sightings are repeated measurements of the same objects, not new
+evidence about the edition's price. "Not enough copies to tell" stays a
+requirement, and the count that matters is distinct copies, not rows.
+
+**What is genuinely new is the time dimension, and it changes what a threshold
+means.** Before, "under $8 delivered" could only ask about the copies visible
+right now. It can now also ask whether this book has *ever* been seen under
+$8 — which is a different and more useful question for a book with no cheap
+copy today, and which is the shape *Tell me* will want. Worth deciding
+deliberately rather than drifting into: the threshold and the history are two
+features that look like one.
+
+**We record asking prices, and we cannot record sale prices. This is the
+constraint the whole milestone has to be designed around.**
+
+What a sweep observes is that a listing was there at a price, and later that it
+was not there. **Why it went is not observable.** Sold, ended unsold, cancelled
+by the seller and relisted all look identical: eBay's Browse API answers 404
+for the item and says nothing about which happened. The one official source of
+sold data is the Marketplace Insights API, which is a Limited Release restricted
+to approved partners and closed to new users — so it is not available to this
+project, and no amount of polling substitutes for it.
+
+An earlier draft of this section said "a copy that sold for $6 last month is the
+best evidence there is". That was a conclusion written as though it were an
+observation, which is the exact error *Keep what we saw* existed to fix. It is
+recorded here rather than quietly deleted.
+
+**So J5's fourth candidate is weaker than it looked, and still worth having.**
+It yields the distribution of *asking* prices over time, which is what sellers
+want rather than what the book is worth — and the gap between those two is
+precisely the question "is this fair". What it does give, for free and
+reliably:
+
+- **Time on market**, which is a genuine negative signal. A copy listed at $30
+  that has sat through twelve sweeps is evidence that $30 is too high, and it
+  needs no knowledge of sales at all.
+- **What the cheapest available copy has ranged over**, which answers "is today
+  unusually expensive" without claiming anything about value.
+- **Disappearance rates by price band**, in aggregate and only at volume this
+  project does not have yet. Worth noting as a maybe, not planning on.
+
+**One narrow case where a sale is observable.** A listing with a quantity above
+one exposes its remaining availability, so quantity dropping between sweeps
+while the listing stays live is a real sale at a known price. Used books are
+mostly unique copies, so this will be rare — but it is the only true sale
+signal available and costs nothing to record.
+
+**Only the newest sweep is shown, but every sweep is stored.** Price judgement
+should read all sightings of certain-tier copies rather than only the ones
+currently buyable — a copy that was listed at $6 and is now gone is still
+evidence about asking prices, and it is exactly the row the page no longer
+displays. The distinction between "what the page shows" and "what the judgement
+reads" is new and needs stating in whatever mechanism wins.
+
+**The one caution carried forward.** The growth bound in decision 44 rests on an
+assumption about listing turnover, not on the schema. A price-history feature
+is precisely the thing that would make keeping more data feel worthwhile, so
+this milestone is where that assumption should be checked against what the
+volume actually holds rather than restated.
+
 ---
 
 ## M5 · Two kinds of hunt
@@ -249,6 +253,20 @@ amended.
 seller relists, so the cheap implementation will call the same copy new every
 few days — and that is exactly the failure that makes "what's new" worthless.
 J2's open question.
+
+There is now a lead on it. A relist **preserves the original listing date**
+(decision 44), so two item ids sharing a seller, a price and a listed date are
+very likely one copy. That is a heuristic rather than an identity key and it
+belongs to this milestone to measure, but it is a better starting point than
+treating every new id as a new copy.
+
+**A pass is scheduled by somebody opening a book's page, and by nothing else.**
+So a book nobody opens never gets examined, and a book that failed to resolve
+stays unresolved until a person happens to look at it — *Keep what we saw*
+found one in exactly that state. That is tolerable while a human drives every
+page view and stops being tolerable the moment the tool is supposed to run
+without attention. A poll that examines on its own schedule is the fix, and it
+is this milestone's, not a bug to patch before it.
 
 **Probably the largest milestone here**, and the most likely to split at its
 first review: the poll, the listing schema, seen-state, ranking and dismissal
@@ -387,3 +405,76 @@ mechanism meant to catch it. Deploying on every merge, the network guard in
 `conftest.py`, and asserting on rendered HTML rather than on the property
 behind it are all responses to that, and none of them would have been obvious
 before.
+
+### M3 · Keep what we saw, derive the rest
+
+**Delivered 2026-09-24.** Observations are kept and never rewritten;
+everything else is derived on read. Which ISBNs are a book's editions is now a
+query over what sellers declared and what the catalogue says those numbers
+are, so a matching rule change re-judges every book on the list at the next
+page view, for no requests. A refresh adds to what is for sale instead of
+replacing it, and what a copy has cost over time is queryable. Every stored
+observation records which version of the code captured it, so the one case
+that genuinely costs requests — a rule needing a field we never fetched — can
+re-ask about only the rows that lack it.
+
+Four slices rather than the three estimated. Separating what somebody typed
+from what a rule concluded had to come first, and was not visible until the
+first slice was planned in detail.
+
+**What it taught.**
+
+- **This was filed as an invariant and was really a bug with a deadline.** Two
+  of the four slices repaired things that were actively wrong in production,
+  not merely inelegant. "The system stores conclusions as though they were
+  facts" sounded like an architectural preference and was the reason a shipped
+  fix did nothing.
+- **What grows is what you stop deleting, not what you start writing.** The
+  slice was designed around sighting rows being the term to worry about.
+  Measured on the real database, a sighting is **40 bytes** and a copy is
+  **490** — and copies are the ones that now accumulate forever. The entire
+  cost analysis had been pointed at the wrong table, and one query corrected
+  it.
+- **Slices interacted in ways neither issue predicted.** Keeping copies
+  forever made the ended-listing rule in the next slice load-bearing rather
+  than an edge case: after it, most rows eligible for re-asking belong to
+  listings eBay answers 404 for. Shipped in the other order, a recapture pass
+  would have quietly destroyed good declarations across the whole want-list.
+- **The signal was already in the code, being thrown away.** Deciding what to
+  do when a re-ask returns less than what is stored produced a plausible
+  heuristic — never overwrite a non-null with a null — and the real answer was
+  that `detail.py` had always known the difference between 404 and 200 and was
+  collapsing both into an empty answer. Worth checking whether a distinction is
+  being discarded before inventing a proxy for it.
+- **Deriving on read is cheap, and now measured rather than assumed.** 0.199ms
+  to 0.265ms per page assembly, against a two-second budget of which one eBay
+  search spends 300–500. The first draft of that decision asserted "page time
+  did not move" without having run anything.
+- **Keeping a production-shaped database was the thing that made verification
+  real.** Every slice was checked against a copy of the live file, not a fresh
+  one. Both production bugs that opened this milestone were invisible to tests
+  precisely because tests start empty — a fresh database cannot contain a
+  conclusion drawn under an older rule.
+
+**What it got wrong.**
+
+- **A migration that guesses.** 010 identified a typed ISBN as "the edition row
+  with nothing else in it", which is right for every row we have and stated its
+  residual in the file. It is still a guess in a migration, and the capture
+  version that makes guessing unnecessary arrived three slices later.
+- **A decision entry claimed a timing nobody had measured**, caught before the
+  commit rather than after, which is the same failure M2 recorded and not yet a
+  habit that has stopped happening.
+- **Uncommitted work was reverted with `git checkout`** while undoing a
+  deliberate mutation test. Recovered from a copy, one file redone. Mutation
+  testing on a dirty tree needs the tree committed first.
+- **"Stuck" is still a state only a person can clear.** A pass is scheduled by
+  opening a book's page and by nothing else, so a book nobody opens never
+  heals. It happened to be fine — the book in question healed the moment it was
+  opened — and the design flaw is real and belongs to *Always current*.
+
+The pattern worth keeping: **the cheapest check in this milestone was a copy of
+production and a script that grades it.** Every real finding came from running
+the new code against the actual file — the stored wrong conclusion, the 490-byte
+row, the zero-stale migration. None of them were reachable from the test suite,
+and all of them were reachable in under a minute.
