@@ -435,15 +435,26 @@ def test_an_override_moves_to_the_same_column(both_kinds_of_row):
     assert row["typed"] == "The Riddle of the Sands 1903"
 
 
-def test_concluded_editions_stay_put_for_the_next_slice(both_kinds_of_row):
-    """Including the wrong one. Deleting conclusions is S15's job, and it can
-    do it safely only because nothing typed is mixed in with them."""
+def test_concluded_editions_are_deleted_once_nothing_typed_is_among_them(
+    both_kinds_of_row,
+):
+    """Including the wrong one, which is the point.
+
+    010 moved the typed number out; 011 can then empty the table, because
+    everything left was concluded by a pass under rules that have already
+    changed once. What counts as this book is derived on read now.
+    """
     db.migrate(both_kinds_of_row)
 
-    rows = both_kinds_of_row.execute(
-        "SELECT isbn FROM edition WHERE work_id = 1 ORDER BY isbn"
-    ).fetchall()
-    assert [row["isbn"] for row in rows] == ["9780394757735", "9781771965231"]
+    assert (
+        both_kinds_of_row.execute("SELECT count(*) AS n FROM edition").fetchone()["n"]
+        == 0
+    )
+    # And what somebody typed is untouched by any of it.
+    assert [
+        row["typed"]
+        for row in both_kinds_of_row.execute("SELECT typed FROM entry ORDER BY id")
+    ] == [None, "9780099448396", "The Riddle of the Sands 1903"]
 
 
 def test_a_book_added_by_title_was_typed_nothing(both_kinds_of_row):

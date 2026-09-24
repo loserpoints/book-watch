@@ -1739,3 +1739,71 @@ and by number, not by which book was on the list when we asked.
 
 **No behaviour changes.** That is the point of doing it as its own slice — the
 next one changes what is true, and this one only changes where it is written.
+
+## 43. Which numbers are this book is derived on read, not stored
+
+**Decision.** `_target()` works out an entry's ISBN and product-id set with a
+query over things we observed — what sellers declared, what Open Library says
+those numbers are, who sellers say wrote them — every time a page is drawn.
+The `edition` table stops holding conclusions; migration 011 empties it.
+Decision 42 separated typed from concluded so that this could be done without
+losing what a person put in the form.
+
+**The problem this solves, stated properly.** A conclusion stored under one
+set of rules survives the rules changing. A pass decided Don Gillmor's ISBN
+was an edition of Joy Williams's novel, wrote it down, and the author check
+written a fortnight later to reject exactly that never ran — because the
+grader reads a known edition ahead of every other signal. Fixing the rule
+fixed nothing that already existed. That is the shape of the bug, and it
+would have recurred on every future rule change.
+
+The alternatives were both worse. **Re-run the passes** and the cost is
+linear in the want-list, paid to Open Library, every time a rule moves — the
+one thing we cannot spend. **A screen to edit the table** makes a person the
+repair mechanism for a rule that is wrong, which is not a fix, it is a chore
+with an error rate.
+
+**What it costs.** Two extra joins per page view, over three indexed tables
+on a single-user SQLite file. Measured on the real database — one book,
+twelve copies, 200 runs each — assembling the copy list went from a median
+0.199ms to 0.265ms. Two thirds of a tenth of a millisecond, against a page
+budget of two seconds and a single eBay search that spends 300 to 500 of
+them. The cost is linear in copies per book rather than in the want-list, and
+bounded by how many copies eBay returns for one book. If it ever does show
+up, the answer is a cache keyed on a rule version, not a return to storing
+conclusions.
+
+**Judging a number is stricter than judging a listing.** `is_this_book()`
+deliberately lacks the escape `_author_contradicts()` has, where a listing's
+own title naming the right author overrides a wrong author field. A number
+accepted becomes one the grader trusts ahead of everything else, for every
+listing declaring it, indefinitely — so a wrong one contaminates. A right one
+rejected merely has to be recognised the ordinary way, as text, one tier
+down. The asymmetry in the consequences is the reason for the asymmetry in
+the rule.
+
+**Measured, on the database that had the bug.** A copy of the production file
+holding Gillmor's ISBN as a stored edition, graded before and after the same
+change:
+
+| | certain | possible | excluded |
+|---|---|---|---|
+| before | 10 | 2 | 0 |
+| after | 9 | 2 | 1 |
+
+The one that moved is Biblioasis 2023, by Don Gillmor. Nine Joy Williams
+copies stayed certain, both untitled listings stayed possible. The Open
+Library call ledger reads 3 rows before and 3 after: nothing was fetched, and
+`tests/conftest.py` makes a real request an error in every test. The 227
+labelled listings still hide nothing true on either hunt.
+
+**Enrichment stops concluding.** It keeps asking Open Library what a number
+is and writing the answer to the notebook — that is an observation and it is
+cached. It no longer draws any conclusion from the answer. A pass now
+examines; deciding happens on read.
+
+**The residual.** Deriving reaches only numbers some seller declared on a
+copy we have seen. A book with no copies for sale has an empty ISBN set and
+matches on title and author alone, which is what it did before any pass ran
+anyway. Nothing regresses; a real edition nobody is currently selling is
+simply not yet known, and becomes known the moment somebody lists it.

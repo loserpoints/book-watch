@@ -140,6 +140,40 @@ def grade(evidence: Evidence, target: Target, *, hunt: Hunt = "reader") -> Tier:
     return "excluded"
 
 
+def is_this_book(
+    catalogue_title: str, declared_author: str | None, target: Target
+) -> bool:
+    """Does the catalogue say this *number* is the book being hunted?
+
+    Judging a number, not a listing, and the difference decides how strict to
+    be. A number accepted here becomes one the grader trusts ahead of every
+    other signal, for every listing that declares it, for as long as it is
+    accepted — so a wrong one contaminates everything downstream, while a
+    right one rejected merely has to be recognised the ordinary way.
+
+    So there is no "the listing's own name vouches for the author" escape
+    here, which `_author_contradicts` allows and should. One seller typing a
+    translator into the author field is a reason not to conclude anything from
+    that number; it is not a reason to hide their copy.
+    """
+    if not names_the_same_book(catalogue_title, target.title):
+        return False
+    return not attributed_elsewhere(declared_author, target.author)
+
+
+def attributed_elsewhere(claimed: str | None, wanted: str | None) -> bool:
+    """Does a seller name an author this book does not have?
+
+    Only ever a negative, and only when both sides are known. Two names
+    agreeing proves nothing — every listing for a famous title names its
+    famous author.
+    """
+    if not claimed or not wanted:
+        return False
+    theirs, ours = surnames(claimed), surnames(wanted)
+    return bool(theirs) and bool(ours) and not (theirs & ours)
+
+
 def _author_contradicts(evidence: Evidence, target: Target) -> bool:
     """Does the seller say this is by somebody else?
 
@@ -161,13 +195,9 @@ def _author_contradicts(evidence: Evidence, target: Target) -> bool:
     author — which is what the three books called *Breaking and Entering*
     looked like, and what a mistyped author field does not.
     """
-    if not target.author or not evidence.declared_author:
+    if not attributed_elsewhere(evidence.declared_author, target.author):
         return False
-    wanted = surnames(target.author)
-    claimed = surnames(evidence.declared_author)
-    if not wanted or not claimed or wanted & claimed:
-        return False
-    return _surname(target.author) not in _flatten(evidence.listing_title)
+    return _surname(target.author or "") not in _flatten(evidence.listing_title)
 
 
 def surnames(names: str) -> set[str]:
