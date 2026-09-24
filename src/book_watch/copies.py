@@ -26,6 +26,13 @@ from book_watch.wantlist import Entry
 #: lookups per row. The joins are left joins throughout: a copy nobody has
 #: asked eBay about, and a number nobody has asked Open Library about, are
 #: both ordinary states rather than missing data.
+#:
+#: Restricted to the newest sweep, because copies are kept now rather than
+#: deleted and the page's question is still "what is buyable today". The
+#: comparison is on a sweep id rather than a time: two sweeps a second apart
+#: are different sweeps and a timestamp cannot say so. `IS` rather than `=`
+#: so that a book with no sweep at all matches its copies instead of
+#: silently showing none.
 _SELECT = """
 SELECT copy.item_id,
        copy.title,
@@ -52,6 +59,10 @@ SELECT copy.item_id,
   LEFT JOIN openlibrary_edition AS identity
          ON identity.isbn = declaration.isbn AND identity.found = 1
  WHERE copy.work_id = ?
+   AND copy.last_sweep_id IS (
+       SELECT sweep.id FROM sweep WHERE sweep.work_id = ?
+     ORDER BY sweep.id DESC LIMIT 1
+   )
 """
 
 
@@ -100,24 +111,66 @@ class Copy:
         return landed.amount if landed else self.price.amount
 
 
-def store(
-    connection: sqlite3.Connection, work_id: int, listings: list[Listing]
-) -> None:
-    """Replace what is on sale for this book with what was just found.
+def store(connection: sqlite3.Connection, work_id: int, listings: list[Listing]) -> int:
+    """Record what eBay just returned, keeping everything seen before it.
 
-    Replace rather than merge: a copy that has stopped appearing has been
-    sold or withdrawn, and keeping it would turn this table into a list of
-    things that used to be buyable.
+    This used to delete the book's copies and reinsert the new ones, which
+    answered the page's question — what is for sale now — by destroying the
+    answer to a later one. What a copy has cost over time is the cheapest
+    evidence we will ever have for judging a price, and it costs no requests
+    to keep, because it arrives in a search we already ran.
+
+    So a sweep now *adds*: a sweep row, an upsert per copy, and a sighting for
+    any copy whose price moved or that has come back after being absent. A
+    copy that stopped appearing is left where it is, pointing at the last
+    sweep that saw it. Returns the sweep id.
     """
-    connection.execute("DELETE FROM copy WHERE work_id = ?", (work_id,))
-    connection.executemany(
-        """
-        INSERT INTO copy (
-            item_id, work_id, title, url, price, currency, shipping,
-            condition, seller, thumbnail, epid, listed_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-        [
+    sweep_id = connection.execute(
+        "INSERT INTO sweep (work_id) VALUES (?) RETURNING id", (work_id,)
+    ).fetchone()["id"]
+
+    previous = {
+        row["item_id"]: row
+        for row in connection.execute(
+            "SELECT item_id, price, currency, shipping, condition, last_sweep_id "
+            "FROM copy WHERE work_id = ?",
+            (work_id,),
+        )
+    }
+    latest_before = connection.execute(
+        "SELECT id FROM sweep WHERE work_id = ? AND id < ? ORDER BY id DESC LIMIT 1",
+        (work_id, sweep_id),
+    ).fetchone()
+    was_current = latest_before["id"] if latest_before else None
+
+    fresh: list[str] = []
+    for listing in listings:
+        shipping = _shipping_of(listing)
+        before = previous.get(listing.item_id)
+        if before is None:
+            fresh.append(listing.item_id)
+        connection.execute(
+            """
+            INSERT INTO copy (
+                item_id, work_id, title, url, price, currency, shipping,
+                condition, seller, thumbnail, epid, listed_at,
+                first_seen_at, last_seen_at, last_sweep_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                      datetime('now'), datetime('now'), ?)
+            ON CONFLICT (item_id, work_id) DO UPDATE SET
+                title = excluded.title,
+                url = excluded.url,
+                price = excluded.price,
+                currency = excluded.currency,
+                shipping = excluded.shipping,
+                condition = excluded.condition,
+                seller = excluded.seller,
+                thumbnail = excluded.thumbnail,
+                epid = excluded.epid,
+                listed_at = excluded.listed_at,
+                last_seen_at = datetime('now'),
+                last_sweep_id = excluded.last_sweep_id
+            """,
             (
                 listing.item_id,
                 work_id,
@@ -125,23 +178,104 @@ def store(
                 listing.item_web_url,
                 str(listing.price.amount),
                 listing.price.currency,
-                _shipping_of(listing),
+                shipping,
                 listing.condition,
                 listing.seller,
                 listing.thumbnail_url,
                 listing.epid,
                 listing.listing_date.isoformat() if listing.listing_date else None,
+                sweep_id,
+            ),
+        )
+        if _worth_recording(before, listing, shipping, was_current):
+            connection.execute(
+                "INSERT INTO sighting "
+                "(item_id, work_id, sweep_id, price, currency, shipping, condition) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (
+                    listing.item_id,
+                    work_id,
+                    sweep_id,
+                    str(listing.price.amount),
+                    listing.price.currency,
+                    shipping,
+                    listing.condition,
+                ),
             )
-            for listing in listings
-        ],
+
+    # Only genuinely new copies are new work. This used to clear
+    # unconditionally, so every refresh scheduled a full enrichment pass and
+    # spent Open Library requests re-asking about numbers already answered —
+    # which is the traffic we have the least room to waste.
+    if fresh:
+        connection.execute(
+            "UPDATE work SET copies_fetched_at = datetime('now'), enriched_at = NULL "
+            "WHERE id = ?",
+            (work_id,),
+        )
+    else:
+        connection.execute(
+            "UPDATE work SET copies_fetched_at = datetime('now') WHERE id = ?",
+            (work_id,),
+        )
+    return sweep_id
+
+
+def _worth_recording(
+    before: sqlite3.Row | None,
+    listing: Listing,
+    shipping: str | None,
+    was_current: int | None,
+) -> bool:
+    """Is this sighting something the last one does not already say?
+
+    Only changes are written, which is the whole reason the history stays
+    small: an unchanged price recorded every sweep is one fact repeated daily
+    forever. A row means "this is the price from this sweep onward", and holds
+    until the next row.
+
+    A copy we have never seen is always worth recording — its first sighting
+    is a change from nothing. So is one that has come back after being absent,
+    even at the identical price: without that row, a gap reads as one
+    continuous offer, and that is a claim we cannot support.
+    """
+    if before is None:
+        return True
+    if before["last_sweep_id"] != was_current:
+        return True  # it was not in the previous sweep — a reappearance
+    return (
+        before["price"] != str(listing.price.amount)
+        or before["currency"] != listing.price.currency
+        or before["shipping"] != shipping
+        or before["condition"] != listing.condition
     )
-    # New copies are new work, so the book stops counting as enriched. That is
-    # what schedules the next pass, and what makes the want-list say so again.
-    connection.execute(
-        "UPDATE work SET copies_fetched_at = datetime('now'), enriched_at = NULL "
-        "WHERE id = ?",
-        (work_id,),
-    )
+
+
+def price_history(
+    connection: sqlite3.Connection, work_id: int, item_id: str
+) -> list[tuple[str, Money, Money | None]]:
+    """What one copy has cost, each time that changed, oldest first.
+
+    Returned as (when, price, shipping). Only changes are stored, so a reading
+    holds from its sweep until the next one — two entries a month apart mean
+    the price was unchanged between them, not that nobody looked.
+    """
+    return [
+        (
+            row["at"],
+            Money(Decimal(row["price"]), row["currency"]),
+            Money(Decimal(row["shipping"]), row["currency"])
+            if row["shipping"] is not None
+            else None,
+        )
+        for row in connection.execute(
+            "SELECT sweep.at, sighting.price, sighting.currency, sighting.shipping "
+            "FROM sighting JOIN sweep ON sweep.id = sighting.sweep_id "
+            "WHERE sighting.work_id = ? AND sighting.item_id = ? "
+            "ORDER BY sighting.sweep_id",
+            (work_id, item_id),
+        )
+    ]
 
 
 def for_entry(connection: sqlite3.Connection, entry: Entry) -> list[Copy]:
@@ -155,7 +289,7 @@ def for_entry(connection: sqlite3.Connection, entry: Entry) -> list[Copy]:
     target = _target(connection, entry)
     copies = [
         _to_copy(row, target, entry)
-        for row in connection.execute(_SELECT, (entry.work_id,))
+        for row in connection.execute(_SELECT, (entry.work_id, entry.work_id))
     ]
     order = {"certain": 0, "probable": 1, "possible": 2, "excluded": 3}
     copies.sort(key=lambda copy: (order[copy.tier], copy.sort_key))

@@ -9,9 +9,12 @@ and reaching only the next one added, so most of this file is about what a
 change to the rules would do to books that already exist.
 """
 
+from decimal import Decimal
+
 import pytest
 
 from book_watch import copies, db, wantlist
+from book_watch.ebay.search import Listing, Money
 
 STONER = ("9781590171998", "Stoner", "John Williams")
 OMNIBUS = ("9781598537024", "John Williams : Collected Novels", "John Williams")
@@ -144,3 +147,106 @@ def test_deriving_asks_nobody_anything(database):
         a_copy_declaring(database, book.work_id, f"v1|{n}|0", declared)
 
     assert len(copies.for_entry(database, book)) == 3
+
+
+# --- what a sweep keeps ------------------------------------------------------
+
+
+def a_listing(item_id="v1|1|0", price="9.99", *, shipping=None, condition="Good"):
+    return Listing(
+        item_id=item_id,
+        title="Stoner by John Williams",
+        price=Money(Decimal(price), "USD"),
+        item_web_url="https://www.ebay.com/itm/1",
+        condition=condition,
+        seller="aseller",
+        shipping_cost=Money(Decimal(shipping), "USD") if shipping else None,
+        thumbnail_url=None,
+        listing_date=None,
+    )
+
+
+def on_sale(connection, entry):
+    return {copy.item_id for copy in copies.for_entry(connection, entry)}
+
+
+def test_a_copy_seen_again_keeps_what_it_was(database):
+    """The whole point of the slice: a refresh stops destroying the record."""
+    book = a_book(database, "Stoner", "John Williams")
+    copies.store(database, book.work_id, [a_listing(price="9.99")])
+    copies.store(database, book.work_id, [a_listing(price="7.50")])
+    database.commit()
+
+    history = copies.price_history(database, book.work_id, "v1|1|0")
+
+    assert [str(price.amount) for _, price, _ in history] == ["9.99", "7.50"]
+
+
+def test_an_unchanged_price_is_not_written_twice(database):
+    """Only changes are logged. The same fact recorded daily forever answers
+    nothing extra and is what makes the table grow without bound."""
+    book = a_book(database, "Stoner", "John Williams")
+    for _ in range(5):
+        copies.store(database, book.work_id, [a_listing(price="9.99")])
+    database.commit()
+
+    assert len(copies.price_history(database, book.work_id, "v1|1|0")) == 1
+
+
+def test_a_copy_that_comes_back_is_recorded_even_at_the_same_price(database):
+    """Without this row, a gap with the same price either side would read as
+    one continuous offer, which is not something we observed."""
+    book = a_book(database, "Stoner", "John Williams")
+    copies.store(database, book.work_id, [a_listing()])
+    copies.store(database, book.work_id, [])
+    copies.store(database, book.work_id, [a_listing()])
+    database.commit()
+
+    assert len(copies.price_history(database, book.work_id, "v1|1|0")) == 2
+
+
+def test_a_copy_that_stops_appearing_is_kept_but_not_shown(database):
+    book = a_book(database, "Stoner", "John Williams")
+    copies.store(database, book.work_id, [a_listing("v1|1|0"), a_listing("v1|2|0")])
+    copies.store(database, book.work_id, [a_listing("v1|1|0")])
+    database.commit()
+
+    assert on_sale(database, book) == {"v1|1|0"}
+    kept = database.execute("SELECT COUNT(*) FROM copy").fetchone()[0]
+    assert kept == 2
+
+
+def test_when_a_vanished_copy_was_last_seen_survives(database):
+    book = a_book(database, "Stoner", "John Williams")
+    copies.store(database, book.work_id, [a_listing("v1|2|0")])
+    copies.store(database, book.work_id, [])
+    database.commit()
+
+    row = database.execute(
+        "SELECT first_seen_at, last_seen_at FROM copy WHERE item_id = 'v1|2|0'"
+    ).fetchone()
+    assert row["last_seen_at"] is not None
+    assert row["first_seen_at"] == row["last_seen_at"]
+
+
+def test_shipping_changing_is_a_price_change(database):
+    """What a copy costs is what it costs delivered, so this counts."""
+    book = a_book(database, "Stoner", "John Williams")
+    copies.store(database, book.work_id, [a_listing(shipping="3.99")])
+    copies.store(database, book.work_id, [a_listing(shipping="0.00")])
+    database.commit()
+
+    history = copies.price_history(database, book.work_id, "v1|1|0")
+    assert [str(ship.amount) for _, _, ship in history] == ["3.99", "0.00"]
+
+
+def test_two_sweeps_in_the_same_second_are_different_sweeps(database):
+    """Why a sweep is an id and not a timestamp. A test that compared times
+    would pass here by accident and fail in production."""
+    book = a_book(database, "Stoner", "John Williams")
+    first = copies.store(database, book.work_id, [a_listing("v1|1|0")])
+    second = copies.store(database, book.work_id, [a_listing("v1|2|0")])
+    database.commit()
+
+    assert first != second
+    assert on_sale(database, book) == {"v1|2|0"}
