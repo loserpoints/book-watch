@@ -1601,6 +1601,12 @@ changes, both controls need to move behind something shared.
 
 ## 40. A page view spends one search and nothing else
 
+> **Amended by decision 48 (2026-09-24).** The "only when that book has never
+> been searched for" half is wrong and is replaced: opening a book now searches
+> whenever its results are more than an hour old. The rest of this entry —
+> at most one search, never a listing's details — stands, and the measurements
+> below are what make it stand.
+
 **Decision.** Opening a book runs at most one eBay search, and only when that
 book has never been searched for or the reader asks to look again. It never
 fetches a listing's details. Everything else it shows was written down
@@ -2013,3 +2019,91 @@ and "stopped appearing" are observations. Say the second.
 what sellers *ask*, not what books *fetch*, and the gap between those is most
 of what "is this fair" means. It is still the cheapest candidate and still
 worth accumulating. It is not the candidate the milestone thought it was.
+
+## 48. Opening a book is a request to see what is listed now
+
+**Decision.** Opening a book searches eBay, unless it was searched within the
+last hour. A pill says how old the results are and a button re-runs on demand,
+ignoring the gate. Decision 40's "only on the first view" rule is replaced;
+its other half — one search, never a listing's details — stands.
+
+**The bug this fixes.** The page read the store and refreshed it only on a
+book's first-ever view. So it showed copies that may have sold days earlier
+and hid copies listed since. Production, before this:
+
+```
+Breaking and Entering
+  copies_fetched_at: 2026-09-23 21:41:48
+  distinct seen_at across all 12 copies: ['2026-09-23 21:41:48']
+```
+
+One sweep. Ever. A watcher that does not watch — and there is no other reason
+to click a book's title than to find out what is listed now.
+
+**How decision 40 got it wrong, which is worth being precise about.** Its
+measurements are right and its conclusion about per-listing detail calls is
+right: 50 × 0.51s does not fit a page. But "search only on the first view"
+travelled along with that finding without being argued for. The entry weighs
+the *latency* of searching and never weighs the cost of the page being stale
+for ever. It is a correct answer to the question it asked.
+
+**Synchronous, not backgrounded.** A background sweep would show yesterday's
+copies at the moment somebody asked for today's, with the fresh ones appearing
+only on a second click — which defeats the click. Rendering from the store and
+swapping in fresh results over HTMX was also considered: it gives a fast page
+*and* current data, and it lets the list reorder while you are reading it,
+which is the failure the hour gate exists to prevent, on a shorter timescale.
+
+**One hour, and the reason is not the API budget.** Ten books at the
+theoretical ceiling of 24 sweeps each is 240 searches a day against 5,000.
+Cost does not constrain this.
+
+The reason is that **results have to hold still long enough to act on**. Look
+at one book, go and check another, come back — if a sweep ran in between and
+the list reordered, you can lose the copy you had already decided to buy.
+Freshness that costs you the purchase is a bad trade, and the market does not
+move in minutes: these listings sit for weeks.
+
+Secondary, and worth knowing: ungated, sweep frequency tracks how often
+somebody clicks, so the price history's time axis would be shaped by one
+person's habits rather than by the market.
+
+**Measured.** Reading the store alone is a median 4.6ms; searching as well is
+16.5ms, so the app-side cost of this change is **11.9ms**. The real cost is
+the eBay round trip on top of that — about 1.8s by decision 40's measurement —
+paid on at most one view an hour per book. That is a genuine regression and it
+is the price of the page meaning what it says.
+
+**A sweep now records how much it saw.** We ask for 50 and eBay ranks by
+relevance, so a copy at rank 48 today can be at rank 53 tomorrow while sitting
+untouched. A copy missing from a sweep therefore means *it ended* or *we did
+not look far enough*, and nothing could tell those apart.
+
+That barely mattered while a book was searched once. It matters now that every
+visit sweeps, because the copies at the edge of the window churn in and out —
+and `_worth_recording` treats a copy missing last time as having **come back**,
+which would fill the price history with reappearances that only ever meant
+"fell out of our results". So a sweep stores what it asked for and what eBay
+said matched, and a reappearance is only recorded when the previous sweep saw
+the whole market. Unknown counts as a window, which is the conservative
+reading and the one every other unknown here gets.
+
+| Book | Matching listings | Truncated at 50 |
+|---|---|---|
+| *State of Grace* | 5 | No |
+| *Breaking and Entering* | 12 | No |
+| *Crash* | 53 | Yes |
+| *Stoner* | 65 | Yes |
+| *Pride and Prejudice* | 109 | Yes |
+
+**The window is read from `copies.CURRENT_FOR` at call time**, not bound as a
+default argument. A default would capture it at import and make "one named
+place" untrue the moment anything tried to change it, which is exactly what an
+account setting would do. A test asserts this, and it failed on the first
+attempt — the default-argument version was what I wrote first.
+
+**What is deliberately not here.** The want-list does not sweep: ten books is
+ten searches and a ten-second page, and its job is "what am I watching" rather
+than "what is for sale". The gate is per book; it becomes per book and scope
+when the US-only default lands, because a recent US sweep must not block a
+first look at everything.

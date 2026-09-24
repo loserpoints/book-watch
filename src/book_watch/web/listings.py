@@ -97,6 +97,7 @@ def build_router(
 ) -> APIRouter:
     router = APIRouter()
     templates = Jinja2Templates(directory=TEMPLATES_DIR)
+    templates.env.filters["ago"] = _ago
     run_search: SearchFn = search if search is not None else LazyBrowseSearch()
     open_database: ConnectFn = (
         connect if connect is not None else open_configured_database
@@ -200,10 +201,18 @@ def build_router(
                 )
 
             error = None
-            if refresh or book.copies_fetched_at is None:
+            # Opening a book is a request to see what is listed *now* — there
+            # is no other reason to click a book's title. It used to search
+            # only on a book's first-ever view, so the page showed copies that
+            # may have sold days earlier and hid copies listed since. Decision
+            # 40, amended.
+            if refresh or copies.due_for_sweep(connection, book.work_id):
                 try:
                     copies.store(
-                        connection, book.work_id, run_search(book.search_query, limit)
+                        connection,
+                        book.work_id,
+                        run_search(book.search_query, limit),
+                        asked_for=limit,
                     )
                     connection.commit()
                     book = wantlist.get(connection, book_id)
@@ -213,6 +222,7 @@ def build_router(
                     error = (f"eBay could not be searched: {exc}", 502)
 
             for_sale = copies.for_entry(connection, book)
+            checked = copies.swept_at(connection, book.work_id)
 
         # Scheduled after the response is written, never before it. Decision
         # 40: examining fifty copies is twenty-five seconds of eBay, and this
@@ -239,6 +249,7 @@ def build_router(
             "listings": [],
             "error": error[0] if error else None,
             "fetched_at": book.copies_fetched_at or "never",
+            "checked": checked,
             "is_isbn": normalise(book.search_query) is not None,
         }
         return templates.TemplateResponse(
@@ -246,3 +257,29 @@ def build_router(
         )
 
     return router
+
+
+def _ago(when: datetime | None) -> str:
+    """How long ago, in words a person reads at a glance.
+
+    "checked 2026-09-23 20:48:08" tells you nothing without arithmetic, which
+    is the point of issue #22. This is the part of it this slice needs: the
+    page's whole claim is about how current its results are, so the one number
+    that matters must not need working out.
+    """
+    if when is None:
+        return "never"
+    seconds = (datetime.now(UTC) - when).total_seconds()
+    if seconds < 90:
+        return "just now"
+    for size, unit in ((60, "minute"), (3600, "hour"), (86400, "day")):
+        count = int(seconds // size)
+        if count < _size_of_next(unit):
+            return f"{count} {unit}{'' if count == 1 else 's'} ago"
+    weeks = max(1, int(seconds // 604800))
+    return f"{weeks} week{'' if weeks == 1 else 's'} ago"
+
+
+def _size_of_next(unit: str) -> int:
+    """How many of `unit` fit before the next unit up takes over."""
+    return {"minute": 60, "hour": 24, "day": 14}[unit]

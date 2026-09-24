@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import sqlite3
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 
 from book_watch.ebay.search import Listing, Money
@@ -111,7 +112,90 @@ class Copy:
         return landed.amount if landed else self.price.amount
 
 
-def store(connection: sqlite3.Connection, work_id: int, listings: list[Listing]) -> int:
+#: How long a book's results are treated as current.
+#:
+#: **The reason is not the API budget.** Ten books at the theoretical ceiling
+#: of twenty-four sweeps each is 240 searches a day against an allowance of
+#: 5,000, so cost does not constrain this at all.
+#:
+#: The reason is that results have to hold still long enough to act on. Look at
+#: one book, go and check another, come back — if a sweep ran in between and
+#: the list reordered, you can lose the copy you had already decided to buy.
+#: Freshness that costs you the purchase is a bad trade, and the market does
+#: not move in minutes: these listings sit for weeks.
+#:
+#: A secondary effect, worth knowing. Ungated, sweep frequency would track how
+#: often somebody clicks, so the price history's time axis would be shaped by
+#: one person's habits rather than by the market.
+#:
+#: One named place, so #72 can read it from somewhere else later without a
+#: hunt.
+CURRENT_FOR = timedelta(hours=1)
+
+
+def due_for_sweep(
+    connection: sqlite3.Connection,
+    work_id: int,
+    *,
+    current_for: timedelta | None = None,
+) -> bool:
+    """Should opening this book spend a search?
+
+    Yes when it has never been searched for, or when the last sweep is older
+    than `current_for`. Asking to look again does not come through here — that
+    is an explicit act and bypasses the gate, because a button that does
+    nothing for fifty-nine minutes is worse than no button.
+
+    The policy lives here rather than at the call site so there is one answer
+    to the question. It is enforced at the call site because by the time
+    `store` is reached the request has already been spent.
+
+    `current_for` is read from the module rather than bound as a default
+    argument, which would capture it at import and make the "one named place"
+    a lie the moment anything tried to change it — which is exactly what #72
+    will want to do.
+    """
+    if current_for is None:
+        current_for = CURRENT_FOR
+    row = connection.execute(
+        "SELECT at FROM sweep WHERE work_id = ? ORDER BY id DESC LIMIT 1",
+        (work_id,),
+    ).fetchone()
+    if row is None:
+        return True
+    swept_at = _parse_timestamp(row["at"])
+    if swept_at is None:
+        return True
+    return datetime.now(UTC) - swept_at >= current_for
+
+
+def swept_at(connection: sqlite3.Connection, work_id: int) -> datetime | None:
+    """When this book was last searched for, or None if it never was."""
+    row = connection.execute(
+        "SELECT at FROM sweep WHERE work_id = ? ORDER BY id DESC LIMIT 1",
+        (work_id,),
+    ).fetchone()
+    return _parse_timestamp(row["at"]) if row else None
+
+
+def _parse_timestamp(raw: str | None) -> datetime | None:
+    """SQLite's `datetime('now')` is UTC and says so nowhere in the string."""
+    if not raw:
+        return None
+    try:
+        parsed = datetime.fromisoformat(raw)
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
+
+
+def store(
+    connection: sqlite3.Connection,
+    work_id: int,
+    listings: list[Listing],
+    *,
+    asked_for: int | None = None,
+) -> int:
     """Record what eBay just returned, keeping everything seen before it.
 
     This used to delete the book's copies and reinsert the new ones, which
@@ -126,7 +210,9 @@ def store(connection: sqlite3.Connection, work_id: int, listings: list[Listing])
     sweep that saw it. Returns the sweep id.
     """
     sweep_id = connection.execute(
-        "INSERT INTO sweep (work_id) VALUES (?) RETURNING id", (work_id,)
+        "INSERT INTO sweep (work_id, asked_for, total_matching) "
+        "VALUES (?, ?, ?) RETURNING id",
+        (work_id, asked_for, getattr(listings, "total", None)),
     ).fetchone()["id"]
 
     previous = {
@@ -138,10 +224,13 @@ def store(connection: sqlite3.Connection, work_id: int, listings: list[Listing])
         )
     }
     latest_before = connection.execute(
-        "SELECT id FROM sweep WHERE work_id = ? AND id < ? ORDER BY id DESC LIMIT 1",
+        "SELECT id, asked_for, total_matching FROM sweep "
+        "WHERE work_id = ? AND id < ? ORDER BY id DESC LIMIT 1",
         (work_id, sweep_id),
     ).fetchone()
     was_current = latest_before["id"] if latest_before else None
+    # Whether absence from that sweep was evidence of anything at all.
+    saw_everything = latest_before is not None and _was_complete(latest_before)
 
     fresh: list[str] = []
     for listing in listings:
@@ -187,7 +276,7 @@ def store(connection: sqlite3.Connection, work_id: int, listings: list[Listing])
                 sweep_id,
             ),
         )
-        if _worth_recording(before, listing, shipping, was_current):
+        if _worth_recording(before, listing, shipping, was_current, saw_everything):
             connection.execute(
                 "INSERT INTO sighting "
                 "(item_id, work_id, sweep_id, price, currency, shipping, condition) "
@@ -221,11 +310,30 @@ def store(connection: sqlite3.Connection, work_id: int, listings: list[Listing])
     return sweep_id
 
 
+def _was_complete(sweep: sqlite3.Row) -> bool:
+    """Did this sweep see every listing that matched, or only a window?
+
+    eBay ranks by relevance and we ask for a fixed number, so a copy can leave
+    our results without leaving the market. A sweep only knows it saw
+    everything when eBay said how many matched and that number fits inside
+    what we asked for — or when eBay returned fewer than we asked for, which
+    is the same fact arriving a different way.
+
+    Not knowing counts as a window. That is the conservative reading and it is
+    what every other unknown in this project gets.
+    """
+    asked_for, total = sweep["asked_for"], sweep["total_matching"]
+    if asked_for is None or total is None:
+        return False
+    return total <= asked_for
+
+
 def _worth_recording(
     before: sqlite3.Row | None,
     listing: Listing,
     shipping: str | None,
     was_current: int | None,
+    saw_everything: bool,
 ) -> bool:
     """Is this sighting something the last one does not already say?
 
@@ -238,11 +346,18 @@ def _worth_recording(
     is a change from nothing. So is one that has come back after being absent,
     even at the identical price: without that row, a gap reads as one
     continuous offer, and that is a claim we cannot support.
+
+    **Unless the last sweep only saw a window.** Then the copy's absence from
+    it was never evidence of absence — it may have sat at rank 51 the whole
+    time — and writing a reappearance would record a gap in the market that
+    only ever existed in our results. On a book with more than fifty listings
+    the copies at the edge churn in and out on every visit, so this is the
+    difference between a price history and a log of eBay's ranking.
     """
     if before is None:
         return True
-    if before["last_sweep_id"] != was_current:
-        return True  # it was not in the previous sweep — a reappearance
+    if before["last_sweep_id"] != was_current and saw_everything:
+        return True  # genuinely absent last time, and now back
     return (
         before["price"] != str(listing.price.amount)
         or before["currency"] != listing.price.currency
