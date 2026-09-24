@@ -17,6 +17,7 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal, InvalidOperation
+from typing import Literal
 
 from book_watch.ebay.search import Listing, Money, Scope
 from book_watch.isbn import normalise
@@ -77,6 +78,15 @@ SELECT copy.item_id,
 """
 
 
+#: What a ceiling says about one copy. Three answers rather than two, because
+#: a delivered price is not always knowable — and the page distinguishes the
+#: two reasons it might not be, since one is the seller's silence about
+#: postage and the other is a currency we cannot compare.
+Verdict = Literal[
+    "under", "over", "shipping unstated", "another currency", "no ceiling"
+]
+
+
 @dataclass(frozen=True, slots=True)
 class Copy:
     """One copy for sale, with how sure we are that it is the book."""
@@ -114,6 +124,35 @@ class Copy:
         if self.shipping is None or self.shipping.currency != self.price.currency:
             return None
         return Money(self.price.amount + self.shipping.amount, self.price.currency)
+
+    def against(self, ceiling: Money | None) -> Verdict:
+        """Is this copy within what somebody said they would pay?
+
+        Three answers, not two. "Under" and "over" are not exhaustive, because
+        a copy whose shipping eBay never stated has no delivered price at all —
+        and the two honest-looking shortcuts are both wrong:
+
+        - treating unstated shipping as free flatters the copy and invents a
+          bargain, which is the wasted-trust failure the brief is about;
+        - treating it as over is right most of the time and wrong sometimes,
+          with no way to tell which times.
+
+        So there is a third answer and the page says which of the two reasons
+        produced it.
+
+        This differs on purpose from `sort_key`, which ranks an unknown total
+        by its price alone. **A sort has to put the row somewhere; a claim does
+        not.** Guessing to order a list is a lesser sin than guessing in an
+        assertion the reader will act on.
+        """
+        if ceiling is None:
+            return "no ceiling"
+        if self.shipping is None:
+            return "shipping unstated"
+        landed = self.landed_cost
+        if landed is None or landed.currency != ceiling.currency:
+            return "another currency"
+        return "under" if landed.amount <= ceiling.amount else "over"
 
     @property
     def sort_key(self) -> Decimal:

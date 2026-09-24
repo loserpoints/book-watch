@@ -16,7 +16,10 @@ from __future__ import annotations
 import sqlite3
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
+from decimal import Decimal, InvalidOperation
 from typing import Literal
+
+from book_watch.ebay.search import Money
 
 #: Which hunt an entry is on. A reader will take any edition of the book; a
 #: collector wants one particular printing. Every entry is one or the other,
@@ -54,6 +57,24 @@ class Entry:
     resolved_at: str | None
     enriched_at: str | None
     copies_fetched_at: str | None
+    #: The most this entry will pay, delivered, or None. Both fields are set
+    #: together or neither is: a number with no currency is not a price.
+    ceiling: str | None = None
+    ceiling_currency: str | None = None
+
+    @property
+    def will_pay(self) -> Money | None:
+        """The ceiling as money, or None when there is not one.
+
+        Parsed here rather than stored as a number, for the reason decision 1
+        gives: a price that has been through a float is a different price.
+        """
+        if self.ceiling is None or self.ceiling_currency is None:
+            return None
+        try:
+            return Money(Decimal(self.ceiling), self.ceiling_currency)
+        except InvalidOperation:
+            return None
 
     @property
     def added_by(self) -> str | None:
@@ -134,6 +155,8 @@ SELECT entry.id,
        entry.hunt,
        entry.typed,
        entry.added_at,
+       entry.ceiling,
+       entry.ceiling_currency,
        work.title,
        work.author,
        work.resolved_at,
@@ -251,6 +274,43 @@ def all_books(connection: sqlite3.Connection) -> list[Entry]:
     return [_to_entry(row) for row in rows]
 
 
+def set_ceiling(
+    connection: sqlite3.Connection, entry_id: int, amount: str | None, currency: str
+) -> Entry:
+    """Set or clear what this entry will pay, delivered.
+
+    An empty amount clears it, which has to be possible: a ceiling somebody
+    can set and not unset is a trap, and there is no other way to change your
+    mind from the page.
+
+    Rejects an amount that is not a price rather than storing it and failing
+    to compare later, which would look like "no copy is under" and give no
+    clue why.
+    """
+    cleaned = (amount or "").strip()
+    if not cleaned:
+        connection.execute(
+            "UPDATE entry SET ceiling = NULL, ceiling_currency = NULL WHERE id = ?",
+            (entry_id,),
+        )
+        connection.commit()
+        return get(connection, entry_id)
+
+    try:
+        parsed = Decimal(cleaned)
+    except InvalidOperation:
+        raise ValueError(f"{cleaned!r} is not an amount.") from None
+    if parsed <= 0:
+        raise ValueError("A ceiling has to be more than nothing.")
+
+    connection.execute(
+        "UPDATE entry SET ceiling = ?, ceiling_currency = ? WHERE id = ?",
+        (str(parsed), currency.strip().upper(), entry_id),
+    )
+    connection.commit()
+    return get(connection, entry_id)
+
+
 def remove(connection: sqlite3.Connection, entry_id: int) -> bool:
     """Delete an entry. Returns whether there was one to delete.
 
@@ -296,4 +356,6 @@ def _to_entry(row: sqlite3.Row) -> Entry:
         resolved_at=row["resolved_at"],
         enriched_at=row["enriched_at"],
         copies_fetched_at=row["copies_fetched_at"],
+        ceiling=row["ceiling"],
+        ceiling_currency=row["ceiling_currency"],
     )

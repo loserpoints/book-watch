@@ -570,3 +570,74 @@ def test_looking_again_and_finding_a_new_copy_does_schedule_one(book_client):
     client.get("/book/1?refresh=1")
 
     assert scheduled == [1]
+
+
+# --- what I will pay ---------------------------------------------------------
+
+
+def test_setting_a_ceiling_marks_what_is_under_it(book_client):
+    client = book_client(
+        returning(
+            a_listing(item_id="v1|1|0", price=Money(Decimal("4.00"), "USD")),
+            a_listing(item_id="v1|2|0", price=Money(Decimal("30.00"), "USD")),
+        )
+    )
+    add_book(client, "9780099448396", "Crash")
+    client.get("/book/1")
+
+    client.post("/book/1/ceiling", data={"ceiling": "8.00", "currency": "USD"})
+    page = client.get("/book/1").text
+
+    assert "Under your limit" in page
+    # Both copies still shown: the ceiling marks, it never filters.
+    assert "v1|1|0" in page or "itm/123" in page
+    assert page.count("Under your limit") == 1
+
+
+def test_a_ceiling_can_be_cleared(book_client):
+    """A limit somebody can set and not unset is a trap, and the page is the
+    only place to change your mind."""
+    client = book_client(returning(a_listing()))
+    add_book(client, "9780099448396", "Crash")
+    client.post("/book/1/ceiling", data={"ceiling": "8.00", "currency": "USD"})
+
+    client.post("/book/1/ceiling", data={"ceiling": "", "currency": "USD"})
+
+    with client.app.state.connect() as connection:
+        row = connection.execute(
+            "SELECT ceiling, ceiling_currency FROM entry"
+        ).fetchone()
+    assert (row["ceiling"], row["ceiling_currency"]) == (None, None)
+
+
+def test_a_ceiling_that_is_not_a_price_is_refused(book_client):
+    """Storing it would look like "no copy is under" later, with no clue why."""
+    client = book_client(returning(a_listing()))
+    add_book(client, "9780099448396", "Crash")
+
+    assert (
+        client.post(
+            "/book/1/ceiling", data={"ceiling": "cheap", "currency": "USD"}
+        ).status_code
+        == 400
+    )
+    assert (
+        client.post(
+            "/book/1/ceiling", data={"ceiling": "-5", "currency": "USD"}
+        ).status_code
+        == 400
+    )
+
+
+def test_a_copy_with_no_stated_shipping_says_so_rather_than_guessing(book_client):
+    client = book_client(
+        returning(a_listing(price=Money(Decimal("4.00"), "USD"), shipping_cost=None))
+    )
+    add_book(client, "9780099448396", "Crash")
+    client.get("/book/1")
+    client.post("/book/1/ceiling", data={"ceiling": "8.00", "currency": "USD"})
+
+    page = client.get("/book/1").text
+
+    assert "Shipping not stated" in page
+    assert "Under your limit" not in page

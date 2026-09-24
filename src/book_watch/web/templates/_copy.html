@@ -10,6 +10,21 @@
     <div class="title">
       <a href="{{ copy.url }}" rel="noopener noreferrer" target="_blank">{{ copy.title }}</a>
     </div>
+    {#- The ceiling marks; it never filters. Same reasoning as decision 33 chose
+        grading over filtering: a copy just over the line is exactly the one
+        worth seeing, and hiding it turns a judgement into a disappearance.
+
+        "Cannot tell" is a real answer alongside under and over, and which of
+        the two reasons produced it is worth saying — the seller's silence
+        about postage is a different problem from a price we cannot compare. -#}
+    {% set says = verdict[copy.item_id] if verdict else 'no ceiling' %}
+    {% if says == 'under' %}
+      <div class="under">Under your limit</div>
+    {% elif says == 'shipping unstated' %}
+      <div class="muted">Shipping not stated — can't tell if it's under</div>
+    {% elif says == 'another currency' %}
+      <div class="muted">Priced in another currency — can't compare</div>
+    {% endif %}
     <div class="muted">
       {{ copy.condition or 'condition unstated' }}
       {%- if copy.seller %} · {{ copy.seller }}{% endif %}

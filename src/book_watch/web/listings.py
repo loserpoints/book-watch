@@ -15,9 +15,10 @@ from collections.abc import Callable
 from contextlib import closing
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Query, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, BackgroundTasks, Form, Query, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from book_watch import copies, enrichment, wantlist
@@ -36,6 +37,7 @@ from book_watch.web.wantlist import ConnectFn, open_configured_database
 
 SEARCH_PATH = "/search"
 BOOK_PATH = "/book/{book_id}"
+CEILING_PATH = "/book/{book_id}/ceiling"
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
@@ -240,6 +242,7 @@ def build_router(
                     error = (f"eBay could not be searched: {exc}", 502)
 
             for_sale = copies.for_entry(connection, book, scope=scope)
+            ceiling = book.will_pay
             checked = copies.swept_at(connection, book.work_id, scope=scope)
 
         # Scheduled after the response is written, never before it. Decision
@@ -269,11 +272,37 @@ def build_router(
             "fetched_at": book.copies_fetched_at or "never",
             "checked": checked,
             "scope": scope,
+            "ceiling": ceiling,
+            # The verdict per copy, worked out once here rather than in the
+            # template. Decision 43: derived on read, never stored.
+            "verdict": {copy.item_id: copy.against(ceiling) for copy in for_sale},
             "is_isbn": normalise(book.search_query) is not None,
         }
         return templates.TemplateResponse(
             request, "book.html", context, status_code=error[1] if error else 200
         )
+
+    @router.post(CEILING_PATH, response_class=HTMLResponse)
+    def set_ceiling(
+        request: Request,
+        book_id: int,
+        ceiling: Annotated[str, Form()] = "",
+        currency: Annotated[str, Form()] = "USD",
+    ) -> HTMLResponse:
+        """Set or clear what this book is worth paying, delivered.
+
+        A redirect rather than a rendered page, so a refresh does not re-post
+        the form — and so the answer comes back through the one route that
+        knows how to draw a book.
+        """
+        with closing(open_database()) as connection:
+            try:
+                wantlist.set_ceiling(connection, book_id, ceiling, currency)
+            except LookupError:
+                return HTMLResponse("That book is not on the want-list.", 404)
+            except ValueError as exc:
+                return HTMLResponse(str(exc), 400)
+        return RedirectResponse(f"/book/{book_id}", status_code=303)
 
     return router
 

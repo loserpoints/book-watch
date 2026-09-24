@@ -14,6 +14,7 @@ from decimal import Decimal
 import pytest
 
 from book_watch import copies, db, wantlist
+from book_watch.copies import Copy
 from book_watch.ebay.search import Listing, Money, Results
 
 STONER = ("9781590171998", "Stoner", "John Williams")
@@ -382,3 +383,79 @@ def test_the_gate_is_per_scope(database):
 
     assert not copies.due_for_sweep(database, book.work_id, scope="us")
     assert copies.due_for_sweep(database, book.work_id, scope="everywhere")
+
+
+# --- what I will pay ---------------------------------------------------------
+
+
+def priced(price, shipping, currency="USD"):
+    return Copy(
+        item_id="v1|1|0",
+        title="Stoner",
+        url="https://ebay/x",
+        price=Money(Decimal(price), currency),
+        shipping=Money(Decimal(shipping), currency) if shipping is not None else None,
+        tier="certain",
+    )
+
+
+EIGHT = Money(Decimal("8.00"), "USD")
+
+
+def test_a_cheap_copy_with_cheap_postage_is_under():
+    assert priced("5.00", "2.00").against(EIGHT) == "under"
+
+
+def test_landed_cost_is_what_counts_not_the_price():
+    """$7 plus $3 postage is not a $7 copy. Shipping is the difference between
+    a good copy and a bad deal, which is why the ceiling is a delivered one."""
+    assert priced("7.00", "3.00").against(EIGHT) == "over"
+
+
+def test_exactly_at_the_ceiling_is_under():
+    """A limit somebody typed is what they will pay, not what they will
+    exceed. Rejecting the copy that costs exactly it would be pedantry."""
+    assert priced("8.00", "0.00").against(EIGHT) == "under"
+
+
+def test_unstated_shipping_cannot_be_judged():
+    """Not under, and not over. Calling it free would invent a bargain, which
+    is the wasted-trust failure the brief exists to avoid; calling it over
+    would be right most of the time with no way to know which times."""
+    assert priced("5.00", None).against(EIGHT) == "shipping unstated"
+
+
+def test_another_currency_cannot_be_judged():
+    assert priced("5.00", "2.00", currency="GBP").against(EIGHT) == "another currency"
+
+
+def test_without_a_ceiling_nothing_is_judged():
+    assert priced("5.00", "2.00").against(None) == "no ceiling"
+
+
+def test_a_ceiling_never_hides_or_reorders_anything(database):
+    """The ceiling annotates. Decision 33 chose grading over filtering because
+    a copy just over the line is exactly the one worth seeing."""
+    book = a_book(database, "Stoner", "John Williams")
+    swept(
+        database,
+        book.work_id,
+        [
+            a_listing("v1|1|0", price="30.00", shipping="0.00"),
+            a_listing("v1|2|0", price="4.00", shipping="1.00"),
+        ],
+    )
+    database.commit()
+    before = [copy.item_id for copy in copies.for_entry(database, book)]
+
+    # Re-read the entry: `for_entry` is given one, so testing with the copy
+    # fetched before the ceiling existed would prove nothing.
+    book = wantlist.set_ceiling(database, book.id, "8.00", "USD")
+    assert book.will_pay is not None
+    after = copies.for_entry(database, book)
+
+    assert [copy.item_id for copy in after] == before
+    assert {c.item_id: c.against(Money(Decimal("8.00"), "USD")) for c in after} == {
+        "v1|1|0": "over",
+        "v1|2|0": "under",
+    }

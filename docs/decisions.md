@@ -2223,3 +2223,72 @@ blank list would make the reader guess.
 (`ebay.search._LOCATION_FILTER` and the route's scope). Making it configurable
 is issue #72 — a settings table for one user is furniture, and what makes that
 change cheap later is the value having one home, not the table existing now.
+
+## 50. A ceiling marks copies; it never hides them
+
+**Decision.** An entry carries the most it will pay, **delivered**, as an
+amount and a currency that are set together or not at all. The page marks each
+copy under, over, or unjudgeable, and shows every copy either way.
+Migration 016.
+
+**On the entry, not the work.** A work is shared between entries, and *Two
+kinds of hunt* is where two entries for one book start existing. A reader who
+will take any copy and a collector who wants one printing will not pay the
+same, so a ceiling on the work would make one of them wrong.
+
+**Landed cost, not price.** $7 plus $3 postage is not a $7 copy. Shipping is
+the difference between a good copy and a bad deal, and `Copy.landed_cost`
+already computed it.
+
+**Three answers, because two would require guessing.** `landed_cost` is
+already `None` when the seller never stated postage, or stated it in another
+currency (decision 1). For an $8 ceiling:
+
+| Copy | Delivered | Marked |
+|---|---|---|
+| $5.00 + $2.00 | $7.00 | under |
+| $7.00 + $3.00 | $10.00 | over |
+| $8.00 + $0.00 | $8.00 | **under** — a limit is what you will pay, not what you will not |
+| $5.00, postage unstated | unknown | **cannot tell, and it says which reason** |
+| £5.00 + £2.00 | unknown | **cannot tell, and it says which reason** |
+
+The two shortcuts were both rejected. *Unstated postage as free* flatters the
+copy and invents a bargain, which is the wasted-trust failure the brief exists
+to prevent. *Unstated postage as over* is right most of the time and wrong
+sometimes, with nothing to say which times.
+
+The two unjudgeable cases are told apart on the page, because a seller's
+silence about postage is a different problem from a price in a currency we
+cannot compare, and only one of them is the seller's doing.
+
+**This deliberately differs from `sort_key`**, which ranks an unknown total by
+its price alone. **A sort has to put the row somewhere; a claim does not.**
+Guessing in order to order a list is a lesser thing than guessing in an
+assertion somebody will act on.
+
+**It annotates and never filters.** Decision 33's argument, applied to price
+instead of identity: a copy just over the line is exactly the copy worth
+seeing, and hiding it turns a judgement into a disappearance. A test asserts
+the same copies appear in the same order with and without a ceiling set —
+and it did not, at first (see below).
+
+**The currency is stored, not assumed.** Assuming the marketplace's would be
+simpler and silently wrong the first time a copy is priced in something else,
+which happens: a search can return an overseas seller pricing in GBP.
+Decision 49's US-only default makes that rarer, not impossible, and rarer is
+the worst frequency for a bug.
+
+**Clearing has to be possible.** An empty box removes the ceiling. A limit
+somebody can set and not unset is a trap, and the page is the only place to
+change your mind. An amount that is not a price is refused rather than stored:
+stored, it would later look like "no copy is under" with no clue why.
+
+**Measured on a copy of production.** Twelve copies of *Breaking and Entering*
+against a $15 ceiling: five under, seven over, **twelve still shown**, order
+unchanged.
+
+**Two mutations, and the second found a bad test.** Treating unstated postage
+as free failed two tests, as it should. Making the ceiling filter failed
+nothing — because the test fetched its entry *before* setting the ceiling, so
+the code under test saw no ceiling at all and could not have filtered. The
+test was asserting nothing. Fixed, and the mutation now fails it.
