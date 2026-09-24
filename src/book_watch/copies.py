@@ -19,7 +19,7 @@ from decimal import Decimal, InvalidOperation
 
 from book_watch.ebay.search import Listing, Money
 from book_watch.isbn import normalise
-from book_watch.matching import Evidence, Target, Tier, grade
+from book_watch.matching import Evidence, Target, Tier, grade, is_this_book
 from book_watch.wantlist import Entry
 
 #: Everything the grader needs about one copy, in one query rather than three
@@ -167,34 +167,74 @@ def unasked(copies: list[Copy]) -> list[str]:
     return [copy.item_id for copy in copies if not copy.looked_at]
 
 
+#: Every number declared on this book's copies, with what the catalogue calls
+#: it and who a seller said wrote it. All three are observations already paid
+#: for, which is why deriving costs no requests.
+_DECLARED_NUMBERS = """
+SELECT DISTINCT declaration.isbn,
+                declaration.author AS declared_author,
+                identity.title     AS catalogue_title
+  FROM copy
+  JOIN listing_declaration AS declaration ON declaration.item_id = copy.item_id
+  JOIN openlibrary_edition AS identity
+       ON identity.isbn = declaration.isbn AND identity.found = 1
+ WHERE copy.work_id = ? AND declaration.isbn IS NOT NULL
+"""
+
+
+#: Which product id each declared number was seen alongside, on this book's
+#: copies. One query rather than one per product id, because a book with fifty
+#: copies would otherwise cost fifty.
+_DECLARED_PRODUCT_IDS = """
+SELECT DISTINCT copy.epid, declaration.isbn
+  FROM copy
+  JOIN listing_declaration AS declaration ON declaration.item_id = copy.item_id
+ WHERE copy.work_id = ? AND copy.epid IS NOT NULL AND declaration.isbn IS NOT NULL
+"""
+
+
 def _target(connection: sqlite3.Connection, entry: Entry) -> Target:
-    # What somebody typed counts, and so does everything a pass has concluded.
-    # The two are separate now: the first can never be wrong, the second is a
-    # conclusion that the next slice stops storing and starts deriving.
-    isbns = {
-        row["isbn"]
-        for row in connection.execute(
-            "SELECT isbn FROM edition WHERE work_id = ? AND isbn IS NOT NULL",
-            (entry.work_id,),
-        )
-    }
-    if entry.typed and normalise(entry.typed):
-        isbns.add(normalise(entry.typed))
-    epids = {
-        row["epid"]
-        for row in connection.execute(
-            "SELECT DISTINCT epid FROM copy "
-            "WHERE work_id = ? AND epid IS NOT NULL AND item_id IN ("
-            "  SELECT item_id FROM listing_declaration WHERE isbn IN ("
-            "    SELECT isbn FROM edition WHERE work_id = ? AND isbn IS NOT NULL))",
-            (entry.work_id, entry.work_id),
-        )
-    }
-    return Target(
+    """What we are looking for, worked out fresh every time.
+
+    Which numbers count as this book is **derived, not stored**. It used to be
+    a table a pass wrote conclusions into, and a conclusion stored under one
+    set of rules survives the rules changing — which is how a different book
+    called *Breaking and Entering* stayed matched behind the check written to
+    reject it.
+
+    Now it is a query over things we observed: what sellers declared, what the
+    catalogue says those numbers are, who sellers say wrote them. Change the
+    rule and every book on the list is re-judged on the next page view, for
+    nothing.
+    """
+    typed = normalise(entry.typed) if entry.typed else None
+    wanted = Target(
         title=entry.title or entry.search_query,
         # Only ever used to reject. An entry added before authors were asked
         # for has none, and then nothing is rejected on this basis.
         author=entry.author,
+    )
+
+    isbns = {
+        row["isbn"]
+        for row in connection.execute(_DECLARED_NUMBERS, (entry.work_id,))
+        if is_this_book(row["catalogue_title"], row["declared_author"], wanted)
+    }
+    # What somebody typed is not a conclusion and is never re-judged.
+    if typed:
+        isbns.add(typed)
+
+    # A product id counts when a copy carrying it declared one of the numbers
+    # above. eBay's `epid` over-merges (decision 33), so it is only ever
+    # reached this way — through a number — never asserted on its own.
+    epids = {
+        row["epid"]
+        for row in connection.execute(_DECLARED_PRODUCT_IDS, (entry.work_id,))
+        if row["isbn"] in isbns
+    }
+    return Target(
+        title=wanted.title,
+        author=wanted.author,
         isbns=frozenset(isbns),
         epids=frozenset(epids),
     )

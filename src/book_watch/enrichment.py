@@ -29,7 +29,6 @@ from dataclasses import dataclass
 from book_watch.ebay.declarations import Declarations
 from book_watch.ebay.errors import EbayError
 from book_watch.isbn import normalise
-from book_watch.matching import names_the_same_book, surnames
 from book_watch.openlibrary import BudgetExhausted, OpenLibraryUnavailable, Resolver
 
 logger = logging.getLogger(__name__)
@@ -51,7 +50,6 @@ class Pass:
 
     examined: int = 0
     resolved: int = 0
-    editions_learned: int = 0
     #: Whether this pass gave the book itself a title it had been missing.
     identified: bool = False
     completed: bool = False
@@ -97,8 +95,6 @@ def _run(
     declarations = declarations_for(connection)
     examined = 0
     identified = False
-    #: Every number seen, and an author some seller attached to it.
-    claimed_by: dict[str, str | None] = {}
     numbers: set[str] = set()
 
     item_ids = [
@@ -120,11 +116,10 @@ def _run(
             examined += 1
         if declared.isbn:
             numbers.add(declared.isbn)
-            claimed_by.setdefault(declared.isbn, declared.author)
     connection.commit()
 
     resolver = resolver_for(connection)
-    resolved = learned = 0
+    resolved = 0
     wanted = title["title"]
 
     # A book added before there was anything to identify it with never got a
@@ -140,59 +135,29 @@ def _run(
     for isbn in sorted(numbers):
         already = resolver.known(isbn)
         try:
-            identity = resolver.identify(isbn)
+            # The answer is written into the notebook by the resolver; a
+            # pass no longer draws any conclusion from it. Which numbers are
+            # this book is worked out on read, from what is stored here.
+            resolver.identify(isbn)
         except BudgetExhausted as exc:
             connection.commit()
             # Not retried, and not treated as an outage. Decision 39: a caller
             # that retries this on a timer is the exact failure it prevents.
             logger.warning("Enriching %s stopped at the ceiling: %s", work_id, exc)
-            return Pass(examined, resolved, learned, stopped_because="over budget")
+            return Pass(examined, resolved, stopped_because="over budget")
         except OpenLibraryUnavailable as exc:
             connection.commit()
             logger.warning("Enriching %s stopped: %s", work_id, exc)
-            return Pass(examined, resolved, learned, stopped_because="open library")
+            return Pass(examined, resolved, stopped_because="open library")
         if not already:
             resolved += 1
-        # A number the catalogue says is this book becomes one of its editions,
-        # so the next copy declaring it is certain without asking anything.
-        #
-        # Which is exactly why this is the strictest check in the app. An
-        # edition learned wrongly is not one bad listing — it is a number that
-        # makes every future listing declaring it *certain*, ahead of any
-        # other evidence. Three books called "Breaking and Entering" got in
-        # this way: the catalogue agreed each number was something by that
-        # name, because it was.
-        if wanted and identity and names_the_same_book(identity.title, wanted):
-            if _by_someone_else(connection, work_id, claimed_by.get(isbn)):
-                continue
-            learned += _remember_edition(connection, work_id, identity)
     connection.commit()
 
     connection.execute(
         "UPDATE work SET enriched_at = datetime('now') WHERE id = ?", (work_id,)
     )
     connection.commit()
-    return Pass(examined, resolved, learned, completed=True, identified=identified)
-
-
-def _by_someone_else(
-    connection: sqlite3.Connection, work_id: int, claimed: str | None
-) -> bool:
-    """Does a seller say this number is by an author this book does not have?
-
-    Stricter than the grader's version, deliberately. The grader lets a
-    listing's own name vouch for the author, because one mistyped field should
-    not hide a real copy. Here the cost is reversed: admitting a wrong number
-    contaminates every future listing that declares it, while rejecting a
-    right one only means it has to be recognised the ordinary way.
-    """
-    if not claimed:
-        return False
-    row = connection.execute(
-        "SELECT author FROM work WHERE id = ?", (work_id,)
-    ).fetchone()
-    wanted = surnames(row["author"]) if row and row["author"] else set()
-    return bool(wanted) and not (wanted & surnames(claimed))
+    return Pass(examined, resolved, completed=True, identified=identified)
 
 
 def _identify_the_book(
@@ -225,21 +190,3 @@ def _identify_the_book(
         "UPDATE work SET resolved_at = datetime('now') WHERE id = ?", (work_id,)
     )
     return None, True
-
-
-def _remember_edition(connection: sqlite3.Connection, work_id: int, identity) -> int:
-    cursor = connection.execute(
-        """
-        INSERT INTO edition (work_id, isbn, publisher, published, physical_format)
-        VALUES (?, ?, ?, ?, ?)
-        ON CONFLICT (isbn) DO NOTHING
-        """,
-        (
-            work_id,
-            identity.isbn,
-            identity.publisher,
-            identity.published,
-            identity.physical_format,
-        ),
-    )
-    return cursor.rowcount

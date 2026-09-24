@@ -131,34 +131,6 @@ def test_a_pass_examines_every_copy_and_resolves_every_number(database):
     assert resolver.asked == ["9781590171998"]
 
 
-def test_a_number_the_catalogue_says_is_this_book_becomes_an_edition(database):
-    """So the next copy declaring it is certain without asking anything."""
-    _, connection = database
-    a_copy(connection, "v1|1|0")
-    detail = CountingDetail({"v1|1|0": Declared("v1|1|0", isbn="9781590171998")})
-
-    result, _ = run(database, detail, {"9781590171998": STONER})
-
-    assert result.editions_learned == 1
-    row = connection.execute(
-        "SELECT isbn, publisher FROM edition WHERE work_id = 1"
-    ).fetchone()
-    assert row["isbn"] == "9781590171998"
-    assert row["publisher"] == "New York Review Books"
-
-
-def test_a_number_naming_a_different_book_does_not_become_an_edition(database):
-    """The omnibus. Its title contains the book's and its author is right."""
-    _, connection = database
-    a_copy(connection, "v1|1|0")
-    detail = CountingDetail({"v1|1|0": Declared("v1|1|0", isbn="9781598537024")})
-
-    result, _ = run(database, detail, {"9781598537024": OMNIBUS})
-
-    assert result.editions_learned == 0
-    assert connection.execute("SELECT count(*) AS n FROM edition").fetchone()["n"] == 0
-
-
 def test_a_finished_pass_is_recorded_so_the_want_list_stops_saying_so(database):
     _, connection = database
     a_copy(connection, "v1|1|0")
@@ -187,7 +159,6 @@ def test_a_second_pass_learns_nothing_new_and_asks_ebay_nothing(database):
     assert detail.asked == ["v1|1|0"]
     assert second.examined == 0
     assert second.resolved == 0
-    assert second.editions_learned == 0
 
 
 # --- stopping, which has to leave things usable ------------------------------
@@ -349,47 +320,3 @@ def test_a_book_that_already_has_a_title_is_left_alone(database):
     result, _ = run(database, CountingDetail({}), {})
 
     assert not result.identified
-
-
-def test_a_number_a_seller_attributes_to_someone_else_is_not_learned(database):
-    """The strictest check in the app, and the reason is asymmetric.
-
-    An edition learned wrongly is not one bad listing — it is a number that
-    makes every future listing declaring it *certain*, ahead of any other
-    evidence. That is how Don Gillmor's *Breaking and Entering* became an
-    edition of Joy Williams's.
-    """
-    _, connection = database
-    connection.execute("UPDATE work SET author = 'Joy Williams' WHERE id = 1")
-    connection.execute("UPDATE work SET title = 'Breaking and Entering' WHERE id = 1")
-    a_copy(connection, "v1|1|0")
-    connection.commit()
-    detail = CountingDetail(
-        {"v1|1|0": Declared("v1|1|0", isbn="9781771965231", author="Don Gillmor")}
-    )
-    gillmor = EditionIdentity(
-        isbn="9781771965231",
-        title="Breaking and Entering",
-        work_id="OL00000W",
-        publisher="Biblioasis",
-        published="2023",
-        physical_format="Trade Paperback",
-    )
-
-    result, _ = run(database, detail, {"9781771965231": gillmor})
-
-    assert result.editions_learned == 0
-    assert connection.execute("SELECT count(*) AS n FROM edition").fetchone()["n"] == 0
-
-
-def test_a_number_nobody_attributed_is_still_learned(database):
-    """The check can only reject on a disagreement, never on an absence."""
-    _, connection = database
-    connection.execute("UPDATE work SET author = 'John Williams' WHERE id = 1")
-    a_copy(connection, "v1|1|0")
-    connection.commit()
-    detail = CountingDetail({"v1|1|0": Declared("v1|1|0", isbn="9781590171998")})
-
-    result, _ = run(database, detail, {"9781590171998": STONER})
-
-    assert result.editions_learned == 1
