@@ -480,16 +480,41 @@ def test_a_finished_pass_stops_scheduling(book_client):
     assert scheduled == []
 
 
-def test_looking_again_makes_the_book_need_a_pass_again(book_client):
-    """New copies are new work, whatever happened to the old ones."""
-    client, scheduled = enriching_client(book_client)
-    add_book(client, "9780099448396", "Crash")
-    client.get("/book/1")
+def _finish_the_pass(client):
     with client.app.state.connect() as connection:
         connection.execute("UPDATE work SET enriched_at = datetime('now')")
         connection.commit()
+
+
+def test_looking_again_and_finding_nothing_new_schedules_no_pass(book_client):
+    """A refresh that returns the same copies has taught us nothing.
+
+    This used to schedule a pass unconditionally, so every refresh spent Open
+    Library requests re-asking about numbers already answered. Their traffic
+    is the budget with the least room in it.
+    """
+    client, scheduled = enriching_client(book_client)
+    add_book(client, "9780099448396", "Crash")
+    client.get("/book/1")
+    _finish_the_pass(client)
     scheduled.clear()
 
+    client.get("/book/1?refresh=1")
+
+    assert scheduled == []
+
+
+def test_looking_again_and_finding_a_new_copy_does_schedule_one(book_client):
+    """A copy nobody has examined is the thing a pass exists for."""
+    scheduled = []
+    results = [a_listing()]
+    client = book_client(lambda query, limit: list(results), scheduled.append)
+    add_book(client, "9780099448396", "Crash")
+    client.get("/book/1")
+    _finish_the_pass(client)
+    scheduled.clear()
+
+    results.append(a_listing(item_id="v1|999|0", title="Crash, another copy"))
     client.get("/book/1?refresh=1")
 
     assert scheduled == [1]

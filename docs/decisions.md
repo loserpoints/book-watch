@@ -1807,3 +1807,89 @@ copy we have seen. A book with no copies for sale has an empty ISBN set and
 matches on title and author alone, which is what it did before any pass ran
 anyway. Nothing regresses; a real edition nobody is currently selling is
 simply not yet known, and becomes known the moment somebody lists it.
+
+## 44. A sweep adds; it no longer replaces
+
+**Decision.** `copies.store()` keeps every copy it has ever seen. A sweep
+writes a `sweep` row, upserts each copy returned, and leaves the ones that
+did not come back where they are. The page shows copies whose `last_sweep_id`
+is the book's newest sweep, so it still answers "what is buyable now" and
+reads exactly as it did. Migration 012.
+
+**What was wrong.** `store()` deleted the book's copies and reinserted the
+search results. That was defensible on the page's terms and destroyed the
+only cheap evidence we will ever have about price: our own observations,
+which arrive free inside a search we already ran. J5 wants to say whether a
+price is good. Every refresh since the page shipped had been throwing away
+the data that would answer it, so the clock had never started.
+
+It is S15's bug pointing the other way. That one kept conclusions and threw
+away observations. So did this.
+
+**Only changes are written.** A sighting row means "this is the price from
+this sweep onward" and holds until the next row. Recording an unchanged price
+every sweep is one fact written daily forever, and answers nothing a change
+log does not.
+
+One rule keeps that lossless: **a copy that comes back after being absent
+gets a row even at the identical price.** Without it, a gap with the same
+price either side reads as one continuous offer, and that is a claim we did
+not observe. It is the only case where a row is written without anything
+having changed, and it is the reason `_worth_recording()` takes the previous
+sweep id rather than just comparing two prices.
+
+**The growth, measured rather than guessed.** Payload per row in the real
+database: a copy is **490 bytes**, a sighting **40**, a sweep **21**.
+
+That inverts the assumption this slice started with. Sightings were supposed
+to be the term that grows; they are the cheapest row in the schema. What
+grows is `copy`, because a copy is now never deleted and carries a title, a
+URL and a thumbnail.
+
+So the bound is set by listing turnover, not by polling frequency. At fifty
+books polled daily with fifty results each, if **every** copy were new every
+day: 1.2 MB/day, about 450 MB/year, which a 1 GB volume would not survive
+long. That is not how used-book listings behave — they sit for weeks — and at
+a more realistic 5% daily turnover it is roughly 22 MB/year, or decades.
+
+Stated honestly: **this is bounded by an assumption about turnover, not by
+the schema.** The mitigation if the assumption is wrong is already available
+and cheap — a copy nobody has seen for months can be reduced to its sighting
+rows, which are 40 bytes and hold the part worth keeping. Not built, because
+building it now would be guessing at a number we can simply watch.
+
+**A refresh no longer schedules a pass unless something is new.** `store()`
+used to clear `enriched_at` unconditionally, so every refresh sent a full
+enrichment pass back to Open Library about numbers already answered. It now
+clears it only when a genuinely new item id arrived. Open Library is the
+budget with the least room in it, and this was spending it on nothing.
+
+**No `gone_at` column.** "Gone" is `last_sweep_id` not being the newest
+sweep, and `last_seen_at` already holds the fact worth keeping. A third
+column would be a third thing to keep consistent with the other two.
+
+**On relisting.** eBay currently issues a new item id when a listing is
+relisted, and it used to do the opposite, so we treat a returning item id as
+the same copy and let the sighting gap record the absence. Either behaviour
+is handled. Worth knowing separately: a relist preserves the original listing
+date, so sorting by genuine newness stays possible later.
+
+## 45. Identity is an id, never a timestamp
+
+**Decision.** Anything that identifies a thing, orders it, or says which one
+is latest uses an integer primary key. Project-wide, not a choice to make per
+table.
+
+**Why it came up.** "The latest sweep" could have been `MAX(at)`. Two sweeps
+written in the same second are indistinguishable by time and are different
+sweeps, so that query is wrong in a way that passes every test — clocks in
+tests are slow enough to hide it, and a real refresh is not. `ORDER BY id`
+cannot have that bug. There is a test that would fail under the timestamp
+version specifically to keep it that way.
+
+**What this does not mean.** Not "store fewer timestamps". `work.enriched_at`
+and `copies_fetched_at` are state flags read for null-ness; `openlibrary_call.at`
+is a rate-limit ledger where the time *is* the fact; `sweep.at` exists so a
+price history can be read by a human. All fine. The rule is about **identity
+and ordering** — never join on a time, compare on a time, or decide which row
+is current from a time.
