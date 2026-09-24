@@ -28,6 +28,7 @@ from dataclasses import dataclass
 
 from book_watch.ebay.declarations import Declarations
 from book_watch.ebay.errors import EbayError
+from book_watch.isbn import normalise
 from book_watch.matching import names_the_same_book, surnames
 from book_watch.openlibrary import BudgetExhausted, OpenLibraryUnavailable, Resolver
 
@@ -197,11 +198,19 @@ def _by_someone_else(
 def _identify_the_book(
     connection: sqlite3.Connection, work_id: int, resolver: Resolver
 ) -> tuple[str | None, bool]:
-    """Give an untitled book its title, from a number already on its shelf."""
+    """Give an untitled book its title, from the number it was added with.
+
+    The number somebody typed, not one a pass inferred — a book with no title
+    has had no pass, so there is nothing inferred to read, and the typed value
+    is the only thing that was ever known about it.
+    """
     for row in connection.execute(
-        "SELECT isbn FROM edition WHERE work_id = ? AND isbn IS NOT NULL ORDER BY id",
+        "SELECT typed AS isbn FROM entry WHERE work_id = ? AND typed IS NOT NULL "
+        "ORDER BY id",
         (work_id,),
     ):
+        if normalise(row["isbn"]) is None:
+            continue  # an override: text that was never a number to look up
         identity = resolver.identify(row["isbn"])
         if identity is None:
             continue

@@ -33,10 +33,11 @@ class DuplicateBook(Exception):
 class Entry:
     """One row on the want-list, with the work it names.
 
-    `added_by` is what the entry was added with — a number, or the text typed
-    for a book that never had one. It is the ISBN only while the work has
-    exactly one known edition; once listings have taught us about others,
-    naming one of them would be picking arbitrarily.
+    `typed` is exactly what somebody put in the add form: an ISBN, or the
+    text for a book that never had one (decision 29). It is a fact about
+    their intent and can never be wrong, which is why it lives here rather
+    than among the editions a rule inferred — those are conclusions, and
+    conclusions from rules that keep changing have to stay re-derivable.
 
     `title` is genuinely absent for a book added by number alone, until
     something learns one. Screens use `name`.
@@ -48,18 +49,20 @@ class Entry:
     title: str | None
     author: str | None
     added_at: str
-    search_text: str | None
+    typed: str | None
     edition_count: int
     resolved_at: str | None
     enriched_at: str | None
     copies_fetched_at: str | None
-    _single_isbn: str | None
 
     @property
     def added_by(self) -> str | None:
-        if self.search_text is not None:
-            return self.search_text
-        return self._single_isbn if self.edition_count == 1 else None
+        """What this entry was added with, if that was anything in particular.
+
+        A book added by title has none, and naming one of the editions since
+        learned would be answering a different question.
+        """
+        return self.typed
 
     @property
     def name(self) -> str:
@@ -90,7 +93,7 @@ class Entry:
         answer — one search on title and author — takes over. S10 makes that
         the only path; this keeps both true in the meantime.
         """
-        return self.added_by or " ".join(
+        return self.typed or " ".join(
             part for part in (self.title, self.author) if part
         )  # an entry always has one or the other
 
@@ -129,15 +132,14 @@ _SELECT = """
 SELECT entry.id,
        entry.work_id,
        entry.hunt,
-       entry.search_text,
+       entry.typed,
        entry.added_at,
        work.title,
        work.author,
        work.resolved_at,
        work.enriched_at,
        work.copies_fetched_at,
-       count(edition.id) AS edition_count,
-       min(edition.isbn) AS single_isbn
+       count(edition.id) AS edition_count
   FROM entry
   JOIN work ON work.id = entry.work_id
   LEFT JOIN edition ON edition.work_id = work.id
@@ -168,13 +170,10 @@ def add_identified(
             (title, author, openlibrary_work_id),
         )
         work_id = int(cursor.lastrowid)
-        if isbn:
-            connection.execute(
-                "INSERT INTO edition (work_id, isbn) VALUES (?, ?)", (work_id, isbn)
-            )
-    return _add_reader_entry(
-        connection, work_id, search_text=None, duplicate=isbn or title
-    )
+    # No edition row. The number goes on the entry, because it is what
+    # somebody typed rather than something a rule concluded, and `edition`
+    # now holds conclusions only.
+    return _add_reader_entry(connection, work_id, typed=isbn, duplicate=isbn or title)
 
 
 def add(connection: sqlite3.Connection, isbn: str, title: str | None = None) -> Entry:
@@ -205,30 +204,24 @@ def add(connection: sqlite3.Connection, isbn: str, title: str | None = None) -> 
             ),
         )
         work_id = int(cursor.lastrowid)
-        if is_isbn:
-            connection.execute(
-                "INSERT INTO edition (work_id, isbn) VALUES (?, ?)", (work_id, isbn)
-            )
 
-    return _add_reader_entry(
-        connection, work_id, search_text=None if is_isbn else isbn, duplicate=isbn
-    )
+    return _add_reader_entry(connection, work_id, typed=isbn, duplicate=isbn)
 
 
 def _add_reader_entry(
     connection: sqlite3.Connection,
     work_id: int,
     *,
-    search_text: str | None,
+    typed: str | None,
     duplicate: str,
 ) -> Entry:
     try:
         cursor = connection.execute(
             """
-            INSERT INTO entry (work_id, hunt, edition_id, search_text)
+            INSERT INTO entry (work_id, hunt, edition_id, typed)
             VALUES (?, 'reader', NULL, ?)
             """,
-            (work_id, search_text),
+            (work_id, typed),
         )
     except sqlite3.IntegrityError as exc:
         # The partial unique index is the only constraint this insert can
@@ -271,10 +264,21 @@ def remove(connection: sqlite3.Connection, entry_id: int) -> bool:
 
 
 def _existing_work(connection: sqlite3.Connection, isbn: str | None) -> int | None:
+    """Which book, if any, this number already belongs to.
+
+    Both places it can be known from: somebody typed it, or a pass concluded
+    it. Either makes adding it again the same book rather than a second one.
+    """
     if isbn is None:
         return None
     row = connection.execute(
-        "SELECT work_id FROM edition WHERE isbn = ?", (isbn,)
+        """
+        SELECT work_id FROM edition WHERE isbn = ?
+        UNION
+        SELECT work_id FROM entry WHERE typed = ?
+        LIMIT 1
+        """,
+        (isbn, isbn),
     ).fetchone()
     return int(row["work_id"]) if row is not None else None
 
@@ -287,10 +291,9 @@ def _to_entry(row: sqlite3.Row) -> Entry:
         title=row["title"],
         author=row["author"],
         added_at=row["added_at"],
-        search_text=row["search_text"],
+        typed=row["typed"],
         edition_count=row["edition_count"],
         resolved_at=row["resolved_at"],
         enriched_at=row["enriched_at"],
         copies_fetched_at=row["copies_fetched_at"],
-        _single_isbn=row["single_isbn"],
     )

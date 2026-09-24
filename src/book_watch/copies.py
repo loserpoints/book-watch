@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 
 from book_watch.ebay.search import Listing, Money
+from book_watch.isbn import normalise
 from book_watch.matching import Evidence, Target, Tier, grade
 from book_watch.wantlist import Entry
 
@@ -167,6 +168,9 @@ def unasked(copies: list[Copy]) -> list[str]:
 
 
 def _target(connection: sqlite3.Connection, entry: Entry) -> Target:
+    # What somebody typed counts, and so does everything a pass has concluded.
+    # The two are separate now: the first can never be wrong, the second is a
+    # conclusion that the next slice stops storing and starts deriving.
     isbns = {
         row["isbn"]
         for row in connection.execute(
@@ -174,6 +178,8 @@ def _target(connection: sqlite3.Connection, entry: Entry) -> Target:
             (entry.work_id,),
         )
     }
+    if entry.typed and normalise(entry.typed):
+        isbns.add(normalise(entry.typed))
     epids = {
         row["epid"]
         for row in connection.execute(

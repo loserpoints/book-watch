@@ -148,19 +148,27 @@ def test_two_numbers_for_the_same_book_become_one_entry(connection):
         wantlist.add(connection, "9780374524128")
 
 
-def test_a_book_with_several_known_editions_names_none_of_them(connection):
-    """Picking one number to display would be picking arbitrarily."""
+def test_editions_learned_later_do_not_change_what_it_was_added_with(connection):
+    """A conclusion cannot rewrite a fact about somebody's intent."""
     book = wantlist.add(connection, "9780099448396", "Crash")
     connection.execute(
-        "INSERT INTO edition (work_id, isbn) VALUES (?, ?)",
+        "INSERT INTO edition (work_id, isbn, publisher) VALUES (?, ?, 'FSG')",
         (book.work_id, "9780374524128"),
     )
 
     reread = wantlist.get(connection, book.id)
-    assert reread.edition_count == 2
-    assert reread.added_by is None
-    # So the search falls back to what decision 33 chose anyway.
-    assert reread.search_query == "Crash"
+    assert reread.edition_count == 1
+    assert reread.added_by == "9780099448396"
+    assert reread.search_query == "9780099448396"
+
+
+def test_a_book_added_by_title_was_added_by_nothing_in_particular(connection):
+    book = wantlist.add_identified(
+        connection, title="Stoner", author="John Williams", openlibrary_work_id="OL1W"
+    )
+
+    assert book.added_by is None
+    assert book.search_query == "Stoner John Williams"
 
 
 def test_the_same_isbn_cannot_be_added_twice(connection):
@@ -205,19 +213,26 @@ def test_an_empty_list_is_empty(connection):
 
 
 def test_removing_a_book_keeps_what_was_learned_about_it(connection):
-    """The work and its editions are knowledge, not something the person put there.
+    """What was learned is knowledge; what was typed was the person's, and goes.
 
-    Re-adding the book then costs no requests at all.
+    Re-adding still costs no requests, because the expensive things — what a
+    seller declared, what a number is — are keyed by listing and by number,
+    not by which book happened to be on the list when we asked.
     """
     book = wantlist.add(connection, "9780099448396", "Crash")
+    connection.execute(
+        "INSERT INTO edition (work_id, isbn, publisher) VALUES (?, ?, 'Vintage')",
+        (book.work_id, "9780099561545"),
+    )
 
     wantlist.remove(connection, book.id)
 
-    editions = connection.execute(
-        "SELECT count(*) AS n FROM edition WHERE isbn = '9780099448396'"
+    learned = connection.execute(
+        "SELECT count(*) AS n FROM edition WHERE work_id = ?", (book.work_id,)
     ).fetchone()
-    assert editions["n"] == 1
-    assert wantlist.add(connection, "9780099448396").work_id == book.work_id
+    assert learned["n"] == 1
+    # And a number a pass concluded still leads back to the same book.
+    assert wantlist.add(connection, "9780099561545").work_id == book.work_id
 
 
 def test_asking_for_a_book_that_does_not_exist_raises(connection):
