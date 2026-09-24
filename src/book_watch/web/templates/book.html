@@ -17,6 +17,18 @@
 
 {% if error %}<p class="error">{{ error }}</p>{% endif %}
 
+{# What this book is worth paying, delivered. An empty box clears it — a
+   ceiling you can set and not unset is a trap, and this is the only place to
+   change your mind. #}
+<form class="ceiling" method="post" action="/book/{{ book.id }}/ceiling">
+  <label for="ceiling">Most I'll pay, delivered</label>
+  <input type="text" id="ceiling" name="ceiling" inputmode="decimal"
+         value="{{ book.ceiling or '' }}" placeholder="no limit" size="8">
+  <input type="hidden" name="currency" value="{{ book.ceiling_currency or 'USD' }}">
+  <button type="submit">Save</button>
+  {% if ceiling %}<span class="muted">{{ ceiling.currency }}</span>{% endif %}
+</form>
+
 {# Opening this page searched eBay, unless it was searched within the hour.
    The pill says which, because a soft "now" is fine only while the page never
    pretends otherwise. The button ignores the gate on purpose: one that did
