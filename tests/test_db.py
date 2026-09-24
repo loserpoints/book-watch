@@ -299,32 +299,44 @@ def test_a_book_with_no_title_does_not_acquire_a_fake_one(old_shape_with_rows):
     row = old_shape_with_rows.execute("SELECT title FROM work WHERE id = 2").fetchone()
     assert row["title"] is None
 
-    edition = old_shape_with_rows.execute(
-        "SELECT isbn FROM edition WHERE work_id = 2"
+    typed = old_shape_with_rows.execute(
+        "SELECT typed FROM entry WHERE work_id = 2"
     ).fetchone()
-    assert edition["isbn"] == "9781590171998"
+    assert typed["typed"] == "9781590171998"
 
 
-def test_a_real_isbn_becomes_an_edition(old_shape_with_rows):
+def test_a_real_isbn_becomes_what_the_entry_was_typed_with(old_shape_with_rows):
+    """Not an edition. Editions are conclusions; this is what somebody typed."""
     db.migrate(old_shape_with_rows)
 
     rows = old_shape_with_rows.execute(
-        "SELECT work_id, isbn FROM edition ORDER BY work_id"
+        "SELECT id, typed FROM entry ORDER BY id"
     ).fetchall()
-    assert [(row["work_id"], row["isbn"]) for row in rows] == [
+    assert [(row["id"], row["typed"]) for row in rows] == [
         (1, "9780099448396"),
         (2, "9781590171998"),
+        (3, "The Riddle of the Sands 1903"),
     ]
+    # And nothing is left in `edition`, which now holds conclusions only.
+    assert (
+        old_shape_with_rows.execute("SELECT count(*) AS n FROM edition").fetchone()["n"]
+        == 0
+    )
 
 
 def test_an_override_survives_as_text_rather_than_a_fake_edition(old_shape_with_rows):
-    """Decision 29's escape hatch. It is not an ISBN, so it does not become one."""
+    """Decision 29's escape hatch. It is not an ISBN, so it does not become one.
+
+    It lives in the same column as a typed ISBN, because it is the same kind
+    of thing: what somebody put in the form. Whether it parses as a number is
+    a question to ask it, not a reason to store it twice.
+    """
     db.migrate(old_shape_with_rows)
 
     entry = old_shape_with_rows.execute(
-        "SELECT search_text FROM entry WHERE id = 3"
+        "SELECT typed FROM entry WHERE id = 3"
     ).fetchone()
-    assert entry["search_text"] == "The Riddle of the Sands 1903"
+    assert entry["typed"] == "The Riddle of the Sands 1903"
 
     editions = old_shape_with_rows.execute(
         "SELECT count(*) AS n FROM edition WHERE work_id = 3"
@@ -355,3 +367,97 @@ def test_the_notebook_is_left_alone_by_003(old_shape_with_rows):
         "SELECT title FROM openlibrary_edition WHERE isbn = '9781590171998'"
     ).fetchone()
     assert row["title"] == "Stoner"
+
+
+# --- 010 over a database holding both kinds of edition row ------------------
+#
+# The case this migration exists for. `edition` has been holding an ISBN
+# somebody typed and an ISBN a rule concluded, with nothing to tell them
+# apart, and that ambiguity is why the wrong book could not be unmatched.
+
+
+def at_the_shape_before_010(connection) -> None:
+    db.pending(connection)
+    for migration in sorted(db.MIGRATIONS_DIR.glob("*.sql")):
+        if migration.name.startswith("010"):
+            break
+        connection.executescript(migration.read_text())
+        connection.execute(
+            "INSERT INTO schema_migration (name) VALUES (?)", (migration.name,)
+        )
+
+
+@pytest.fixture
+def both_kinds_of_row(database):
+    at_the_shape_before_010(database)
+    database.executescript(
+        """
+        INSERT INTO work (id, title, author) VALUES
+            (1, 'Breaking and Entering', 'Joy Williams'),
+            (2, 'Crash', 'J. G. Ballard'),
+            (3, 'The Riddle of the Sands', NULL);
+
+        -- Added by title: every edition here was concluded by a pass.
+        INSERT INTO entry (id, work_id, hunt) VALUES (1, 1, 'reader');
+        INSERT INTO edition (work_id, isbn, publisher) VALUES
+            (1, '9780394757735', 'Vintage Books'),
+            (1, '9781771965231', 'Biblioasis');      -- the wrong book
+
+        -- Added by number: one bare row, which is what `add()` wrote.
+        INSERT INTO entry (id, work_id, hunt) VALUES (2, 2, 'reader');
+        INSERT INTO edition (work_id, isbn) VALUES (2, '9780099448396');
+
+        -- Added through decision 29's override.
+        INSERT INTO entry (id, work_id, hunt, search_text)
+        VALUES (3, 3, 'reader', 'The Riddle of the Sands 1903');
+        """
+    )
+    return database
+
+
+def test_a_typed_number_moves_to_the_entry(both_kinds_of_row):
+    db.migrate(both_kinds_of_row)
+
+    row = both_kinds_of_row.execute("SELECT typed FROM entry WHERE id = 2").fetchone()
+    assert row["typed"] == "9780099448396"
+    # And is no longer duplicated among the conclusions.
+    left = both_kinds_of_row.execute(
+        "SELECT count(*) AS n FROM edition WHERE work_id = 2"
+    ).fetchone()
+    assert left["n"] == 0
+
+
+def test_an_override_moves_to_the_same_column(both_kinds_of_row):
+    """It is the same kind of thing: what somebody put in the form."""
+    db.migrate(both_kinds_of_row)
+
+    row = both_kinds_of_row.execute("SELECT typed FROM entry WHERE id = 3").fetchone()
+    assert row["typed"] == "The Riddle of the Sands 1903"
+
+
+def test_concluded_editions_stay_put_for_the_next_slice(both_kinds_of_row):
+    """Including the wrong one. Deleting conclusions is S15's job, and it can
+    do it safely only because nothing typed is mixed in with them."""
+    db.migrate(both_kinds_of_row)
+
+    rows = both_kinds_of_row.execute(
+        "SELECT isbn FROM edition WHERE work_id = 1 ORDER BY isbn"
+    ).fetchall()
+    assert [row["isbn"] for row in rows] == ["9780394757735", "9781771965231"]
+
+
+def test_a_book_added_by_title_was_typed_nothing(both_kinds_of_row):
+    db.migrate(both_kinds_of_row)
+
+    row = both_kinds_of_row.execute("SELECT typed FROM entry WHERE id = 1").fetchone()
+    assert row["typed"] is None
+
+
+def test_search_text_is_gone_rather_than_left_meaning_half_of_something(
+    both_kinds_of_row,
+):
+    db.migrate(both_kinds_of_row)
+
+    columns = {row[1] for row in both_kinds_of_row.execute("PRAGMA table_info(entry)")}
+    assert "typed" in columns
+    assert "search_text" not in columns

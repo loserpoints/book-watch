@@ -3,7 +3,7 @@
 Short entries, one per decision that would be expensive to reverse or annoying
 to re-argue. Each states what was chosen, what else was considered, and why.
 
-*Last updated: 2026-09-23*
+*Last updated: 2026-09-24*
 
 ---
 
@@ -1693,3 +1693,49 @@ it resumes the next time that book is opened. For a want-list of a few books
 read by one person that is fine, and it stops being fine the moment anything
 is expected to be current without somebody looking. That is *Always current*'s
 problem, and this is the piece it will schedule.
+
+---
+
+## 42. What somebody typed is not something a rule concluded
+
+**Decision.** The ISBN or text a person puts in the add form is stored on the
+entry, in one column called `typed`. `edition` holds only numbers a rule
+decided belong to a book. Migration 010.
+
+**Why, and it is not tidiness.** `edition` held both, with nothing to tell
+them apart, and that is the reason the wrong book could not be unmatched. A
+pass had concluded Don Gillmor's ISBN was an edition of Joy Williams's novel;
+the grader reads a known edition ahead of every other signal, so the check
+written to reject it never ran. No repair could delete the bad row without
+guessing which rows were conclusions, and guessing is what produced it.
+
+Separated, `edition` becomes derived-only — it can be emptied and rebuilt
+whenever the rules change, which is what makes every future rule change free
+rather than a migration.
+
+**On the entry, not the work.** It is one person's intent at one moment. A
+work is shared between entries, and *Two kinds of hunt* is where two entries
+for one book start existing — a reader wanting any copy and a collector
+wanting one printing typed different things and both are right.
+
+**The override folds in rather than sitting alongside.** `search_text` held
+text that was never an ISBN (decision 29); `typed` holds what somebody put in
+the form. They are the same fact. Whether it parses as a number is a question
+to ask it, not a reason for two columns — and two columns meaning almost the
+same thing is how one of them quietly stops being maintained.
+
+**The migration guesses once, and says so.** A work added by number has
+exactly one edition row carrying nothing but the number, because `add()` wrote
+only that; anything with a publisher, date or format came from a pass. The
+residual: a pass that learned a number Open Library knew nothing else about
+would leave a bare row too, and it is mistaken here for a typed one. At two
+books that is checkable by eye. The capture version in a later slice is what
+makes it unnecessary to check.
+
+**Cost.** Removing a book now loses the number it was added with, because that
+number was the person's rather than something learned. Re-adding still costs
+no requests: what a seller declared and what a number is are keyed by listing
+and by number, not by which book was on the list when we asked.
+
+**No behaviour changes.** That is the point of doing it as its own slice — the
+next one changes what is true, and this one only changes where it is written.

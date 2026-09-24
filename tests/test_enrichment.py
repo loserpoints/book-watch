@@ -299,8 +299,9 @@ def test_a_book_that_is_gone_is_not_an_error(database):
 
 def an_untitled_book(connection, isbn="9780679726197"):
     connection.execute("INSERT INTO work (id) VALUES (2)")
-    connection.execute("INSERT INTO entry (work_id, hunt) VALUES (2, 'reader')")
-    connection.execute("INSERT INTO edition (work_id, isbn) VALUES (2, ?)", (isbn,))
+    connection.execute(
+        "INSERT INTO entry (work_id, hunt, typed) VALUES (2, 'reader', ?)", (isbn,)
+    )
     connection.commit()
 
 
