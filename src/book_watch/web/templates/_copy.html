@@ -83,23 +83,18 @@
         {%- elif stands.unplaced == 'no delivered price' -%}
           No delivered price, so this one can't be placed among the others.
         {%- else -%}
+          {#- Rank only. The range this used to carry is a property of the
+              class rather than of the copy, so it is stated once above the
+              list instead of once per copy — which on a twelve-copy book was
+              the same clause eight times. The tense lives up there too. -#}
           {%- if stands.listed == 1 -%}
-            The only {{ stands.condition_class }} copy listed now.
+            The only {{ stands.condition_class }} copy listed.
           {%- elif stands.rank == 1 -%}
             {{ 'Tied cheapest' if stands.tied else 'Cheapest' }}
-            of {{ stands.listed }} {{ stands.condition_class }} copies listed now.
+            of {{ stands.listed }} {{ stands.condition_class }} copies.
           {%- else -%}
             {{ 'Tied ' if stands.tied }}{{ stands.rank | ordinal }} cheapest
-            of {{ stands.listed }} {{ stands.condition_class }} copies listed now.
-          {%- endif -%}
-          {#- The range spans every copy ever recorded, not only the ones still
-              for sale: a copy that has gone was a real book at a real price,
-              and dropping it would leave the range describing only what has
-              not sold — the slowest-moving end of the market. Suppressed when
-              it would be a single number wearing a dash. -#}
-          {%- if stands.seen > 1 and stands.low.amount != stands.high.amount %}
-            Asking {{ "%.2f"|format(stands.low.amount) }}–{{ stands.high }}
-            delivered across {{ stands.seen }} seen.
+            of {{ stands.listed }} {{ stands.condition_class }} copies.
           {%- endif -%}
         {%- endif -%}
       </div>

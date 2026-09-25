@@ -699,9 +699,40 @@ def test_a_copy_says_where_it_sits_among_the_others(book_client):
 
     page = as_read(client.get("/book/1").text)
 
-    assert "Cheapest of 2 used copies listed now." in page
-    assert "2nd cheapest of 2 used copies listed now." in page
-    assert "Asking 4.00–30.00 USD delivered across 2 seen." in page
+    assert "2 used copies listed now, asking 4.00–30.00 USD delivered" in page
+    assert "Cheapest of 2 used copies." in page
+    assert "2nd cheapest of 2 used copies." in page
+
+
+def test_the_range_is_stated_once_however_many_copies_there_are(book_client):
+    """The whole point of the slice. S21 put the range on every copy, which on
+    a twelve-copy book was the same clause eight times — one fact crowding out
+    the one thing that varies. It is a property of the class, not the copy."""
+    client = book_client(
+        returning(
+            *[
+                a_listing(
+                    item_id=f"v1|{n}|0",
+                    price=Money(Decimal(f"{n + 4}.00"), "USD"),
+                    shipping_cost=Money(Decimal("0.00"), "USD"),
+                    condition_id="5000",
+                )
+                for n in range(6)
+            ]
+        )
+    )
+    add_book(client, "9780099448396", "Crash")
+    client.get("/book/1")
+    make_certain(client)
+
+    page = as_read(client.get("/book/1").text)
+
+    # The range clause itself, not the word "asking" — that also appears in a
+    # stylesheet comment, which is exactly the kind of loose assertion that
+    # passes for the wrong reason later.
+    assert page.count("asking 4.00–9.00 USD delivered across 6 seen") == 1
+    # And every copy still says where it sits.
+    assert page.lower().count("cheapest of 6 used copies") == 6
 
 
 def test_a_new_copy_and_a_used_one_are_never_counted_together(book_client):
@@ -729,8 +760,11 @@ def test_a_new_copy_and_a_used_one_are_never_counted_together(book_client):
 
     page = as_read(client.get("/book/1").text)
 
-    assert "The only used copy listed now." in page
-    assert "The only new copy listed now." in page
+    assert "The only used copy listed." in page
+    assert "The only new copy listed." in page
+    # Two markets, stated separately, neither pooled into a count of three.
+    assert "1 used copy listed now." in page
+    assert "1 new copy listed now." in page
     assert "copies listed now" not in page
 
 
@@ -844,5 +878,7 @@ def test_the_range_on_the_page_spans_copies_that_have_stopped_appearing(book_cli
     stock.pop()  # the $30 copy stops appearing
     page = as_read(client.get("/book/1?refresh=1").text)
 
-    assert "The only used copy listed now." in page
-    assert "Asking 4.00–30.00 USD delivered across 2 seen." in page
+    assert "The only used copy listed." in page
+    assert (
+        "1 used copy listed now, asking 4.00–30.00 USD delivered across 2 seen." in page
+    )

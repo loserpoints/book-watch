@@ -2443,6 +2443,29 @@ not on the page. That is decision 48's failure exactly — a correct function on
 the wrong input, passing every test — so there is now a page-level test that
 a copy which has stopped appearing still widens the range.
 
+> **Where each renders, corrected 2026-09-25.** Both were put on every copy,
+> which is what the slice specified and what reading the result disproved: on
+> a twelve-copy book the range rendered eight times, identically, crowding out
+> the one thing that varies. A rank belongs to a copy; **a range belongs to the
+> class**, and is now stated once above the list it describes.
+>
+> Three rules fall out of that and are easier to re-argue than to re-derive:
+>
+> - **Only classes with copies listed now get a line.** These head a list, so
+>   a class with nothing in that list has no list to head. The range for a book
+>   whose used copies have all gone is a real and interesting fact, and it is a
+>   *different* statement from this one — it belongs to whatever shows a book's
+>   history rather than to a header over what is for sale.
+> - **Unknown is never one of them.** It has no range worth stating and no rank
+>   to head, so it appears only on the copies themselves, where it says why
+>   that copy could not be placed.
+> - **A market is keyed by class and currency**, not class alone, because
+>   `standings` already partitions by both. Decision 50's refusal, applied to a
+>   range: £5 to $36 is not a range and a symbol would not make it one.
+>
+> The per-copy line drops "listed now" along with the range, because the header
+> above it carries the tense for the whole list.
+
 ---
 
 ## 54. The want-list sweeps, on demand and one book at a time
