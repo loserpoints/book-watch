@@ -13,7 +13,7 @@ from decimal import Decimal
 
 import pytest
 
-from book_watch import copies, db, wantlist
+from book_watch import copies, db, standing, sweeps, wantlist
 from book_watch.copies import Copy
 from book_watch.ebay.search import Listing, Money, Results
 
@@ -209,7 +209,7 @@ def swept(connection, work_id, listings, *, total=None, asked_for=50, scope="us"
     a bigger number for a book whose results eBay truncated.
     """
     found = Results(list(listings), len(listings) if total is None else total)
-    return copies.store(connection, work_id, found, asked_for=asked_for, scope=scope)
+    return sweeps.store(connection, work_id, found, asked_for=asked_for, scope=scope)
 
 
 def test_a_copy_seen_again_keeps_what_it_was(database):
@@ -219,7 +219,7 @@ def test_a_copy_seen_again_keeps_what_it_was(database):
     swept(database, book.work_id, [a_listing(price="7.50")])
     database.commit()
 
-    history = copies.price_history(database, book.work_id, "v1|1|0")
+    history = sweeps.price_history(database, book.work_id, "v1|1|0")
 
     assert [str(price.amount) for _, price, _ in history] == ["9.99", "7.50"]
 
@@ -232,7 +232,7 @@ def test_an_unchanged_price_is_not_written_twice(database):
         swept(database, book.work_id, [a_listing(price="9.99")])
     database.commit()
 
-    assert len(copies.price_history(database, book.work_id, "v1|1|0")) == 1
+    assert len(sweeps.price_history(database, book.work_id, "v1|1|0")) == 1
 
 
 def test_a_copy_that_comes_back_is_recorded_even_at_the_same_price(database):
@@ -247,7 +247,7 @@ def test_a_copy_that_comes_back_is_recorded_even_at_the_same_price(database):
     swept(database, book.work_id, [a_listing()])
     database.commit()
 
-    assert len(copies.price_history(database, book.work_id, "v1|1|0")) == 2
+    assert len(sweeps.price_history(database, book.work_id, "v1|1|0")) == 2
 
 
 def test_a_copy_that_stops_appearing_is_kept_but_not_shown(database):
@@ -281,7 +281,7 @@ def test_shipping_changing_is_a_price_change(database):
     swept(database, book.work_id, [a_listing(shipping="0.00")])
     database.commit()
 
-    history = copies.price_history(database, book.work_id, "v1|1|0")
+    history = sweeps.price_history(database, book.work_id, "v1|1|0")
     assert [str(ship.amount) for _, _, ship in history] == ["3.99", "0.00"]
 
 
@@ -308,7 +308,7 @@ def test_a_copy_missing_from_a_truncated_sweep_has_not_come_back(database):
     swept(database, book.work_id, [a_listing()], total=400)
     database.commit()
 
-    assert len(copies.price_history(database, book.work_id, "v1|1|0")) == 1
+    assert len(sweeps.price_history(database, book.work_id, "v1|1|0")) == 1
 
 
 def test_a_sweep_records_what_it_asked_for_and_what_matched(database):
@@ -389,8 +389,8 @@ def test_the_gate_is_per_scope(database):
     swept(database, book.work_id, [a_listing()], scope="us")
     database.commit()
 
-    assert not copies.due_for_sweep(database, book.work_id, scope="us")
-    assert copies.due_for_sweep(database, book.work_id, scope="everywhere")
+    assert not sweeps.due_for_sweep(database, book.work_id, scope="us")
+    assert sweeps.due_for_sweep(database, book.work_id, scope="everywhere")
 
 
 # --- what I will pay ---------------------------------------------------------
@@ -514,7 +514,7 @@ def a_certain_copy(
 
 
 def standing_for(connection, entry):
-    return copies.standings(
+    return standing.standings(
         copies.for_entry(connection, entry), copies.ever_seen(connection, entry)
     )
 
@@ -784,7 +784,7 @@ def test_a_copy_recorded_before_the_id_was_stored_reads_as_unknown(database):
 
 
 def markets_for(connection, entry):
-    return copies.markets(standing_for(connection, entry))
+    return standing.markets(standing_for(connection, entry))
 
 
 def test_used_comes_before_new(database):
@@ -881,7 +881,7 @@ def test_a_copy_that_cannot_be_placed_makes_no_market(database):
 
 
 def glance_at(connection, entry):
-    return copies.glance(connection, entry)
+    return standing.glance(connection, entry)
 
 
 def test_the_headline_leads_with_the_cheapest_used_copy(database):
@@ -965,3 +965,43 @@ def test_uncertain_copies_are_counted_rather_than_called_nothing(database):
     assert at.listed == 0
     assert at.headline is None
     assert at.uncertain == 1
+
+
+def test_one_render_derives_the_edition_set_once(database, monkeypatch):
+    """Both populations come from one `_target` call.
+
+    Not a speed test — a ten-book want-list renders in about 12ms either way.
+    It is that two adjacent derivations invite the question of whether they
+    could disagree, and the answer should be that there is only one to ask
+    about. Without this, the duplication comes back the next time somebody
+    needs both populations and reaches for the two public functions.
+    """
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
+
+    derived = []
+    real = copies._target
+    monkeypatch.setattr(
+        copies, "_target", lambda *a, **k: (derived.append(1), real(*a, **k))[1]
+    )
+
+    listed, seen = copies.populations(database, book)
+
+    assert len(derived) == 1
+    assert [one.item_id for one in listed] == ["v1|1|0"]
+    assert [one.item_id for one in seen] == ["v1|1|0"]
+
+
+def test_the_glance_derives_it_once_too(database, monkeypatch):
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
+
+    derived = []
+    real = copies._target
+    monkeypatch.setattr(
+        copies, "_target", lambda *a, **k: (derived.append(1), real(*a, **k))[1]
+    )
+
+    standing.glance(database, book)
+
+    assert len(derived) == 1

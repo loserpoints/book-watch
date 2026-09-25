@@ -1816,7 +1816,7 @@ simply not yet known, and becomes known the moment somebody lists it.
 
 ## 44. A sweep adds; it no longer replaces
 
-**Decision.** `copies.store()` keeps every copy it has ever seen. A sweep
+**Decision.** `sweeps.store()` keeps every copy it has ever seen. A sweep
 writes a `sweep` row, upserts each copy returned, and leaves the ones that
 did not come back where they are. The page shows copies whose `last_sweep_id`
 is the book's newest sweep, so it still answers "what is buyable now" and
@@ -2135,7 +2135,7 @@ reading and the one every other unknown here gets.
 | *Stoner* | 65 | Yes |
 | *Pride and Prejudice* | 109 | Yes |
 
-**The window is read from `copies.CURRENT_FOR` at call time**, not bound as a
+**The window is read from `sweeps.CURRENT_FOR` at call time**, not bound as a
 default argument. A default would capture it at import and make "one named
 place" untrue the moment anything tried to change it, which is exactly what an
 account setting would do. A test asserts this, and it failed on the first
@@ -2569,3 +2569,79 @@ hour gate broke nothing, because the queue already filters out books inside it
 — so the check only bites when the endpoint is reached directly, which is
 exactly what a freshly added book does and what reloading that page would do
 again. Tested now.
+
+---
+
+## 55. Three modules for copies, and one screen per router
+
+**Decision.** `copies.py` splits into `copies` (what is for sale and whether
+it is this book), `sweeps` (what a search saw and when), and `standing` (where
+a copy sits among the others). The want-list's checking endpoints move from
+`web/listings.py` to `web/wantlist.py`, and the eBay search wiring both
+screens need moves to `web/searching.py`. No behaviour changes.
+
+**What the sizes were.** `copies.py` had reached 971 lines doing five jobs;
+it is now 408, 330 and 329. `web/listings.py` was 448 and routed two screens;
+it is now 292 and routes one.
+
+**The seam between `copies` and `sweeps` is tense, not subject.** Both are
+about copies. One asks *what is for sale now*, the other *what was true when
+we last looked* — and confusing those two is exactly the bug decision 48
+fixed, where a page showed copies that may have sold days earlier. Naming the
+split after the tense keeps that distinction in the import list rather than in
+somebody's memory.
+
+**`standing` is the third because it reads both.** A rank needs what is
+listed, a range needs everything ever seen (decision 53), so it depends on the
+other two and neither depends on it. That it sits cleanly on top is the
+evidence the cut was in the right place.
+
+**The routers were split by accident.** `wantlist.py` owned the want-list
+screen while the want-list's *check* endpoints lived in `listings.py` — purely
+because that is where the eBay search function happened to be injected when
+S23 needed one. Each module now owns one screen, and what both need lives
+where `web/filters.py` already went.
+
+**One derivation per render, not two.** `populations()` returns both
+populations from a single `_target` call. This is **not** a speed fix and
+should not be read as one: a ten-book want-list renders in about 12ms over 72
+queries, and this removes 2 of the 7 queries a book costs. The reason is that
+a reader of two adjacent derivations has to wonder whether they could
+disagree, and the answer should be that there is only one.
+
+**Two tests had gone quietly wrong, and both were found by moving code.**
+
+*Patching the wrong module.* `test_the_app_does_not_read_ebay_credentials_at_
+startup` exists to stop somebody making the search client eager — its own
+docstring says so. When the client moved to `searching`, the test went on
+passing while patching `listings`, so it would no longer have caught the thing
+it was written to catch. It now patches both modules that can reach a
+credential, and a mutation making the client eager fails it.
+
+*A fixture that could have reached eBay.* The want-list's own tests built its
+router without a search stub, which was harmless while that router could not
+search and stopped being harmless the moment it could. They now pass one that
+raises, so the intent is stated rather than left to `conftest` to catch.
+
+**What was looked at and deliberately not done**, so the same candidates are
+not re-proposed next milestone:
+
+- **Performance.** There is no problem to fix. Ten books with twelve copies
+  each renders in 12.2ms.
+- **`isbn.py`, `db.py`, `config.py`, `matching.py`, and the two API clients.**
+  Surveyed and clean: small, single-purpose, and every rule in `matching.py`
+  carries the precision it was measured at.
+- **`enrichment._run`'s four repeated exits** — real, and issue #87. M3-era
+  code nothing in M5 touches, so folding it in would have widened a refactor
+  already spanning two modules and two routers.
+- **American spelling** (#37). A repo-wide find-and-replace mixed into a
+  structural refactor makes both unreadable as a diff.
+
+**The survey's own finding is worth recording, because it contradicts the
+expectation that prompted it.** The early code is the best code here. The
+debt was all in the late, large files that accreted a slice at a time. Two
+mechanisms explain it: early modules were carved out when their job was
+genuinely small and single, and early *mistakes* did not survive — M3 rewrote
+the stored conclusions, and migrations 010, 012 and 015 dropped superseded
+columns rather than leaving them. What needs watching is not old code. It is
+any file that grew 60% in three days.
