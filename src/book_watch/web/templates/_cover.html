@@ -1,0 +1,22 @@
+{# A book's cover, drawn over its own placeholder.
+
+   The placeholder is always there, underneath. While the image loads, and if
+   it never arrives, the book is still recognisably itself rather than an
+   empty frame — and "never arrives" includes Open Library being down, which
+   is their outage showing as a plain block rather than as a broken page.
+
+   Three cases, from migration 018's three states:
+     cover known      the image, straight from Open Library (decision 56)
+     never asked      our own route, which asks once and redirects
+     known to be none the placeholder alone, and no request at all
+
+   Hidden from screen readers: the title is the link right beside it, and
+   reading it twice helps nobody. #}
+<div class="cover" aria-hidden="true">
+  <span class="cover-name">{{ cover_name }}</span>
+  {%- if cover_id %}
+    <img src="{{ cover_id | cover_url }}" alt="" loading="lazy" onerror="this.remove()">
+  {%- elif cover_route %}
+    <img src="{{ cover_route }}" alt="" loading="lazy" onerror="this.remove()">
+  {%- endif %}
+</div>

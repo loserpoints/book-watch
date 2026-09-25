@@ -359,6 +359,95 @@ def test_a_failed_request_still_counts_as_having_bothered_them():
     assert slept == [pytest.approx(1.0)]
 
 
+# --- covers -----------------------------------------------------------------
+#
+# Only ids. Decision 56: the images stay on Open Library's cover server and
+# the page points at them, so nothing here fetches one.
+
+
+def test_a_title_search_asks_for_the_cover_in_the_same_request():
+    """A new book gets its cover for the price of the search it already costs."""
+    seen = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.update(request.url.params)
+        return httpx.Response(200, json=SEARCH)
+
+    build_client(handler).search_works("stoner")
+
+    assert "cover_i" in seen["fields"].split(",")
+
+
+def test_a_candidate_carries_its_cover():
+    search = {"docs": [{**SEARCH["docs"][0], "cover_i": 14348537}]}
+
+    [candidate] = build_client(responds_with(search)).search_works("pride")
+
+    assert candidate.cover_id == 14348537
+
+
+def test_a_candidate_without_a_cover_says_none():
+    candidates = build_client(responds_with(SEARCH)).search_works("pride")
+
+    assert candidates[0].cover_id is None
+
+
+def test_an_edition_reports_its_first_cover():
+    record = {**STONER, "covers": [8231856, 8231857]}
+
+    identity = build_client(responds_with(record)).identify_isbn("9781590171998")
+
+    assert identity.cover_id == 8231856
+
+
+def test_a_removed_cover_is_skipped_rather_than_shown():
+    """Open Library marks a removed cover -1 and leaves it in the list."""
+    record = {**STONER, "covers": [-1, 8231857]}
+
+    identity = build_client(responds_with(record)).identify_isbn("9781590171998")
+
+    assert identity.cover_id == 8231857
+
+
+def test_a_work_reports_its_cover():
+    requests = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request.url.path)
+        return httpx.Response(200, json={"title": "Stoner", "covers": [-1, 6980524]})
+
+    assert build_client(handler).work_cover("OL3511459W") == 6980524
+    assert requests == ["/works/OL3511459W.json"]
+
+
+def test_a_work_with_no_covers_has_none():
+    client = build_client(responds_with({"title": "Stoner"}))
+
+    assert client.work_cover("OL3511459W") is None
+
+
+def test_a_work_open_library_no_longer_has_has_no_cover():
+    client = build_client(responds_with({}, status_code=404))
+
+    assert client.work_cover("OL3511459W") is None
+
+
+def test_asking_for_a_cover_is_counted_like_any_other_request():
+    budget = in_memory_budget()
+
+    build_client(responds_with({"covers": [1]}), budget).work_cover("OL3511459W")
+
+    assert budget.spent() == 1
+
+
+def test_a_work_id_that_is_a_path_is_refused_before_anything_is_asked():
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise AssertionError("nothing should have been sent")
+
+    with pytest.raises(ValueError):
+        build_client(handler).work_cover("../books/OL1M")
+
+
 # --- the notebook -----------------------------------------------------------
 
 

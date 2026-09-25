@@ -20,6 +20,10 @@ class Candidate:
     authors: tuple[str, ...]
     first_published: int | None
     edition_count: int | None
+    #: Open Library's pick of a cover for the work, as a cover id. `None` when
+    #: the search reported none, which is Open Library saying it holds no
+    #: cover for any edition of it.
+    cover_id: int | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,3 +51,10 @@ class EditionIdentity:
     publisher: str | None
     published: str | None
     physical_format: str | None
+    #: The first cover Open Library holds for this edition, or `None`.
+    #:
+    #: Read by the add form only. The notebook (`Resolver`) does not store it,
+    #: so an identity read back from there always has `None` here — which is
+    #: why `resolution.CAPTURE` did not change: bumping it would re-ask about
+    #: every number ever seen, for a field nothing on that path reads.
+    cover_id: int | None = None

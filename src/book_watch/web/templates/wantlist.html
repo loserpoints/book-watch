@@ -47,6 +47,13 @@
         <input type="hidden" name="title" value="{{ candidate.title }}">
         <input type="hidden" name="author" value="{{ candidate.authors | join(', ') }}">
         <input type="hidden" name="work_id" value="{{ candidate.work_id }}">
+        <input type="hidden" name="cover_id" value="{{ candidate.cover_id or '' }}">
+        {#- No route to fall back on: a candidate's search result already says
+            whether there is a cover, and one that is never chosen should cost
+            nothing more. -#}
+        {% with cover_id = candidate.cover_id, cover_name = candidate.title, cover_route = none %}
+          {% include "_cover.html" %}
+        {% endwith %}
         <div class="details">
           <div class="title">{{ candidate.title }}</div>
           <div class="muted">

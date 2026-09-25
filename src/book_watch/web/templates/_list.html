@@ -31,5 +31,9 @@
     {% set state = 'checking' if book.id == checking else 'idle' %}
     {% include "_entry.html" %}
   {% endfor %}
+  {#- Their covers API asks for a link back, and it is the least we owe. -#}
+  <p class="muted credit">
+    Covers from <a href="https://openlibrary.org" rel="noopener">Open Library</a>.
+  </p>
 {% endif %}
 </div>

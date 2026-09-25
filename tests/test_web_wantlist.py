@@ -1,5 +1,7 @@
 """Tests for the want-list screens, driven through the real templates."""
 
+import dataclasses
+
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -51,10 +53,13 @@ class FakeCatalogue:
     into traffic against a non-profit.
     """
 
-    def __init__(self, *, identities=None, candidates=(), unavailable=False):
+    def __init__(
+        self, *, identities=None, candidates=(), unavailable=False, work_covers=None
+    ):
         self.identities = identities if identities is not None else {CRASH.isbn: CRASH}
         self.candidates = list(candidates)
         self.unavailable = unavailable
+        self.work_covers = work_covers or {}
         self.asked = []
 
     def identify_isbn(self, isbn):
@@ -68,6 +73,12 @@ class FakeCatalogue:
             raise OpenLibraryUnavailable("open library is down")
         self.asked.append((title, author))
         return self.candidates
+
+    def work_cover(self, work_id):
+        if self.unavailable:
+            raise OpenLibraryUnavailable("open library is down")
+        self.asked.append(("cover", work_id))
+        return self.work_covers.get(work_id)
 
 
 def build_client(tmp_path, catalogue):
@@ -395,3 +406,139 @@ def test_a_finished_book_stops_saying_it(client):
         connection.commit()
 
     assert "still digging" not in client.get("/").text
+
+
+# --- covers -----------------------------------------------------------------
+#
+# Decision 56. The page points at Open Library's cover server; only the ids
+# are ours, and learning one is never allowed to hold up the list.
+
+STONER_COVER = 6980524
+COVER_URL = f"https://covers.openlibrary.org/b/id/{STONER_COVER}-M.jpg?default=false"
+
+
+def pick(client, cover_id=""):
+    return client.post(
+        "/books/chosen",
+        data={
+            "title": "Stoner",
+            "author": "John Williams",
+            "work_id": "OL3511459W",
+            "cover_id": cover_id,
+        },
+    )
+
+
+def test_candidates_show_their_covers_and_carry_them_to_the_list(tmp_path):
+    with_cover = [dataclasses.replace(CANDIDATES[0], cover_id=STONER_COVER)]
+    client = build_client(tmp_path, FakeCatalogue(candidates=with_cover))
+
+    page = find(client, "stoner").text
+
+    assert COVER_URL in page
+    assert f'name="cover_id" value="{STONER_COVER}"' in page
+
+
+def test_a_picked_book_shows_its_cover_for_no_further_request(tmp_path):
+    catalogue = FakeCatalogue()
+    client = build_client(tmp_path, catalogue)
+
+    page = pick(client, str(STONER_COVER)).text
+
+    assert COVER_URL in page
+    assert catalogue.asked == []
+
+
+def test_a_picked_book_open_library_has_no_cover_for_shows_the_placeholder(tmp_path):
+    client = build_client(tmp_path, FakeCatalogue())
+
+    page = pick(client).text
+
+    assert 'class="cover-name">Stoner<' in page
+    # Nothing to load: Open Library already said so, and asking again on
+    # every view would be asking for an answer we have.
+    assert "/cover" not in page.split('id="want-list"')[1]
+    assert "<img" not in page.split('id="want-list"')[1]
+
+
+def test_a_book_added_by_number_shows_its_editions_cover(tmp_path):
+    crash = dataclasses.replace(CRASH, cover_id=240726)
+    catalogue = FakeCatalogue(identities={CRASH.isbn: crash})
+    client = build_client(tmp_path, catalogue)
+
+    page = add(client, CRASH.isbn).text
+
+    assert "b/id/240726-M.jpg" in page
+    assert len(catalogue.asked) == 1
+
+
+def test_a_book_added_by_number_with_no_edition_cover_asks_later(tmp_path):
+    """The work's cover is still unknown, and finding out is not worth a wait."""
+    catalogue = FakeCatalogue()
+    client = build_client(tmp_path, catalogue)
+
+    page = add(client, CRASH.isbn).text
+
+    assert 'src="/books/1/cover"' in page
+    assert catalogue.asked == [CRASH.isbn]
+
+
+def test_rendering_the_list_asks_open_library_nothing(tmp_path):
+    catalogue = FakeCatalogue()
+    client = build_client(tmp_path, catalogue)
+    add(client, CRASH.isbn)
+    pick(client)
+    before = list(catalogue.asked)
+
+    client.get("/")
+
+    assert catalogue.asked == before
+
+
+def test_the_cover_route_learns_the_cover_once_and_sends_the_browser_there(tmp_path):
+    catalogue = FakeCatalogue(work_covers={CRASH.work_id: 240726})
+    client = build_client(tmp_path, catalogue)
+    add(client, CRASH.isbn)
+
+    first = client.get("/books/1/cover", follow_redirects=False)
+    second = client.get("/books/1/cover", follow_redirects=False)
+
+    assert first.status_code == second.status_code == 302
+    assert first.headers["location"].endswith("/b/id/240726-M.jpg?default=false")
+    assert catalogue.asked.count(("cover", CRASH.work_id)) == 1
+    # And the list now points there itself, so the route is not needed again.
+    assert "b/id/240726-M.jpg" in client.get("/").text
+
+
+def test_no_cover_is_a_404_and_the_list_stops_asking(tmp_path):
+    client = build_client(tmp_path, FakeCatalogue())
+    add(client, CRASH.isbn)
+
+    response = client.get("/books/1/cover", follow_redirects=False)
+
+    assert response.status_code == 404
+    assert 'src="/books/1/cover"' not in client.get("/").text
+
+
+def test_open_library_being_down_leaves_the_cover_to_be_asked_for_next_time(tmp_path):
+    catalogue = FakeCatalogue(work_covers={CRASH.work_id: 240726})
+    client = build_client(tmp_path, catalogue)
+    add(client, CRASH.isbn)
+
+    catalogue.unavailable = True
+    assert client.get("/books/1/cover", follow_redirects=False).status_code == 404
+    catalogue.unavailable = False
+
+    assert client.get("/books/1/cover", follow_redirects=False).status_code == 302
+
+
+def test_a_cover_for_a_book_that_is_not_there_is_a_404(client):
+    assert client.get("/books/99/cover").status_code == 404
+
+
+def test_the_list_credits_open_library_for_its_covers(tmp_path):
+    client = build_client(tmp_path, FakeCatalogue())
+
+    page = pick(client).text
+
+    assert 'href="https://openlibrary.org"' in page

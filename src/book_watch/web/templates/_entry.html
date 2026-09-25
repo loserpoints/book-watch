@@ -8,6 +8,10 @@
    itself: the runner drives the whole walk and swaps finished rows back in
    out of band, so there is one place that decides what happens next. #}
 <div class="entry" id="entry-{{ book.id }}"{% if oob %} hx-swap-oob="true"{% endif %}>
+  {% with cover_id = book.cover, cover_name = book.name,
+          cover_route = none if book.has_no_cover else '/books/%d/cover' % book.id %}
+    {% include "_cover.html" %}
+  {% endwith %}
   <div class="details">
     <div class="title">
       <a href="/book/{{ book.id }}">{{ book.name }}</a>

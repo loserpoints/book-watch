@@ -24,10 +24,10 @@ from contextlib import closing
 from pathlib import Path
 
 from fastapi import APIRouter, Form, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
-from book_watch import db, standing, sweeps, wantlist
+from book_watch import covers, db, standing, sweeps, wantlist
 from book_watch.config import MissingCredentialError, load_database_path
 from book_watch.ebay.errors import EbayError
 from book_watch.ebay.search import DEFAULT_LIMIT
@@ -80,6 +80,9 @@ class LazyCatalogue:
     def search_works(self, title: str, author: str | None = None):
         return self._open().search_works(title, author)
 
+    def work_cover(self, work_id: str):
+        return self._open().work_cover(work_id)
+
 
 def open_configured_database() -> sqlite3.Connection:
     """Connect using the configured path, migrating if needed.
@@ -101,6 +104,7 @@ def build_router(
     router = APIRouter()
     templates = Jinja2Templates(directory=TEMPLATES_DIR)
     filters.register(templates.env)
+    templates.env.filters["cover_url"] = covers.url
     open_database: ConnectFn = (
         connect if connect is not None else open_configured_database
     )
@@ -289,6 +293,7 @@ def build_router(
                 author=author or None,
                 openlibrary_work_id=identity.work_id,
                 isbn=normalised,
+                edition_cover=identity.cover_id,
             ),
             duplicate_of=normalised,
         )
@@ -333,6 +338,7 @@ def build_router(
         title: str = Form(...),
         author: str = Form(""),
         work_id: str = Form(""),
+        cover_id: str = Form(""),
     ) -> HTMLResponse:
         """Put the candidate the person picked on the list.
 
@@ -348,9 +354,35 @@ def build_router(
                 title=title.strip(),
                 author=author.strip() or None,
                 openlibrary_work_id=work_id.strip() or None,
+                work_cover=int(cover_id) if cover_id.strip().isdigit() else None,
             ),
             duplicate_of=title.strip(),
         )
+
+    @router.get("/books/{book_id}/cover")
+    def cover(book_id: int) -> Response:
+        """Send the browser to this book's cover, learning which one it is first.
+
+        Only reached for a book whose cover nobody has asked about yet: once
+        the answer is stored, the list links to Open Library's image directly
+        and never comes here again. So the one Open Library request this can
+        make happens once per book, after the list has already rendered.
+
+        A 404 means there is nothing to show, for whatever reason, and the
+        page shows its placeholder. If the reason was Open Library being
+        unreachable, nothing was written and the next view asks again.
+        """
+        with closing(open_database()) as connection:
+            try:
+                book = wantlist.get(connection, book_id)
+            except LookupError:
+                return Response(status_code=404)
+            if book.cover is None and book.cover_asked_at is None:
+                covers.look_up(connection, open_library, book.work_id)
+                book = wantlist.get(connection, book_id)
+        if book.cover is None:
+            return Response(status_code=404)
+        return RedirectResponse(covers.url(book.cover), status_code=302)
 
     @router.delete("/books/{book_id}", response_class=HTMLResponse)
     def remove_book(request: Request, book_id: int) -> HTMLResponse:
