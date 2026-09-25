@@ -2428,7 +2428,8 @@ to $36 is not a range, and putting a symbol on it would not make it one.
 **A known limitation, stated rather than solved: relists inflate the count.**
 A relisted copy is the same physical book under a new item id, so "cheapest of
 9" may really be "cheapest of 7" with one seller counted three times. Identity
-across relists is M6's problem; decision 44 records the lead. The count gets
+across relists belongs to *Always current*; decision 44 records the lead.
+The count gets
 less trustworthy the longer a book sits.
 
 **Nothing here may imply a copy sold.** Every figure is an asking price and is
@@ -2441,3 +2442,71 @@ instead of the seen one broke nothing: the rule was tested on the function and
 not on the page. That is decision 48's failure exactly — a correct function on
 the wrong input, passing every test — so there is now a page-level test that
 a copy which has stopped appearing still widens the range.
+
+---
+
+## 54. The want-list sweeps, on demand and one book at a time
+
+**Decision.** The want-list gets a *Check all* that walks the list, one book at
+a time, honouring the per-book hour gate; and a *Re-run all* that ignores it,
+exactly as the book page's re-run does. Nothing sweeps on page load. This
+amends decision 48, which said the want-list does not sweep at all.
+
+**What decision 48 got right, and what it missed.** Its reason was sound: "ten
+books is ten searches and a ten-second page". A list that spent ten seconds
+before rendering would be a worse list. What it did not consider is that the
+alternative it left standing was *ten page opens* — the reader doing the
+sequencing by hand, one book at a time, to find out that nothing had changed.
+That is the manual searching the brief exists to remove, wearing different
+clothes.
+
+The fix is not to overturn the reason but to move the work off page load. The
+list renders from the store immediately, as it always did. Sweeping is an
+explicit act with a button on it.
+
+**Sequential, chained, not timed.** Each row fetches itself and its response
+triggers the next. The alternative — every row firing on a staggered timer —
+requires guessing a delay wide enough that two searches never overlap, and a
+search is about 1.8 seconds against a stagger that would have to be at least
+that. Guessing wrong gives two eBay requests in flight and two writers against
+a database that has one (decision 3). Chaining makes the guess unnecessary:
+there is one request outstanding by construction, whatever any of them costs.
+
+It also means closing the tab stops the walk, which is correct for a button you
+are watching, and it keeps the machine awake for the duration rather than
+risking a stop partway through a server-side job.
+
+**The gate is honoured, so most of the walk is instant.** A book swept within
+the hour renders final and triggers straight through without a request. So the
+common case is a list that settles at once with two or three stale books
+ticking over, rather than a ten-second cascade every time.
+
+**And the gate has to be visible, or the button looks broken.** Pressing
+*Check all* twice inside an hour correctly does nothing. Doing nothing silently
+reads as a bug, so the page says everything is current and when it was last
+checked. This is the same reasoning as decision 48's freshness pill, applied to
+an action instead of a page.
+
+**What the row shows: the used market first, falling back to new.** A rank and
+a range are per condition class (decision 52), so a single line per book needs
+a rule. It leads with the cheapest *used* delivered price, marked against the
+ceiling, then the used range. A book with no used copies at all shows the new
+market instead, labelled as new — *State of Grace*, five copies, all Brand New,
+is that case and it is not rare.
+
+Used first because the reading hunt is the dominant one and new copies are
+mostly bulk-seller inventory. *Two kinds of hunt* will likely invert this for
+collectible entries, which is an argument for the rule living in one place
+rather than in the template.
+
+**Cost.** Ten books is ten searches for a full re-run, against an allowance of
+5,000 a day — around 500 full re-runs available daily. The constraint is not
+the budget and never was; it is how long a person will watch a list reorder.
+
+**Where this stops working.** A sequential walk is fine at ten books and
+probably fine at thirty. The brief says a want-list in the dozens. At some
+length the honest answer stops being a faster cascade and becomes the poll,
+which is *Always current*'s job — and J1's test already says so: if opening the
+app is what triggers the search, that job is not done. This decision makes
+looking cheap. It does not make it unnecessary, and it should not be mistaken
+for having done so.

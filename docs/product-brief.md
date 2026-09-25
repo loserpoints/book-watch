@@ -1,6 +1,6 @@
 # Product brief: book-watch
 
-*Last updated: 2026-09-22*
+*Last updated: 2026-09-25*
 
 `docs/jobs.md` is the companion to this file. This one says what the tool is
 and why it should exist; that one says what I am trying to get done and how
@@ -48,9 +48,19 @@ carries a `mode` that selects which.
    marketplaces for listings matching them.
 3. It compares against listings it has already seen, so only genuinely new
    inventory counts.
-4. It emails me a digest of new listings under threshold.
+4. It tells me when a copy appears under my price ceiling, and stays quiet
+   when none has.
 
-A small web UI manages the want-list and shows current matches.
+A small web UI manages the want-list and shows current matches, and one action
+checks every book on it.
+
+**The email is a backup, not the channel.** An earlier draft of this called
+item 4 a daily digest, which was wrong in a way worth recording: a digest of
+everything is a digest I stop reading within a week, and then the job has
+failed while every part of it still works. What I want is an interruption only
+when something crosses the ceiling I set, and silence otherwise — which means
+most days bring no email at all. The thing I actually reach for is the list
+itself, checked in one action. The email exists for the days I forget to look.
 
 ## Non-goals
 
