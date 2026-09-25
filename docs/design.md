@@ -55,7 +55,7 @@ screen at a time turned out to be the unit a decision can actually be made in.
 1. **Inventory** — every fact each screen shows today *(below)*
 2. **The want-list** *(below)*
 3. **Adding a book** *(below)*
-4. The book page, around the copies
+4. **The book page, around the copies** *(below)*
 5. A copy
 6. The mock-up, tying it together
 
@@ -189,6 +189,20 @@ Further calls, same day:
 **Open question: does adding close the panel?** Closing it shows the new row
 checking itself. Keeping it open is what adding several books by one author
 (#101) needs. Alan leans towards keeping it open; settle it with #101.
+
+### 4. The book page, around the copies
+
+Alan's call, 2026-09-25: every fact P1–P9 is right, and there is far too much
+text before the first copy. Keep all of it and consolidate it visually, so the
+copies start near the top of a phone screen.
+
+Found on the way:
+
+- **The P2 warning shows on every book added by title**, where it is false —
+  #102. It should show only for text added in place of an ISBN.
+- **That text lives in the ISBN field**, which accepts anything after one
+  refusal. A better home is the title search, when it finds nothing — logged
+  on #101.
 
 ## Open
 
