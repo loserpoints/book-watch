@@ -58,5 +58,51 @@
         {%- else %} shipping calculated at checkout{% endif %})
       </span>
     </div>
+    {#- Where this copy sits among the others of the same book and kind.
+
+        New and used never pool. They are two markets rather than two grades:
+        a new copy is priced by distributor economics through bulk sellers, a
+        used one by scarcity and wear, and mixing them puts a floor under the
+        used number that has nothing to do with the used market.
+
+        Every figure is delivered and every figure is an *asking* price. What
+        a sweep sees is that a copy was listed at a price and later was not;
+        why it went is not something eBay will tell us (decision 47). Nothing
+        here may imply a copy sold, or sold for this. -#}
+    {% set stands = standing.get(copy.item_id) if standing else None %}
+    {% if stands %}
+      <div class="muted standing">
+        {%- if stands.unplaced == 'condition unstated' -%}
+          The seller didn't state a condition, so there's nothing to compare
+          this against.
+        {%- elif stands.unplaced == 'no condition code' -%}
+          {#- The copy's own line says "Good" and this one must not say the
+              seller stated nothing. eBay's words arrived without eBay's
+              number, which is every row recorded before migration 017. -#}
+          No condition code on this one, so it isn't placed among the others.
+        {%- elif stands.unplaced == 'no delivered price' -%}
+          No delivered price, so this one can't be placed among the others.
+        {%- else -%}
+          {%- if stands.listed == 1 -%}
+            The only {{ stands.condition_class }} copy listed now.
+          {%- elif stands.rank == 1 -%}
+            {{ 'Tied cheapest' if stands.tied else 'Cheapest' }}
+            of {{ stands.listed }} {{ stands.condition_class }} copies listed now.
+          {%- else -%}
+            {{ 'Tied ' if stands.tied }}{{ stands.rank | ordinal }} cheapest
+            of {{ stands.listed }} {{ stands.condition_class }} copies listed now.
+          {%- endif -%}
+          {#- The range spans every copy ever recorded, not only the ones still
+              for sale: a copy that has gone was a real book at a real price,
+              and dropping it would leave the range describing only what has
+              not sold — the slowest-moving end of the market. Suppressed when
+              it would be a single number wearing a dash. -#}
+          {%- if stands.seen > 1 and stands.low.amount != stands.high.amount %}
+            Asking {{ "%.2f"|format(stands.low.amount) }}–{{ stands.high }}
+            delivered across {{ stands.seen }} seen.
+          {%- endif -%}
+        {%- endif -%}
+      </div>
+    {% endif %}
   </div>
 </div>

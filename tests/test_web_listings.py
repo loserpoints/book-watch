@@ -641,3 +641,208 @@ def test_a_copy_with_no_stated_shipping_says_so_rather_than_guessing(book_client
 
     assert "Shipping not stated" in page
     assert "Under your limit" not in page
+
+
+# --- where this copy sits among the others -----------------------------------
+
+
+def make_certain(client, isbn="9780099448396", title="Crash"):
+    """Give every stored copy a declaration the catalogue recognises.
+
+    Copies reach `certain` on identifiers, never on text (decision 33), and
+    only a certain copy carries a standing — a rank against a set of copies it
+    might not belong to would be a rank for a different book.
+    """
+    with client.app.state.connect() as connection:
+        for row in connection.execute("SELECT item_id FROM copy"):
+            connection.execute(
+                "INSERT OR IGNORE INTO listing_declaration (item_id, isbn, author) "
+                "VALUES (?, ?, 'J. G. Ballard')",
+                (row["item_id"], isbn),
+            )
+        connection.execute(
+            "INSERT OR IGNORE INTO openlibrary_edition (isbn, found, title) "
+            "VALUES (?, 1, ?)",
+            (isbn, title),
+        )
+        connection.commit()
+
+
+def as_read(page):
+    """The page's text with whitespace collapsed, which is what a browser
+    renders. A sentence broken across lines in the template is one line on
+    screen, and asserting on the template's line breaks would make these
+    tests fail on a reflow that changed nothing anybody can see."""
+    return " ".join(page.split())
+
+
+def test_a_copy_says_where_it_sits_among_the_others(book_client):
+    client = book_client(
+        returning(
+            a_listing(
+                item_id="v1|1|0",
+                price=Money(Decimal("4.00"), "USD"),
+                shipping_cost=Money(Decimal("0.00"), "USD"),
+                condition_id="5000",
+            ),
+            a_listing(
+                item_id="v1|2|0",
+                price=Money(Decimal("30.00"), "USD"),
+                shipping_cost=Money(Decimal("0.00"), "USD"),
+                condition_id="5000",
+            ),
+        )
+    )
+    add_book(client, "9780099448396", "Crash")
+    client.get("/book/1")
+    make_certain(client)
+
+    page = as_read(client.get("/book/1").text)
+
+    assert "Cheapest of 2 used copies listed now." in page
+    assert "2nd cheapest of 2 used copies listed now." in page
+    assert "Asking 4.00–30.00 USD delivered across 2 seen." in page
+
+
+def test_a_new_copy_and_a_used_one_are_never_counted_together(book_client):
+    """Two markets rather than two grades. The page must not say 'cheapest of
+    3' where one of the three is shrink-wrapped stock from a bulk seller."""
+    client = book_client(
+        returning(
+            a_listing(
+                item_id="v1|1|0",
+                price=Money(Decimal("18.00"), "USD"),
+                shipping_cost=Money(Decimal("0.00"), "USD"),
+                condition_id="5000",
+            ),
+            a_listing(
+                item_id="v1|2|0",
+                price=Money(Decimal("21.00"), "USD"),
+                shipping_cost=Money(Decimal("0.00"), "USD"),
+                condition_id="1000",
+            ),
+        )
+    )
+    add_book(client, "9780099448396", "Crash")
+    client.get("/book/1")
+    make_certain(client)
+
+    page = as_read(client.get("/book/1").text)
+
+    assert "The only used copy listed now." in page
+    assert "The only new copy listed now." in page
+    assert "copies listed now" not in page
+
+
+def test_a_copy_with_no_stated_condition_says_so_rather_than_ranking(book_client):
+    client = book_client(
+        returning(
+            a_listing(
+                item_id="v1|1|0",
+                price=Money(Decimal("4.00"), "USD"),
+                shipping_cost=Money(Decimal("0.00"), "USD"),
+                condition=None,
+                condition_id=None,
+            )
+        )
+    )
+    add_book(client, "9780099448396", "Crash")
+    client.get("/book/1")
+    make_certain(client)
+
+    page = as_read(client.get("/book/1").text)
+
+    assert "didn&#39;t state a condition" in page or "didn't state a condition" in page
+    assert "cheapest" not in page.lower()
+
+
+def test_a_copy_with_words_but_no_code_does_not_contradict_itself(book_client):
+    """Every row recorded before migration 017 is this: eBay's words stored,
+    eBay's number parsed and dropped. A copy whose own line reads "Good" must
+    not be told it stated no condition — a page that contradicts itself in
+    public is not believed about the things it gets right."""
+    client = book_client(
+        returning(
+            a_listing(
+                item_id="v1|1|0",
+                price=Money(Decimal("4.00"), "USD"),
+                shipping_cost=Money(Decimal("0.00"), "USD"),
+                condition="Good",
+                condition_id=None,
+            )
+        )
+    )
+    add_book(client, "9780099448396", "Crash")
+    client.get("/book/1")
+    make_certain(client)
+
+    page = as_read(client.get("/book/1").text)
+
+    assert "Good" in page
+    assert "No condition code on this one" in page
+    assert "state a condition" not in page
+
+
+def test_nothing_on_the_page_says_a_copy_sold(book_client):
+    """Decision 47. We observe that a copy was listed at a price and later was
+    not; why it went is not something eBay will tell us. The wording is where
+    that distinction gets lost, so it is asserted rather than trusted."""
+    client = book_client(
+        returning(
+            a_listing(
+                item_id="v1|1|0",
+                price=Money(Decimal("4.00"), "USD"),
+                shipping_cost=Money(Decimal("0.00"), "USD"),
+                condition_id="5000",
+            ),
+            a_listing(
+                item_id="v1|2|0",
+                price=Money(Decimal("30.00"), "USD"),
+                shipping_cost=Money(Decimal("0.00"), "USD"),
+                condition_id="5000",
+            ),
+        )
+    )
+    add_book(client, "9780099448396", "Crash")
+    client.get("/book/1")
+    make_certain(client)
+
+    page = as_read(client.get("/book/1").text).lower()
+
+    for conclusion in ("sold for", "sold at", "went for", "fetched", "sale price"):
+        assert conclusion not in page
+
+
+def test_the_range_on_the_page_spans_copies_that_have_stopped_appearing(book_client):
+    """The page must hand the range the wider population, not the copies it is
+    drawing. Wiring a correct function to the narrower input passes every
+    unit test and is the failure decision 48 describes: a rank and a range
+    answer different questions and cannot read the same list.
+
+    A copy that has gone still happened. Losing it would leave the range
+    describing only what has *not* sold, which is the slowest-moving end of
+    the market — and it would silently narrow every time a book sold well."""
+    stock = [
+        a_listing(
+            item_id="v1|1|0",
+            price=Money(Decimal("4.00"), "USD"),
+            shipping_cost=Money(Decimal("0.00"), "USD"),
+            condition_id="5000",
+        ),
+        a_listing(
+            item_id="v1|2|0",
+            price=Money(Decimal("30.00"), "USD"),
+            shipping_cost=Money(Decimal("0.00"), "USD"),
+            condition_id="5000",
+        ),
+    ]
+    client = book_client(lambda query, limit, **_: list(stock))
+    add_book(client, "9780099448396", "Crash")
+    client.get("/book/1")
+    make_certain(client)
+
+    stock.pop()  # the $30 copy stops appearing
+    page = as_read(client.get("/book/1?refresh=1").text)
+
+    assert "The only used copy listed now." in page
+    assert "Asking 4.00–30.00 USD delivered across 2 seen." in page

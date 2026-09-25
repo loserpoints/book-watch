@@ -29,16 +29,9 @@ from book_watch.wantlist import Entry
 #: asked eBay about, and a number nobody has asked Open Library about, are
 #: both ordinary states rather than missing data.
 #:
-#: Restricted to the newest sweep **of one scope**, because copies are kept
-#: now rather than deleted and the page's question is still "what is buyable
-#: today". Scope matters: a US-only sweep and an everywhere sweep are
-#: different questions, and an everywhere sweep finds *fewer* US copies
-#: because imports displace them. So a view reads the newest sweep of its own
-#: scope rather than filtering one out of the other. The
-#: comparison is on a sweep id rather than a time: two sweeps a second apart
-#: are different sweeps and a timestamp cannot say so. `IS` rather than `=`
-#: so that a book with no sweep at all matches its copies instead of
-#: silently showing none.
+#: Unrestricted by sweep: this is every copy of the book we have ever
+#: recorded. What is *for sale* is a narrower question, and `_CURRENT_IN_SCOPE`
+#: below is what narrows it.
 _SELECT = """
 SELECT copy.item_id,
        copy.title,
@@ -47,6 +40,7 @@ SELECT copy.item_id,
        copy.currency,
        copy.shipping,
        copy.condition,
+       copy.condition_id,
        copy.seller,
        copy.thumbnail,
        copy.epid,
@@ -66,6 +60,24 @@ SELECT copy.item_id,
   LEFT JOIN openlibrary_edition AS identity
          ON identity.isbn = declaration.isbn AND identity.found = 1
  WHERE copy.work_id = ?
+"""
+
+
+#: Narrows `_SELECT` to what a sweep of one scope saw last time it ran — the
+#: page's "what is buyable today". Appended rather than built in, because the
+#: same columns answer a second question: what this book has ever been seen
+#: at, which is a statement about the market and must not be restricted to
+#: the copies that happen to be listed this minute.
+#:
+#: Scope matters and is not a filter over one set of results: a US-only sweep
+#: and an everywhere sweep are different questions, and an everywhere sweep
+#: finds *fewer* US copies because imports displace them out of the fifty
+#: slots. So a view reads the newest sweep of its own scope rather than
+#: filtering one out of the other. The comparison is on a sweep id rather
+#: than a time: two sweeps a second apart are different sweeps and a
+#: timestamp cannot say so. `IS` rather than `=` so that a book with no sweep
+#: at all matches its copies instead of silently showing none.
+_CURRENT_IN_SCOPE = """
    AND copy.item_id IN (
        SELECT seen.item_id FROM copy_seen AS seen
         WHERE seen.work_id = ? AND seen.scope = ?
@@ -86,6 +98,31 @@ Verdict = Literal[
     "under", "over", "shipping unstated", "another currency", "no ceiling"
 ]
 
+#: Which market a copy belongs to. Not three grades on one scale — new and
+#: used are two different markets, priced by different things: a new copy by
+#: publisher and distributor economics through bulk sellers, a used copy by
+#: scarcity and wear. Pooling them puts a floor under the used number that has
+#: nothing to do with the used market.
+ConditionClass = Literal["new", "used", "unknown"]
+
+#: eBay's id for a brand-new item. Every other id is some flavour of
+#: secondhand, Like New included: it has had an owner, which is the thing that
+#: separates the two markets.
+_BRAND_NEW = "1000"
+
+#: Why a copy could not be placed among the others, when it could not be.
+#: All three are ordinary states rather than errors, and they are told apart
+#: because they are different problems — the same reasoning that gives the
+#: ceiling two ways of saying "cannot tell" instead of one.
+#:
+#: "no condition code" is the awkward one and it is why this is three values
+#: rather than two. A copy can carry eBay's words without eBay's number: every
+#: row recorded before migration 017 does, because the number was parsed and
+#: dropped for months. Saying "the seller didn't state a condition" about a
+#: copy whose own line reads "Good" would be a visible contradiction, and a
+#: page that contradicts itself is not trusted about the things it gets right.
+Unplaced = Literal["no delivered price", "condition unstated", "no condition code"]
+
 
 @dataclass(frozen=True, slots=True)
 class Copy:
@@ -98,6 +135,11 @@ class Copy:
     shipping: Money | None
     tier: Tier
     condition: str | None = None
+    #: eBay's numeric condition id, kept because the display string beside it
+    #: cannot be grouped on. Decision 33 lost seven listings to trusting
+    #: eBay's category strings; these are localized and re-worded, and the
+    #: number is the part that holds still.
+    condition_id: str | None = None
     seller: str | None = None
     thumbnail: str | None = None
     category: str | None = None
@@ -113,6 +155,20 @@ class Copy:
     #: Whether eBay has been asked what this seller declared. False means the
     #: copy is graded on its listing name alone and may firm up later.
     looked_at: bool = True
+
+    @property
+    def condition_class(self) -> ConditionClass:
+        """Which market this copy is in, from the id and never from the words.
+
+        Unknown when eBay stated no id — which is both a seller who filled
+        nothing in and every copy recorded before the id was stored. It is
+        left as its own answer rather than folded into used: a copy that might
+        be shrink-wrapped and might be water-damaged is not evidence about
+        either market.
+        """
+        if self.condition_id is None:
+            return "unknown"
+        return "new" if self.condition_id == _BRAND_NEW else "used"
 
     @property
     def landed_cost(self) -> Money | None:
@@ -305,9 +361,9 @@ def store(
             """
             INSERT INTO copy (
                 item_id, work_id, title, url, price, currency, shipping,
-                condition, seller, thumbnail, epid, listed_at, located_in,
-                first_seen_at, last_seen_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                condition, condition_id, seller, thumbnail, epid, listed_at,
+                located_in, first_seen_at, last_seen_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                       datetime('now'), datetime('now'))
             ON CONFLICT (item_id, work_id) DO UPDATE SET
                 title = excluded.title,
@@ -316,6 +372,7 @@ def store(
                 currency = excluded.currency,
                 shipping = excluded.shipping,
                 condition = excluded.condition,
+                condition_id = excluded.condition_id,
                 seller = excluded.seller,
                 thumbnail = excluded.thumbnail,
                 epid = excluded.epid,
@@ -332,6 +389,7 @@ def store(
                 listing.price.currency,
                 shipping,
                 listing.condition,
+                listing.condition_id,
                 listing.seller,
                 listing.thumbnail_url,
                 listing.epid,
@@ -476,11 +534,147 @@ def for_entry(
     target = _target(connection, entry)
     copies = [
         _to_copy(row, target, entry)
-        for row in connection.execute(_SELECT, (entry.work_id, entry.work_id, scope))
+        for row in connection.execute(
+            _SELECT + _CURRENT_IN_SCOPE, (entry.work_id, entry.work_id, scope)
+        )
     ]
     order = {"certain": 0, "probable": 1, "possible": 2, "excluded": 3}
     copies.sort(key=lambda copy: (order[copy.tier], copy.sort_key))
     return copies
+
+
+def ever_seen(connection: sqlite3.Connection, entry: Entry) -> list[Copy]:
+    """Every copy of this book we have ever recorded, graded, in no order.
+
+    The wider of the two populations, and the one a *range* is taken over. A
+    copy that stopped appearing last week still happened: it was a real book
+    at a real asking price, and forgetting it the moment it sells would leave
+    the range describing only what is currently unsold, which is the slowest-
+    moving and most over-priced end of the market.
+
+    Not restricted by scope either. Which search found a copy is a fact about
+    us rather than about the book, and a range is a statement about the book.
+    """
+    target = _target(connection, entry)
+    return [
+        _to_copy(row, target, entry)
+        for row in connection.execute(_SELECT, (entry.work_id,))
+    ]
+
+
+@dataclass(frozen=True, slots=True)
+class Standing:
+    """Where one copy sits among the others of the same book and kind.
+
+    Two numbers about two different populations, which is the whole point of
+    keeping them in one object: a *rank* is about what you could buy instead
+    of this, right now, so it counts only copies currently listed — you
+    cannot be cheapest of a set including four that are gone. A *range* is
+    about what the book asks, so it spans every copy ever seen.
+    """
+
+    condition_class: ConditionClass
+    #: 1 is cheapest. None when this copy could not be placed, and `unplaced`
+    #: then says why.
+    rank: int | None = None
+    #: Whether something else is asking exactly the same. Without this, two
+    #: copies at $9.99 would both read "cheapest of 6" and the page would look
+    #: broken rather than tied.
+    tied: bool = False
+    #: How many copies the rank is out of — currently listed, same class.
+    listed: int = 0
+    low: Money | None = None
+    high: Money | None = None
+    #: How many copies the range spans. Always at least `listed`, because
+    #: everything listed now has also been seen.
+    seen: int = 0
+    unplaced: Unplaced | None = None
+
+
+def standings(listed: list[Copy], seen: list[Copy]) -> dict[str, Standing]:
+    """Place each listed copy among the others, by item id.
+
+    **Certain copies only, on both sides.** The possible tier ran at 8–14%
+    precision on the edition question (decision 33), so a range averaged
+    across it would mostly be other books, and a rank against it would be a
+    rank against a different title.
+
+    **Grouped by class and by currency.** The class split is the substantive
+    one and decision 51 argues it. The currency split is the same refusal to
+    compare that `against` makes: a range from £5 to $36 is not a range, and
+    putting a symbol on it would not make it one.
+
+    **Everything is a delivered price.** Price and postage are one number
+    here, as they are everywhere else in this project — a $7 book with $6
+    postage is a $13 book, and a seller who moves cost from one column to the
+    other must not be able to move their copy up the page by doing it.
+
+    Copies that cannot be placed get an entry saying so rather than no entry
+    at all. Silence would read as "nothing to report about this copy", when
+    what is true is "this copy withheld what the comparison needs".
+    """
+    listed_prices: dict[tuple[str, str], list[Decimal]] = {}
+    seen_prices: dict[tuple[str, str], list[Decimal]] = {}
+    for copies_in, prices in ((listed, listed_prices), (seen, seen_prices)):
+        for copy in copies_in:
+            placed = _placeable(copy)
+            if placed is None:
+                continue
+            prices.setdefault((copy.condition_class, placed.currency), []).append(
+                placed.amount
+            )
+
+    standing: dict[str, Standing] = {}
+    for copy in listed:
+        if copy.tier != "certain":
+            continue
+        kind = copy.condition_class
+        if kind == "unknown":
+            # Which kind of silence it was. A seller who filled nothing in is
+            # a different situation from a copy we recorded before the code
+            # was kept, and only the first is the seller's doing.
+            standing[copy.item_id] = Standing(
+                kind,
+                unplaced=(
+                    "condition unstated"
+                    if copy.condition is None
+                    else "no condition code"
+                ),
+            )
+            continue
+        delivered = copy.landed_cost
+        if delivered is None:
+            standing[copy.item_id] = Standing(kind, unplaced="no delivered price")
+            continue
+
+        key = (kind, delivered.currency)
+        here = sorted(listed_prices.get(key, []))
+        everything = seen_prices.get(key, [])
+        standing[copy.item_id] = Standing(
+            condition_class=kind,
+            # Competition ranking: two copies at the same price are both
+            # cheapest, and the next one along is third. Handing one of them
+            # first place because it sorted higher would be a coin toss
+            # presented as a finding.
+            rank=here.index(delivered.amount) + 1,
+            tied=here.count(delivered.amount) > 1,
+            listed=len(here),
+            low=Money(min(everything), delivered.currency) if everything else None,
+            high=Money(max(everything), delivered.currency) if everything else None,
+            seen=len(everything),
+        )
+    return standing
+
+
+def _placeable(copy: Copy) -> Money | None:
+    """What this copy counts as in a comparison, or None if it cannot count.
+
+    A copy needs three things to be comparable: to be certainly this book, to
+    be in a known market, and to have a price somebody could actually pay.
+    """
+    if copy.tier != "certain" or copy.condition_class == "unknown":
+        return None
+    return copy.landed_cost
 
 
 def unasked(copies: list[Copy]) -> list[str]:
@@ -579,6 +773,7 @@ def _to_copy(row: sqlite3.Row, target: Target, entry: Entry) -> Copy:
         else None,
         tier=grade(evidence, target, hunt=entry.hunt),
         condition=row["condition"],
+        condition_id=row["condition_id"],
         seller=row["seller"],
         thumbnail=row["thumbnail"],
         category=row["category"],

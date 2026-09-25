@@ -1,0 +1,34 @@
+-- What condition a copy is in, as eBay's number rather than as its words.
+--
+-- We have parsed `conditionId` out of every search response since the client
+-- was written and thrown it away one line later, keeping only the display
+-- string. That was fine while condition was something a reader glanced at. It
+-- stops being fine the moment anything groups by it, because grouping on a
+-- display string is the mistake decision 33 already paid for once: eBay's
+-- category *strings* cost us seven listings, and these strings are localized,
+-- re-worded, and not promised to be stable. The number is.
+--
+-- Three classes are derived from it and none are stored, per decision 43:
+--
+--   new       1000
+--   used      everything else, Like New included — it is still secondhand
+--   unknown   null, which is what a seller who stated nothing leaves
+--
+-- New and used are not two grades on one scale. They are two markets: a new
+-- copy's price comes from publisher and distributor economics through bulk
+-- sellers, a used copy's from scarcity and wear. *State of Grace* is the case
+-- that makes it concrete — five copies, all Brand New, all bulk sellers,
+-- $21–36. Pooled with used copies, "typical price $23" would be a statement
+-- about new inventory wearing a used book's clothes, and would make an $18
+-- used copy look like a find when it may be perfectly ordinary.
+ALTER TABLE copy ADD COLUMN condition_id TEXT;
+
+-- Existing rows stay null, and that is deliberate rather than lazy.
+--
+-- Mapping the stored display strings back to ids would be the exact thing the
+-- column exists to stop trusting, and it would buy very little: the record is
+-- days old and every page view sweeps (decision 48), so a copy still for sale
+-- gets a real id the first time somebody opens its book. The only rows that
+-- keep a null for ever are copies that had already stopped appearing, and for
+-- those the honest answer *is* unknown — we never captured the number and
+-- cannot go back for it, because a search only returns what is listed now.

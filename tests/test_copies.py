@@ -175,13 +175,21 @@ def test_deriving_asks_nobody_anything(database):
 # --- what a sweep keeps ------------------------------------------------------
 
 
-def a_listing(item_id="v1|1|0", price="9.99", *, shipping=None, condition="Good"):
+def a_listing(
+    item_id="v1|1|0",
+    price="9.99",
+    *,
+    shipping=None,
+    condition="Good",
+    condition_id=None,
+):
     return Listing(
         item_id=item_id,
         title="Stoner by John Williams",
         price=Money(Decimal(price), "USD"),
         item_web_url="https://www.ebay.com/itm/1",
         condition=condition,
+        condition_id=condition_id,
         seller="aseller",
         shipping_cost=Money(Decimal(shipping), "USD") if shipping else None,
         thumbnail_url=None,
@@ -459,3 +467,310 @@ def test_a_ceiling_never_hides_or_reorders_anything(database):
         "v1|1|0": "over",
         "v1|2|0": "under",
     }
+
+
+# --- where this copy sits among the others -----------------------------------
+#
+# Two populations, and keeping them apart is most of what these assert. A rank
+# counts what is listed *now*, because you cannot be cheapest of a set
+# including four copies that are gone. A range spans every copy ever seen,
+# because a copy that has left was still a real book at a real price.
+
+
+USED, LIKE_NEW, BRAND_NEW = "5000", "2750", "1000"
+
+
+def a_certain_copy(
+    connection,
+    work_id,
+    item_id,
+    *,
+    price="10.00",
+    shipping="0.00",
+    condition_id=USED,
+    currency="USD",
+    listed=True,
+    declared=STONER,
+    condition=None,
+):
+    """A copy that grades `certain`, priced and graded as a seller would.
+
+    `listed=False` is a copy that has stopped appearing: still recorded, still
+    part of what this book has been seen at, no longer something you can buy.
+    """
+    a_copy_declaring(connection, work_id, item_id, declared)
+    connection.execute(
+        "UPDATE copy SET price = ?, shipping = ?, currency = ?, "
+        "       condition_id = ?, condition = ? "
+        " WHERE item_id = ? AND work_id = ?",
+        (price, shipping, currency, condition_id, condition, item_id, work_id),
+    )
+    if not listed:
+        connection.execute(
+            "DELETE FROM copy_seen WHERE item_id = ? AND work_id = ?",
+            (item_id, work_id),
+        )
+    connection.commit()
+
+
+def standing_for(connection, entry):
+    return copies.standings(
+        copies.for_entry(connection, entry), copies.ever_seen(connection, entry)
+    )
+
+
+def test_a_new_copy_does_not_move_a_used_copys_rank(database):
+    """The heart of the slice. New and used are two markets, not two grades on
+    one scale: a new copy is priced by distributor economics through bulk
+    sellers and a used one by scarcity and wear. Pooling them would put a
+    floor under the used number that has nothing to do with the used market —
+    and would make an ordinary used copy look like a find."""
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
+    a_certain_copy(database, book.work_id, "v1|2|0", price="24.00")
+    a_certain_copy(
+        database, book.work_id, "v1|3|0", price="4.00", condition_id=BRAND_NEW
+    )
+
+    stands = standing_for(database, book)
+
+    # The $4 new copy is cheaper than both used copies and changes neither.
+    assert (stands["v1|1|0"].rank, stands["v1|1|0"].listed) == (1, 2)
+    assert (stands["v1|2|0"].rank, stands["v1|2|0"].listed) == (2, 2)
+    assert (stands["v1|3|0"].rank, stands["v1|3|0"].listed) == (1, 1)
+    assert stands["v1|1|0"].condition_class == "used"
+    assert stands["v1|3|0"].condition_class == "new"
+
+
+def test_the_range_never_reaches_across_the_two_markets(database):
+    """The same split, applied to the range rather than the rank."""
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
+    a_certain_copy(database, book.work_id, "v1|2|0", price="36.00")
+    a_certain_copy(
+        database, book.work_id, "v1|3|0", price="4.00", condition_id=BRAND_NEW
+    )
+
+    used = standing_for(database, book)["v1|1|0"]
+
+    assert (used.low.amount, used.high.amount) == (Decimal("18.00"), Decimal("36.00"))
+    assert used.seen == 2
+
+
+def test_like_new_is_still_a_used_copy(database):
+    """It has had an owner, which is the thing that separates the markets.
+    'Like New' is a grade within secondhand, not a second kind of new."""
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
+    a_certain_copy(
+        database, book.work_id, "v1|2|0", price="24.00", condition_id=LIKE_NEW
+    )
+
+    stands = standing_for(database, book)
+
+    assert stands["v1|2|0"].condition_class == "used"
+    assert stands["v1|1|0"].listed == 2
+
+
+def test_the_class_comes_from_the_id_and_never_from_the_words(database):
+    """Decision 33 lost seven listings to trusting eBay's category strings.
+    The display string is localized and re-worded; the number is not. So a
+    copy whose words say one thing and whose id says another follows the id."""
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(
+        database, book.work_id, "v1|1|0", condition_id=USED, condition="Brand New"
+    )
+
+    assert standing_for(database, book)["v1|1|0"].condition_class == "used"
+
+
+def test_a_copy_alone_in_its_class_says_so_rather_than_ranking(database):
+    """ "Cheapest of 1" is a true sentence that tells you nothing and sounds
+    like it told you something."""
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
+
+    alone = standing_for(database, book)["v1|1|0"]
+
+    assert (alone.rank, alone.listed) == (1, 1)
+
+
+def test_the_range_spans_copies_that_are_no_longer_listed(database):
+    """A copy that has gone still happened. Dropping it would leave the range
+    describing only what has *not* sold — the slowest-moving and most
+    over-priced end of the market."""
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", price="30.00")
+    a_certain_copy(database, book.work_id, "v1|2|0", price="12.00", listed=False)
+
+    here = standing_for(database, book)["v1|1|0"]
+
+    # Alone on the shelf, but not alone in the record.
+    assert here.listed == 1
+    assert here.seen == 2
+    assert (here.low.amount, here.high.amount) == (Decimal("12.00"), Decimal("30.00"))
+
+
+def test_a_vanished_copy_gets_no_standing_of_its_own(database):
+    """It is part of the range and absent from the page. Nothing to place."""
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", price="30.00")
+    a_certain_copy(database, book.work_id, "v1|2|0", price="12.00", listed=False)
+
+    assert "v1|2|0" not in standing_for(database, book)
+
+
+def test_rank_is_on_the_delivered_price_not_the_asking_one(database):
+    """Price and postage are one number here. A seller who moves cost from the
+    price into the postage must not be able to move their copy up the page by
+    doing it — that is the whole reason the ceiling is delivered too."""
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "cheap|ask", price="7.00", shipping="6.00")
+    a_certain_copy(database, book.work_id, "cheap|real", price="10.00", shipping="0.00")
+
+    stands = standing_for(database, book)
+
+    assert stands["cheap|real"].rank == 1
+    assert stands["cheap|ask"].rank == 2
+
+
+def test_a_ceiling_does_not_change_where_a_copy_ranks(database):
+    """A rank is about the market; a ceiling is about you. A copy over your
+    limit is still one of the copies the cheaper ones are cheaper *than*."""
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", price="4.00")
+    a_certain_copy(database, book.work_id, "v1|2|0", price="40.00")
+
+    without = standing_for(database, book)["v1|1|0"]
+    wantlist.set_ceiling(database, book.id, "10.00", "USD")
+    database.commit()
+    with_limit = standing_for(database, wantlist.get(database, book.id))["v1|1|0"]
+
+    assert (with_limit.rank, with_limit.listed) == (without.rank, without.listed)
+    assert with_limit.listed == 2
+
+
+def test_a_copy_with_no_stated_condition_is_not_ranked(database):
+    """Its own class of one, which means it mostly says nothing — the honest
+    outcome. Two copies that might each be shrink-wrapped or water-damaged are
+    not evidence about one another."""
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", condition_id=None)
+    a_certain_copy(database, book.work_id, "v1|2|0", condition_id=None)
+
+    stands = standing_for(database, book)
+
+    assert stands["v1|1|0"].unplaced == "condition unstated"
+    assert stands["v1|1|0"].rank is None
+
+
+def test_words_without_a_code_are_a_different_silence(database):
+    """A copy can carry eBay's words without eBay's number — every row
+    recorded before the code was kept does. That is not the seller staying
+    quiet, and the page must not say it was."""
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(
+        database, book.work_id, "v1|1|0", condition_id=None, condition="Good"
+    )
+
+    assert standing_for(database, book)["v1|1|0"].unplaced == "no condition code"
+
+
+def test_an_unstated_condition_does_not_enter_anyone_elses_range(database):
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
+    a_certain_copy(database, book.work_id, "v1|2|0", price="24.00")
+    a_certain_copy(database, book.work_id, "v1|3|0", price="99.00", condition_id=None)
+
+    used = standing_for(database, book)["v1|1|0"]
+
+    assert used.seen == 2
+    assert used.high.amount == Decimal("24.00")
+
+
+def test_a_copy_without_a_delivered_price_cannot_be_placed(database):
+    """Same refusal the ceiling makes. Unstated postage is not free and not
+    infinite, and a rank built on either guess is a claim rather than a sort."""
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", price="18.00", shipping=None)
+    a_certain_copy(database, book.work_id, "v1|2|0", price="24.00")
+
+    stands = standing_for(database, book)
+
+    assert stands["v1|1|0"].unplaced == "no delivered price"
+    assert stands["v1|1|0"].rank is None
+    # And it is absent from the population it could not join.
+    assert stands["v1|2|0"].listed == 1
+    assert stands["v1|2|0"].seen == 1
+
+
+def test_currencies_do_not_pool(database):
+    """A range from £5 to $36 is not a range, and a symbol would not make it
+    one. Decision 50 refuses the same comparison for the ceiling."""
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
+    a_certain_copy(database, book.work_id, "v1|2|0", price="5.00", currency="GBP")
+
+    stands = standing_for(database, book)
+
+    assert stands["v1|1|0"].listed == 1
+    assert stands["v1|1|0"].seen == 1
+    assert stands["v1|2|0"].listed == 1
+
+
+def test_two_copies_at_the_same_price_are_both_cheapest(database):
+    """Handing one of them first place because it sorted higher would be a
+    coin toss presented as a finding."""
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", price="9.99")
+    a_certain_copy(database, book.work_id, "v1|2|0", price="9.99")
+    a_certain_copy(database, book.work_id, "v1|3|0", price="20.00")
+
+    stands = standing_for(database, book)
+
+    assert (stands["v1|1|0"].rank, stands["v1|1|0"].tied) == (1, True)
+    assert (stands["v1|2|0"].rank, stands["v1|2|0"].tied) == (1, True)
+    # Competition ranking: the next one along is third, not second.
+    assert (stands["v1|3|0"].rank, stands["v1|3|0"].tied) == (3, False)
+
+
+def test_only_copies_that_are_certainly_this_book_are_compared(database):
+    """The possible tier ran at 8–14% precision on the edition question, so a
+    range across it would mostly be other books and a rank against it would be
+    a rank against a different title."""
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
+    a_certain_copy(database, book.work_id, "v1|2|0", price="24.00")
+    # Declares a number the catalogue calls a different book entirely.
+    a_certain_copy(database, book.work_id, "v1|3|0", price="1.00", declared=GILLMOR)
+
+    stands = standing_for(database, book)
+
+    assert "v1|3|0" not in stands
+    assert stands["v1|1|0"].rank == 1
+    assert stands["v1|1|0"].listed == 2
+
+
+def test_the_condition_id_survives_a_sweep(database):
+    """It has arrived in every search response since the client was written
+    and been dropped one line later."""
+    book = a_book(database, "Stoner", "John Williams")
+    swept(database, book.work_id, [a_listing(condition="Good", condition_id=USED)])
+    database.commit()
+
+    stored = database.execute(
+        "SELECT condition_id FROM copy WHERE item_id = 'v1|1|0'"
+    ).fetchone()
+    assert stored["condition_id"] == USED
+
+
+def test_a_copy_recorded_before_the_id_was_stored_reads_as_unknown(database):
+    """Existing rows are not backfilled from the display string — that is the
+    exact thing the column exists to stop trusting. Unknown is the truth."""
+    book = a_book(database, "Stoner", "John Williams")
+    a_copy_declaring(database, book.work_id, "v1|1|0", STONER)
+
+    only = copies.for_entry(database, book)[0]
+
+    assert only.condition_id is None
+    assert only.condition_class == "unknown"

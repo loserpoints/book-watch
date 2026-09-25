@@ -3,7 +3,7 @@
 Short entries, one per decision that would be expensive to reverse or annoying
 to re-argue. Each states what was chosen, what else was considered, and why.
 
-*Last updated: 2026-09-24*
+*Last updated: 2026-09-25*
 
 ---
 
@@ -2292,3 +2292,152 @@ as free failed two tests, as it should. Making the ceiling filter failed
 nothing — because the test fetched its entry *before* setting the ceiling, so
 the code under test saw no ceiling at all and could not have filtered. The
 test was asserting nothing. Fixed, and the mutation now fails it.
+
+## 51. Every price in this project is a delivered price
+
+**Decision.** Price and postage are one number, everywhere, with no second
+number beside it that means "before postage". The ceiling compares delivered
+cost (decision 50), the sort ranks on it, and the rank and range added by S21
+are computed on it. Where a delivered price cannot be known, the copy is not
+placed rather than placed on a guess.
+
+**Why it is stated as a theme rather than settled per feature.** It came up
+for the third time in S21 — is a rank on the asking price or the landed one —
+having already been answered for the ceiling and for the sort. Answering it
+once per feature is how a tool ends up with two meanings of "cheap" on one
+page, and the reader has no way to know which one a given line used.
+
+**The argument is the all-in pricing argument.** A $7 book with $6 postage is
+a $13 book. Splitting the two lets a seller list lower than they charge, which
+is a thing sellers do deliberately: shipping is a place to park margin where
+it does not show up in a sort. Online marketplaces have the same problem
+ticketing does, and the answer the industry converged on — show the number
+somebody pays — is the right one here for the same reason.
+
+**What we give up by not distinguishing them.** There is a real signal in the
+split, and it is about the seller rather than about the copy: the best sellers
+tend to ship free and put everything in the price, while a listing with
+unusually high postage under a low price is at least a hint about who you are
+dealing with. That is a seller-trust signal, and seller trust is #75. Nothing
+reads it today, so nothing is lost by treating the two columns as one now, and
+#75 can go back to the raw columns — which are both still stored — when there
+is something to do with them.
+
+**Both columns stay stored.** This is a decision about what anything
+*compares*, never about what we keep. `copy.price` and `copy.shipping` are
+recorded separately, as is every sighting, so the split is recoverable.
+
+---
+
+## 52. New and used are two markets, and never pool
+
+**Decision.** A copy's condition class comes from eBay's `conditionId` and
+never from its display string. Three classes: new (`1000`), used (everything
+else, Like New included), unknown (no id). A rank or a range is computed
+within one class, and no output crosses two. Migration 017.
+
+**Two markets, not two grades on one scale.** A new copy's price comes from
+publisher and distributor economics through bulk sellers; a used copy's from
+scarcity and wear. Pooling them puts a floor under the used number that has
+nothing to do with the used market.
+
+*State of Grace* is the case that makes it concrete: five copies, **all Brand
+New**, $21–36, all bulk sellers. Pooled, "typical price $23" would be a
+statement about new inventory wearing a used book's clothes, and would make an
+$18 used copy look like a find when it may be perfectly ordinary.
+
+*Breaking and Entering*'s twelve copies split 9 used, 2 new, 1 unknown — 3
+Very Good, 3 Good, 2 Acceptable, 2 Brand New, 1 Like New, 1 with nothing
+stated.
+
+**The cost is not doubled records.** It is the same records partitioned, so
+each group is smaller, and "not enough to say" becomes the common path rather
+than an edge case. *State of Grace* has **zero** used copies and will until
+one appears. That is the correct answer for that book.
+
+**Like New is used.** It has had an owner, which is the thing that separates
+the two markets. It is a grade within secondhand, not a second kind of new.
+
+**From the number, never from the words.** eBay's display strings are
+localized, re-worded, and not promised to be stable. Decision 33 already lost
+seven listings to trusting eBay's category strings, and this is the same trap
+with a different field. The number is the part that holds still. We had been
+parsing `conditionId` out of every search response since the client was
+written and dropping it one line later.
+
+**Existing rows are not backfilled**, and that is deliberate. Mapping stored
+display strings back to ids would be the exact thing the column exists to stop
+trusting, and it would buy very little: the record is days old and every page
+view sweeps (decision 48), so a copy still for sale gets a real id the first
+time somebody opens its book. The rows that keep a null for ever are copies
+that had already stopped appearing, and for those the honest answer *is*
+unknown — we never captured the number and cannot go back for it, because a
+search only returns what is listed now.
+
+**Which forced a third answer rather than two.** A copy can carry eBay's words
+without eBay's number, and every row written before migration 017 does. Saying
+"the seller didn't state a condition" about a copy whose own line reads "Good"
+is a visible self-contradiction, and a page that contradicts itself in public
+is not believed about the things it gets right. So "no condition code" is a
+separate state from "condition unstated" — the same reasoning that gives the
+ceiling two ways of saying "cannot tell" instead of one.
+
+---
+
+## 53. A rank counts what is listed; a range counts everything seen
+
+**Decision.** Two populations, deliberately different, both restricted to
+copies graded *certain*:
+
+| Output | Reads |
+|---|---|
+| Rank — "cheapest of 6 used copies listed now" | Copies **currently listed**, in the scope being viewed |
+| Range — "asking $18–36 delivered across 9 seen" | **Every** copy ever recorded for this work, same class |
+
+**Why a rank cannot span both.** You cannot be cheapest of a set including
+four copies that are gone. A rank answers "what could I buy instead of this,
+right now", and a copy that ended is not an alternative.
+
+**Why a range cannot be narrowed to the shelf.** A copy that has gone still
+happened: it was a real book at a real asking price. Dropping it would leave
+the range describing only what has *not* sold — the slowest-moving and most
+over-priced end of the market — and it would narrow the range *more* the
+better the book sells, which is precisely backwards.
+
+**Certain only, on both sides.** The possible tier ran at 8–14% precision on
+the edition question (decision 33), so a range averaged across it would mostly
+be other books, and a rank against it would be a rank against a different
+title.
+
+**The range is not restricted by scope, and the rank is.** Which search found
+a copy is a fact about us; a range is a statement about the book. A rank is
+about what is in front of you, which is scope-shaped by definition.
+
+**Independent of the ceiling.** A rank counts copies over your limit, because
+the rank is about the market and the ceiling is about you. A copy priced out
+of your reach is still one of the copies the cheaper ones are cheaper *than*.
+
+**Ties are joint.** Two copies at the same delivered price are both cheapest
+and the next one along is third. Handing one of them first place because it
+sorted higher would be a coin toss presented as a finding — and two rows both
+reading "cheapest of 6" would look like a bug rather than a tie.
+
+**Currencies do not pool either**, for decision 50's reason: a range from £5
+to $36 is not a range, and putting a symbol on it would not make it one.
+
+**A known limitation, stated rather than solved: relists inflate the count.**
+A relisted copy is the same physical book under a new item id, so "cheapest of
+9" may really be "cheapest of 7" with one seller counted three times. Identity
+across relists is M6's problem; decision 44 records the lead. The count gets
+less trustworthy the longer a book sits.
+
+**Nothing here may imply a copy sold.** Every figure is an asking price and is
+worded as one, per decision 47. A test asserts the rendered page contains none
+of "sold for", "sold at", "went for", "fetched" or "sale price", because the
+wording is where that distinction gets lost.
+
+**A mutation found a real gap.** Wiring the range to the *listed* population
+instead of the seen one broke nothing: the rule was tested on the function and
+not on the page. That is decision 48's failure exactly — a correct function on
+the wrong input, passing every test — so there is now a page-level test that
+a copy which has stopped appearing still widens the range.
