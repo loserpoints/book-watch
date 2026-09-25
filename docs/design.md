@@ -175,11 +175,20 @@ So "any combination" is not true today. The copy says what is true — title,
 optionally with author, or an ISBN — unless an author-only search is built,
 which is a behaviour change and not M6's.
 
-Also noted for S30, not decided here:
+Further calls, same day:
 
+- **Title and author by default, ISBN behind a switch.** An ISBN is a hard
+  match and a title is a search; they are two different ways in, and the form
+  should look like it. The panel opens on title-and-author, with a control to
+  flip to ISBN.
 - **The whole candidate row is the tap target**, not only "This one"
-  (principle 5)
-- **Adding closes the panel** and leaves the new row in view, checking itself
+  (principle 5). The small button already caused a mis-tap in production.
+- **Author-only search, adding several books at once**: wanted, and a
+  behaviour change, so it is #101 rather than M6.
+
+**Open question: does adding close the panel?** Closing it shows the new row
+checking itself. Keeping it open is what adding several books by one author
+(#101) needs. Alan leans towards keeping it open; settle it with #101.
 
 ## Open
 
