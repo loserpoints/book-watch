@@ -127,9 +127,21 @@ Alan's calls, 2026-09-25, against the labelled screenshot:
 | B5 | Under or over the limit is shown by colouring the price, not by words |
 | B5 | The seen range becomes a small picture — a distribution, or a bar, with a mark for the current cheapest — to the right of the text rather than in it |
 | B5 | "Nothing listed" still has to be said, but shortly — a count of what is listed, for instance |
-| B6 | Remove becomes a trash icon |
+| B6 | Remove becomes a trash icon, and keeps its "Remove Crash from the list?" confirmation |
+| B3 | The ISBN leaves this screen; it stays on the book page |
+| B4 | "Still digging" stays: it is the transparency principle 3 asks for. Ideally visual rather than words — how is S27's problem |
+| B5 | "Checked 2 hours ago" stays per row, shortened. A single list-wide age was rejected: a book just added makes any one number wrong for the rest |
+| B5 | *Checking* and *Couldn't check* are both shown. *Not checked yet* is rare since S23 checks on add, but still real (see below) |
+| B5 | No used/new label. Which market the row reports is unchanged — used, falling back to new when there is no used copy (decision 52 still governs what is computed; this only drops the word) |
+| B5 | When no copy is certain, the row says so as a count: "2 maybes" |
+| B5 | Books with no limit, or whose cheapest copy has unknown shipping, get an uncoloured price |
+| B5 | Colour is paired with a symbol, to be chosen in S27. Not an arrow: arrows read as a trend, and this is a comparison with a fixed line |
 
-Still to settle for this screen: the facts the calls above did not cover.
+**Why "not checked yet" survives S23.** Adding a book starts its check from
+the page, so closing the tab first leaves it unchecked. A check that fails is
+not stored either, so after a reload a failed book reads as unchecked. And
+books added before S23 were never checked. Rare, but it has to look different
+from "nothing listed", which is a claim about the market.
 
 ## Open
 
