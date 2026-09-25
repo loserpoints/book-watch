@@ -48,41 +48,6 @@ renumbers. Two rules keep that from costing anything:
 
 ---
 
-## M5 · The whole list, in one look
-
-**Goal.** The want-list answers "is anything worth buying right now" without my
-opening a single book. Each entry shows its cheapest copy, what the market has
-asked for that book, and whether anything is under my ceiling. One action
-checks every book on the list.
-
-**Jobs advanced.**
-
-- **J1**, substantially but not to its test. The list stops being a list of
-  names and becomes a view of the market.
-- **J2**, in part: the narrowing now happens across the whole list at once
-  rather than one book at a time.
-
-**Why here.** *What I will pay* built the judgement and put it on the wrong
-screen. A ceiling, a rank and a range are all answers to "should I buy this",
-and that question is asked while looking at the list — the book page is where
-you go once the answer is probably yes. Ten books meant ten page opens to find
-out nothing had changed, which is the manual searching the brief exists to
-remove, wearing different clothes.
-
-**Why it is not J1 finished.** J1's test is explicit: *if opening the app is
-what triggers the search, this isn't done.* A button is still me deciding to
-look. This milestone makes looking cheap; *Always current* makes looking
-unnecessary, and the distinction is worth keeping rather than blurring because
-the button feels good enough.
-
-**The open question.** How the cascade behaves on a list several times longer
-than today's. Ten books at roughly two seconds each is fine and thirty is
-probably still fine; the brief says dozens, and at some length a sequential
-walk stops being acceptable and the answer becomes the poll rather than a
-faster cascade.
-
----
-
 ## M6 · Judge a copy at a glance
 
 **Goal.** A visual language the whole app is built in, so a copy can be ruled
@@ -465,3 +430,58 @@ current listings** is what shipped, because it needs no floor, works at two
 observations, and claims nothing about value. Our own observed history is
 accumulating underneath it and is still the compounding asset it was argued to
 be — it is simply not yet old enough to say anything.
+
+---
+
+### M5 · The whole list, in one look
+
+**Delivered 2026-09-25.** The want-list shows each book's cheapest copy, what
+its market has asked, and whether anything is under the ceiling. *Check all*
+walks the shelf one book at a time; a book added checks itself. The range moved
+off every copy and above the list it describes.
+
+**What it taught.**
+
+- **A range belongs to the class, not the copy.** Shipping it per copy — which
+  is what the slice specified — rendered the same nine-word clause eight times
+  on a twelve-copy book, crowding out the one thing that varies. Reading the
+  result was the only way to see it; the spec looked right.
+- **The walk skipped its first book, silently.** The step that starts a run
+  rendered book one as "checking" and pointed the chain at book two, so book
+  one sat in that state for ever, was never searched, and the run reported one
+  book too few while otherwise looking correct. The first step has nothing to
+  report and only a book to start — treating it as though it had finished
+  something is what cost the book.
+- **A row has four states and three are easy to say wrongly.** Nobody has
+  looked, nothing is listed, copies are listed but none can be compared, and
+  here is the cheapest one. "Nothing listed in the US" over a book nobody has
+  searched for is a confident claim about a market we never asked about, and it
+  is what the obvious implementation says. It is also wrong over copies in the
+  *might be this book* tier: those copies exist.
+- **Driving the thing before writing its tests found all three.** None came
+  from the suite, and a test written from the spec would plausibly have missed
+  the first two.
+- **The debt was not where it was expected.** The refactor survey was prompted
+  by the reasonable guess that early code would be the worst; the early modules
+  are the best in the repo. Early boundaries were drawn when each job was
+  genuinely small, and early mistakes did not survive — *Keep what we saw*
+  rewrote the stored conclusions and migrations 010, 012 and 015 dropped
+  superseded columns. What needs watching is any file that grew 60% in three
+  days.
+- **There was no performance problem to find.** Ten books with twelve copies
+  each render in 12.2ms over 72 queries. The duplication that was removed was
+  removed for legibility, and saying so kept the sweep honest about its own
+  value.
+- **Moving code is how two dead tests were found.** One existed to stop the
+  search client being made eager — its docstring said so — and had been passing
+  while patching a module the client had left. Neither turned up by looking for
+  them; both turned up because a refactor forced them to move.
+- **Mutation testing keeps earning its place, and one mutation lied.** A string
+  replacement silently failed to apply and the "pass" meant nothing. A mutation
+  result is only evidence once the source is confirmed changed.
+
+**Twice now, on process.** Uncommitted work was reverted with `git checkout`
+while undoing a mutation — the same mistake *Keep what we saw* recorded — and
+a `check.sh` run was piped through `grep`, which masks its exit code, so a
+failing lint read as green. Mutation testing needs a committed tree, and a
+check's exit status needs reading.
