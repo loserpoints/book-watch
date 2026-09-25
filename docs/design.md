@@ -56,7 +56,7 @@ screen at a time turned out to be the unit a decision can actually be made in.
 2. **The want-list** *(below)*
 3. **Adding a book** *(below)*
 4. **The book page, around the copies** *(below)*
-5. A copy
+5. **A copy** *(below)*
 6. The mock-up, tying it together
 
 ### 1. Inventory, as of S25
@@ -203,6 +203,21 @@ Found on the way:
 - **That text lives in the ISBN field**, which accepts anything after one
   refusal. A better home is the title search, when it finds nothing — logged
   on #101.
+
+### 5. A copy
+
+Alan's calls, 2026-09-25: the facts are right, and the row is far too
+text-heavy. It has to get more visual.
+
+| # | Call |
+|---|---|
+| C1 | Tapping the photo enlarges it |
+| C9 | The price/shipping split goes. The delivered price alone is enough (both stay stored, decision 51) |
+| C3 | "Can't tell" copies sort below every copy with a known delivered price, rather than by their price alone — #104 |
+| C3 | A copy whose price alone is already over the limit is over, whatever the postage — #103 |
+| C3 | Over the limit must be marked. It is computed and never rendered — a bug against decision 50, #103 |
+| new | Dismiss a copy into a collapsed *Dismissed* group — #105. Imperfect across relists, and accepted as such |
+| J3 | Ex-library and jacket condition: a modal with the full listing is barely better than opening eBay. What would beat it is the seller's condition note and all the photos, which the item call already made once per listing returns and we drop — #106 |
 
 ## Open
 
