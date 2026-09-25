@@ -137,6 +137,19 @@ Alan's calls, 2026-09-25, against the labelled screenshot:
 | B5 | Books with no limit, or whose cheapest copy has unknown shipping, get an uncoloured price |
 | B5 | Colour is paired with a symbol, to be chosen in S27. Not an arrow: arrows read as a trend, and this is a comparison with a fixed line |
 
+**Checking, intent only — names and form tabled.** Three needs, no settled
+design:
+
+1. A way to check the books that have gone stale
+2. It has to be clear that a book checked within the hour is skipped, and
+   why — before the tap, not only after it
+3. A separate control that overrides the hour and checks everything
+
+Candidates looked at and not chosen: *Update (2)* / *Check all*, where the
+count says how many are stale and reads *All current* at zero; *Refresh* /
+*Refresh everything*; *Check what's stale* / *Check all now*. Revisit in S27
+or S30, with the look in front of us.
+
 **Why "not checked yet" survives S23.** Adding a book starts its check from
 the page, so closing the tab first leaves it unchecked. A check that fails is
 not stored either, so after a reload a failed book reads as unchecked. And
