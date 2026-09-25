@@ -41,6 +41,34 @@ A config file would have been the smallest thing that works, and was seriously
 considered. The UI was chosen anyway because adding a book needs to take under
 thirty seconds or I won't do it, and hand-editing YAML doesn't clear that bar.
 
+> **Revisited 2026-09-25, at the start of M6, and kept.** The premise above —
+> four deliberately unambitious screens — is gone: M6 builds a design system,
+> the app is now meant to live on a phone, and a Play Store build is a
+> possible later. The conclusion survived for different reasons, which are the
+> ones to re-argue next time:
+>
+> - **The platform now does what a build step used to.** Custom properties,
+>   nesting, `@layer`, `color-mix()`, `light-dark()`, container queries and
+>   `:has()` are all native, so tokens, themes and components-as-Jinja-macros
+>   need no preprocessor. One reader on a current browser needs no
+>   compatibility layer.
+> - **Nothing the reference apps do needs a framework.** Lists, detail pages,
+>   one-tap filters and a one-field add screen are server-rendered pages with
+>   htmx. What a framework would genuinely buy — command palettes, drag and
+>   drop, rich in-page state — is not in the design.
+> - **An installable phone app needs no build either.** A web app manifest and
+>   a service worker make it installable from the browser.
+> - **The one real translation is to email**, whose clients ignore custom
+>   properties. That is solved in Python at send time by inlining styles, which
+>   means tokens must be data Python can read, not only CSS.
+>
+> **What it costs.** No utility-class vocabulary (Tailwind's enforced spacing
+> scale is the real loss), so token discipline is enforced by a test instead.
+> **What would reopen it:** a design that needs rich client-side interaction,
+> which is a framework question and not a build-step one. A Play Store wrapper
+> needs Node at packaging time, in CI; that is a packaging step, not a build
+> step for the app, and does not reopen this.
+
 ---
 
 ## 3. SQLite, with the schema in plain SQL

@@ -69,7 +69,11 @@ itself, checked in one action. The email exists for the days I forget to look.
 - **Reselling or arbitrage.** This is for a reader. That framing is what makes
   it different from the closest existing tools.
 - **Multiple users, accounts, or auth.** One user.
-- **A mobile app.** Email is the notification channel.
+- **A public app, or other users.** It installs on my phone as a web app, and
+  is designed phone-first. A Play Store build for my own phone is a possible
+  later; a public release is not, because it needs auth, per-user eBay quota,
+  and a way off Open Library's live API — the backend, not the screens, is the
+  expensive half. Email stays the notification channel.
 
 ## Success criteria
 
