@@ -112,6 +112,13 @@ form.override { margin-top: 0.5rem; }
    line before it: these belong with the page's other framing, not as
    free-standing paragraphs. */
 .market { margin: 0.15rem 0; }
+/* What the want-list says about a book without opening it. */
+.glance { margin-top: 0.2rem; }
+.sweep { display: flex; gap: 0.75rem; align-items: center; margin: 0.75rem 0 0.25rem; }
+.sweep a { font-size: 0.875rem; }
+#sweep-runner:empty { display: none; }
+/* Only while a walk is actually running, so a finished list is quiet. */
+.sweeping { font-style: italic; }
 /* The dotted underline is the only thing telling a reader there is more to
    read. Without it the hover is a secret. */
 span.digging[title], .digging span[title] {

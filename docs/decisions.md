@@ -2533,3 +2533,39 @@ which is *Always current*'s job — and J1's test already says so: if opening th
 app is what triggers the search, that job is not done. This decision makes
 looking cheap. It does not make it unnecessary, and it should not be mistaken
 for having done so.
+
+**Built 2026-09-25, and three things only showed up once it ran.**
+
+*The walk skipped its first book, silently.* The step that starts the run
+rendered book one as "checking" and pointed the chain at book **two**, so book
+one sat in that state for ever and was never searched — while the run reported
+one book too few and otherwise looked correct. The cause was treating the first
+step as though it had finished something. It has not: it has nothing to report
+and only a book to start. The rule that falls out is that **the row a step
+finishes and the row a step starts are different rows**, and the first step has
+only the second.
+
+*A row has four states, not two, and three of them are easy to say wrongly.*
+Nobody has looked; nothing is listed; copies are listed but none can be
+compared; here is the cheapest one. The dangerous one is the first: "nothing
+listed in the US" printed over a book nobody has ever searched for is a
+confident claim about a market we never asked about, and it is what the
+obvious implementation says.
+
+*"Nothing listed" is also wrong over uncertain copies.* A book whose copies all
+sit in the *might be this book* tier has copies — they are on the market, we
+just cannot swear they are the right book. The glance counts those separately
+and says "nothing certain listed, 3 that might be", because the alternative is
+a list that reports an empty market while the page one click away shows three
+copies.
+
+**The counter is carried, not recounted.** Each step is its own request and
+knows only what it was told, so "Checked 3 books" comes from a number threaded
+through the chain. The first version recounted per step and reported "Checked 1
+book" after every run.
+
+**Mutation testing found a rule with no test**, again. Removing the per-book
+hour gate broke nothing, because the queue already filters out books inside it
+— so the check only bites when the endpoint is reached directly, which is
+exactly what a freshly added book does and what reloading that page would do
+again. Tested now.

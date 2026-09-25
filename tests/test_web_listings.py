@@ -4,6 +4,7 @@ No network: the router takes its search function as an argument, so these
 drive the real templates against listings the test made up.
 """
 
+import re
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
@@ -882,3 +883,206 @@ def test_the_range_on_the_page_spans_copies_that_have_stopped_appearing(book_cli
     assert (
         "1 used copy listed now, asking 4.00–30.00 USD delivered across 2 seen." in page
     )
+
+
+# --- checking the whole list -------------------------------------------------
+#
+# The walk is chained rather than timed, so what these guard is mostly
+# structural: one request outstanding at a time, every book visited once, and
+# a row that says which of the four things is true of it.
+
+
+def follow(client, url, *, limit=12):
+    """Walk the chain the way a browser would, returning every response.
+
+    HTMX is not running here, so the trigger has to be followed by hand — and
+    following it by hand is also how a test can prove there was only ever one
+    to follow.
+    """
+    seen = []
+    while url and len(seen) < limit:
+        page = client.get(url.replace("&amp;", "&"))
+        seen.append(page.text)
+        # One outstanding request at a time is the whole design: a second
+        # trigger in one response would be two eBay calls and two writers
+        # against a database that takes one.
+        assert page.text.count('hx-trigger="load"') <= 1, (
+            "a step queued more than one next request"
+        )
+        found = re.search(r'hx-get="([^"]+)"[^>]*hx-trigger="load"', page.text)
+        url = found.group(1) if found else None
+    return seen
+
+
+def a_shelf(book_client, *, fails=()):
+    """Three books, each with its own copies, and a search that counts calls."""
+    asked = []
+
+    def search(query, limit, **_):
+        asked.append(query)
+        if query in fails:
+            raise EbaySearchError("eBay said no")
+        return [
+            a_listing(
+                item_id=f"{query}|{n}",
+                title=f"{TITLES[query]} a fine copy",
+                price=Money(Decimal(f"{10 + n}.00"), "USD"),
+                shipping_cost=Money(Decimal("0.00"), "USD"),
+                condition_id="5000",
+            )
+            for n in range(3)
+        ]
+
+    client = book_client(search)
+    for isbn, title in TITLES.items():
+        add_book(client, isbn, title)
+    return client, asked
+
+
+TITLES = {
+    "9781590171998": "Stoner",
+    "9780099448396": "Crash",
+    "9781771965231": "Breaking and Entering",
+}
+
+
+def all_certain(client):
+    with client.app.state.connect() as connection:
+        for row in connection.execute("SELECT item_id FROM copy"):
+            isbn = row["item_id"].split("|")[0]
+            connection.execute(
+                "INSERT OR IGNORE INTO listing_declaration (item_id, isbn) "
+                "VALUES (?, ?)",
+                (row["item_id"], isbn),
+            )
+            connection.execute(
+                "INSERT OR IGNORE INTO openlibrary_edition (isbn, found, title) "
+                "VALUES (?, 1, ?)",
+                (isbn, TITLES[isbn]),
+            )
+        connection.commit()
+
+
+def test_opening_the_want_list_spends_nothing(book_client):
+    """Decision 54, and the reason decision 48 gave for not doing this at all:
+    a list that spent ten seconds before rendering would be a worse list."""
+    client, asked = a_shelf(book_client)
+
+    page = client.get("/")
+
+    assert page.status_code == 200
+    assert asked == []
+
+
+def test_a_book_never_checked_says_so_rather_than_nothing_listed(book_client):
+    """The worst thing this screen could say. "Nothing listed" about a market
+    nobody has asked about is a confident claim with nothing behind it."""
+    client, _ = a_shelf(book_client)
+
+    page = as_read(client.get("/").text)
+
+    assert page.count("Not checked yet.") == 3
+    assert "Nothing listed" not in page
+
+
+def test_checking_walks_every_book_once(book_client):
+    client, asked = a_shelf(book_client)
+
+    steps = follow(client, "/books/check")
+
+    assert sorted(asked) == sorted(TITLES)
+    assert "Checked 3 books." in as_read(steps[-1])
+
+
+def test_the_walk_carries_its_count_rather_than_losing_it(book_client):
+    """Each step is a separate request and knows only what it was told."""
+    client, _ = a_shelf(book_client)
+
+    steps = [as_read(step) for step in follow(client, "/books/check")]
+
+    assert "Checking 3 books…" in steps[0]
+    assert "Checking 2 books…" in steps[1]
+    assert "Checking 1 book…" in steps[2]
+
+
+def test_a_row_says_it_is_being_checked_while_it_is(book_client):
+    """Before the search, not after. A row that only ever showed its result
+    would leave the list looking frozen for two seconds a book."""
+    client, _ = a_shelf(book_client)
+
+    first = as_read(follow(client, "/books/check", limit=1)[0])
+
+    assert first.count("Checking…") == 1
+
+
+def test_the_gate_stops_a_second_walk_from_spending_anything(book_client):
+    client, asked = a_shelf(book_client)
+    follow(client, "/books/check")
+    asked.clear()
+
+    again = as_read(client.get("/books/check").text)
+
+    assert asked == []
+    assert "Everything is current" in again
+
+
+def test_re_checking_ignores_the_gate(book_client):
+    """Matching the book page's re-run: a control that did nothing for
+    fifty-nine minutes would be worse than no control."""
+    client, asked = a_shelf(book_client)
+    follow(client, "/books/check")
+    asked.clear()
+
+    follow(client, "/books/check?force=1")
+
+    assert sorted(asked) == sorted(TITLES)
+
+
+def test_a_failed_search_leaves_that_row_saying_so_and_carries_on(book_client):
+    """One dead book must not hide the other nine."""
+    client, asked = a_shelf(book_client, fails={"9780099448396"})
+
+    steps = follow(client, "/books/check")
+
+    assert sorted(asked) == sorted(TITLES)
+    assert any("Couldn't check this one just now." in as_read(s) for s in steps)
+    assert "Checked 3 books." in as_read(steps[-1])
+
+
+def test_adding_a_book_starts_checking_it(book_client):
+    """Not an exception to "nothing sweeps on page load" — adding a book is an
+    explicit act, and it means a book you just added never shows as
+    unchecked, which is the state that reads worst on a list."""
+    client, _ = a_shelf(book_client)
+
+    page = client.post(
+        "/books",
+        data={"isbn": "9780156031219", "title": "The Little Prince", "override": "1"},
+    ).text
+
+    runner = re.search(r'<div id="sweep-runner"[^>]*>', page)
+    assert runner and 'hx-get="/books/4/check' in runner.group(0)
+    assert 'hx-trigger="load"' in runner.group(0)
+
+
+def test_a_checked_book_leads_with_its_cheapest_used_copy(book_client):
+    client, _ = a_shelf(book_client)
+    follow(client, "/books/check")
+    all_certain(client)
+
+    page = as_read(client.get("/").text)
+
+    assert page.count("cheapest used 10.00 USD") == 3
+    assert page.count("3 listed, seen 10.00–12.00 USD") == 3
+
+
+def test_the_ceiling_shows_against_the_cheapest_copy(book_client):
+    client, _ = a_shelf(book_client)
+    follow(client, "/books/check")
+    all_certain(client)
+    client.post("/book/1/ceiling", data={"ceiling": "11.50", "currency": "USD"})
+
+    page = as_read(client.get("/").text)
+
+    # One book has a ceiling; the other two say nothing about limits.
+    assert page.count("under your limit") == 1

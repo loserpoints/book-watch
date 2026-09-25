@@ -33,11 +33,14 @@ from book_watch.ebay.search import (
     Scope,
 )
 from book_watch.isbn import normalise
+from book_watch.web import filters
 from book_watch.web.wantlist import ConnectFn, open_configured_database
 
 SEARCH_PATH = "/search"
 BOOK_PATH = "/book/{book_id}"
 CEILING_PATH = "/book/{book_id}/ceiling"
+CHECK_ALL_PATH = "/books/check"
+CHECK_ONE_PATH = "/books/{book_id}/check"
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
@@ -107,8 +110,7 @@ def build_router(
 ) -> APIRouter:
     router = APIRouter()
     templates = Jinja2Templates(directory=TEMPLATES_DIR)
-    templates.env.filters["ago"] = _ago
-    templates.env.filters["ordinal"] = _ordinal
+    filters.register(templates.env)
     run_search: SearchFn = search if search is not None else LazyBrowseSearch()
     open_database: ConnectFn = (
         connect if connect is not None else open_configured_database
@@ -295,6 +297,132 @@ def build_router(
             request, "book.html", context, status_code=error[1] if error else 200
         )
 
+    def render_step(
+        request: Request,
+        *,
+        book,
+        glance,
+        state: str,
+        queue: list[int],
+        force: bool,
+        done: int,
+    ) -> HTMLResponse:
+        """One step of the walk: the next runner, plus the rows that changed."""
+        next_book = next_glance = None
+        if queue:
+            with closing(open_database()) as connection:
+                next_book = wantlist.get(connection, queue[0])
+                next_glance = copies.glance(connection, next_book)
+        return templates.TemplateResponse(
+            request,
+            "_checked.html",
+            {
+                "book": book,
+                "glance": glance,
+                "state": state,
+                "next_book": next_book,
+                "next_glance": next_glance,
+                "next_id": queue[0] if queue else None,
+                "queue": queue[1:],
+                "remaining": len(queue),
+                "force": force,
+                # Carried along the chain rather than recounted, because each
+                # step is a separate request and knows only what it was told.
+                "done": done,
+                "message": (
+                    None if queue else f"Checked {done} book{'' if done == 1 else 's'}."
+                ),
+            },
+        )
+
+    @router.get(CHECK_ALL_PATH, response_class=HTMLResponse)
+    def check_all(request: Request, force: int = 0) -> HTMLResponse:
+        """Work out which books need checking, and start the walk.
+
+        The queue is built here rather than passed in, so a book already
+        checked within the hour never enters it and its row never flickers
+        through a state it was not in. That is also why most of a walk is
+        instant: the gate usually leaves two or three books in the queue.
+        """
+        with closing(open_database()) as connection:
+            queue = [
+                book.id
+                for book in wantlist.all_books(connection)
+                if force or copies.due_for_sweep(connection, book.work_id, scope="us")
+            ]
+        if not queue:
+            # Doing nothing is the correct answer and it still has to be said.
+            # Silence here reads as a broken button, and every book being
+            # inside the hour gate is exactly why nothing happened.
+            return templates.TemplateResponse(
+                request,
+                "_runner.html",
+                {
+                    "next_id": None,
+                    "message": (
+                        "Everything is current — every book was checked "
+                        "within the hour."
+                    ),
+                },
+            )
+        # Nothing has been checked yet, so there is no finished row — only
+        # the first book moving into its checking state and a runner aimed at
+        # that same book. Aiming it at the second is how the first was
+        # skipped.
+        return render_step(
+            request,
+            book=None,
+            glance=None,
+            state="checking",
+            queue=queue,
+            force=bool(force),
+            done=0,
+        )
+
+    @router.get(CHECK_ONE_PATH, response_class=HTMLResponse)
+    def check_one(
+        request: Request,
+        book_id: int,
+        queue: str = "",
+        force: int = 0,
+        done: int = 0,
+    ) -> HTMLResponse:
+        """Search for one book, then hand the walk to the next.
+
+        A search that fails leaves this row saying so and the walk carries on.
+        One dead book must not hide the other nine — and the failure is on the
+        row it belongs to rather than on the run as a whole, because that is
+        where it can be acted on.
+        """
+        rest = [int(part) for part in queue.split(",") if part.strip().isdigit()]
+        state = "idle"
+        with closing(open_database()) as connection:
+            book = wantlist.get(connection, book_id)
+            if force or copies.due_for_sweep(connection, book.work_id, scope="us"):
+                try:
+                    copies.store(
+                        connection,
+                        book.work_id,
+                        run_search(book.search_query, DEFAULT_LIMIT, scope="us"),
+                        asked_for=DEFAULT_LIMIT,
+                        scope="us",
+                    )
+                    connection.commit()
+                except (MissingCredentialError, EbayError):
+                    state = "failed"
+                book = wantlist.get(connection, book_id)
+            glance = copies.glance(connection, book)
+
+        return render_step(
+            request,
+            book=book,
+            glance=glance,
+            state=state,
+            queue=rest,
+            force=bool(force),
+            done=done + 1,
+        )
+
     @router.post(CEILING_PATH, response_class=HTMLResponse)
     def set_ceiling(
         request: Request,
@@ -318,40 +446,3 @@ def build_router(
         return RedirectResponse(f"/book/{book_id}", status_code=303)
 
     return router
-
-
-def _ordinal(n: int) -> str:
-    """1 -> "1st", 2 -> "2nd", 11 -> "11th".
-
-    Display only, which is why it lives here rather than beside the numbers.
-    The teens are the whole reason this is not a lookup on the last digit.
-    """
-    if 10 <= n % 100 <= 20:
-        return f"{n}th"
-    return f"{n}{ {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th') }"
-
-
-def _ago(when: datetime | None) -> str:
-    """How long ago, in words a person reads at a glance.
-
-    "checked 2026-09-23 20:48:08" tells you nothing without arithmetic, which
-    is the point of issue #22. This is the part of it this slice needs: the
-    page's whole claim is about how current its results are, so the one number
-    that matters must not need working out.
-    """
-    if when is None:
-        return "never"
-    seconds = (datetime.now(UTC) - when).total_seconds()
-    if seconds < 90:
-        return "just now"
-    for size, unit in ((60, "minute"), (3600, "hour"), (86400, "day")):
-        count = int(seconds // size)
-        if count < _size_of_next(unit):
-            return f"{count} {unit}{'' if count == 1 else 's'} ago"
-    weeks = max(1, int(seconds // 604800))
-    return f"{weeks} week{'' if weeks == 1 else 's'} ago"
-
-
-def _size_of_next(unit: str) -> int:
-    """How many of `unit` fit before the next unit up takes over."""
-    return {"minute": 60, "hour": 24, "day": 14}[unit]

@@ -740,6 +740,102 @@ def markets(standing: dict[str, Standing]) -> list[Market]:
     )
 
 
+@dataclass(frozen=True, slots=True)
+class Headline:
+    """The one thing the want-list says about a book without opening it.
+
+    One market, not all of them. A list is read at a glance, and two lines a
+    book is a table rather than a glance — so this picks the market that
+    answers "is there anything worth buying" and leaves the rest to the page.
+    """
+
+    market: Market
+    #: Cheapest delivered price listed in that market right now.
+    cheapest: Money
+    #: How that stands against this entry's ceiling. Independent of the rank
+    #: above it: the ceiling is about you, the market is not.
+    verdict: Verdict
+
+
+def headline(
+    listed: list[Copy], standing: dict[str, Standing], ceiling: Money | None
+) -> Headline | None:
+    """Pick the market worth leading with, and the copy that leads it.
+
+    **Used first, falling back to new.** The reading hunt is the dominant one
+    and a new copy is usually bulk inventory, so a used copy is what the list
+    is watching for. A book with no used copies at all shows the new market
+    instead rather than showing nothing — *State of Grace* is five copies, all
+    Brand New, and "nothing listed" would be false.
+
+    `markets` already orders used before new, so this takes the first and the
+    fallback costs nothing. When *Two kinds of hunt* inverts the order for a
+    collectible entry, it inverts there and this follows.
+
+    None when there is nothing to lead with: no copies listed, or none that
+    can be placed. The row then says what it does know rather than inventing
+    a headline.
+    """
+    available = markets(standing)
+    if not available:
+        return None
+    leading = available[0]
+    assert leading.low is not None  # a market exists only where a price did
+
+    cheapest = {
+        item_id
+        for item_id, placed in standing.items()
+        if placed.rank == 1
+        and placed.condition_class == leading.condition_class
+        and placed.low is not None
+        and placed.low.currency == leading.low.currency
+    }
+    # Ties share rank 1 and share a price, so either will do.
+    copy = next((one for one in listed if one.item_id in cheapest), None)
+    if copy is None or copy.landed_cost is None:
+        return None
+    return Headline(
+        market=leading, cheapest=copy.landed_cost, verdict=copy.against(ceiling)
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class Glance:
+    """One book as the want-list shows it, read entirely from the store.
+
+    No request is made to build this. The list renders from what the last
+    sweep left behind, and checking is a separate, explicit act — decision 54.
+    """
+
+    #: When this book was last searched in this scope, or None if never. The
+    #: difference between "nothing is listed" and "nobody has looked" is the
+    #: whole reason this is here.
+    checked: datetime | None
+    #: Copies certainly this book, listed now. Shown when there is no
+    #: headline, because a count is still something the reader can use.
+    listed: int
+    #: Copies carrying the title with nothing to prove the book, which the
+    #: page files under "might be this book". Counted separately because
+    #: "nothing listed" said over five uncertain copies is simply false —
+    #: they are on the market, we just cannot swear they are this book.
+    uncertain: int
+    headline: Headline | None
+
+
+def glance(
+    connection: sqlite3.Connection, entry: Entry, *, scope: Scope = "us"
+) -> Glance:
+    """What to show for one book on the want-list. Reads the store only."""
+    here = for_entry(connection, entry, scope=scope)
+    standing = standings(here, ever_seen(connection, entry))
+    return Glance(
+        checked=swept_at(connection, entry.work_id, scope=scope),
+        listed=sum(1 for one in here if one.tier == "certain"),
+        uncertain=sum(1 for one in here if one.tier not in ("certain", "excluded")),
+        headline=headline(here, standing, entry.will_pay),
+    )
+
+
 def _placeable(copy: Copy) -> Money | None:
     """What this copy counts as in a comparison, or None if it cannot count.
 

@@ -875,3 +875,93 @@ def test_a_copy_that_cannot_be_placed_makes_no_market(database):
     a_certain_copy(database, book.work_id, "v1|1|0", price="18.00", shipping=None)
 
     assert markets_for(database, book) == []
+
+
+# --- what the want-list leads with -------------------------------------------
+
+
+def glance_at(connection, entry):
+    return copies.glance(connection, entry)
+
+
+def test_the_headline_leads_with_the_cheapest_used_copy(database):
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
+    a_certain_copy(database, book.work_id, "v1|2|0", price="9.00", shipping="3.00")
+
+    lead = glance_at(database, book).headline
+
+    assert lead.market.condition_class == "used"
+    assert lead.cheapest.amount == Decimal("12.00")
+
+
+def test_a_book_with_no_used_copies_falls_back_to_the_new_market(database):
+    """*State of Grace* is five copies, all Brand New. "Nothing listed" would
+    be false, and showing nothing would be worse than showing the new price
+    as long as it says which market it came from."""
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(
+        database, book.work_id, "v1|1|0", price="21.00", condition_id=BRAND_NEW
+    )
+    a_certain_copy(
+        database, book.work_id, "v1|2|0", price="36.00", condition_id=BRAND_NEW
+    )
+
+    lead = glance_at(database, book).headline
+
+    assert lead.market.condition_class == "new"
+    assert lead.cheapest.amount == Decimal("21.00")
+
+
+def test_one_used_copy_beats_a_cheaper_new_one_for_the_headline(database):
+    """The fallback is a fallback, not a comparison. A $4 new copy does not
+    displace the used market the reading hunt is actually watching."""
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
+    a_certain_copy(
+        database, book.work_id, "v1|2|0", price="4.00", condition_id=BRAND_NEW
+    )
+
+    lead = glance_at(database, book).headline
+
+    assert lead.market.condition_class == "used"
+    assert lead.cheapest.amount == Decimal("18.00")
+
+
+def test_the_headline_carries_the_ceiling_verdict(database):
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", price="10.00", shipping="1.00")
+    wantlist.set_ceiling(database, book.id, "11.00", "USD")
+    database.commit()
+
+    lead = glance_at(database, wantlist.get(database, book.id)).headline
+
+    assert lead.verdict == "under"
+
+
+def test_a_book_nobody_has_checked_is_told_apart_from_an_empty_one(database):
+    """Two different facts. Saying the second about the first is a confident
+    claim about a market we never asked about."""
+    book = a_book(database, "Stoner", "John Williams")
+
+    never = glance_at(database, book)
+
+    assert never.checked is None
+    assert (never.listed, never.uncertain, never.headline) == (0, 0, None)
+
+
+def test_uncertain_copies_are_counted_rather_than_called_nothing(database):
+    """ "Nothing listed" over five copies carrying the title would be false."""
+    book = a_book(database, "Stoner", "John Williams")
+    # Carries the title and nothing that proves the book — no number from the
+    # seller, no product the catalogue recognises. Text alone never reaches
+    # certain (decision 33), so this is the "might be this book" pile.
+    a_copy_declaring(database, book.work_id, "v1|1|0", STONER, title="Stoner")
+    database.execute("DELETE FROM listing_declaration WHERE item_id = 'v1|1|0'")
+    database.commit()
+
+    at = glance_at(database, book)
+
+    assert at.listed == 0
+    assert at.headline is None
+    assert at.uncertain == 1
