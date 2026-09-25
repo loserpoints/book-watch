@@ -48,153 +48,77 @@ renumbers. Two rules keep that from costing anything:
 
 ---
 
-## M4 · What I will pay, and whether this is fair
+## M5 · The whole list, in one look
 
-**Goal.** A price ceiling per book, and enough context to act on a listing
-without opening a second tab to sanity-check it.
+**Goal.** The want-list answers "is anything worth buying right now" without my
+opening a single book. Each entry shows its cheapest copy, what the market has
+asked for that book, and whether anything is under my ceiling. One action
+checks every book on the list.
 
 **Jobs advanced.**
 
-- **J5**, which is recorded and unscheduled until here.
-- **J2**, in part: a threshold is the bluntest and most useful filter there is.
+- **J1**, substantially but not to its test. The list stops being a list of
+  names and becomes a view of the market.
+- **J2**, in part: the narrowing now happens across the whole list at once
+  rather than one book at a time.
 
-**Why here.** A threshold — "under $8 delivered" — and *is this a fair price*
-are the same question at two resolutions, and splitting them across milestones
-would mean building price judgement twice. Both also depend on *The right
-book*, which is now delivered: comparing a listing against others of the same
-edition is only meaningful once editions are a thing the system understands,
-and they are.
+**Why here.** *What I will pay* built the judgement and put it on the wrong
+screen. A ceiling, a rank and a range are all answers to "should I buy this",
+and that question is asked while looking at the list — the book page is where
+you go once the answer is probably yes. Ten books meant ten page opens to find
+out nothing had changed, which is the manual searching the brief exists to
+remove, wearing different clothes.
 
-**The open question.** The mechanism is genuinely undecided — four candidates
-are recorded against J5 and none is chosen. It is also the most open-ended
-thing in the project and the likeliest source of scope creep, which is why the
-concrete half (the threshold) is worth shipping first and on its own.
+**Why it is not J1 finished.** J1's test is explicit: *if opening the app is
+what triggers the search, this isn't done.* A button is still me deciding to
+look. This milestone makes looking cheap; *Always current* makes looking
+unnecessary, and the distinction is worth keeping rather than blurring because
+the button feels good enough.
 
-**Re-read after *The right book*, 2026-09-23.** Four things changed, and one of
-them is urgent.
-
-**The threshold is now nearly free.** Landed cost is already computed, stored
-and sorted on, and a copy already carries the condition and what its seller
-declared. "Under $8 delivered" is a filter over data that exists, not a feature
-that needs data built for it.
-
-**Price judgement may only use the certain tier, and that is measured rather
-than cautious.** The *possible* tier ran at 8–14% precision on the edition
-question. An average asking price computed across it would be an average of
-mostly other books — the wrong number, confidently displayed, which is worse
-than no number. Whatever mechanism wins, its input is the certain tier alone.
-
-**The samples are smaller than they look.** *Crash* had six right-edition
-copies among fifty-three listings. A fairness judgement on six observations is
-a feeling with a decimal point on it. This milestone has to be able to say "not
-enough copies to tell" and mean it, and that is a design requirement rather
-than an edge case.
-
-**The price history is being deleted, right now, on every refresh.** This is
-the urgent one. J5's fourth candidate — our own observed history, "one table
-and zero extra API calls", useless on day one and compounding after — assumed
-listings would be recorded from the first poll onward. The table exists as of
-*The right book*. But a refresh **replaces** a book's copies rather than adding
-to them (decision 40), because the page's job is to show what is buyable now,
-and a copy that stopped appearing has been sold.
-
-So the clock on that candidate has not started. Every refresh since the page
-shipped has thrown away what the previous one saw. Keeping it means a second,
-append-only table — the same rows, never deleted — which is genuinely one table
-and no extra calls, and which is worth nothing until it is worth a great deal.
-
-**That urgency is what put *Keep what we saw* in front of this one.** Whether
-to start recording was worth deciding immediately, because the cost of
-deciding later is measured in months of data that will not exist — and it
-turned out to be the same bug as the one that made a matching fix do nothing
-in production, pointing the other way. Copies stop being deleted there, so by
-the time this milestone starts the record has been accumulating for however
-long it took to get here.
-
-What to *do* with the record still waits, and should: J5's mechanism is four
-candidates and none of them is chosen.
-
-**Re-read after *Keep what we saw*, 2026-09-24.** The urgent item above is
-resolved, and doing it changed what this milestone starts from.
-
-**The clock has started, and the read path already exists.** Copies accumulate,
-price changes are logged, and `copies.price_history()` returns what one copy
-has cost over time. J5's fourth candidate no longer needs anything built before
-it can be evaluated — it needs *elapsed time*, which is now passing rather than
-being thrown away. That moves the question from "should we start recording" to
-"how long before the record says anything", which is a much better question to
-be stuck on.
-
-**History does not fix the small-sample problem, and it is worth being explicit
-that it looks like it does.** *Crash* had six right-edition copies. Observing
-those six weekly for three months gives seventy-eight rows and still six
-copies. Sightings are repeated measurements of the same objects, not new
-evidence about the edition's price. "Not enough copies to tell" stays a
-requirement, and the count that matters is distinct copies, not rows.
-
-**What is genuinely new is the time dimension, and it changes what a threshold
-means.** Before, "under $8 delivered" could only ask about the copies visible
-right now. It can now also ask whether this book has *ever* been seen under
-$8 — which is a different and more useful question for a book with no cheap
-copy today, and which is the shape *Tell me* will want. Worth deciding
-deliberately rather than drifting into: the threshold and the history are two
-features that look like one.
-
-**We record asking prices, and we cannot record sale prices. This is the
-constraint the whole milestone has to be designed around.**
-
-What a sweep observes is that a listing was there at a price, and later that it
-was not there. **Why it went is not observable.** Sold, ended unsold, cancelled
-by the seller and relisted all look identical: eBay's Browse API answers 404
-for the item and says nothing about which happened. The one official source of
-sold data is the Marketplace Insights API, which is a Limited Release restricted
-to approved partners and closed to new users — so it is not available to this
-project, and no amount of polling substitutes for it.
-
-An earlier draft of this section said "a copy that sold for $6 last month is the
-best evidence there is". That was a conclusion written as though it were an
-observation, which is the exact error *Keep what we saw* existed to fix. It is
-recorded here rather than quietly deleted.
-
-**So J5's fourth candidate is weaker than it looked, and still worth having.**
-It yields the distribution of *asking* prices over time, which is what sellers
-want rather than what the book is worth — and the gap between those two is
-precisely the question "is this fair". What it does give, for free and
-reliably:
-
-- **Time on market**, which is a genuine negative signal. A copy listed at $30
-  that has sat through twelve sweeps is evidence that $30 is too high, and it
-  needs no knowledge of sales at all.
-- **What the cheapest available copy has ranged over**, which answers "is today
-  unusually expensive" without claiming anything about value.
-- **Disappearance rates by price band**, in aggregate and only at volume this
-  project does not have yet. Worth noting as a maybe, not planning on.
-
-**The one narrow case where a sale looked observable, and is not worth having.**
-A listing with quantity above one exposes its remaining availability, so a
-quantity falling while the listing stays live would be a real sale at a known
-price. It was scoped as a slice and then dropped: quantity above one means bulk
-inventory, and the books this project watches are single copies from individual
-sellers. The signal fires on a different population than the one being watched.
-Decision 47 carries the reasoning. **There is no sale signal available to this
-milestone at all.**
-
-**Only the newest sweep is shown, but every sweep is stored.** Price judgement
-should read all sightings of certain-tier copies rather than only the ones
-currently buyable — a copy that was listed at $6 and is now gone is still
-evidence about asking prices, and it is exactly the row the page no longer
-displays. The distinction between "what the page shows" and "what the judgement
-reads" is new and needs stating in whatever mechanism wins.
-
-**The one caution carried forward.** The growth bound in decision 44 rests on an
-assumption about listing turnover, not on the schema. A price-history feature
-is precisely the thing that would make keeping more data feel worthwhile, so
-this milestone is where that assumption should be checked against what the
-volume actually holds rather than restated.
+**The open question.** How the cascade behaves on a list several times longer
+than today's. Ten books at roughly two seconds each is fine and thirty is
+probably still fine; the brief says dozens, and at some length a sequential
+walk stops being acceptable and the answer becomes the poll rather than a
+faster cascade.
 
 ---
 
-## M5 · Two kinds of hunt
+## M6 · Judge a copy at a glance
+
+**Goal.** A visual language the whole app is built in, so a copy can be ruled
+out from the list without reading it word by word.
+
+**Jobs advanced.**
+
+- **J3**, which is substantially a presentation problem: *reject a bad copy —
+  ex-library, wrong edition, a clipped jacket — from the results list alone.*
+  Everything that judgement needs is now on the page, and it is on the page as
+  undifferentiated text.
+- **J2** and **J6** follow from the same work: what comes to the top has to
+  *look* like it came to the top, and a list is only trusted if it is legible.
+
+**Why here, rather than at the end.** Because everything after it is more
+screens. *Two kinds of hunt* adds a mode, a second ranking and condition
+preferences; *Always current* adds what-is-new marking; *Tell me* adds an
+email, which is a rendering surface with far harsher rules than a web page.
+Building the system first means those are built inside it rather than restyled
+afterwards, and it is the difference between one design pass and four.
+
+**Why not earlier.** There was not enough of the app to generalise from. Four
+screens with one kind of thing on them is not a design system, it is a
+stylesheet — and a system derived from too little is one you fight later.
+
+**The open question.** Whether decision 2's no-build-step rule still fits. It
+was chosen when the UI was four screens and deliberately unambitious, and that
+premise is the thing to re-examine rather than the conclusion. The constraint
+is real either way: hand-written CSS can carry typography, colour and layout,
+and cannot carry everything a modern interface borrows from a component
+library.
+
+---
+
+
+## M7 · Two kinds of hunt
 
 **Goal.** An entry is a reading copy or a collectible, and the mode changes what
 matches and how it ranks: lowest landed cost and a readable floor for one,
@@ -218,7 +142,7 @@ is really "show me everything and let me read", is not yet known.
 
 ---
 
-## M6 · Always current, without my looking
+## M8 · Always current, without my looking
 
 **Goal.** The daily poll runs, listings are stored, and opening a book shows
 what is there — already fetched, already dated, with what is new since I last
@@ -277,22 +201,29 @@ are five separable things.
 
 ---
 
-## M7 · Tell me, so I stop looking
+## M9 · Tell me, so I stop looking
 
-**Goal.** A daily email containing only listings that are new since the last
-one and inside the price ceiling set in *What I will pay*. Nothing arrives on a day when
-nothing qualifies.
+**Goal.** An email when a copy appears under the ceiling set in *What I will
+pay*, and no email otherwise. Not a digest — J4's open question was answered on
+2026-09-25 and the answer was the narrow one, so most days bring nothing at
+all.
 
 **Jobs advanced.**
 
-- **J4.** The job M1 deliberately left empty.
+- **J4.** The job *See what's for sale* deliberately left empty.
 
 **Why last.** It is the brief's actual success criterion — *I stop manually
-searching marketplaces* — so it is tempting to pull forward, and that temptation
-is the trap. A digest is a daily statement that these listings are worth your
-attention. Send it before matching is right and it is a daily demonstration
-that they are not, which is a habit that takes far longer to undo than it took
-to form.
+searching marketplaces* — so it is tempting to pull forward, and that
+temptation is the trap. An alert is a standing claim that what it interrupts
+you for is worth your attention. Send it before matching is right and it is a
+recurring demonstration that it is not, which is a habit that takes far longer
+to undo than it took to form.
+
+**It is a backup, and that is a demotion made deliberately.** *The whole list,
+in one look* is how the tool is actually used; this is for the days nobody
+looks. That lowers its priority and does not lower its bar — an alert that
+fires wrongly is worse than no alert, because the list is still there and still
+trustworthy.
 
 Everything before this exists to make the email worth opening.
 
@@ -481,3 +412,52 @@ production and a script that grades it.** Every real finding came from running
 the new code against the actual file — the stored wrong conclusion, the 490-byte
 row, the zero-stale migration. None of them were reachable from the test suite,
 and all of them were reachable in under a minute.
+
+---
+
+### M4 · What I will pay, and whether this is fair
+
+**Delivered 2026-09-25.** A delivered-cost ceiling per book that marks rather
+than hides, searches scoped to copies in the US with a peek at everywhere, a
+page that shows what is listed *now* rather than what was listed once, and each
+copy placed among the others of its kind.
+
+**What it taught.**
+
+- **There is no sale data, and the wording is where that gets lost.** eBay
+  answers 404 for an ended item and says nothing about why; Marketplace
+  Insights is a limited release that is not open to new users. "Sold for" and
+  "went for" are conclusions, "was listed at" and "stopped appearing" are
+  observations (decision 47). The milestone's own re-read made this error three
+  days after shipping a milestone about exactly this distinction.
+- **A clever exception can be worse than no signal.** A listing with quantity
+  above one exposes real sales — and fires almost entirely on bulk sellers,
+  which is the opposite of the population this tool watches. A biased sample
+  does not merely fail to help; it compounds into a more confident error. It
+  survived one round of argument and not the second.
+- **The page had swept once, ever.** Decision 40's "search only on the first
+  view" travelled along with a correct measurement without being argued for,
+  and produced a watcher that did not watch. A correct answer to the question
+  you happened to ask is the easiest kind of wrong thing to ship.
+- **`total` is scoped to the query, not to the market** — found by running a
+  real search rather than by reading the documentation, which had been read and
+  had not said so.
+- **An overseas listing does not add a row, it displaces one.** Filtering at
+  the API rather than on read was worth measuring: the unfiltered search lost a
+  US copy it never returned at all (decision 49).
+- **New and used are two markets rather than two grades** (decision 52), and
+  the samples are smaller than they look once split. *State of Grace* has zero
+  used copies. "Not enough to say" is the common path.
+- **Every price is a delivered price** (decision 51), stated as a theme after
+  the question had been answered three times locally. Shipping is where a
+  seller can park margin so it does not show up in a sort.
+- **Mutation testing earns its keep.** Two bad tests were found by breaking the
+  code and watching nothing fail — a ceiling test that fetched its entry before
+  setting the ceiling, and a range rule tested on the function but never on the
+  page it is wired into.
+
+J5's four candidates resolved without a decision being forced: **rank within
+current listings** is what shipped, because it needs no floor, works at two
+observations, and claims nothing about value. Our own observed history is
+accumulating underneath it and is still the compounding asset it was argued to
+be — it is simply not yet old enough to say anything.

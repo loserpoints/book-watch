@@ -86,11 +86,28 @@ something told me. The brief's own success criterion — that I stop opening
 marketplaces by hand — is really this job's test rather than J1's, and it's the
 job the first milestone deliberately doesn't touch.
 
-**Open questions.** What is worth interrupting me for. A digest of everything
-is a digest I stop reading within a week, and then the job has failed while
-every part of it still works. A price threshold is the obvious filter and is
-probably enough for reading copies; collectible mode's signal is condition
-rather than price, so it may need something else entirely.
+**Answered 2026-09-25: a copy under the ceiling, and nothing else.** The open
+question was what is worth interrupting me for, on the reasoning that a digest
+of everything is a digest I stop reading within a week — and then the job has
+failed while every part of it still works. The answer is the narrow one. A new
+copy under the price ceiling set on that book is worth an email; nothing else
+is. On a day when no copy qualifies, no email is sent at all, so an empty inbox
+is the ordinary case rather than a failure.
+
+That also settles what this job is *for*. It is a backup for the days I forget
+to look, not the way I normally use the tool — the list, checked in one action,
+is that. The job's test below is unchanged and still the brief's real success
+criterion: hearing about a copy I had not gone looking for is a different thing
+from finding one quickly, and only this job delivers it.
+
+**Open questions.** Collectible mode's signal is condition rather than price,
+so a ceiling may be the wrong filter for it entirely — that stays open until
+*Two kinds of hunt* says what a collectible entry actually wants.
+
+**What it still depends on.** "New" has to mean new to me, which is the relist
+identity problem recorded against J2. A relisted copy under the ceiling would
+email me about a book I already saw and passed on, which is exactly the failure
+that makes an alert worthless.
 
 ---
 
