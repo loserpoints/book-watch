@@ -2673,3 +2673,65 @@ genuinely small and single, and early *mistakes* did not survive — M3 rewrote
 the stored conclusions, and migrations 010, 012 and 015 dropped superseded
 columns rather than leaving them. What needs watching is not old code. It is
 any file that grew 60% in three days.
+
+---
+
+## 56. A cover is an id we keep and an image Open Library serves
+
+**Decision.** Each book stores an Open Library cover id; the page loads the
+image from `covers.openlibrary.org` directly. Nothing downloads or stores an
+image. Migration 018, slice S25.
+
+**Why not store the images, which was the plan.** Storing them was agreed
+first, under CLAUDE.md's cache-everything rule, and it would have made fewer
+requests to Open Library over time. Their covers documentation then said the
+API "is intended for displaying covers on public facing websites and not for
+bulk download", and asks pages to point at their cover server with a link
+back. A few dozen downloads is not bulk in any real sense, but linking is the
+use they built the service for, and this project's standing posture towards
+Open Library is to do what they ask rather than what we can argue is fine.
+The likely reasons are theirs to have: their CDN is built for display, they
+see who uses covers, and not every cover is theirs to hand out wholesale.
+
+**What it costs.**
+
+- **Open Library is in the first view of every cover**, from Alan's phone
+  rather than from our server. After that the phone's cache serves it.
+- **No covers without signal**, until an offline slice caches them in the
+  service worker, which is a browser cache and still "displaying".
+- **Their outage shows**, as the placeholder. That is principle 3 in
+  `docs/design.md` doing its job rather than a defect.
+
+**Revisit if** they change their guidance, or linking ever becomes the kind of
+load the rule in CLAUDE.md exists to prevent.
+
+**Whose cover follows the hunt.** A reader sees the work's cover, the one
+somebody recognises; a collector sees the printing they are hunting. Each
+falls back to the other. `covers.chosen` holds the rule. Only reader entries
+exist today, so the collector half is a tested seam for *Two kinds of hunt*.
+
+**A new book's cover costs no request.** The title search now asks for
+`cover_i`, a sixth field on a request it already makes. The ISBN lookup
+already returned the edition's `covers` and we were dropping them. A book
+added by number shows that edition's cover in place of the work's, because
+learning the work's would be a second request while somebody waits.
+
+**Three states, not two.** Not asked, no cover, and a cover are different
+news, so they are stored differently. Drawing "no cover" over every book added
+before migration 018 would have been a confident claim about something never
+asked — the same trap decision 52 avoided with condition codes.
+
+**Anything unknown is learned after the page, once.** A book with no cover id
+yet renders with its image pointed at `/books/{id}/cover`, which asks Open
+Library for the work's cover (one request, paced and counted like any other),
+stores the answer, and redirects. From then on the list links to the image
+directly and never comes back. Failing to reach Open Library writes nothing,
+so the next view asks again. This is decision 41's rule — slow Open Library
+work happens after the page, never during it — and it replaces a separate
+backfill job: the books already on the list learn their covers the first time
+the list is opened, one request each.
+
+**`resolution.CAPTURE` did not change**, deliberately. The notebook does not
+store cover ids, and bumping the version would have re-asked Open Library
+about every number ever seen in a listing, for a field nothing on that path
+reads.

@@ -1,9 +1,14 @@
 """Ask Open Library what a book is, or what a number is.
 
-Two questions and nothing else:
+Three questions and nothing else:
 
     search_works("stoner", "john williams")  -> candidates to choose from
     identify_isbn("9781590171998")           -> what that number is
+    work_cover("OL3511459W")                 -> which cover the work has
+
+Cover *images* are never fetched here. Open Library asks that pages point at
+`covers.openlibrary.org` directly rather than download from it (decision 56),
+so an image is a URL the browser loads, and only the id is ours to know.
 
 Open Library is a non-profit that states its API is not intended as a backend
 for third-party services (decision 7). Everything here is shaped by that.
@@ -128,6 +133,9 @@ class OpenLibraryClient:
         tens of kilobytes of catalogue metadata per result; the five fields a
         person needs to pick the right book fit in under a kilobyte for the
         whole list.
+
+        `cover_i` is the sixth, and costs a few bytes: it is what lets a new
+        book have a cover without a second request (decision 56).
         """
         query = f"{title} {author}".strip() if author else title.strip()
         if not query:
@@ -137,7 +145,9 @@ class OpenLibraryClient:
             params={
                 "q": query,
                 "limit": limit,
-                "fields": "key,title,author_name,first_publish_year,edition_count",
+                "fields": (
+                    "key,title,author_name,first_publish_year,edition_count,cover_i"
+                ),
             },
         )
         docs = payload.get("docs")
@@ -166,6 +176,22 @@ class OpenLibraryClient:
         if payload is None:
             return None
         return _identity(normalised, payload)
+
+    def work_cover(self, work_id: str) -> int | None:
+        """The cover Open Library holds for a work, or `None` if it holds none.
+
+        For books that arrived without one: everything added before covers
+        existed, and a book added by a number whose edition has no cover.
+        A work Open Library no longer has is also `None` — there is no cover
+        to show either way.
+        """
+        work_id = work_id.strip()
+        if not work_id or "/" in work_id:
+            raise ValueError(f"{work_id!r} is not an Open Library work id.")
+        payload = self._get(f"/works/{work_id}.json", allow_missing=True)
+        if payload is None:
+            return None
+        return _first_cover(payload.get("covers"))
 
     def _get(
         self,
@@ -249,6 +275,7 @@ def _candidate(doc: dict[str, Any]) -> Candidate:
         authors=tuple(str(a) for a in authors) if isinstance(authors, list) else (),
         first_published=_optional_int(doc.get("first_publish_year")),
         edition_count=_optional_int(doc.get("edition_count")),
+        cover_id=_cover_id(doc.get("cover_i")),
     )
 
 
@@ -267,6 +294,7 @@ def _identity(isbn: str, payload: dict[str, Any]) -> EditionIdentity:
         publisher=_first_string(payload.get("publishers")),
         published=_optional_string(payload.get("publish_date")),
         physical_format=_optional_string(payload.get("physical_format")),
+        cover_id=_first_cover(payload.get("covers")),
     )
 
 
@@ -281,6 +309,27 @@ def _work_id(key: Any) -> str | None:
     if not isinstance(key, str) or not key.strip():
         return None
     return key.strip().rsplit("/", 1)[-1] or None
+
+
+def _cover_id(value: Any) -> int | None:
+    """A usable cover id, or `None`.
+
+    Open Library marks a removed cover as `-1` rather than dropping it from the
+    list, so a negative id is a cover that used to exist and must not be shown.
+    """
+    cover = _optional_int(value)
+    return cover if cover is not None and cover > 0 else None
+
+
+def _first_cover(value: Any) -> int | None:
+    """The first usable id in a `covers` list — the one Open Library itself shows."""
+    if not isinstance(value, list):
+        return None
+    for item in value:
+        cover = _cover_id(item)
+        if cover is not None:
+            return cover
+    return None
 
 
 def _first_string(value: Any) -> str | None:

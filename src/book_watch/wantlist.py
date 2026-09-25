@@ -19,6 +19,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Literal
 
+from book_watch import covers
 from book_watch.ebay.search import Money
 
 #: Which hunt an entry is on. A reader will take any edition of the book; a
@@ -61,6 +62,28 @@ class Entry:
     #: together or neither is: a number with no currency is not a price.
     ceiling: str | None = None
     ceiling_currency: str | None = None
+    #: The work's cover id, and when anybody asked. See migration 018 for why
+    #: those are three states and not two.
+    work_cover: int | None = None
+    cover_asked_at: str | None = None
+    #: The cover of the printing a collector entry hunts. Always None for a
+    #: reader, who hunts no printing in particular.
+    edition_cover: int | None = None
+
+    @property
+    def cover(self) -> int | None:
+        """The cover this entry shows, by the rule in `covers.chosen`."""
+        return covers.chosen(self.hunt, self.work_cover, self.edition_cover)
+
+    @property
+    def has_no_cover(self) -> bool:
+        """Whether Open Library has told us there is no cover to show.
+
+        Distinct from not knowing yet. A book nobody has asked about may well
+        have a cover, and drawing the placeholder over it would be claiming
+        otherwise.
+        """
+        return self.cover is None and self.cover_asked_at is not None
 
     @property
     def will_pay(self) -> Money | None:
@@ -162,10 +185,14 @@ SELECT entry.id,
        work.resolved_at,
        work.enriched_at,
        work.copies_fetched_at,
+       work.cover_id AS work_cover,
+       work.cover_asked_at,
+       hunted.cover_id AS edition_cover,
        count(edition.id) AS edition_count
   FROM entry
   JOIN work ON work.id = entry.work_id
   LEFT JOIN edition ON edition.work_id = work.id
+  LEFT JOIN edition AS hunted ON hunted.id = entry.edition_id
 """
 
 
@@ -176,21 +203,46 @@ def add_identified(
     author: str | None = None,
     openlibrary_work_id: str | None = None,
     isbn: str | None = None,
+    work_cover: int | None = None,
+    edition_cover: int | None = None,
 ) -> Entry:
     """Put a book on the list that Open Library has already told us about.
 
     Both resolved paths arrive here: a candidate picked from a title search,
     and an ISBN whose record came back. The work is marked resolved, so a
     missing title afterwards can only mean the lookup found nothing.
+
+    Each path brings the cover it already has, so neither costs a request.
+    A title search reports the work's cover, and its absence is an answer:
+    Open Library holds none. A number reports only its edition's, which
+    stands in for the work's; if it has none, the work's is still unknown,
+    and `covers.look_up` asks later rather than while somebody waits.
     """
+    if work_cover is not None or isbn is None:
+        cover, cover_from, asked = work_cover, "work", True
+    else:
+        cover, cover_from, asked = edition_cover, "edition", edition_cover is not None
     work_id = _existing_work(connection, isbn) if isbn else None
     if work_id is None:
         cursor = connection.execute(
             """
-            INSERT INTO work (title, author, openlibrary_work_id, resolved_at)
-            VALUES (?, ?, ?, datetime('now'))
+            INSERT INTO work (
+                title, author, openlibrary_work_id, resolved_at,
+                cover_id, cover_from, cover_asked_at
+            )
+            VALUES (
+                ?, ?, ?, datetime('now'),
+                ?, ?, CASE WHEN ? THEN datetime('now') END
+            )
             """,
-            (title, author, openlibrary_work_id),
+            (
+                title,
+                author,
+                openlibrary_work_id,
+                cover,
+                cover_from if cover is not None else None,
+                asked,
+            ),
         )
         work_id = int(cursor.lastrowid)
     # No edition row. The number goes on the entry, because it is what
@@ -358,4 +410,7 @@ def _to_entry(row: sqlite3.Row) -> Entry:
         copies_fetched_at=row["copies_fetched_at"],
         ceiling=row["ceiling"],
         ceiling_currency=row["ceiling_currency"],
+        work_cover=row["work_cover"],
+        cover_asked_at=row["cover_asked_at"],
+        edition_cover=row["edition_cover"],
     )
