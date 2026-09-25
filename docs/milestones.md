@@ -108,12 +108,16 @@ afterwards, and it is the difference between one design pass and four.
 screens with one kind of thing on them is not a design system, it is a
 stylesheet — and a system derived from too little is one you fight later.
 
-**The open question.** Whether decision 2's no-build-step rule still fits. It
-was chosen when the UI was four screens and deliberately unambitious, and that
-premise is the thing to re-examine rather than the conclusion. The constraint
-is real either way: hand-written CSS can carry typography, colour and layout,
-and cannot carry everything a modern interface borrows from a component
-library.
+**The open question, answered.** Whether decision 2's no-build-step rule
+still fits. It does, for new reasons recorded under decision 2: the platform
+now carries what a build step used to, and nothing in the design needs a
+framework. The principles the system is built to live in `docs/design.md`.
+
+**Covers come first.** The reference apps lean on artwork, and the want-list
+has no cover for a book. Open Library already returns cover ids in responses
+the app makes and discards, so the first slice stores them and caches the
+images, and the tokens and primitives are then designed around real covers
+and real gaps rather than a mock-up.
 
 ---
 

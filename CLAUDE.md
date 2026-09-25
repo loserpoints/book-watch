@@ -9,6 +9,9 @@ else. `docs/operating.md` is the third one — read it before touching the
 deploy, and when something in production is wrong. They carry the scope, the two use cases, and why each technical choice
 was made. If something here contradicts them, they win — and say so.
 
+`docs/design.md` holds the design principles. Read it before building or
+changing a screen.
+
 Then **stop and propose a plan.** Say what you intend to do, what it buys, and
 where you need a decision from me — and wait for me to approve it. Reading the
 docs is not permission to start. Exploring to inform the plan is fine;
