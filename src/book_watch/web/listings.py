@@ -1,12 +1,19 @@
-"""The results pages: eBay listings for an ISBN, or for a book on the list.
+"""One book: what is for sale, what it costs, and the most I will pay.
 
-Searches eBay when the page loads. That is a placeholder, not the design —
-it is fine at one user's handful of page views a day against a 5,000-call
-budget, and the cache that replaces it arrives with the daily poll. If this
-is still here once anything polls on a schedule, something has gone wrong.
+**Opening a book searches eBay, and that is the design rather than a
+placeholder** — an earlier version of this docstring called it one. There is
+no other reason to click a book's title than to find out what is listed
+*now*, and the version that searched only on a book's first-ever view showed
+copies that may have sold days earlier (decision 48). A sweep is gated to one
+an hour per scope so the list holds still long enough to act on, and a button
+ignores the gate on demand.
 
-The search function is injected so the whole page can be tested without a
-network, a key, or eBay being up.
+It never fetches a listing's details: measured at 0.51s each, fifty of them
+is twenty-five seconds, and that work belongs to the background pass.
+
+The ad-hoc `/search` page shares this module because it asks the same
+question of eBay without a book on the list behind it. The want-list and its
+checking live in `wantlist`; the search wiring both need is in `searching`.
 """
 
 from __future__ import annotations
@@ -21,61 +28,30 @@ from fastapi import APIRouter, BackgroundTasks, Form, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from book_watch import copies, enrichment, wantlist
+from book_watch import copies, enrichment, standing, sweeps, wantlist
 from book_watch.config import MissingCredentialError, load_ebay_credentials
 from book_watch.ebay.auth import EbayTokenProvider
 from book_watch.ebay.errors import EbayError
 from book_watch.ebay.search import (
     DEFAULT_LIMIT,
     MAX_LIMIT,
-    BrowseClient,
-    Listing,
     Scope,
 )
 from book_watch.isbn import normalise
 from book_watch.web import filters
+from book_watch.web.searching import LazyBrowseSearch, SearchFn
 from book_watch.web.wantlist import ConnectFn, open_configured_database
 
 SEARCH_PATH = "/search"
 BOOK_PATH = "/book/{book_id}"
 CEILING_PATH = "/book/{book_id}/ceiling"
-CHECK_ALL_PATH = "/books/check"
-CHECK_ONE_PATH = "/books/{book_id}/check"
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
-#: Takes a query and a limit, returns listings. `BrowseClient.search` is the
-#: real one; tests pass a function that returns whatever they need.
-#: `scope` is keyword-only and defaulted, so the ad-hoc search route —
-#: which has no scope of its own — can ignore it.
-SearchFn = Callable[..., list[Listing]]
 
 #: Start a background pass over one book's copies. Injected, like everything
 #: else that reaches a third party, so a test cannot reach one by omission.
 EnrichFn = Callable[[int], object]
-
-
-class LazyBrowseSearch:
-    """Builds the eBay client on first search rather than at startup.
-
-    This laziness is load-bearing, not tidiness. Fly holds the deletion
-    endpoint's secrets and *not* the eBay keys, so an application that read
-    `EBAY_CLIENT_ID` while booting would fail to start in production. That
-    endpoint carries an uptime obligation which has nothing to do with the
-    rest of the app — eBay re-validates it on its own schedule and disables
-    the keyset when the check fails (decisions.md entry 16).
-
-    So a missing key breaks searching, loudly, and breaks nothing else.
-    """
-
-    def __init__(self) -> None:
-        self._browse: BrowseClient | None = None
-
-    def __call__(self, query: str, limit: int, *, scope: Scope = "us") -> list[Listing]:
-        if self._browse is None:
-            tokens = EbayTokenProvider(load_ebay_credentials())
-            self._browse = BrowseClient(tokens)
-        return self._browse.search(query, limit=limit, scope=scope)
 
 
 def _configured_enrichment(connect: ConnectFn) -> EnrichFn:
@@ -193,10 +169,10 @@ def build_router(
         """What is for sale for one book, graded by how sure we are.
 
         The page reads the store. It searches eBay only when this book has
-        never been searched for, or when asked to refresh — decision 30 as
-        amended. It never fetches a listing's detail: measured at 0.51s each,
-        fifty of them is twenty-five seconds, and that work belongs to the
-        background.
+        never been searched for, or when asked to refresh — decision 48,
+        which amended decision 40. It never fetches a listing's detail:
+        measured at 0.51s each, fifty of them is twenty-five seconds, and
+        that work belongs to the background.
         """
         # Nothing is persisted. A toggle that quietly changed what every later
         # visit searched for would be a setting wearing a link's clothes, and
@@ -228,9 +204,9 @@ def build_router(
             # first look at everything: they are different questions, and an
             # everywhere sweep finds fewer US copies because imports displace
             # them out of the fifty slots.
-            if refresh or copies.due_for_sweep(connection, book.work_id, scope=scope):
+            if refresh or sweeps.due_for_sweep(connection, book.work_id, scope=scope):
                 try:
-                    copies.store(
+                    sweeps.store(
                         connection,
                         book.work_id,
                         run_search(book.search_query, limit, scope=scope),
@@ -244,13 +220,14 @@ def build_router(
                 except EbayError as exc:
                     error = (f"eBay could not be searched: {exc}", 502)
 
-            for_sale = copies.for_entry(connection, book, scope=scope)
             ceiling = book.will_pay
-            checked = copies.swept_at(connection, book.work_id, scope=scope)
+            checked = sweeps.swept_at(connection, book.work_id, scope=scope)
             # Where each copy sits among the others. The rank reads what is
-            # listed in this scope; the range reads every copy ever recorded
-            # for this book, which is a wider question and a different query.
-            standing = copies.standings(for_sale, copies.ever_seen(connection, book))
+            # listed in this scope; the range reads every copy ever recorded,
+            # which is a wider question — and both come from one derivation of
+            # the edition set, so there is no second one to disagree with it.
+            for_sale, seen = copies.populations(connection, book, scope=scope)
+            placed = standing.standings(for_sale, seen)
 
         # Scheduled after the response is written, never before it. Decision
         # 40: examining fifty copies is twenty-five seconds of eBay, and this
@@ -286,141 +263,15 @@ def build_router(
             # Deliberately independent of the ceiling. A rank is about the
             # market and a ceiling is about you, so a copy over your limit
             # still counts in what the copies under it are cheaper *than*.
-            "standing": standing,
+            "standing": placed,
             # The same numbers lifted to the book. A range is a property of a
             # condition class, so stating it per copy says one fact once per
             # copy — eight times on a twelve-copy book.
-            "markets": copies.markets(standing),
+            "markets": standing.markets(placed),
             "is_isbn": normalise(book.search_query) is not None,
         }
         return templates.TemplateResponse(
             request, "book.html", context, status_code=error[1] if error else 200
-        )
-
-    def render_step(
-        request: Request,
-        *,
-        book,
-        glance,
-        state: str,
-        queue: list[int],
-        force: bool,
-        done: int,
-    ) -> HTMLResponse:
-        """One step of the walk: the next runner, plus the rows that changed."""
-        next_book = next_glance = None
-        if queue:
-            with closing(open_database()) as connection:
-                next_book = wantlist.get(connection, queue[0])
-                next_glance = copies.glance(connection, next_book)
-        return templates.TemplateResponse(
-            request,
-            "_checked.html",
-            {
-                "book": book,
-                "glance": glance,
-                "state": state,
-                "next_book": next_book,
-                "next_glance": next_glance,
-                "next_id": queue[0] if queue else None,
-                "queue": queue[1:],
-                "remaining": len(queue),
-                "force": force,
-                # Carried along the chain rather than recounted, because each
-                # step is a separate request and knows only what it was told.
-                "done": done,
-                "message": (
-                    None if queue else f"Checked {done} book{'' if done == 1 else 's'}."
-                ),
-            },
-        )
-
-    @router.get(CHECK_ALL_PATH, response_class=HTMLResponse)
-    def check_all(request: Request, force: int = 0) -> HTMLResponse:
-        """Work out which books need checking, and start the walk.
-
-        The queue is built here rather than passed in, so a book already
-        checked within the hour never enters it and its row never flickers
-        through a state it was not in. That is also why most of a walk is
-        instant: the gate usually leaves two or three books in the queue.
-        """
-        with closing(open_database()) as connection:
-            queue = [
-                book.id
-                for book in wantlist.all_books(connection)
-                if force or copies.due_for_sweep(connection, book.work_id, scope="us")
-            ]
-        if not queue:
-            # Doing nothing is the correct answer and it still has to be said.
-            # Silence here reads as a broken button, and every book being
-            # inside the hour gate is exactly why nothing happened.
-            return templates.TemplateResponse(
-                request,
-                "_runner.html",
-                {
-                    "next_id": None,
-                    "message": (
-                        "Everything is current — every book was checked "
-                        "within the hour."
-                    ),
-                },
-            )
-        # Nothing has been checked yet, so there is no finished row — only
-        # the first book moving into its checking state and a runner aimed at
-        # that same book. Aiming it at the second is how the first was
-        # skipped.
-        return render_step(
-            request,
-            book=None,
-            glance=None,
-            state="checking",
-            queue=queue,
-            force=bool(force),
-            done=0,
-        )
-
-    @router.get(CHECK_ONE_PATH, response_class=HTMLResponse)
-    def check_one(
-        request: Request,
-        book_id: int,
-        queue: str = "",
-        force: int = 0,
-        done: int = 0,
-    ) -> HTMLResponse:
-        """Search for one book, then hand the walk to the next.
-
-        A search that fails leaves this row saying so and the walk carries on.
-        One dead book must not hide the other nine — and the failure is on the
-        row it belongs to rather than on the run as a whole, because that is
-        where it can be acted on.
-        """
-        rest = [int(part) for part in queue.split(",") if part.strip().isdigit()]
-        state = "idle"
-        with closing(open_database()) as connection:
-            book = wantlist.get(connection, book_id)
-            if force or copies.due_for_sweep(connection, book.work_id, scope="us"):
-                try:
-                    copies.store(
-                        connection,
-                        book.work_id,
-                        run_search(book.search_query, DEFAULT_LIMIT, scope="us"),
-                        asked_for=DEFAULT_LIMIT,
-                        scope="us",
-                    )
-                    connection.commit()
-                except (MissingCredentialError, EbayError):
-                    state = "failed"
-                book = wantlist.get(connection, book_id)
-            glance = copies.glance(connection, book)
-
-        return render_step(
-            request,
-            book=book,
-            glance=glance,
-            state=state,
-            queue=rest,
-            force=bool(force),
-            done=done + 1,
         )
 
     @router.post(CEILING_PATH, response_class=HTMLResponse)

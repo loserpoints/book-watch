@@ -12,12 +12,13 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from book_watch import copies as copies_module
 from book_watch import db
+from book_watch import sweeps as sweeps_module
 from book_watch.config import DeletionEndpointConfig, MissingCredentialError
 from book_watch.ebay.errors import EbaySearchError
 from book_watch.ebay.search import Listing, Money
 from book_watch.web import listings as listings_module
+from book_watch.web import searching as searching_module
 from book_watch.web import wantlist as web_wantlist
 from book_watch.web.app import create_app
 
@@ -178,6 +179,11 @@ def test_the_app_does_not_read_ebay_credentials_at_startup(monkeypatch):
     def explode(*args, **kwargs):
         raise AssertionError("eBay credentials must not be read at startup")
 
+    # Both modules that can reach a credential. The search client reads them
+    # in `searching` and the enrichment wiring in `listings`, and patching
+    # only one leaves the other free to go eager without failing this test —
+    # which is what happened when the search client moved out.
+    monkeypatch.setattr(searching_module, "load_ebay_credentials", explode)
     monkeypatch.setattr(listings_module, "load_ebay_credentials", explode)
 
     client = TestClient(create_app(DELETION_CONFIG))
@@ -191,7 +197,7 @@ def test_searching_without_ebay_keys_fails_loudly_and_breaks_nothing_else(
     def missing(*args, **kwargs):
         raise MissingCredentialError("EBAY_CLIENT_ID is not set.")
 
-    monkeypatch.setattr(listings_module, "load_ebay_credentials", missing)
+    monkeypatch.setattr(searching_module, "load_ebay_credentials", missing)
     client = TestClient(create_app(DELETION_CONFIG))
 
     assert client.get("/search?isbn=x").status_code == 500
@@ -232,7 +238,10 @@ def book_client(tmp_path):
                 search, connect, enrich or (lambda work_id: None)
             )
         )
-        app.include_router(web_wantlist.build_router(connect))
+        # The want-list searches too, now that it owns checking — so it gets
+        # the same stub. Without this it reaches for the real client and
+        # conftest's guard fires, which is how this was caught.
+        app.include_router(web_wantlist.build_router(connect, search=search))
         client = TestClient(app)
         # So a test can set up a state the routes cannot reach on their own —
         # a database with history, which is what production has.
@@ -344,14 +353,14 @@ def test_a_view_after_the_window_searches_again(book_client):
 
 
 def test_the_window_is_one_place_and_the_route_obeys_it(book_client, monkeypatch):
-    """The value is read from `copies.CURRENT_FOR` rather than inlined, so
+    """The value is read from `sweeps.CURRENT_FOR` rather than inlined, so
     #72 can read it from somewhere else later without hunting for it."""
     search, asked = counting_search()
     client = book_client(search)
     add_book(client, "9780099448396", "Crash")
     client.get("/book/1")
 
-    monkeypatch.setattr(copies_module, "CURRENT_FOR", timedelta(0))
+    monkeypatch.setattr(sweeps_module, "CURRENT_FOR", timedelta(0))
     client.get("/book/1")
 
     assert len(asked) == 2

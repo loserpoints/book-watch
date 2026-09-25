@@ -78,8 +78,17 @@ def build_client(tmp_path, catalogue):
         db.migrate(connection)
         return connection
 
+    def never_searches(*args, **kwargs):
+        raise AssertionError(
+            "These tests are about the list itself and must not search eBay. "
+            "The router can search now that it owns checking, so saying so "
+            "here is cheaper than relying on conftest to catch it."
+        )
+
     app = FastAPI()
-    app.include_router(web_wantlist.build_router(connect, catalogue))
+    app.include_router(
+        web_wantlist.build_router(connect, catalogue, search=never_searches)
+    )
     # So a test can set up a state the routes cannot reach on their own.
     app.state.connect = connect
     return TestClient(app)

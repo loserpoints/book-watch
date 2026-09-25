@@ -27,8 +27,10 @@ from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from book_watch import copies, db, wantlist
-from book_watch.config import load_database_path
+from book_watch import db, standing, sweeps, wantlist
+from book_watch.config import MissingCredentialError, load_database_path
+from book_watch.ebay.errors import EbayError
+from book_watch.ebay.search import DEFAULT_LIMIT
 from book_watch.isbn import normalise
 from book_watch.openlibrary import (
     CallBudget,
@@ -36,8 +38,11 @@ from book_watch.openlibrary import (
     OpenLibraryUnavailable,
 )
 from book_watch.web import filters
+from book_watch.web.searching import LazyBrowseSearch, SearchFn
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
+CHECK_ALL_PATH = "/books/check"
+CHECK_ONE_PATH = "/books/{book_id}/check"
 
 ConnectFn = Callable[[], sqlite3.Connection]
 
@@ -89,7 +94,9 @@ def open_configured_database() -> sqlite3.Connection:
 
 
 def build_router(
-    connect: ConnectFn | None = None, catalogue: LazyCatalogue | None = None
+    connect: ConnectFn | None = None,
+    catalogue: LazyCatalogue | None = None,
+    search: SearchFn | None = None,
 ) -> APIRouter:
     router = APIRouter()
     templates = Jinja2Templates(directory=TEMPLATES_DIR)
@@ -98,6 +105,7 @@ def build_router(
         connect if connect is not None else open_configured_database
     )
     open_library = catalogue if catalogue is not None else LazyCatalogue(open_database)
+    run_search: SearchFn = search if search is not None else LazyBrowseSearch()
 
     def at_a_glance(connection: sqlite3.Connection, books: list) -> dict[int, object]:
         """What each book's market looks like, read from the store alone.
@@ -106,7 +114,7 @@ def build_router(
         ten books — that is what the button is for (decision 54), and a page
         that spent ten seconds before rendering would be a worse page.
         """
-        return {book.id: copies.glance(connection, book) for book in books}
+        return {book.id: standing.glance(connection, book) for book in books}
 
     def render_list(request: Request, *, checking: int | None = None) -> HTMLResponse:
         with closing(open_database()) as connection:
@@ -351,5 +359,131 @@ def build_router(
         # Deleting something already gone is not an error worth showing: the
         # list is the answer to "what is on the list", and it is now correct.
         return render_list(request)
+
+    def render_step(
+        request: Request,
+        *,
+        book,
+        glance,
+        state: str,
+        queue: list[int],
+        force: bool,
+        done: int,
+    ) -> HTMLResponse:
+        """One step of the walk: the next runner, plus the rows that changed."""
+        next_book = next_glance = None
+        if queue:
+            with closing(open_database()) as connection:
+                next_book = wantlist.get(connection, queue[0])
+                next_glance = standing.glance(connection, next_book)
+        return templates.TemplateResponse(
+            request,
+            "_checked.html",
+            {
+                "book": book,
+                "glance": glance,
+                "state": state,
+                "next_book": next_book,
+                "next_glance": next_glance,
+                "next_id": queue[0] if queue else None,
+                "queue": queue[1:],
+                "remaining": len(queue),
+                "force": force,
+                # Carried along the chain rather than recounted, because each
+                # step is a separate request and knows only what it was told.
+                "done": done,
+                "message": (
+                    None if queue else f"Checked {done} book{'' if done == 1 else 's'}."
+                ),
+            },
+        )
+
+    @router.get(CHECK_ALL_PATH, response_class=HTMLResponse)
+    def check_all(request: Request, force: int = 0) -> HTMLResponse:
+        """Work out which books need checking, and start the walk.
+
+        The queue is built here rather than passed in, so a book already
+        checked within the hour never enters it and its row never flickers
+        through a state it was not in. That is also why most of a walk is
+        instant: the gate usually leaves two or three books in the queue.
+        """
+        with closing(open_database()) as connection:
+            queue = [
+                book.id
+                for book in wantlist.all_books(connection)
+                if force or sweeps.due_for_sweep(connection, book.work_id, scope="us")
+            ]
+        if not queue:
+            # Doing nothing is the correct answer and it still has to be said.
+            # Silence here reads as a broken button, and every book being
+            # inside the hour gate is exactly why nothing happened.
+            return templates.TemplateResponse(
+                request,
+                "_runner.html",
+                {
+                    "next_id": None,
+                    "message": (
+                        "Everything is current — every book was checked "
+                        "within the hour."
+                    ),
+                },
+            )
+        # Nothing has been checked yet, so there is no finished row — only
+        # the first book moving into its checking state and a runner aimed at
+        # that same book. Aiming it at the second is how the first was
+        # skipped.
+        return render_step(
+            request,
+            book=None,
+            glance=None,
+            state="checking",
+            queue=queue,
+            force=bool(force),
+            done=0,
+        )
+
+    @router.get(CHECK_ONE_PATH, response_class=HTMLResponse)
+    def check_one(
+        request: Request,
+        book_id: int,
+        queue: str = "",
+        force: int = 0,
+        done: int = 0,
+    ) -> HTMLResponse:
+        """Search for one book, then hand the walk to the next.
+
+        A search that fails leaves this row saying so and the walk carries on.
+        One dead book must not hide the other nine — and the failure is on the
+        row it belongs to rather than on the run as a whole, because that is
+        where it can be acted on.
+        """
+        rest = [int(part) for part in queue.split(",") if part.strip().isdigit()]
+        state = "idle"
+        with closing(open_database()) as connection:
+            book = wantlist.get(connection, book_id)
+            if force or sweeps.due_for_sweep(connection, book.work_id, scope="us"):
+                try:
+                    sweeps.store(
+                        connection,
+                        book.work_id,
+                        run_search(book.search_query, DEFAULT_LIMIT, scope="us"),
+                        asked_for=DEFAULT_LIMIT,
+                        scope="us",
+                    )
+                    connection.commit()
+                except (MissingCredentialError, EbayError):
+                    state = "failed"
+                book = wantlist.get(connection, book_id)
+            glance = standing.glance(connection, book)
+
+        return render_step(
+            request,
+            book=book,
+            glance=glance,
+            state=state,
+            queue=rest,
+            force=bool(force),
+            done=done + 1,
+        )
 
     return router

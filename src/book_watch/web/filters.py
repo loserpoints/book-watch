@@ -45,12 +45,12 @@ def ago(when: datetime | None) -> str:
         return "just now"
     for size, unit in ((60, "minute"), (3600, "hour"), (86400, "day")):
         count = int(seconds // size)
-        if count < size_of_next(unit):
+        if count < _size_of_next(unit):
             return f"{count} {unit}{'' if count == 1 else 's'} ago"
     weeks = max(1, int(seconds // 604800))
     return f"{weeks} week{'' if weeks == 1 else 's'} ago"
 
 
-def size_of_next(unit: str) -> int:
+def _size_of_next(unit: str) -> int:
     """How many of `unit` fit before the next unit up takes over."""
     return {"minute": 60, "hour": 24, "day": 14}[unit]
