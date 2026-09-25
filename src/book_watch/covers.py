@@ -21,7 +21,8 @@ from __future__ import annotations
 import sqlite3
 from typing import Literal, Protocol
 
-from book_watch.openlibrary import OpenLibraryError
+from book_watch.isbn import normalise
+from book_watch.openlibrary import EditionIdentity, OpenLibraryError
 
 COVERS_URL = "https://covers.openlibrary.org/b/id"
 
@@ -30,8 +31,10 @@ COVERS_URL = "https://covers.openlibrary.org/b/id"
 Size = Literal["S", "M", "L"]
 
 
-class WorkCovers(Protocol):
+class Catalogue(Protocol):
     def work_cover(self, work_id: str) -> int | None: ...
+
+    def identify_isbn(self, isbn: str) -> EditionIdentity | None: ...
 
 
 def url(cover_id: int, size: Size = "M") -> str:
@@ -51,19 +54,28 @@ def chosen(hunt: str, work_cover: int | None, edition_cover: int | None) -> int 
     return work_cover or edition_cover
 
 
-def look_up(
-    connection: sqlite3.Connection, catalogue: WorkCovers, work_id: int
-) -> None:
+def look_up(connection: sqlite3.Connection, catalogue: Catalogue, work_id: int) -> None:
     """Learn a work's cover, once, for a book that arrived without one.
 
     Runs when the browser asks for the cover, never while the list renders, so
     the list appears at once and a cover arrives after it (decision 41's rule
     for any slow Open Library work).
 
+    Asks by whatever the book is known by:
+
+    - **its Open Library work**, for a book picked from a search — one request;
+    - **the ISBN it was added by**, when there is no work to ask about. Every
+      book added by number before migration 003 is in this state, because that
+      migration carried the number across and had no work id to carry. The
+      edition's cover stands in for the work's, as it does when a book is
+      added by number today; only if the edition has none is the work it
+      names asked as well, so this is one request and at most two;
+    - **nothing**, for a book added by text alone, which is recorded as having
+      no cover rather than retried on every view for an answer that cannot
+      come.
+
     Writes nothing when Open Library cannot be asked, so the next view tries
-    again. A book with no Open Library work — one added by text alone — cannot
-    be asked about at all, and is recorded as having no cover rather than being
-    retried on every view for an answer that cannot come.
+    again.
     """
     row = connection.execute(
         "SELECT openlibrary_work_id, cover_asked_at FROM work WHERE id = ?",
@@ -73,22 +85,44 @@ def look_up(
         return
 
     cover: int | None = None
-    if row["openlibrary_work_id"]:
-        try:
+    cover_from = "work"
+    try:
+        if row["openlibrary_work_id"]:
             cover = catalogue.work_cover(row["openlibrary_work_id"])
-        except OpenLibraryError:
-            # Unreachable, or our own ceiling reached. Neither is an answer
-            # about the cover, so neither may be written down as one.
-            return
+        elif (isbn := _typed_isbn(connection, work_id)) is not None:
+            edition = catalogue.identify_isbn(isbn)
+            if edition is not None and edition.cover_id is not None:
+                cover, cover_from = edition.cover_id, "edition"
+            elif edition is not None and edition.work_id:
+                cover = catalogue.work_cover(edition.work_id)
+    except OpenLibraryError:
+        # Unreachable, or our own ceiling reached. Neither is an answer about
+        # the cover, so neither may be written down as one.
+        return
 
     connection.execute(
         """
         UPDATE work
            SET cover_id = ?,
-               cover_from = CASE WHEN ? IS NULL THEN NULL ELSE 'work' END,
+               cover_from = ?,
                cover_asked_at = datetime('now')
          WHERE id = ? AND cover_asked_at IS NULL
         """,
-        (cover, cover, work_id),
+        (cover, cover_from if cover is not None else None, work_id),
     )
     connection.commit()
+
+
+def _typed_isbn(connection: sqlite3.Connection, work_id: int) -> str | None:
+    """The ISBN somebody added this book by, if they added it by one.
+
+    Text typed for a book that never had an ISBN (decision 29) is not one,
+    and asking Open Library about it would be a question with no answer.
+    """
+    for row in connection.execute(
+        "SELECT typed FROM entry WHERE work_id = ? AND typed IS NOT NULL", (work_id,)
+    ):
+        isbn = normalise(row["typed"])
+        if isbn is not None:
+            return isbn
+    return None

@@ -1,6 +1,7 @@
 """Tests for the want-list screens, driven through the real templates."""
 
 import dataclasses
+from contextlib import closing
 
 import pytest
 from fastapi import FastAPI
@@ -542,3 +543,24 @@ def test_the_list_credits_open_library_for_its_covers(tmp_path):
     page = pick(client).text
 
     assert 'href="https://openlibrary.org"' in page
+
+
+def test_a_book_added_by_number_before_work_ids_gets_its_cover(tmp_path):
+    """The *State of Grace* case: carried across by migration 003 with no work."""
+    crash = dataclasses.replace(CRASH, cover_id=240726)
+    catalogue = FakeCatalogue(identities={CRASH.isbn: crash})
+    client = build_client(tmp_path, catalogue)
+    with closing(client.app.state.connect()) as connection:
+        work_id = connection.execute(
+            "INSERT INTO work (title) VALUES ('Crash')"
+        ).lastrowid
+        connection.execute(
+            "INSERT INTO entry (work_id, hunt, typed) VALUES (?, 'reader', ?)",
+            (work_id, CRASH.isbn),
+        )
+
+    response = client.get("/books/1/cover", follow_redirects=False)
+
+    assert response.status_code == 302
+    assert "b/id/240726-M.jpg" in response.headers["location"]
+    assert catalogue.asked == [CRASH.isbn]

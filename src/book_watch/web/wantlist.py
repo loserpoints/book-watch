@@ -365,8 +365,9 @@ def build_router(
 
         Only reached for a book whose cover nobody has asked about yet: once
         the answer is stored, the list links to Open Library's image directly
-        and never comes here again. So the one Open Library request this can
-        make happens once per book, after the list has already rendered.
+        and never comes here again. So the Open Library request this makes —
+        two at most, for a book known only by an edition with no cover of its
+        own — happens once per book, after the list has already rendered.
 
         A 404 means there is nothing to show, for whatever reason, and the
         page shows its placeholder. If the reason was Open Library being

@@ -2731,6 +2731,21 @@ work happens after the page, never during it — and it replaces a separate
 backfill job: the books already on the list learn their covers the first time
 the list is opened, one request each.
 
+> **Corrected 2026-09-25: a book with no work id is asked by its ISBN.** S25
+> shipped recording "no cover" for any book without an Open Library work id,
+> meaning books added by text alone. That also caught every book added by
+> number before migration 003, which carried the number across with no work id
+> to carry — and *State of Grace* showed a placeholder while Open Library holds
+> two covers for it. The lookup now asks by the ISBN the book was added by (its
+> edition's cover, or the work it names if the edition has none: one request,
+> at most two), and migration 019 clears the "no cover" it had wrongly
+> concluded for exactly those books. The general lesson is decision 52's again:
+> "we could not ask" is not "the answer is no", and it was written down as one.
+>
+> **Coverage on production:** one of the two books on the list after S25 —
+> *Breaking and Entering* had its cover, *State of Grace* is the case above.
+> Two of two is expected once the correction deploys, and is not yet seen.
+
 **`resolution.CAPTURE` did not change**, deliberately. The notebook does not
 store cover ids, and bumping the version would have re-asked Open Library
 about every number ever seen in a listing, for a field nothing on that path
