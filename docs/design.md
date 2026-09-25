@@ -53,8 +53,8 @@ recorded here as it lands. Twelve abstract steps were the first plan; a
 screen at a time turned out to be the unit a decision can actually be made in.
 
 1. **Inventory** — every fact each screen shows today *(below)*
-2. **The want-list** *(in progress, below)*
-3. Adding a book
+2. **The want-list** *(below)*
+3. **Adding a book** *(below)*
 4. The book page, around the copies
 5. A copy
 6. The mock-up, tying it together
@@ -155,6 +155,31 @@ the page, so closing the tab first leaves it unchecked. A check that fails is
 not stored either, so after a reload a failed book reads as unchecked. And
 books added before S23 were never checked. Rare, but it has to look different
 from "nothing listed", which is a claim about the market.
+
+### 3. Adding a book
+
+Alan's calls, 2026-09-25: the content is right and only the styling changes.
+One addition: say plainly which fields can be used together, so it does not
+look as though all three are needed.
+
+**What the form actually accepts**, which that wording has to match rather
+than flatter:
+
+- **a title**, optionally with an author to narrow it — searches Open Library
+  and offers candidates
+- **an ISBN**, which takes over: a title typed beside it is used only as the
+  name if the number is added anyway
+- **an author alone is refused** ("Enter a title, or an ISBN.")
+
+So "any combination" is not true today. The copy says what is true — title,
+optionally with author, or an ISBN — unless an author-only search is built,
+which is a behaviour change and not M6's.
+
+Also noted for S30, not decided here:
+
+- **The whole candidate row is the tap target**, not only "This one"
+  (principle 5)
+- **Adding closes the panel** and leaves the new row in view, checking itself
 
 ## Open
 
