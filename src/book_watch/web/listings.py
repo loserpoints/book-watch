@@ -108,6 +108,7 @@ def build_router(
     router = APIRouter()
     templates = Jinja2Templates(directory=TEMPLATES_DIR)
     templates.env.filters["ago"] = _ago
+    templates.env.filters["ordinal"] = _ordinal
     run_search: SearchFn = search if search is not None else LazyBrowseSearch()
     open_database: ConnectFn = (
         connect if connect is not None else open_configured_database
@@ -244,6 +245,10 @@ def build_router(
             for_sale = copies.for_entry(connection, book, scope=scope)
             ceiling = book.will_pay
             checked = copies.swept_at(connection, book.work_id, scope=scope)
+            # Where each copy sits among the others. The rank reads what is
+            # listed in this scope; the range reads every copy ever recorded
+            # for this book, which is a wider question and a different query.
+            standing = copies.standings(for_sale, copies.ever_seen(connection, book))
 
         # Scheduled after the response is written, never before it. Decision
         # 40: examining fifty copies is twenty-five seconds of eBay, and this
@@ -276,6 +281,10 @@ def build_router(
             # The verdict per copy, worked out once here rather than in the
             # template. Decision 43: derived on read, never stored.
             "verdict": {copy.item_id: copy.against(ceiling) for copy in for_sale},
+            # Deliberately independent of the ceiling. A rank is about the
+            # market and a ceiling is about you, so a copy over your limit
+            # still counts in what the copies under it are cheaper *than*.
+            "standing": standing,
             "is_isbn": normalise(book.search_query) is not None,
         }
         return templates.TemplateResponse(
@@ -305,6 +314,17 @@ def build_router(
         return RedirectResponse(f"/book/{book_id}", status_code=303)
 
     return router
+
+
+def _ordinal(n: int) -> str:
+    """1 -> "1st", 2 -> "2nd", 11 -> "11th".
+
+    Display only, which is why it lives here rather than beside the numbers.
+    The teens are the whole reason this is not a lookup on the last digit.
+    """
+    if 10 <= n % 100 <= 20:
+        return f"{n}th"
+    return f"{n}{ {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th') }"
 
 
 def _ago(when: datetime | None) -> str:
