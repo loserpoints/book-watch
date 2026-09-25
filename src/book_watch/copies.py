@@ -666,6 +666,80 @@ def standings(listed: list[Copy], seen: list[Copy]) -> dict[str, Standing]:
     return standing
 
 
+@dataclass(frozen=True, slots=True)
+class Market:
+    """One condition class's standing for a book, stated once for the page.
+
+    The same numbers `Standing` carries per copy, lifted to the book. Every
+    copy of a class shares its class's range and count, so rendering them per
+    copy repeats one fact as many times as there are copies — which is what
+    S21 shipped and what reading it made obvious.
+    """
+
+    condition_class: ConditionClass
+    #: Copies of this class listed now, which is what a rank counts.
+    listed: int
+    #: Copies of this class ever recorded, which is what a range spans.
+    seen: int
+    low: Money | None = None
+    high: Money | None = None
+
+    @property
+    def has_range(self) -> bool:
+        """Is there a range worth stating, or only a number wearing a dash?
+
+        One observation is not a range, and neither is two at the same price —
+        "asking 18.00–18.00" is a sentence that looks like information.
+        """
+        if self.low is None or self.high is None:
+            return False
+        return self.seen > 1 and self.low.amount != self.high.amount
+
+
+#: Used before new, because the reading hunt is the dominant one and a new
+#: copy is usually bulk inventory. *Two kinds of hunt* is where a collectible
+#: entry may want this inverted, and when it does the order belongs here
+#: rather than in a template.
+_MARKET_ORDER: dict[ConditionClass, int] = {"used": 0, "new": 1, "unknown": 2}
+
+
+def markets(standing: dict[str, Standing]) -> list[Market]:
+    """The classes this book's listed copies sit in, one entry each.
+
+    Derived from the per-copy standings rather than from a second query: every
+    number is already in there, repeated once per copy, and this is the lift.
+
+    **Only classes with copies listed now appear.** These head a list, so a
+    class with nothing in that list has no list to head. A used range for a
+    book whose used copies have all gone is a real and interesting fact, and
+    it is a different statement from this one — it belongs to whatever shows
+    a book's history rather than to a header over what is for sale.
+
+    **Unknown never appears.** It has no range worth stating and no rank to
+    head, so the page mentions it only on the copies themselves, where it
+    says why that copy could not be placed.
+
+    Keyed by class *and* currency, because `standings` partitions by both: a
+    GBP used copy and a USD used copy are not in one market and their prices
+    cannot share a range.
+    """
+    found: dict[tuple[ConditionClass, str], Market] = {}
+    for placed in standing.values():
+        if placed.rank is None or placed.low is None:
+            continue
+        found[(placed.condition_class, placed.low.currency)] = Market(
+            condition_class=placed.condition_class,
+            listed=placed.listed,
+            seen=placed.seen,
+            low=placed.low,
+            high=placed.high,
+        )
+    return sorted(
+        found.values(),
+        key=lambda market: (_MARKET_ORDER[market.condition_class], -market.listed),
+    )
+
+
 def _placeable(copy: Copy) -> Money | None:
     """What this copy counts as in a comparison, or None if it cannot count.
 

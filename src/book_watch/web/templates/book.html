@@ -72,6 +72,31 @@
   </p>
   <p class="muted">{{ toggle }}</p>
 
+  {#- What each market this book sits in is asking, stated once.
+
+      New and used never pool: they are two markets rather than two grades,
+      priced by different things (decision 52). So this is one line each
+      rather than one line about all of them, and a book with copies in only
+      one market gets only one line.
+
+      Every figure is delivered and every figure is an *asking* price. What a
+      sweep sees is that a copy was listed at a price and later was not; why
+      it went is not something eBay will tell us (decision 47).
+
+      The unknown class is absent on purpose. It has no range worth stating,
+      so it is mentioned only on the copies themselves. -#}
+  {% for market in markets %}
+    <p class="muted market">
+      {{ market.listed }}
+      {{- ' ' }}{{ market.condition_class }}
+      {{- ' ' }}cop{{ 'y' if market.listed == 1 else 'ies' }} listed now
+      {%- if market.has_range %},
+        asking {{ "%.2f"|format(market.low.amount) }}–{{ market.high }}
+        delivered across {{ market.seen }} seen
+      {%- endif -%}.
+    </p>
+  {% endfor %}
+
   {% if unlooked %}
     {# Honest rather than hidden: the first look at a new book is genuinely
        less certain than the second, and a spinner would claim otherwise.

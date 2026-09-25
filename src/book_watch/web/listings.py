@@ -285,6 +285,10 @@ def build_router(
             # market and a ceiling is about you, so a copy over your limit
             # still counts in what the copies under it are cheaper *than*.
             "standing": standing,
+            # The same numbers lifted to the book. A range is a property of a
+            # condition class, so stating it per copy says one fact once per
+            # copy — eight times on a twelve-copy book.
+            "markets": copies.markets(standing),
             "is_isbn": normalise(book.search_query) is not None,
         }
         return templates.TemplateResponse(

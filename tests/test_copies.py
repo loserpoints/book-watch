@@ -774,3 +774,104 @@ def test_a_copy_recorded_before_the_id_was_stored_reads_as_unknown(database):
 
     assert only.condition_id is None
     assert only.condition_class == "unknown"
+
+
+# --- the markets a book sits in ----------------------------------------------
+#
+# The same numbers as a standing, lifted from the copy to the book. What these
+# guard is mostly what is *absent*: a class with nothing listed, the unknown
+# class, and a range that is really one number.
+
+
+def markets_for(connection, entry):
+    return copies.markets(standing_for(connection, entry))
+
+
+def test_used_comes_before_new(database):
+    """The reading hunt is the dominant one and a new copy is usually bulk
+    inventory. *Two kinds of hunt* may invert this for collectible entries,
+    which is why the order lives in one place rather than in a template."""
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(
+        database, book.work_id, "v1|1|0", price="4.00", condition_id=BRAND_NEW
+    )
+    a_certain_copy(database, book.work_id, "v1|2|0", price="18.00")
+
+    assert [m.condition_class for m in markets_for(database, book)] == ["used", "new"]
+
+
+def test_a_market_counts_listed_copies_and_spans_seen_ones(database):
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
+    a_certain_copy(database, book.work_id, "v1|2|0", price="24.00")
+    a_certain_copy(database, book.work_id, "v1|3|0", price="36.00", listed=False)
+
+    (used,) = markets_for(database, book)
+
+    assert (used.listed, used.seen) == (2, 3)
+    assert (used.low.amount, used.high.amount) == (Decimal("18.00"), Decimal("36.00"))
+
+
+def test_the_unknown_class_is_never_a_market(database):
+    """It has no range worth stating and no rank to head, so the page mentions
+    it only on the copies themselves, where it says why it could not be
+    placed."""
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", condition_id=None)
+
+    assert markets_for(database, book) == []
+
+
+def test_a_class_whose_copies_have_all_gone_heads_nothing(database):
+    """These head a list. A class with nothing in that list has no list to
+    head — its range is a real fact and a different statement from this one."""
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", price="18.00", listed=False)
+    a_certain_copy(
+        database, book.work_id, "v1|2|0", price="4.00", condition_id=BRAND_NEW
+    )
+
+    assert [m.condition_class for m in markets_for(database, book)] == ["new"]
+
+
+def test_one_copy_is_not_a_range(database):
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
+
+    (used,) = markets_for(database, book)
+
+    assert used.listed == 1
+    assert used.has_range is False
+
+
+def test_two_copies_at_one_price_are_not_a_range_either(database):
+    """ "Asking 18.00–18.00" is a sentence that looks like information."""
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
+    a_certain_copy(database, book.work_id, "v1|2|0", price="18.00")
+
+    (used,) = markets_for(database, book)
+
+    assert used.seen == 2
+    assert used.has_range is False
+
+
+def test_currencies_are_separate_markets(database):
+    """Decision 50's refusal, applied to a range: £5 to $36 is not a range and
+    a symbol would not make it one."""
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
+    a_certain_copy(database, book.work_id, "v1|2|0", price="5.00", currency="GBP")
+
+    markets = markets_for(database, book)
+
+    assert len(markets) == 2
+    assert {m.low.currency for m in markets} == {"USD", "GBP"}
+    assert all(m.listed == 1 for m in markets)
+
+
+def test_a_copy_that_cannot_be_placed_makes_no_market(database):
+    book = a_book(database, "Stoner", "John Williams")
+    a_certain_copy(database, book.work_id, "v1|1|0", price="18.00", shipping=None)
+
+    assert markets_for(database, book) == []
