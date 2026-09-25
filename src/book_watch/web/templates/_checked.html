@@ -1,0 +1,20 @@
+{# One step of the walk: what happens next, and the rows that changed.
+
+   The runner is the response's own content, because that is what the request
+   targeted. The rows ride along out of band — the one just finished, and the
+   one about to start, so a row says it is being checked while it is being
+   checked rather than only afterwards. #}
+{% include "_runner.html" %}
+
+{#- Absent on the first step, which starts the walk without having finished
+    anything. Rendering the first book here as though it were done is how the
+    walk skipped it entirely and reported one book too few. -#}
+{% if book %}
+  {% with oob = true %}{% include "_entry.html" %}{% endwith %}
+{% endif %}
+
+{% if next_book %}
+  {% with book = next_book, glance = next_glance, state = 'checking', oob = true %}
+    {% include "_entry.html" %}
+  {% endwith %}
+{% endif %}

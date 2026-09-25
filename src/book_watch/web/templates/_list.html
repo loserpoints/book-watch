@@ -4,33 +4,32 @@
   <p class="muted">Nothing on the list yet.</p>
 {% else %}
   <p class="muted">{{ books | length }} book{{ '' if books | length == 1 else 's' }}.</p>
+
+  {#- Checking is an explicit act with a button on it. The list itself renders
+      from the store and spends nothing (decision 54) — opening this page is
+      not a request to search ten books, and a page that took ten seconds to
+      appear would be a worse page.
+
+      Re-check ignores the hour gate exactly as the book page's re-run does.
+      It is the one control here that spends requests unconditionally. -#}
+  <p class="sweep">
+    <button type="button" class="secondary"
+            hx-get="/books/check"
+            hx-target="#sweep-runner"
+            hx-swap="outerHTML">Check all</button>
+    <a href="#" hx-get="/books/check?force=1"
+       hx-target="#sweep-runner" hx-swap="outerHTML">Re-check everything</a>
+  </p>
+  {#- A book just added arrives with the walk already primed for it, so it
+      checks itself without the page having asked for anything else. -#}
+  {% with next_id = checking, queue = [], remaining = 1, force = False %}
+    {% include "_runner.html" %}
+  {% endwith %}
+
   {% for book in books %}
-    <div class="entry">
-      <div class="details">
-        <div class="title">
-          <a href="/book/{{ book.id }}">{{ book.name }}</a>
-        </div>
-        <div class="muted">
-          {%- if book.added_by %}{{ book.added_by }} · {% endif -%}
-          added {{ book.added_on or book.added_at }}
-          {%- if book.being_enriched %} ·
-            {# Only while there is work outstanding. A book nobody has opened
-               has no copies either, so there is nothing to dig through and
-               this says nothing — the app does not advertise work it has not
-               started. #}
-            <span class="digging" title="We ask the public catalogues slowly on
-purpose. They're free and we'd like them to stay that way.">still digging</span>
-          {%- endif %}
-        </div>
-      </div>
-      <button class="remove"
-              hx-delete="/books/{{ book.id }}"
-              hx-target="#want-list"
-              hx-swap="outerHTML"
-              hx-confirm="Remove {{ book.name }} from the list?">
-        Remove
-      </button>
-    </div>
+    {% set glance = glances.get(book.id) if glances else None %}
+    {% set state = 'checking' if book.id == checking else 'idle' %}
+    {% include "_entry.html" %}
   {% endfor %}
 {% endif %}
 </div>

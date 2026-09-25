@@ -1,0 +1,76 @@
+{# One book as the want-list shows it.
+
+   Rendered from two places and it must look identical from both: the list
+   itself, and the endpoint that checks a single book and swaps this row back
+   in. That is why the states live here rather than in either caller.
+
+   `state` is 'idle', 'checking' or 'failed'. A row never fetches anything
+   itself: the runner drives the whole walk and swaps finished rows back in
+   out of band, so there is one place that decides what happens next. #}
+<div class="entry" id="entry-{{ book.id }}"{% if oob %} hx-swap-oob="true"{% endif %}>
+  <div class="details">
+    <div class="title">
+      <a href="/book/{{ book.id }}">{{ book.name }}</a>
+    </div>
+    <div class="muted">
+      {%- if book.added_by %}{{ book.added_by }} · {% endif -%}
+      added {{ book.added_on or book.added_at }}
+      {%- if book.being_enriched %} ·
+        {# Only while there is work outstanding. A book nobody has opened has
+           no copies either, so there is nothing to dig through and this says
+           nothing — the app does not advertise work it has not started. #}
+        <span class="digging" title="We ask the public catalogues slowly on
+purpose. They're free and we'd like them to stay that way.">still digging</span>
+      {%- endif %}
+    </div>
+
+    {#- What the market looks like, without opening the book. Every figure is
+        delivered and every figure is an asking price (decisions 47 and 51).
+
+        The four states below are four different facts and none of them may be
+        said with another's words: nobody has looked, nothing is listed,
+        copies are listed but none can be compared, and here is the cheapest
+        one. "Nothing listed" for a book nobody has searched for would be the
+        worst of these — a confident claim about a market we never asked
+        about. -#}
+    <div class="muted glance">
+      {%- if state == 'checking' -%}
+        Checking…
+      {%- elif state == 'failed' -%}
+        Couldn't check this one just now.
+      {%- elif glance is none or glance.checked is none -%}
+        Not checked yet.
+      {%- elif glance.headline -%}
+        {%- set lead = glance.headline -%}
+        cheapest {{ lead.market.condition_class }} {{ lead.cheapest }}
+        {%- if lead.verdict == 'under' %} — <span class="under">under your limit</span>
+        {%- elif lead.verdict == 'over' %} — over your limit
+        {%- endif -%}
+        {{ ' ' }}· {{ lead.market.listed }} listed
+        {%- if lead.market.has_range %},
+          seen {{ "%.2f"|format(lead.market.low.amount) }}–{{ lead.market.high }}
+        {%- endif %} · checked {{ glance.checked | ago }}
+      {%- elif glance.listed -%}
+        {#- Copies, but nothing comparable in them yet — every copy recorded
+            before migration 017 is in this state until its next sweep. A
+            count is still worth having. -#}
+        {{ glance.listed }} cop{{ 'y' if glance.listed == 1 else 'ies' }} listed
+        · checked {{ glance.checked | ago }}
+      {%- elif glance.uncertain -%}
+        {#- "Nothing listed" over five uncertain copies would simply be false.
+            They are on the market; we cannot swear they are this book. -#}
+        nothing certain listed · {{ glance.uncertain }} that might be
+        · checked {{ glance.checked | ago }}
+      {%- else -%}
+        Nothing listed in the US · checked {{ glance.checked | ago }}
+      {%- endif -%}
+    </div>
+  </div>
+  <button class="remove"
+          hx-delete="/books/{{ book.id }}"
+          hx-target="#want-list"
+          hx-swap="outerHTML"
+          hx-confirm="Remove {{ book.name }} from the list?">
+    Remove
+  </button>
+</div>

@@ -1,0 +1,21 @@
+{# The one place the walk is driven from, and the one place it reports.
+
+   Chained rather than timed: this element fetches the next book and its
+   response is the next runner. One request is outstanding by construction,
+   which a staggered timer could only approximate by guessing a delay wider
+   than a search takes (decision 54).
+
+   When there is nothing left it becomes a sentence instead of a trigger —
+   including the case where there was nothing to do, because a button that
+   correctly does nothing still has to say so. #}
+{% if next_id %}
+  <div id="sweep-runner" class="muted sweeping"
+       hx-get="/books/{{ next_id }}/check?queue={{ queue | join(',') }}&done={{ done or 0 }}{{ '&force=1' if force }}"
+       hx-trigger="load"
+       hx-target="#sweep-runner"
+       hx-swap="outerHTML">
+    Checking {{ remaining }} book{{ '' if remaining == 1 else 's' }}…
+  </div>
+{% else %}
+  <div id="sweep-runner" class="muted">{{ message or '' }}</div>
+{% endif %}

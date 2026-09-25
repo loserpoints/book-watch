@@ -27,7 +27,7 @@ from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from book_watch import db, wantlist
+from book_watch import copies, db, wantlist
 from book_watch.config import load_database_path
 from book_watch.isbn import normalise
 from book_watch.openlibrary import (
@@ -35,6 +35,7 @@ from book_watch.openlibrary import (
     OpenLibraryClient,
     OpenLibraryUnavailable,
 )
+from book_watch.web import filters
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
@@ -92,15 +93,30 @@ def build_router(
 ) -> APIRouter:
     router = APIRouter()
     templates = Jinja2Templates(directory=TEMPLATES_DIR)
+    filters.register(templates.env)
     open_database: ConnectFn = (
         connect if connect is not None else open_configured_database
     )
     open_library = catalogue if catalogue is not None else LazyCatalogue(open_database)
 
-    def render_list(request: Request) -> HTMLResponse:
+    def at_a_glance(connection: sqlite3.Connection, books: list) -> dict[int, object]:
+        """What each book's market looks like, read from the store alone.
+
+        No request is made here. Opening this page is not a request to search
+        ten books — that is what the button is for (decision 54), and a page
+        that spent ten seconds before rendering would be a worse page.
+        """
+        return {book.id: copies.glance(connection, book) for book in books}
+
+    def render_list(request: Request, *, checking: int | None = None) -> HTMLResponse:
         with closing(open_database()) as connection:
             books = wantlist.all_books(connection)
-        return templates.TemplateResponse(request, "_list.html", {"books": books})
+            glances = at_a_glance(connection, books)
+        return templates.TemplateResponse(
+            request,
+            "_list.html",
+            {"books": books, "glances": glances, "checking": checking},
+        )
 
     def render_page(
         request: Request,
@@ -113,14 +129,23 @@ def build_router(
         title: str = "",
         author: str = "",
         status_code: int = 200,
+        checking: int | None = None,
     ) -> HTMLResponse:
         with closing(open_database()) as connection:
             books = wantlist.all_books(connection)
+            glances = at_a_glance(connection, books)
         return templates.TemplateResponse(
             request,
             "wantlist.html",
             {
                 "books": books,
+                "glances": glances,
+                # The book just added, which starts checking itself on load.
+                # Adding a book is an explicit act, so this is not an
+                # exception to "nothing sweeps on page load" — and it means a
+                # book you just added never shows as unchecked, which is the
+                # state that reads worst on a list.
+                "checking": checking,
                 "error": error,
                 "note": note,
                 "offer_override": offer_override,
@@ -135,15 +160,17 @@ def build_router(
     def store(request: Request, put_on_list, duplicate_of: str) -> HTMLResponse:
         try:
             with closing(open_database()) as connection:
-                put_on_list(connection)
+                added = put_on_list(connection)
         except wantlist.DuplicateBook:
             return render_page(
                 request,
                 error=f"{duplicate_of} is already on the list.",
                 status_code=409,
             )
-        # The whole page comes back, so the form clears and the new row shows.
-        return render_page(request)
+        # The whole page comes back, so the form clears and the new row shows
+        # — already checking itself, because the first thing you want to know
+        # about a book you just added is whether anybody is selling it.
+        return render_page(request, checking=added.id)
 
     @router.get("/", response_class=HTMLResponse)
     def want_list(request: Request) -> HTMLResponse:
