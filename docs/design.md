@@ -48,21 +48,16 @@ Three apps Alan uses and likes, each for something specific:
 
 ## What each row says
 
-S26 (#94). Settled one step at a time, in this order, each recorded here as
-it lands:
+S26 (#94). Settled one screen at a time, in the order they are used, each
+recorded here as it lands. Twelve abstract steps were the first plan; a
+screen at a time turned out to be the unit a decision can actually be made in.
 
-1. **Inventory** — every fact a row shows today *(below)*
-2. The copy row's headline
-3. The rejection signals: edition, condition, location, seller
-4. The photograph
-5. The seller's description
-6. Uncertainty, compactly
-7. The book page's frame
-8. The want-list row
-9. List or cover grid
-10. One-tap toggles
-11. Tap-to-explain
-12. The mock-up
+1. **Inventory** — every fact each screen shows today *(below)*
+2. **The want-list** *(in progress, below)*
+3. Adding a book
+4. The book page, around the copies
+5. A copy
+6. The mock-up, tying it together
 
 ### 1. Inventory, as of S25
 
@@ -116,6 +111,25 @@ it lands:
 | L3 | Count | "2 books." |
 | L4 | Check | "Check all" and "Re-check everything" |
 | L5 | Credit | "Covers from Open Library." |
+
+### 2. The want-list
+
+Alan's calls, 2026-09-25, against the labelled screenshot:
+
+| # | Call |
+|---|---|
+| L1 | Too much room for something done occasionally. Collapse it behind a **+** button (as nzb360 does) or an expandable panel. The three fields stay as they are |
+| L3 | Keep the total |
+| L4 | Keep *Check all*, and keep the hour gate on it |
+| L5 | Keep the Open Library credit |
+| B3 | "Added" becomes a timeframe ("3 days ago"), using the logic already in an issue |
+| B5 | "cheapest used $13.49" collapses to something like "from $13.49" |
+| B5 | Under or over the limit is shown by colouring the price, not by words |
+| B5 | The seen range becomes a small picture — a distribution, or a bar, with a mark for the current cheapest — to the right of the text rather than in it |
+| B5 | "Nothing listed" still has to be said, but shortly — a count of what is listed, for instance |
+| B6 | Remove becomes a trash icon |
+
+Still to settle for this screen: the facts the calls above did not cover.
 
 ## Open
 
