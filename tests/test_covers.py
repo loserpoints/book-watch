@@ -3,7 +3,11 @@
 import pytest
 
 from book_watch import covers, db, wantlist
-from book_watch.openlibrary import BudgetExhausted, OpenLibraryUnavailable
+from book_watch.openlibrary import (
+    BudgetExhausted,
+    EditionIdentity,
+    OpenLibraryUnavailable,
+)
 
 # --- whose cover --------------------------------------------------------------
 
@@ -40,9 +44,16 @@ def test_a_missing_image_is_a_404_rather_than_a_blank_one():
 
 
 class Catalogue:
-    def __init__(self, answer):
+    def __init__(self, answer, editions=None):
         self.answer = answer
+        self.editions = editions or {}
         self.asked = []
+
+    def identify_isbn(self, isbn):
+        self.asked.append(isbn)
+        if isinstance(self.answer, Exception):
+            raise self.answer
+        return self.editions.get(isbn)
 
     def work_cover(self, work_id):
         self.asked.append(work_id)
@@ -157,3 +168,94 @@ def test_a_collector_entry_shows_its_editions_cover(connection):
     hunts = {b.hunt: b.cover for b in wantlist.all_books(connection)}
 
     assert hunts == {"reader": 1, "collector": 2}
+
+
+# --- books added by number before there were work ids -------------------------
+#
+# Migration 003 carried M1's books across with their ISBN and no work id.
+# *State of Grace* is one, and S25 first shipped recording it as coverless
+# without asking, while Open Library holds two covers for it.
+
+STATE_OF_GRACE = "9780679723004"
+
+
+def edition(cover_id=None, work_id="OL1998538W"):
+    return EditionIdentity(
+        isbn=STATE_OF_GRACE,
+        title="State of Grace",
+        work_id=work_id,
+        publisher=None,
+        published=None,
+        physical_format=None,
+        cover_id=cover_id,
+    )
+
+
+def added_by_number(connection, typed=STATE_OF_GRACE):
+    """A book as migration 003 left it: a number, and no work to ask about."""
+    work_id = connection.execute(
+        "INSERT INTO work (title) VALUES ('State of Grace')"
+    ).lastrowid
+    connection.execute(
+        "INSERT INTO entry (work_id, hunt, typed) VALUES (?, 'reader', ?)",
+        (work_id, typed),
+    )
+    return work_id
+
+
+def test_a_book_with_no_work_is_asked_about_by_its_isbn(connection):
+    work_id = added_by_number(connection)
+    catalogue = Catalogue(None, {STATE_OF_GRACE: edition(cover_id=419932)})
+
+    covers.look_up(connection, catalogue, work_id)
+
+    assert entry_for(connection, work_id).cover == 419932
+    assert catalogue.asked == [STATE_OF_GRACE]
+
+
+def test_an_edition_with_no_cover_asks_the_work_it_names(connection):
+    work_id = added_by_number(connection)
+    catalogue = Catalogue(6928523, {STATE_OF_GRACE: edition(cover_id=None)})
+
+    covers.look_up(connection, catalogue, work_id)
+
+    assert entry_for(connection, work_id).cover == 6928523
+    assert catalogue.asked == [STATE_OF_GRACE, "OL1998538W"]
+
+
+def test_a_number_open_library_does_not_hold_has_no_cover(connection):
+    work_id = added_by_number(connection)
+    catalogue = Catalogue(None, {})
+
+    covers.look_up(connection, catalogue, work_id)
+
+    assert entry_for(connection, work_id).has_no_cover
+    assert catalogue.asked == [STATE_OF_GRACE]
+
+
+def test_text_typed_for_a_book_with_no_isbn_is_not_asked_about(connection):
+    """Decision 29's override. It is not a number, so there is no question."""
+    work_id = added_by_number(connection, typed="Stoner, 1965 Viking first")
+    catalogue = Catalogue(6928523)
+
+    covers.look_up(connection, catalogue, work_id)
+
+    assert catalogue.asked == []
+    assert entry_for(connection, work_id).has_no_cover
+
+
+def test_migration_019_asks_again_only_where_018_never_asked(connection):
+    by_number = added_by_number(connection)
+    by_text = added_by_number(connection, typed="Stoner, 1965 Viking first")
+    by_work = unasked(connection)
+    connection.execute("UPDATE work SET cover_asked_at = datetime('now')")
+    # Run 019 again over the state 018's first lookup left behind.
+    connection.execute("DELETE FROM schema_migration WHERE name LIKE '019_%'")
+    db.migrate(connection)
+
+    asked = {
+        w: entry_for(connection, w).cover_asked_at is not None
+        for w in (by_number, by_text, by_work)
+    }
+
+    assert asked == {by_number: False, by_text: True, by_work: True}
