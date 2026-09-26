@@ -187,9 +187,8 @@ Further calls, same day:
 - **Author-only search, adding several books at once**: wanted, and a
   behaviour change, so it is #101 rather than M6.
 
-**Open question: does adding close the panel?** Closing it shows the new row
-checking itself. Keeping it open is what adding several books by one author
-(#101) needs. Alan leans towards keeping it open; settle it with #101.
+**Does adding close the panel? Settled in S27:** a short tap adds one and
+closes; a long press (or *Select*) keeps it open to add several. Built with #101.
 
 ### 4. The book page, around the copies
 
@@ -336,9 +335,15 @@ IBM Plex Sans for everything else, and a round + in thumb reach.
 - **Every result is tappable as a whole.** A book already on the list says
   *On your list* in place of *Add*, as nzb360's *In Library* does, so the same
   work is not added twice.
-- **Adding keeps the sheet open** and marks the row *✓ Added*. That is the way
-  Alan leans on the open question tied to #101. It is drawn this way so it can
-  be judged, not because it is decided.
+- **Adding one or several (settles the open question, built with #101).** A
+  short tap adds that book and closes the sheet. A long press starts select
+  mode: checkboxes, the sheet stays open, and an **Add n** button appears. A
+  visible **Select** link does the same for mouse and keyboard users, and for
+  anyone who does not know the gesture. The mock-up shows the select-mode
+  "✓ Added" row.
+- **The hint stays "A title is enough. Add the author to narrow it down."**
+  until #101 makes author-only search true. Then it becomes "Title, author, or
+  both."
 - **The ISBN side** carries the typo error and *Add anyway*, with its reason
   in one line. Where *Add anyway* belongs is #101's question.
 
