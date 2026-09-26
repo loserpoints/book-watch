@@ -37,7 +37,7 @@ from book_watch.openlibrary import (
     OpenLibraryClient,
     OpenLibraryUnavailable,
 )
-from book_watch.web import filters
+from book_watch.web import assets, filters
 from book_watch.web.searching import LazyBrowseSearch, SearchFn
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
@@ -104,6 +104,7 @@ def build_router(
     router = APIRouter()
     templates = Jinja2Templates(directory=TEMPLATES_DIR)
     filters.register(templates.env)
+    assets.register(templates.env)
     templates.env.filters["cover_url"] = covers.url
     open_database: ConnectFn = (
         connect if connect is not None else open_configured_database

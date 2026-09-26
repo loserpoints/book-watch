@@ -16,7 +16,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from book_watch.config import DeletionEndpointConfig, load_deletion_config
-from book_watch.web import ebay_deletion, listings, wantlist
+from book_watch.web import design, ebay_deletion, listings, wantlist
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -41,6 +41,7 @@ def create_app(config: DeletionEndpointConfig | None = None) -> FastAPI:
     app.include_router(ebay_deletion.build_router(config or load_deletion_config()))
     app.include_router(listings.build_router())
     app.include_router(wantlist.build_router())
+    app.include_router(design.build_router())
     # htmx is vendored rather than loaded from a CDN: one file, no runtime
     # dependency on somebody else's uptime, and it works offline.
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

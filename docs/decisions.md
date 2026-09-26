@@ -2750,3 +2750,66 @@ the list is opened, one request each.
 store cover ids, and bumping the version would have re-asked Open Library
 about every number ever seen in a listing, for a field nothing on that path
 reads.
+
+---
+
+## 57. Design tokens live in one TOML file, and reach the page without a build
+
+**Decision.** Every colour, typeface, type size, spacing step and corner
+radius is defined once, in `src/book_watch/web/tokens.toml`, with a dark and a
+light value for each colour. The app generates CSS custom properties from it
+at startup and writes them into each page's head. The rest of the styling
+moved out of `base.html` into `static/app.css`, served with a version tag
+taken from its contents. Fonts are served from `static/fonts`. S28, #96.
+
+**Why TOML rather than a Python module.** The tokens are data, not
+behaviour. A colour should be changeable by reading a file that says what
+each colour is for, without knowing Python. Python reads TOML with the
+standard library (`tomllib`), so there is no new dependency, and the email
+*Tell me* will send reads the same file: email clients ignore custom
+properties and need every value inlined, which is the one real translation
+decision 2's revisit named.
+
+**Why the tokens go in the head and the stylesheet is a file.** The tokens are
+a few hundred bytes, cost no request there, and cannot go stale against the
+stylesheet that uses them. The stylesheet is larger and changes more often,
+so it is a file the phone caches. The `?v=` tag, a hash of its contents
+computed at startup, changes only when the file does. Neither step is a
+build: nothing is compiled, and the file served is the file in the repo.
+
+**Why fonts are served from here.** Courier Prime and IBM Plex Sans are both
+under the SIL Open Font License, which allows it (`static/fonts/OFL.txt`).
+Four weights come to 88KB, fetched once. No page asks Google for anything.
+They work offline, and a Play Store build would need them this way. They were
+taken from the `@fontsource` packages on npm, because the font CDNs are
+blocked from the build sandbox.
+
+**Enforced, not hoped for.** Without a utility framework nothing stops a
+stray `#333` (decision 2), so `tests/test_tokens.py` does:
+
+- a colour, font size, font family, margin, padding, gap or radius written as
+  a raw value in `app.css` or in any template's styles fails the suite;
+- every text colour meets WCAG AA (4.5:1) on the surfaces it sits on, in both
+  themes;
+- the token block reaches the page unescaped.
+
+Widths and heights are layout, not tokens, and stay where they are used.
+
+**What the checks caught on their first run.** Two things, both invisible in
+code review:
+
+- **Light mode's green and coral were too faint on the cream surface**
+  (4.32:1 and 4.48:1). They were darkened to `#276b2a` and `#a63d24`.
+- **Every page fell back to the browser's default serif.** Jinja escaped the
+  quotes around `"IBM Plex Sans"` to `&#34;`, and inside `<style>` that is
+  never decoded, so the font rules were invalid and silently ignored. Only a
+  screenshot showed it. The fix marks the generated block safe, and a test
+  now asserts the quotes survive.
+
+**`/design` is public, on purpose.** It shows every token and, from S29, every
+component, with no data of Alan's on it. Nothing in the app sits behind a
+login yet, so it exposes nothing new. If book-watch ever has other users, it
+moves into an admin area.
+
+**What S28 does not do.** The screens keep their old layout, on the new
+tokens. S30 rebuilds them.
