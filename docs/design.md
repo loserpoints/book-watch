@@ -239,6 +239,48 @@ text. That is S27's brief. The specific open visual questions, collected:
   ISBN switch
 - **The cover placeholder**, deferred from S25
 
+## The direction (S27, #95)
+
+Three directions were drawn on the same S26 content and published as a page
+to open on a phone: **A · Shelf** (warm, serif, amber), **B · Wall**
+(Letterboxd-style cover grid, cool, green) and **C · Catalogue** (library
+card catalogue, typewriter, violet date-stamp).
+[The page](https://claude.ai/artifact/FNuEVupwmv4LiGL1R1UwJb) keeps all three
+for reference.
+
+**Chosen: A's shelf with C's typewriter.** Warm dark ground, amber accent,
+covers with a spine edge and a shadow, Courier Prime for titles and prices,
+IBM Plex Sans for everything else, and a round + in thumb reach.
+
+**Round-one calls on the chosen direction, 2026-09-26:**
+
+- **Price strips label their ends.** The lowest and highest asking price sit
+  under the two ends of the strip, which brings the range back without taking
+  more room. The dashed line is the limit, and the larger dot is the cheapest
+  copy listed now.
+- **Long titles take the full width of the row.** The price and strip sit
+  below the title, on the right.
+- **Check all asks first:** *"Check all 7 books? 5 of them were checked within
+  the last hour and will be searched again. To check only the 2 that are out
+  of date, use Update."* It has a *Don't ask me again* box. This settles the
+  checking question S26 tabled: *Update (n)* checks only the stale books, and
+  *Check all* overrides the hour and asks first.
+- **Too concise in two places:** *"checked just now"*, not *"now"*, and
+  *"only new listing"*, not *"only new"*.
+- **Put back what the first drawing dropped:** "added 3w" on the list; each
+  copy's eBay listing title, which is also the link to eBay and often says
+  "ex-library" itself; and *"Seller says:"* before the edition line, because
+  decision 33 treats that line as the seller's claim, not a fact.
+
+**Where it came from, noted for the record.** Alan's charts in
+`movie-analysis` and `hockey-analysis` use dot-and-range plots with an
+emphasised point, dashed guide lines at reference values, and an italic
+subtitle that explains the guides. The price strip is the same idea: dots
+for every asking price, a dashed guide at the limit, the cheapest copy
+emphasised. The charts mostly use Trebuchet MS, with IBM Plex Sans through
+`theme_ipsum_ps`. Trebuchet is not on Android or Google Fonts, so Plex Sans
+stays.
+
 ## Open
 
 - **A signature.** Something that makes it feel like itself — possibly how
