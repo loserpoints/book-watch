@@ -57,7 +57,8 @@ screen at a time turned out to be the unit a decision can actually be made in.
 3. **Adding a book** *(below)*
 4. **The book page, around the copies** *(below)*
 5. **A copy** *(below)*
-6. The mock-up, tying it together
+6. ~~The mock-up~~ — skipped by Alan's call: S27 restyles whatever a plain mock-up
+   would show, so the directions are drawn straight from the calls here
 
 ### 1. Inventory, as of S25
 
@@ -217,7 +218,26 @@ text-heavy. It has to get more visual.
 | C3 | A copy whose price alone is already over the limit is over, whatever the postage — #103 |
 | C3 | Over the limit must be marked. It is computed and never rendered — a bug against decision 50, #103 |
 | new | Dismiss a copy into a collapsed *Dismissed* group — #105. Imperfect across relists, and accepted as such |
+| C1 | Confirmed: tapping the photo enlarges it — and with #106, shows every photo |
+| C9 | Confirmed: the split is stored and not displayed |
 | J3 | Ex-library and jacket condition: a modal with the full listing is barely better than opening eBay. What would beat it is the seller's condition note and all the photos, which the item call already made once per listing returns and we drop — #106 |
+| J3 | The listing description is out: long, arbitrary HTML, full of seller banners. #106 keeps only the short condition note and the photo URLs — no extra calls, a few hundred bytes a copy, nothing loaded until a photo is tapped |
+
+### What S26 hands to S27
+
+Every screen came back with the same note: the right facts, far too much
+text. That is S27's brief. The specific open visual questions, collected:
+
+- **The under/over symbol**, paired with a coloured price. Not an arrow
+- **"Still digging" as something visual** rather than words
+- **The seen range as a small picture** beside the want-list row (#76)
+- **Checking**: the stale-only control, the hour rule made visible, and the
+  override — three needs, no names yet
+- **The book page frame** (P1–P9) consolidated so copies start near the top
+- **The copy row** made visual: price as the headline, the rest compact
+- **The add panel**: + button or expanding panel, title-and-author with an
+  ISBN switch
+- **The cover placeholder**, deferred from S25
 
 ## Open
 
