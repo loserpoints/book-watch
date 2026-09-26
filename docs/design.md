@@ -187,9 +187,8 @@ Further calls, same day:
 - **Author-only search, adding several books at once**: wanted, and a
   behaviour change, so it is #101 rather than M6.
 
-**Open question: does adding close the panel?** Closing it shows the new row
-checking itself. Keeping it open is what adding several books by one author
-(#101) needs. Alan leans towards keeping it open; settle it with #101.
+**Does adding close the panel? Settled in S27:** a short tap adds one and
+closes; a long press (or *Select*) keeps it open to add several. Built with #101.
 
 ### 4. The book page, around the copies
 
@@ -238,6 +237,124 @@ text. That is S27's brief. The specific open visual questions, collected:
 - **The add panel**: + button or expanding panel, title-and-author with an
   ISBN switch
 - **The cover placeholder**, deferred from S25
+
+## The direction (S27, #95)
+
+Three directions were drawn on the same S26 content and published as a page
+to open on a phone: **A · Shelf** (warm, serif, amber), **B · Wall**
+(Letterboxd-style cover grid, cool, green) and **C · Catalogue** (library
+card catalogue, typewriter, violet date-stamp).
+[The page](https://claude.ai/artifact/FNuEVupwmv4LiGL1R1UwJb) keeps all three
+for reference.
+
+**Chosen: A's shelf with C's typewriter.** Warm dark ground, amber accent,
+covers with a spine edge and a shadow, Courier Prime for titles and prices,
+IBM Plex Sans for everything else, and a round + in thumb reach.
+
+**Round-one calls on the chosen direction, 2026-09-26:**
+
+- **Price strips label their ends.** The lowest and highest asking price sit
+  under the two ends of the strip, which brings the range back without taking
+  more room. The dashed line is the limit, and the larger dot is the cheapest
+  copy listed now.
+- **Long titles take the full width of the row.** The price and strip sit
+  below the title, on the right.
+- **Check all asks first:** *"Check all 7 books? 5 of them were checked within
+  the last hour and will be searched again. To check only the 2 that are out
+  of date, use Update."* It has a *Don't ask me again* box. This settles the
+  checking question S26 tabled: *Update (n)* checks only the stale books, and
+  *Check all* overrides the hour and asks first.
+- **Too concise in two places:** *"checked just now"*, not *"now"*, and
+  *"only new listing"*, not *"only new"*.
+- **Put back what the first drawing dropped:** "added 3w" on the list; each
+  copy's eBay listing title, which is also the link to eBay and often says
+  "ex-library" itself; and *"Seller says:"* before the edition line, because
+  decision 33 treats that line as the seller's claim, not a fact.
+
+**Rounds two and three, same day:**
+
+- **Strip ends are rounded to whole dollars.** The headline price keeps its
+  cents; the strip's labels only mark the range.
+- **Check all's sheet offers Update, not Cancel.** The cheaper action is the
+  alternative, and tapping outside the sheet closes it.
+- **"asking, delivered" is gone from the book page.** By then every price is
+  known to be delivered, and the label confused more than it told.
+- **On the want-list, the title sits above the cover**, full width. The cover
+  then sits beside author, counts, price and strip, which are about its
+  height, so long titles no longer push text below the cover.
+- **"added 2d ago"**, with "still digging" shown as the three dots alone on
+  the list so the line fits on a phone (measured at 390px wide: exactly
+  fits). Tapping the dots gives the words. The book page keeps the word.
+- **A copy's text wraps under its photo** and uses the full width once past
+  it. Centring the photo against the text was tried and was worse.
+- **The seller's condition note** (#106) shows as a quoted line on the copy,
+  clamped to two lines. Tapping expands it in place, which beats a modal
+  because the copy stays in view. Sellers do write paragraphs here.
+
+**Round four, reversing two round-three calls:**
+
+- **Back to "added 2d", with no "ago".** "2d" is the shortest the age gets,
+  and "10mo ago" would force a wrap. "Still digging" becomes the word
+  *digging* with a slow shimmer, instead of three dots. At 390px wide,
+  "added 2d · digging" fits exactly, and "added 10mo · digging" overflows by
+  about 8px. That is a rare pair; S30 decides how the line gives way.
+- **The copy's text sits beside the photo again.** Only the condition note
+  runs full width underneath. Wrapping everything under the photo looked bad.
+- **"1st of 3" becomes a small strip beside the price**, because the old
+  wording did not say it was about price. Every dot is a copy of the same
+  kind listed now, and this copy is the large dot. That is decision 53's rank
+  population, drawn rather than counted. A copy with unknown shipping says
+  "can't place: shipping unknown", and the only copy of its kind keeps its
+  words ("only new listing").
+- **The want-list strip's dots are all one colour.** The cheapest is always
+  the left end, so emphasising it said nothing. The strip is for the spread,
+  and the limit line stays.
+- **The accent is one of Alan's.** It was amber, carried over from nzb360.
+  Dodger blue (`#1e90ff` dark, `dodgerblue4` `#104e8b` light) and dark orange
+  (`#ff8c00` dark, `#b35900` light) are both on the page to compare. Leaning
+  blue: an orange accent sits too close to the coral that means "over".
+- **Notes collapse again:** tap to expand, tap to collapse. A note short
+  enough to fit in two lines has nothing to expand.
+
+**Round five, and the direction settled:**
+
+- **The accent is dodger blue:** `#1e90ff` in dark mode and `dodgerblue4`
+  `#104e8b` in light, Alan's own colours from his charts. Every dot on the
+  want-list strips is blue.
+- **The seller's claim is attributed by name:** "goodwill_books says:
+  Paperback · Vintage · 1995". The separate seller line goes. This line and
+  the condition note below it run full width under the photo; the price,
+  condition, listing title and dismiss sit beside the photo. It is the
+  compact layout the earlier rounds were reaching for.
+
+**Adding a book, drawn in the chosen direction:**
+
+- The **+** opens a sheet on **Title & author**, with a switch to **ISBN**.
+  Each side says what it is for: "A title is enough. Add the author to narrow
+  it down." / "An exact edition, by its number."
+- **Every result is tappable as a whole.** A book already on the list says
+  *On your list* in place of *Add*, as nzb360's *In Library* does, so the same
+  work is not added twice.
+- **Adding one or several (settles the open question, built with #101).** A
+  short tap adds that book and closes the sheet. A long press starts select
+  mode: checkboxes, the sheet stays open, and an **Add n** button appears. A
+  visible **Select** link does the same for mouse and keyboard users, and for
+  anyone who does not know the gesture. The mock-up shows the select-mode
+  "✓ Added" row.
+- **The hint stays "A title is enough. Add the author to narrow it down."**
+  until #101 makes author-only search true. Then it becomes "Title, author, or
+  both."
+- **The ISBN side** carries the typo error and *Add anyway*, with its reason
+  in one line. Where *Add anyway* belongs is #101's question.
+
+**Where it came from, noted for the record.** Alan's charts in
+`movie-analysis` and `hockey-analysis` use dot-and-range plots with an
+emphasised point, dashed guide lines at reference values, and an italic
+subtitle that explains the guides. The price strip is the same idea: dots
+for every asking price, a dashed guide at the limit, the cheapest copy
+emphasised. The charts mostly use Trebuchet MS, with IBM Plex Sans through
+`theme_ipsum_ps`. Trebuchet is not on Android or Google Fonts, so Plex Sans
+stays.
 
 ## Open
 
