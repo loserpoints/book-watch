@@ -272,6 +272,26 @@ IBM Plex Sans for everything else, and a round + in thumb reach.
   "ex-library" itself; and *"Seller says:"* before the edition line, because
   decision 33 treats that line as the seller's claim, not a fact.
 
+**Rounds two and three, same day:**
+
+- **Strip ends are rounded to whole dollars.** The headline price keeps its
+  cents; the strip's labels only mark the range.
+- **Check all's sheet offers Update, not Cancel.** The cheaper action is the
+  alternative, and tapping outside the sheet closes it.
+- **"asking, delivered" is gone from the book page.** By then every price is
+  known to be delivered, and the label confused more than it told.
+- **On the want-list, the title sits above the cover**, full width. The cover
+  then sits beside author, counts, price and strip, which are about its
+  height, so long titles no longer push text below the cover.
+- **"added 2d ago"**, with "still digging" shown as the three dots alone on
+  the list so the line fits on a phone (measured at 390px wide: exactly
+  fits). Tapping the dots gives the words. The book page keeps the word.
+- **A copy's text wraps under its photo** and uses the full width once past
+  it. Centring the photo against the text was tried and was worse.
+- **The seller's condition note** (#106) shows as a quoted line on the copy,
+  clamped to two lines. Tapping expands it in place, which beats a modal
+  because the copy stays in view. Sellers do write paragraphs here.
+
 **Where it came from, noted for the record.** Alan's charts in
 `movie-analysis` and `hockey-analysis` use dot-and-range plots with an
 emphasised point, dashed guide lines at reference values, and an italic
