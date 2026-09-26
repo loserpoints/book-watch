@@ -292,6 +292,31 @@ IBM Plex Sans for everything else, and a round + in thumb reach.
   clamped to two lines. Tapping expands it in place, which beats a modal
   because the copy stays in view. Sellers do write paragraphs here.
 
+**Round four, reversing two round-three calls:**
+
+- **Back to "added 2d", with no "ago".** "2d" is the shortest the age gets,
+  and "10mo ago" would force a wrap. "Still digging" becomes the word
+  *digging* with a slow shimmer, instead of three dots. At 390px wide,
+  "added 2d · digging" fits exactly, and "added 10mo · digging" overflows by
+  about 8px. That is a rare pair; S30 decides how the line gives way.
+- **The copy's text sits beside the photo again.** Only the condition note
+  runs full width underneath. Wrapping everything under the photo looked bad.
+- **"1st of 3" becomes a small strip beside the price**, because the old
+  wording did not say it was about price. Every dot is a copy of the same
+  kind listed now, and this copy is the large dot. That is decision 53's rank
+  population, drawn rather than counted. A copy with unknown shipping says
+  "can't place: shipping unknown", and the only copy of its kind keeps its
+  words ("only new listing").
+- **The want-list strip's dots are all one colour.** The cheapest is always
+  the left end, so emphasising it said nothing. The strip is for the spread,
+  and the limit line stays.
+- **The accent is one of Alan's.** It was amber, carried over from nzb360.
+  Dodger blue (`#1e90ff` dark, `dodgerblue4` `#104e8b` light) and dark orange
+  (`#ff8c00` dark, `#b35900` light) are both on the page to compare. Leaning
+  blue: an orange accent sits too close to the coral that means "over".
+- **Notes collapse again:** tap to expand, tap to collapse. A note short
+  enough to fit in two lines has nothing to expand.
+
 **Where it came from, noted for the record.** Alan's charts in
 `movie-analysis` and `hockey-analysis` use dot-and-range plots with an
 emphasised point, dashed guide lines at reference values, and an italic
