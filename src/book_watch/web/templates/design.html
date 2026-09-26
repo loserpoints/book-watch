@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Design · book-watch{% endblock %}
+{% block content %}
+<h1>Design</h1>
+<p class="muted">
+  Every token in <code>web/tokens.toml</code>, as the app draws it. This page
+  follows your phone's light or dark setting; the swatches show both. Decision
+  57, and the direction in <code>docs/design.md</code>.
+</p>
+
+<h2 class="design-h">Colour</h2>
+<p class="muted">Contrast is against the page background. AA asks for 4.5 for body text and 3 for large text and marks.</p>
+<div class="swatches">
+  {% for c in colours %}
+    <div class="swatch-row">
+      <div class="swatch-pair" aria-hidden="true">
+        <span class="swatch" style="background: {{ c.dark }}"></span>
+        <span class="swatch" style="background: {{ c.light }}"></span>
+      </div>
+      <div class="details">
+        <div><code>--{{ c.name }}</code></div>
+        <div class="muted">{{ c.use }}</div>
+        <div class="muted figures">
+          dark {{ c.dark }} · {{ "%.1f" | format(c.dark_contrast) }}:1
+          &nbsp; light {{ c.light }} · {{ "%.1f" | format(c.light_contrast) }}:1
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<h2 class="design-h">Type</h2>
+<div class="type-samples">
+  <p class="sample-title">Breaking and Entering</p>
+  <p class="sample-figure"><span class="under">✓ from $10.49</span> &nbsp; <span class="over-text">$27 $15 over</span></p>
+  <p>IBM Plex Sans for everything else: counts, dates, the seller, the condition.</p>
+  {% for name, size in text.items() %}
+    <div class="type-step" style="font-size: var(--text-{{ name }})">
+      <code>--text-{{ name }}</code> {{ size }} · A copy of Stoner, $10.49
+    </div>
+  {% endfor %}
+</div>
+
+<h2 class="design-h">Space</h2>
+{% for name, size in space.items() %}
+  <div class="space-step">
+    <span class="space-bar" style="width: var(--space-{{ name }})"></span>
+    <code>--space-{{ name }}</code> <span class="muted">{{ size }}</span>
+  </div>
+{% endfor %}
+
+<h2 class="design-h">Radius</h2>
+<div class="radii">
+  {% for name, size in radius.items() %}
+    <div class="radius-step">
+      <span class="radius-box" style="border-radius: var(--radius-{{ name }})"></span>
+      <code>--radius-{{ name }}</code>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

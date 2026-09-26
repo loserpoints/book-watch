@@ -1,0 +1,108 @@
+# Every colour, typeface and size the app uses, defined once. Decision 57.
+#
+# This file is the only place a colour or a size is written. The web pages get
+# it as CSS custom properties, generated when the app starts (`tokens.css()`);
+# the email *Tell me* will send reads the same values from Python, because
+# email clients ignore custom properties and need them inlined. A test fails
+# on a colour or size written anywhere else.
+#
+# The values are the direction chosen in S27 (`docs/design.md`): a warm dark
+# shelf, dodger blue for anything current or tappable, green and coral for
+# under and over the limit. Dark is tuned first; light is kept working.
+#
+# Names say what a colour is *for*, never what it looks like. A redesign
+# changes values here and nothing else.
+
+# --- colour: each has a dark and a light value -------------------------------
+
+[colour.bg]
+dark = "#1a1612"
+light = "#fbf8f2"
+use = "The page"
+
+[colour.surface]
+dark = "#241f19"
+light = "#f1ebe0"
+use = "Anything that sits on the page: inputs, buttons, chips, cards"
+
+[colour.fg]
+dark = "#efe7da"
+light = "#241d15"
+use = "Body text"
+
+[colour.muted]
+dark = "#a79d8d"
+light = "#6b5f50"
+use = "Secondary text: counts, dates, the seller"
+
+[colour.line]
+dark = "#342d25"
+light = "#e2d9ca"
+use = "Rules and borders"
+
+[colour.accent]
+dark = "#1e90ff"
+light = "#104e8b"
+use = "What is current or can be acted on: links, the primary button. Alan's dodger blue; dodgerblue4 in light"
+
+[colour.on-accent]
+dark = "#06121f"
+light = "#ffffff"
+use = "Text on the accent"
+
+[colour.under]
+dark = "#8fcf86"
+light = "#276b2a"
+use = "A price at or under the limit"
+
+[colour.over]
+dark = "#f08a6c"
+light = "#a63d24"
+use = "A price over the limit, and errors"
+
+[colour.placeholder-bg]
+dark = "#2b251e"
+light = "#ebe3d5"
+use = "A cover Open Library does not have"
+
+[colour.placeholder-fg]
+dark = "#cfc4b2"
+light = "#5d5142"
+use = "The title written on that placeholder"
+
+# --- type ---------------------------------------------------------------------
+
+[font]
+# Courier Prime for titles and prices, the catalogue's typewriter. IBM Plex
+# Sans for everything else. Both are served from /static/fonts under the SIL
+# Open Font License, so no page asks Google for anything.
+title = "\"Courier Prime\", \"Courier New\", ui-monospace, monospace"
+body = "\"IBM Plex Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif"
+figure = "\"Courier Prime\", \"Courier New\", ui-monospace, monospace"
+
+[text]
+# One scale. Anything in between is a new token or a mistake.
+xxs = "0.625rem"  # the title on a cover-sized placeholder, and nothing else
+xs = "0.75rem"
+sm = "0.8125rem"
+md = "0.875rem"
+base = "1rem"
+lg = "1.125rem"
+xl = "1.25rem"
+xxl = "1.375rem"
+
+# --- space and shape ------------------------------------------------------------
+
+[space]
+1 = "0.25rem"
+2 = "0.5rem"
+3 = "0.75rem"
+4 = "1rem"
+5 = "1.5rem"
+6 = "2rem"
+
+[radius]
+sm = "4px"
+md = "6px"
+lg = "10px"
+pill = "999px"

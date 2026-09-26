@@ -356,6 +356,14 @@ emphasised. The charts mostly use Trebuchet MS, with IBM Plex Sans through
 `theme_ipsum_ps`. Trebuchet is not on Android or Google Fonts, so Plex Sans
 stays.
 
+## Tokens (S28, #96)
+
+The direction above, as numbers, lives in `src/book_watch/web/tokens.toml`
+and nowhere else (decision 57). Every colour has a dark and a light value and
+a line saying what it is for. `/design` on the running app draws them all.
+Light mode's green and coral were darkened slightly from the S27 page to pass
+AA on the cream surface.
+
 ## Open
 
 - **A signature.** Something that makes it feel like itself — possibly how

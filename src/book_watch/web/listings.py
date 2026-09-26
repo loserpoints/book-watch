@@ -38,7 +38,7 @@ from book_watch.ebay.search import (
     Scope,
 )
 from book_watch.isbn import normalise
-from book_watch.web import filters
+from book_watch.web import assets, filters
 from book_watch.web.searching import LazyBrowseSearch, SearchFn
 from book_watch.web.wantlist import ConnectFn, open_configured_database
 
@@ -87,6 +87,7 @@ def build_router(
     router = APIRouter()
     templates = Jinja2Templates(directory=TEMPLATES_DIR)
     filters.register(templates.env)
+    assets.register(templates.env)
     run_search: SearchFn = search if search is not None else LazyBrowseSearch()
     open_database: ConnectFn = (
         connect if connect is not None else open_configured_database
