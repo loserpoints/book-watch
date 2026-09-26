@@ -317,6 +317,17 @@ IBM Plex Sans for everything else, and a round + in thumb reach.
 - **Notes collapse again:** tap to expand, tap to collapse. A note short
   enough to fit in two lines has nothing to expand.
 
+**Round five, and the direction settled:**
+
+- **The accent is dodger blue:** `#1e90ff` in dark mode and `dodgerblue4`
+  `#104e8b` in light, Alan's own colours from his charts. Every dot on the
+  want-list strips is blue.
+- **The seller's claim is attributed by name:** "goodwill_books says:
+  Paperback · Vintage · 1995". The separate seller line goes. This line and
+  the condition note below it run full width under the photo; the price,
+  condition, listing title and dismiss sit beside the photo. It is the
+  compact layout the earlier rounds were reaching for.
+
 **Where it came from, noted for the record.** Alan's charts in
 `movie-analysis` and `hockey-analysis` use dot-and-range plots with an
 emphasised point, dashed guide lines at reference values, and an italic
