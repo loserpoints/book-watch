@@ -2744,7 +2744,7 @@ the list is opened, one request each.
 >
 > **Coverage on production:** one of the two books on the list after S25 —
 > *Breaking and Entering* had its cover, *State of Grace* is the case above.
-> Two of two is expected once the correction deploys, and is not yet seen.
+> Two of two once the correction deployed, confirmed on the phone.
 
 **`resolution.CAPTURE` did not change**, deliberately. The notebook does not
 store cover ids, and bumping the version would have re-asked Open Library
