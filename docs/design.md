@@ -328,6 +328,20 @@ IBM Plex Sans for everything else, and a round + in thumb reach.
   condition, listing title and dismiss sit beside the photo. It is the
   compact layout the earlier rounds were reaching for.
 
+**Adding a book, drawn in the chosen direction:**
+
+- The **+** opens a sheet on **Title & author**, with a switch to **ISBN**.
+  Each side says what it is for: "A title is enough. Add the author to narrow
+  it down." / "An exact edition, by its number."
+- **Every result is tappable as a whole.** A book already on the list says
+  *On your list* in place of *Add*, as nzb360's *In Library* does, so the same
+  work is not added twice.
+- **Adding keeps the sheet open** and marks the row *✓ Added*. That is the way
+  Alan leans on the open question tied to #101. It is drawn this way so it can
+  be judged, not because it is decided.
+- **The ISBN side** carries the typo error and *Add anyway*, with its reason
+  in one line. Where *Add anyway* belongs is #101's question.
+
 **Where it came from, noted for the record.** Alan's charts in
 `movie-analysis` and `hockey-analysis` use dot-and-range plots with an
 emphasised point, dashed guide lines at reference values, and an italic
