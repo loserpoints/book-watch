@@ -57,7 +57,9 @@ thirty seconds or I won't do it, and hand-editing YAML doesn't clear that bar.
 >   htmx. What a framework would genuinely buy — command palettes, drag and
 >   drop, rich in-page state — is not in the design.
 > - **An installable phone app needs no build either.** A web app manifest and
->   a service worker make it installable from the browser.
+>   a service worker make it installable from the browser. *(Corrected in S35:
+>   current Chrome needs the manifest alone, and there is deliberately no
+>   service worker — decision 59.)*
 > - **The one real translation is to email**, whose clients ignore custom
 >   properties. That is solved in Python at send time by inlining styles, which
 >   means tokens must be data Python can read, not only CSS.
@@ -2875,3 +2877,41 @@ line breaks included, is the seller's.
 documented ones, and the sandbox this was built in can reach neither eBay nor
 its documentation. The first re-asks in production are the check, and how
 often sellers fill the note in is measured then rather than guessed now.
+
+
+## 59. It installs from a manifest alone, and there is no service worker
+
+**Decision.** bookwatch installs from the home screen with a web app manifest
+(`/manifest.webmanifest`, `web/manifest.py`), icons, and nothing else. It
+opens standalone, full screen without the address bar, in the tokens'
+colours. **No service worker is registered**, and a test fails if one ever is.
+
+**Why no service worker.** A worker that caches pages is the easiest way to
+show yesterday's listings as today's, which is exactly the failure decision
+48 fixed: opening a book is a request to see what is listed *now*. Offline
+behaviour may be worth having one day, but it deserves its own slice with
+that risk as its main subject, not to be slipped in as a side effect of
+getting an icon.
+
+**It turned out not to be needed.** Decision 2 recorded that a manifest *and*
+a service worker make an app installable, which was Chrome's rule for years.
+Asked directly, through its devtools protocol (`Page.getInstallabilityErrors`),
+Chromium 141 reports no installability errors for this page with no worker
+at all. Decision 2's note is corrected. Alan's Android phone is the final
+check, noted on the S35 PR.
+
+**The name is "bookwatch"**, Alan's call "for now". It is one constant in
+`web/manifest.py`.
+
+**The icon is "bw." in Courier Prime**, the app's typewriter face, with the
+full stop in the accent, on the dark ground. Chosen from three drafts (a book
+with a bookmark ribbon, and the price strip, were the others) because it is
+the clearest at home-screen size. A maskable version scales the mark into
+the central 80% that survives any launcher's crop.
+
+**Icons are rendered in the cloud, not by hand.** The SVG sources and a
+script (`scripts/icons.py`) that renders the PNGs with the pre-installed
+Chromium are committed together, so changing the icon needs no local tool
+(CLAUDE.md). The script embeds the font in the page it renders: a page built
+from a string cannot read a local font file, and the first render silently
+came out in a generic serif, caught only by looking at it.

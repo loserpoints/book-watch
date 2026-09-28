@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="{{ theme_colour }}">
+{#- Installs like an app from the home screen (S35): name, icons, standalone.
+    No service worker is registered anywhere, on purpose (decision 59). -#}
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/static/icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
 <title>{% block title %}book-watch{% endblock %}</title>
 {#- The tokens, written into the head: a few hundred bytes, no extra request,
     and they cannot go stale against the stylesheet that uses them. -#}
