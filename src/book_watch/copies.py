@@ -16,6 +16,7 @@ so changing a rule re-judges every book on the next page view for nothing.
 
 from __future__ import annotations
 
+import json
 import sqlite3
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
@@ -55,6 +56,8 @@ SELECT copy.item_id,
        declaration.publisher AS declared_publisher,
        declaration.published AS declared_year,
        declaration.category  AS category,
+       declaration.condition_note AS condition_note,
+       declaration.photos    AS photos,
        identity.title      AS identity_title
   FROM copy
   LEFT JOIN listing_declaration AS declaration
@@ -138,6 +141,12 @@ class Copy:
     declared_format: str | None = None
     declared_publisher: str | None = None
     declared_year: str | None = None
+    #: The seller's own note on condition, whole (decision 58). None until
+    #: this listing has been asked about since S33, or when they wrote none.
+    condition_note: str | None = None
+    #: Every photo's URL, main one first. Empty until asked about since S33;
+    #: `thumbnail` is the search's one small photo and is always there first.
+    photos: tuple[str, ...] = ()
     #: Two-letter country code, or None when eBay did not say. Only ever used
     #: to mark a copy as coming from abroad, never to hide one: US-only is a
     #: property of the *search*, and by the time a copy is on this page it is
@@ -406,9 +415,24 @@ def _to_copy(row: sqlite3.Row, target: Target, entry: Entry) -> Copy:
         declared_format=row["declared_format"],
         declared_publisher=row["declared_publisher"],
         declared_year=row["declared_year"],
+        condition_note=row["condition_note"],
+        photos=_photos(row["photos"]),
         located_in=row["located_in"],
         looked_at=row["asked_ebay"] is not None,
     )
+
+
+def _photos(raw: str | None) -> tuple[str, ...]:
+    """The stored JSON list, or nothing. A bad value is not worth a failed page."""
+    if not raw:
+        return ()
+    try:
+        urls = json.loads(raw)
+    except ValueError:
+        return ()
+    if not isinstance(urls, list):
+        return ()
+    return tuple(url for url in urls if isinstance(url, str))
 
 
 def _amount(raw: str) -> Decimal:

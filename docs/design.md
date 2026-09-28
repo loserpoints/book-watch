@@ -407,8 +407,16 @@ lines, opens and closes `<dialog>`s through `data-open` and `data-close`.
   `…/s-l225.jpg` to `…/s-l1600.jpg` (`web/photos.py`). It rewrites only a URL
   that matches that exact shape, and falls back to the small photo if the
   large one fails. The pattern is eBay's convention, not a documented
-  contract. *Not yet confirmed against a real stored URL:* the repo keeps
-  none, and the build sandbox cannot reach eBay or production.
+  contract. **Confirmed in S33** against a real URL Alan sent from
+  production, `…/images/g/O-QAAeSweGNqFIv6/s-l1600.webp`: the shape holds,
+  and webp is one of the accepted types.
+- **Every photo, since S33 (#106).** The photo button carries the copy's
+  whole list as URLs in `data-photos`; `ui.js` builds the images only when it
+  is tapped, so nothing loads from eBay before then. They sit side by side
+  and are swiped through, and a small count on the thumbnail says there is
+  more than one. A copy not yet re-asked about since S33 has only the
+  search's one photo and enlarges that, as before. Built into the system's
+  copy row; the book page gets it when S34 moves onto that row.
 
 **Found by driving it in a browser, not by the tests:** the first draft laid
 each side of the switch out with an inline `display`, which beat the rule

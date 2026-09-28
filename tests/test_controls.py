@@ -55,6 +55,77 @@ def test_a_copy_photo_opens_the_enlarged_view_with_both_sizes():
     assert '<dialog class="photo-view" id="photo-view"' in page
 
 
+def test_the_real_ebay_url_shape_is_the_one_enlarged():
+    """Confirmed against a real one Alan sent: webp, at 1600 already. Enlarging
+    it again must leave it as it is."""
+    real = "https://i.ebayimg.com/images/g/O-QAAeSweGNqFIv6/s-l1600.webp"
+
+    assert photos.larger(real) == real
+    assert photos.larger(real.replace("s-l1600", "s-l225")) == real
+
+
+def _copy_row(**copy) -> str:
+    from jinja2 import Environment, FileSystemLoader
+
+    env = Environment(loader=FileSystemLoader(design.TEMPLATES_DIR), autoescape=True)
+    assets.register(env)
+    macro = env.from_string('{% import "_ui.html" as ui %}{{ ui.copy_row(c) }}')
+    base = {"url": "#", "price_text": "$9", "verdict": "under", "condition": "Good"}
+    return macro.render(c={**base, **copy})
+
+
+def _photos_on(row: str) -> list[str]:
+    import json
+
+    found = re.search(r"data-photos='([^']*)'", row)
+    assert found, "the photo button must carry every photo"
+    return json.loads(found.group(1).replace("&#34;", '"'))
+
+
+def test_every_photo_of_a_copy_goes_to_the_enlarged_view_largest_first():
+    """S33. URLs only, in eBay's order; nothing is loaded until tapped."""
+    small = "https://i.ebayimg.com/images/g/a/s-l225.jpg"
+    row = _copy_row(
+        photo_url=small,
+        photos=[
+            "https://i.ebayimg.com/images/g/a/s-l500.jpg",
+            "https://i.ebayimg.com/images/g/b/s-l500.jpg",
+        ],
+    )
+
+    assert _photos_on(row) == [
+        "https://i.ebayimg.com/images/g/a/s-l1600.jpg",
+        "https://i.ebayimg.com/images/g/b/s-l1600.jpg",
+    ]
+    assert '<span class="photo-count" aria-hidden="true">2</span>' in row
+    assert "one of 2" in row
+
+
+def test_a_copy_not_yet_asked_about_since_s33_enlarges_its_one_photo():
+    small = "https://i.ebayimg.com/images/g/a/s-l225.jpg"
+    row = _copy_row(photo_url=small)
+
+    assert _photos_on(row) == ["https://i.ebayimg.com/images/g/a/s-l1600.jpg"]
+    assert "photo-count" not in row
+
+
+def test_a_url_cannot_break_out_of_the_attribute():
+    """The list is JSON inside a single-quoted attribute, so a quote in a URL
+    has to arrive escaped rather than end it."""
+    row = _copy_row(photo_url="https://x/a.jpg", photos=["https://x/it's.jpg"])
+
+    assert "it's" not in row
+    assert _photos_on(row) == ["https://x/it's.jpg"]
+
+
+def test_no_photo_is_on_the_page_until_one_is_tapped():
+    """The enlarged view holds no image until the script builds them."""
+    page = design_page()
+    dialog = re.search(r'<dialog class="photo-view".*?</dialog>', page, re.S)
+
+    assert dialog and "<img" not in dialog.group(0)
+
+
 # --- sheets -------------------------------------------------------------------
 
 

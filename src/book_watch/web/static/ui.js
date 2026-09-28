@@ -18,13 +18,7 @@
       if (dialog && typeof dialog.showModal === "function") {
         event.preventDefault();
         var large = opener.getAttribute("data-photo");
-        if (large) {
-          var img = dialog.querySelector("img");
-          if (img) {
-            img.dataset.fallback = opener.getAttribute("data-photo-small") || large;
-            img.src = large;
-          }
-        }
+        if (large) fillPhotos(dialog, opener, large);
         dialog.showModal();
       }
       return;
@@ -47,6 +41,28 @@
       if (!inside) event.target.close();
     }
   });
+
+  // Every photo of one copy, built only now it has been tapped, so nothing
+  // loads from eBay before somebody asks (S33). The first falls back to the
+  // small photo already on the page if its large version does not exist.
+  function fillPhotos(dialog, opener, large) {
+    var strip = dialog.querySelector(".photo-strip");
+    if (!strip) return;
+    var urls = [large];
+    try {
+      var listed = JSON.parse(opener.getAttribute("data-photos") || "[]");
+      if (Array.isArray(listed) && listed.length) urls = listed;
+    } catch (ignored) {}
+    strip.replaceChildren();
+    urls.forEach(function (url, index) {
+      var img = document.createElement("img");
+      img.alt = "The seller's photo, " + (index + 1) + " of " + urls.length;
+      if (index === 0) img.dataset.fallback = opener.getAttribute("data-photo-small") || url;
+      img.src = url;
+      strip.appendChild(img);
+    });
+    strip.scrollLeft = 0;
+  }
 
   // If the large photo does not exist, fall back to the one already shown.
   document.addEventListener(

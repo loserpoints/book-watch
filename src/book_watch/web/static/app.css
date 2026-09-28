@@ -632,6 +632,30 @@ dialog.photo-view {
   background: var(--surface);
 }
 dialog.photo-view[open] { display: grid; gap: var(--space-2); justify-items: center; }
-dialog.photo-view img { max-width: 100%; max-height: 75vh; object-fit: contain; }
+/* Every photo of a copy, swiped through one at a time. */
+.photo-strip {
+  display: flex;
+  gap: var(--space-2);
+  width: 100%;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+}
+.photo-strip img {
+  flex: 0 0 100%;
+  max-height: 75vh;
+  object-fit: contain;
+  scroll-snap-align: center;
+}
+.copy-photo { position: relative; }
+.photo-count {
+  position: absolute;
+  right: var(--space-1);
+  bottom: var(--space-1);
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--fg);
+  font-size: var(--text-sm);
+}
 .controls-demo { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
 .controls-demo + .controls-demo { margin-top: var(--space-3); }
