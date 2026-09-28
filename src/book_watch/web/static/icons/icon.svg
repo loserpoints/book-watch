@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- bookwatch's icon (S35): "bw." in Courier Prime, the app's typewriter
+       face, on the dark ground, with the full stop in the accent. Colours
+       are the dark-theme tokens. The PNGs are rendered from this by
+       scripts/icons.py; edit here, then re-run it. -->
+  <rect width="512" height="512" fill="#1a1612"/>
+  <text x="248" y="318" text-anchor="middle" font-family="Courier Prime"
+        font-weight="700" font-size="232" fill="#efe7da" letter-spacing="-8">bw</text>
+  <rect x="380" y="286" width="34" height="34" rx="4" fill="#1e90ff"/>
+</svg>

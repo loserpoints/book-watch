@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- The same icon for Android's launcher, which crops it to a circle,
+       squircle or whatever shape the phone uses. Everything that matters
+       sits inside the central 80% circle, the "safe zone" the maskable-icon
+       spec guarantees survives any crop, so the mark is scaled to 80%. -->
+  <rect width="512" height="512" fill="#1a1612"/>
+  <g transform="translate(256 256) scale(0.8) translate(-256 -256)">
+    <text x="248" y="318" text-anchor="middle" font-family="Courier Prime"
+          font-weight="700" font-size="232" fill="#efe7da" letter-spacing="-8">bw</text>
+    <rect x="380" y="286" width="34" height="34" rx="4" fill="#1e90ff"/>
+  </g>
+</svg>
