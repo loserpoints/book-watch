@@ -59,7 +59,10 @@ def _size_of_next(unit: str) -> int:
 
 def since(when: datetime | None) -> str:
     """How long ago, in the fewest characters: "just now", "4m", "2h", "3d",
-    "3w", "10mo". For a chip or a row that has no room for "ago" (S27)."""
+    "3w", "10mo", "2y". For a chip or a row that has no room for "ago" (S27).
+
+    Elapsed time, never calendar dates, so whose "today" it is never comes up
+    (#22). Counts round down: 13 days is "1w", the smaller honest answer."""
     if when is None:
         return "never"
     seconds = (datetime.now(UTC) - when).total_seconds()
@@ -74,4 +77,7 @@ def since(when: datetime | None) -> str:
         count = int(seconds // size)
         if count < limit:
             return f"{count}{unit}"
-    return f"{max(2, int(seconds // 2629800))}mo"
+    months = int(seconds // 2629800)
+    if months < 12:
+        return f"{max(2, months)}mo"
+    return f"{int(seconds // 31557600)}y"

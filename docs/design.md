@@ -465,6 +465,41 @@ market strip, the first copy starts about 450px down a 780px screen.
 options were smaller chips with the same 44px tap area, or an icon-first
 "↻ 4m" for the checked chip.
 
+### The want-list
+
+Each book is the system's book row (`web/list_view.py` feeds it), and keeps
+its id so a check can swap it back in live, one book at a time, as before.
+
+- **The price is the cheapest copy of the leading market**, "from $10.49",
+  with ✓ or "$6 over", and the strip of every asking price seen for that
+  market beside it (#76). The strip needs at least two different prices: one
+  price is a point, not a shape. Certain copies only, one dot per copy, new
+  and used never pooled — #76's constraints, all kept.
+- **"added 3w"** (#22) is elapsed time, not a calendar date, so whose "today"
+  it is never arises. Counts round down. The exact date on hover, which #22
+  asked for, is dropped: nothing may live on hover (principle 5), and Alan
+  judged that precision unnecessary.
+- **Every state keeps its own words:** Checking…, Couldn't check just now,
+  Not checked yet, 2 maybes, 0 listed, and a bare count when copies are
+  listed but none can be compared.
+- **The ISBN leaves the row** (S26 B3); the book page still shows it.
+- **Remove is the trash icon** and still asks "Remove Crash from the list?".
+- **Update (n)** checks the books out of date, and its count is what it will
+  cost; at zero it reads *All current*. **Check all** overrides the hour and
+  asks first, in S27's words, offering Update instead. When nothing is inside
+  the hour the two are the same request, so it does not ask.
+- **"Don't ask me again" is remembered by the browser**, per device. Alan's
+  call: being asked once more on another device is fine, and it needs no
+  settings page (#72).
+
+**Measured at 360px** in both themes, in Chromium, on a seeded list of five
+books: no sideways scroll; Update checked the two out of date and then read
+*All current*; Check all asked, and after *Don't ask me again* went straight
+to checking; the trash asked before removing.
+
+**The add form stays as it was** until the third PR replaces it with the +
+and its sheet.
+
 ## Open
 
 - **A signature.** Something that makes it feel like itself — possibly how

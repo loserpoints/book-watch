@@ -15,6 +15,16 @@
     var opener = event.target.closest("[data-open]");
     if (opener) {
       var dialog = document.getElementById(opener.getAttribute("data-open"));
+      // "Don't ask me again": this device said so, so do what the sheet's
+      // main button does without showing it. Per device on purpose; asking
+      // again on another one is fine (S34).
+      var skip = opener.getAttribute("data-skip");
+      if (dialog && skip && remembered(skip)) {
+        event.preventDefault();
+        var main = dialog.querySelector("[data-default]");
+        if (main) main.click();
+        return;
+      }
       if (dialog && typeof dialog.showModal === "function") {
         event.preventDefault();
         var large = opener.getAttribute("data-photo");
@@ -28,7 +38,11 @@
     var closer = event.target.closest("[data-close]");
     if (closer) {
       var parent = closer.closest("dialog");
-      if (parent) parent.close();
+      if (parent) {
+        var noAsk = parent.querySelector("[data-remember]");
+        if (noAsk && noAsk.checked) remember(noAsk.getAttribute("data-remember"));
+        parent.close();
+      }
       return;
     }
 
@@ -41,6 +55,15 @@
       if (!inside) event.target.close();
     }
   });
+
+  // Browser storage can be missing or refuse (a private window); the only
+  // cost is being asked again.
+  function remembered(key) {
+    try { return window.localStorage.getItem(key) === "1"; } catch (e) { return false; }
+  }
+  function remember(key) {
+    try { window.localStorage.setItem(key, "1"); } catch (e) {}
+  }
 
   // Every photo of one copy, built only now it has been tapped, so nothing
   // loads from eBay before somebody asks (S33). The first falls back to the

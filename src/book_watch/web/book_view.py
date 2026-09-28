@@ -20,7 +20,7 @@ from book_watch.ebay.search import Money
 from book_watch.standing import Market, Standing
 from book_watch.web import strips
 
-_SYMBOLS = {"USD": "$", "GBP": "£", "EUR": "€"}
+SYMBOLS = {"USD": "$", "GBP": "£", "EUR": "€"}
 
 #: The market strip spans the phone's content width (360 less the gutters).
 MARKET_STRIP_WIDTH = 328
@@ -37,7 +37,7 @@ def money(value: Money | Decimal, currency: str = "USD") -> str:
         else (value, currency)
     )
     text = f"{amount:.0f}" if amount == amount.to_integral_value() else f"{amount:.2f}"
-    symbol = _SYMBOLS.get(code)
+    symbol = SYMBOLS.get(code)
     return f"{symbol}{text}" if symbol else f"{text} {code}"
 
 
@@ -149,6 +149,6 @@ def market_line(market: Market, seen: Prices, ceiling: Money | None) -> dict:
             limit,
             width=MARKET_STRIP_WIDTH,
             height=20,
-            symbol=_SYMBOLS.get(currency, ""),
+            symbol=SYMBOLS.get(currency, ""),
         )
     return {"text": words, "strip": strip}

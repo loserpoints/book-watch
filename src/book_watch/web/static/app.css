@@ -682,3 +682,28 @@ dialog.photo-view[open] { display: grid; gap: var(--space-2); justify-items: cen
 .markets { display: grid; gap: var(--space-2); margin-bottom: var(--space-3); }
 .match-count { margin: 0 0 var(--space-1); }
 .sheet-form { display: grid; gap: var(--space-3); }
+
+/* The want-list (S34, #98): the count, Update and Check all, then the rows. */
+.list-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-2);
+}
+.list-bar-actions { display: flex; gap: var(--space-2); }
+.badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: var(--text-xxs);
+  font-weight: 700;
+}
+.sheet-text { margin: 0; color: var(--muted); font-size: var(--text-sm); }
+.sheet-check { display: flex; gap: var(--space-2); align-items: center; font-size: var(--text-sm); color: var(--muted); min-height: 44px; }

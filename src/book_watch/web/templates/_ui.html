@@ -70,10 +70,13 @@
 {#- One book on the want-list. Title full width above the cover (S27), then
     the facts beside the cover and the price with its range strip on the
     right. `state` is ok, checking, failed, unchecked, maybes or none. -#}
-{% macro book_row(b) -%}
-<li class="book-row">
+{#- On the real list a row carries its id, so a check can swap it back in
+    out of band (`oob`), and the trash asks before it removes (S26 B6). -#}
+{% macro book_row(b, oob=False) -%}
+<li class="book-row"{% if b.id %} id="entry-{{ b.id }}"{% endif %}{% if oob %} hx-swap-oob="true"{% endif %}>
   <a class="book-row-title" href="{{ b.href }}">{{ b.title }}</a>
-  <button class="icon-btn book-row-remove" type="button" aria-label="Remove {{ b.title }}">{{ trash() }}</button>
+  <button class="icon-btn book-row-remove" type="button" aria-label="Remove {{ b.title }}"
+    {%- if b.id %} hx-delete="/books/{{ b.id }}" hx-target="#want-list" hx-swap="outerHTML" hx-confirm="Remove {{ b.title }} from the list?"{% endif %}>{{ trash() }}</button>
   {{ cover(b.title, b.author, b.cover_url) }}
   <div class="book-row-body">
     <div class="book-row-facts">
@@ -89,7 +92,7 @@
       </span>
       <span class="meta">added {{ b.added }}{% if b.digging %} · {{ digging() }}{% endif %}</span>
     </div>
-    {% if b.state == 'ok' %}
+    {% if b.state == 'ok' and b.price_text %}
       <div class="book-row-price">
         {{ price(b.price_text, b.verdict, b.over_by, prefix="from ") }}
         {{ b.strip }}

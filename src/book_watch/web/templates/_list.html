@@ -1,39 +1,79 @@
+{% import "_ui.html" as ui %}
 {# The list on its own, so a delete can swap just this and leave the form alone. #}
 <div id="want-list">
 {% if not books %}
-  <p class="muted">Nothing on the list yet.</p>
+  <p class="meta">Nothing on the list yet.</p>
 {% else %}
-  <p class="muted">{{ books | length }} book{{ '' if books | length == 1 else 's' }}.</p>
-
   {#- Checking is an explicit act with a button on it. The list itself renders
       from the store and spends nothing (decision 54) — opening this page is
-      not a request to search ten books, and a page that took ten seconds to
-      appear would be a worse page.
+      not a request to search ten books.
 
-      Re-check ignores the hour gate exactly as the book page's re-run does.
-      It is the one control here that spends requests unconditionally. -#}
-  <p class="sweep">
-    <button type="button" class="secondary"
-            hx-get="/books/check"
-            hx-target="#sweep-runner"
-            hx-swap="outerHTML">Check all</button>
-    <a href="#" hx-get="/books/check?force=1"
-       hx-target="#sweep-runner" hx-swap="outerHTML">Re-check everything</a>
-  </p>
+      Two controls, settled in S27. *Update* checks only the books out of
+      date, so its count says what it will cost. *Check all* overrides the
+      hour and asks first, offering the cheaper Update as the alternative. -#}
+  {% set total = books | length %}
+  {% set fresh = total - stale %}
+  <div class="list-bar">
+    <span class="meta">{{ total }} book{{ '' if total == 1 else 's' }}</span>
+    <span class="list-bar-actions">
+      <button type="button" class="btn btn-plain"
+              hx-get="/books/check" hx-target="#sweep-runner" hx-swap="outerHTML"
+              {%- if not stale %} disabled{% endif %}>
+        {%- if stale %}Update <span class="badge">{{ stale }}</span>{% else %}All current{% endif -%}
+      </button>
+      {%- if fresh %}
+        {#- Asks first, unless this device was told not to. -#}
+        <button type="button" class="btn btn-ghost" data-open="check-all-sheet"
+                data-skip="book-watch:check-all-no-ask">Check all</button>
+      {%- else %}
+        {#- Nothing is inside the hour, so Check all and Update are the same
+            request and there is nothing to warn about. -#}
+        <button type="button" class="btn btn-ghost"
+                hx-get="/books/check?force=1" hx-target="#sweep-runner"
+                hx-swap="outerHTML">Check all</button>
+      {%- endif %}
+    </span>
+  </div>
+
   {#- A book just added arrives with the walk already primed for it, so it
       checks itself without the page having asked for anything else. -#}
   {% with next_id = checking, queue = [], remaining = 1, force = False %}
     {% include "_runner.html" %}
   {% endwith %}
 
+  <ul class="ui-list">
   {% for book in books %}
     {% set glance = glances.get(book.id) if glances else None %}
     {% set state = 'checking' if book.id == checking else 'idle' %}
-    {% include "_entry.html" %}
+    {% with oob = false %}{% include "_entry.html" %}{% endwith %}
   {% endfor %}
+  </ul>
+
   {#- Their covers API asks for a link back, and it is the least we owe. -#}
-  <p class="muted credit">
+  <p class="meta credit">
     Covers from <a href="https://openlibrary.org" rel="noopener">Open Library</a>.
   </p>
+
+  {% if fresh %}
+  {% call ui.sheet("check-all-sheet", "Check all %d book%s?" % (total, '' if total == 1 else 's')) %}
+    <p class="sheet-text">
+      {{ fresh }} of them {{ 'was' if fresh == 1 else 'were' }} checked within the
+      last hour and will be searched again.
+      {%- if stale %} To check only the {{ stale }} that {{ 'is' if stale == 1 else 'are' }}
+      out of date, use Update.{% endif %}
+    </p>
+    <label class="sheet-check"><input type="checkbox" data-remember="book-watch:check-all-no-ask"> Don't ask me again</label>
+    <div class="sheet-actions">
+      {%- if stale %}
+      <button type="button" class="btn btn-plain" data-close
+              hx-get="/books/check" hx-target="#sweep-runner" hx-swap="outerHTML">Update {{ stale }}</button>
+      {%- else %}
+      <button type="button" class="btn btn-plain" data-close>Cancel</button>
+      {%- endif %}
+      <button type="button" class="btn btn-primary" data-close data-default
+              hx-get="/books/check?force=1" hx-target="#sweep-runner" hx-swap="outerHTML">Check all {{ total }}</button>
+    </div>
+  {% endcall %}
+  {% endif %}
 {% endif %}
 </div>
