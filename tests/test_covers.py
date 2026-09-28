@@ -151,7 +151,7 @@ def test_a_book_with_no_open_library_work_is_not_asked_about(connection):
 
 
 def test_a_collector_entry_shows_its_editions_cover(connection):
-    """Nothing writes collector entries yet; this is the seam *Two kinds of hunt* builds on."""
+    """Nothing writes collector entries yet; *Two kinds of hunt* builds on this."""
     work_id = unasked(connection)
     connection.execute(
         "UPDATE work SET cover_id = 1, cover_from = 'work' WHERE id = ?", (work_id,)
