@@ -14,35 +14,16 @@
 
 ## Tokens
 
-Every color, font, text size, space and radius is a token in `src/book_watch/web/tokens.toml`. `/design` on the running app draws them all.
-
-- **Color:** `bg`, `surface`, `fg`, `muted`, `line`, `accent`, `on-accent`, `under`, `over`, `placeholder-bg`, `placeholder-fg`, `shadow`, `spine`. Each has a dark and a light value and a line saying what it is for.
-- **Font:** Courier Prime for titles and prices, IBM Plex Sans for everything else. Both are served by the app.
-- **Text:** one scale, `xxs` to `xxl`.
-- **Space:** `1` to `6`.
-- **Radius:** `sm`, `md`, `lg`, `pill`.
+Every color, font, text size, space and radius is a token in `src/book_watch/web/tokens.toml`. The [design page](https://book-watch.fly.dev/design) draws each one with its value, in the theme your device uses.
 
 Tests enforce the rules:
 
 - The stylesheet and templates use tokens only, never raw colors or sizes.
-- Every color has both themes, and dark is the default.
+- Every color has a dark and a light value, and dark is the default.
 - All text meets WCAG AA contrast in both themes.
 - Every icon button is a 44px target.
 - No template uses `title=` for information.
 
 ## Components
 
-Jinja macros in `src/book_watch/web/templates/_ui.html`. Each takes plain values, and `/design` draws every state from samples.
-
-- **Book row:** one book on the want-list, with cover, price and range strip.
-- **Copy row:** one copy on active listings, with photo, price, rank strip, condition, seller's claim and condition note.
-- **Candidate row:** one search result when adding a book. The whole row adds it.
-- **Market line:** a market's count and its range strip.
-- **Strips:** range (every asking price seen, the limit dashed) and rank (this copy among its kind). Drawn as SVG by `web/strips.py`.
-- **Price:** colored under or over, with ✓ or the amount over.
-- **Cover:** the image over a placeholder showing the title.
-- **Chip, tag, button, fab (the round +), field, switch.**
-- **Sheet:** a bottom sheet, a native `<dialog>`.
-- **Photo view:** every photo of a copy, swiped through, with dots.
-- **Explain and digging:** a short phrase that expands in place on tap.
-- **Fold:** a collapsed group, such as the maybes.
+Jinja macros in `src/book_watch/web/templates/_ui.html`. Each takes plain values, so a screen maps its data onto them. The [design page](https://book-watch.fly.dev/design) draws every component in every state, and a new component is added there when it is added here.
