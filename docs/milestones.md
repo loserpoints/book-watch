@@ -48,48 +48,6 @@ renumbers. Two rules keep that from costing anything:
 
 ---
 
-## M6 · A look of its own
-
-**Goal.** Every book has a cover, and the app has a design of its own: a
-direction chosen on real screens, tokens that hold every colour and size, and
-the building blocks every later screen is made of, drawn on `/design`.
-
-**Jobs advanced.**
-
-- **J6**, in part. Covers make the list recognisable at a glance, and a list
-  is only trusted if it is legible.
-- It is mostly foundation. **J3** was this milestone's first name and moved to
-  *Judge a copy at a glance* with the work that delivers it. See below.
-
-**Why here, rather than at the end.** Because everything after it is more
-screens. *Two kinds of hunt* adds a mode, a second ranking and condition
-preferences; *Always current* adds what-is-new marking; *Tell me* adds an
-email, which is a rendering surface with far harsher rules than a web page.
-Building the system first means those are built inside it rather than restyled
-afterwards, and it is the difference between one design pass and four.
-
-**Why not earlier.** There was not enough of the app to generalise from. Four
-screens with one kind of thing on them is not a design system, it is a
-stylesheet — and a system derived from too little is one you fight later.
-
-**The open question, answered.** Whether decision 2's no-build-step rule
-still fits. It does, for new reasons recorded under decision 2: the platform
-now carries what a build step used to, and nothing in the design needs a
-framework. The principles the system is built to live in `docs/design.md`.
-
-**Covers came first.** The reference apps lean on artwork, and the want-list
-had no cover for a book. Open Library already returned cover ids in responses
-the app made and discarded, so the first slice stored them (decision 56).
-
-**Split, 2026-09-28.** This began as *Judge a copy at a glance* and grew into
-the largest milestone yet: covers, two design slices, tokens, and building
-blocks that turned out to be two slices on their own. Rebuilding the screens,
-which is where J3 is actually delivered, would have made it larger still. So
-it ends at the building blocks, and the screens start the next milestone,
-which takes the name that describes them.
-
----
-
 ## M7 · Judge a copy at a glance
 
 **Goal.** The want-list, the book page and adding a book are rebuilt from M6's
@@ -160,8 +118,10 @@ looked marked as new.
 
 - **J1**, completed. The list re-runs itself. Opening the app no longer starts
   the search.
-- **J2**, in large part. Sorting by landed cost, and dismissing a listing so it
-  stops coming back.
+- **J2**, in large part. Dismissing a copy so it stops coming back (#105), and
+  copies with unknown shipping sorting after every copy with a known delivered
+  price (#104). Sorting by delivered price itself arrived with *What I will
+  pay* (decision 51).
 
 **Why here, rather than earlier.** The digest cannot exist without it: "new
 listings" needs a record of the old ones, and "new" has to mean new *to me*
@@ -245,16 +205,19 @@ Real, wanted, and not yet worth a position in the order.
   *multiple* marketplaces, and eBay-only is a nicer saved search. Blocked on
   whether the affiliate terms fit (decision 6), which is not a scheduling
   question.
-- **Seller descriptions in the app.** J3 wants condition detail without clicking
-  through, and S1 established the price: descriptions are not in the search
-  response, so this costs one `getItem` call per listing. *The right book* has
-  since made that call anyway, for the seller's declared number — so the
-  marginal cost of a description is now zero requests and one more stored
-  field. What it still wants is *Always current* showing what a poll actually
-  spends per day before anything else is added to it.
-- **Relative dates** — [issue 22](https://github.com/loserpoints/book-watch/issues/22).
+- **Searching by author alone, and adding several books at once** —
+  [#101](https://github.com/loserpoints/book-watch/issues/101). A short tap
+  adds one book; a long press or *Select* adds several (settled in S27). It
+  also moves "add it as typed" from the ISBN field to the title search.
+- **A default price limit per hunt**, inherited by new books —
+  [#107](https://github.com/loserpoints/book-watch/issues/107).
 - **Checking the library first**, which the brief names as the real first step
   in the workflow and puts out of scope for v1.
+
+*Removed at M6's close:* seller descriptions, ruled out in S26 as long HTML
+full of seller banners. The seller's short condition note takes their place
+in *Judge a copy at a glance* (#106), at no extra requests. Relative dates
+(#22) are delivered by the screens slice there.
 
 ---
 
@@ -524,3 +487,90 @@ while undoing a mutation — the same mistake *Keep what we saw* recorded — an
 a `check.sh` run was piped through `grep`, which masks its exit code, so a
 failing lint read as green. Mutation testing needs a committed tree, and a
 check's exit status needs reading.
+
+### M6 · A look of its own
+
+**Delivered 2026-09-28.** Every book has a cover. The app has a direction
+chosen on real screens, a warm shelf with typewriter titles in Alan's dodger
+blue, recorded in `docs/design.md`. Every colour and size lives in one token
+file (decision 57), the fonts are served from the app, and the building
+blocks every later screen is made of, rows, strips, sheets and controls, are
+drawn in every state on `/design`. No screen was rebuilt yet: that is
+*Judge a copy at a glance*, which this milestone was first named after and
+split from.
+
+**What it taught.**
+
+- **Reviewing screens as a user finds bugs that reviewing logic does not.**
+  Walking the four screens one at a time turned up six issues in a day, and
+  two were real defects the suite passed. *Every* book added by title warned
+  that it was "not an ISBN" (#102), and "over your limit" was computed and
+  never shown on a copy (#103). Both were found by Alan asking what a screen
+  meant, not by a test. So was the first design drawing quietly dropping three
+  facts, found by asking "did you drop anything?".
+- **A decision is made one screen at a time, looking at the screen.** Twelve
+  abstract steps and a numbered inventory table were the first plan, and
+  neither could be reacted to. Labelled screenshots of the real pages could.
+  The same went for design: three directions drawn at phone width on real
+  rows settled in minutes what words would not have settled at all.
+- **Layout iteration has a cost worth naming before it starts.** The copy row
+  took five rounds, and rounds three and four mostly undid round two. The last
+  one was right, so it was not waste, but a stopping rule set up front ("one
+  more try, then admit defeat") is cheaper than one reached at round five.
+- **Render every slice, and look at it.** The suite missed four things a
+  screenshot or a browser run caught:
+  - an escaped token block that silently dropped every typeface;
+  - a `<details>` inside a `<p>`, which the browser splits;
+  - an inline style that beat the rule hiding one side of a switch;
+  - placeholder titles clipped mid-word.
+
+  Each now has a test, written after the fact. The contrast test is the
+  exception: it caught light mode's green and coral on its first run.
+- **Do what the partner asks, even when we can argue it is fine.** Covers
+  were going to be downloaded and stored, under the caching rule. Open
+  Library's docs ask for display, not download, so the page links to their
+  cover server (decision 56). The same instinct kept the listing description
+  out of #106, where the seller's short condition note does the job.
+- **"Couldn't ask" is not "the answer is no", again.** Covers first shipped
+  recording "no cover" for any book without an Open Library work id, which
+  caught every M1-era book added by ISBN. *State of Grace* showed a
+  placeholder while Open Library held two covers. It was decision 52's trap
+  in a new field.
+- **A milestone named for its value has to hold the work that delivers it.**
+  This one was named for J3, grew to seven slices, and would only have
+  delivered J3 at the very end. Splitting it moved the name with the value
+  and left this one named for what it actually built.
+
+**On process, twice more.** A push went up with a failing lint check,
+because the push was chained after a command that always succeeds; M5
+recorded the same class of mistake with `grep`. And a sample-data edit
+silently failed to apply, found only because a test for it failed. A check's
+real exit code, and confirmation that an edit landed, both need reading
+every time.
+
+**Carried into *Judge a copy at a glance*, unconfirmed.** eBay's photo-size
+URL pattern (S30) needs one real stored URL to confirm, and the Android back
+gesture closing a sheet needs a phone.
+
+**The review of what remains**, held at this close (decision 31):
+
+- ***Judge a copy at a glance* stays next**, in the order its slices are
+  numbered. Nothing M6 taught argues against it, and it is the milestone
+  whose value M6 was built for.
+- **Dismissing a copy (#105) belongs to *Always current***, whose goal
+  already names dismissal. It is filed there rather than left unscheduled.
+- ***Always current* had one stale line.** "Sorting by landed cost" was
+  delivered in *What I will pay* (decision 51) and is removed. What is left
+  of that line is unknown-shipping copies sorting last (#104).
+- ***Two kinds of hunt*'s open question has a partial answer.** Condition for
+  collectors lives in seller prose, and #106 keeps the one field of prose that
+  is short and about condition. That makes "is it parseable?" measurable
+  rather than hypothetical, once #106 has run on real listings.
+- **Whether *Two kinds of hunt* or *Always current* comes next is deferred**,
+  by Alan's call, to the close of *Judge a copy at a glance*. The app will
+  have its first real experience to judge from by then.
+- ***Not scheduled* is brought up to date.** Seller descriptions are ruled
+  out, with the condition note taking their place in #106. Relative dates
+  (#22) and the shape of prices (#76) are delivered by the screens slice. The
+  S26 finds that are wanted but unplaced are listed: author search (#101) and
+  a default limit per hunt (#107).
