@@ -2830,3 +2830,48 @@ moves into an admin area.
 
 **What S28 does not do.** The screens keep their old layout, on the new
 tokens. The screens slice (#98) rebuilds them.
+
+## 58. A copy keeps its condition note and every photo, and nothing else from the listing
+
+**Decision.** From the `getItem` response already fetched once per listing
+(decision 33), keep two more things: the seller's condition note
+(`conditionDescription`) and the URL of every photo (`image` then
+`additionalImages`). The listing description is not kept. Migration 020;
+`ebay.declarations.CAPTURE` moves to 2.
+
+**Why these two.** J3's test is ruling a copy out from the list alone. Wrong
+edition was already covered by what the seller declares. Ex-library, price
+clipped and no dust jacket were not: they are written in the condition note
+and visible in the photos, and the app threw both away.
+
+**Why not the description.** Alan's call in S26. It is arbitrary HTML, often
+long, and mostly seller banners, returns policy and links. The condition note
+is a separate plain-text field, and it is where condition is actually written.
+
+**What it costs.**
+
+- **Calls: none new.** The same response already arrives once per listing,
+  ever.
+- **Storage: a few hundred bytes a copy.** The note, and a handful of URLs as
+  a JSON array in one column. A table with a row per photo was the
+  alternative; the list is always read whole and never searched, so it would
+  be structure with nothing to do.
+- **Images: never downloaded.** eBay serves them, and the page asks for them
+  only when a photo is tapped.
+- **Re-asking: once per copy listed now, spread out.** Every row captured
+  before this read neither field, and only the capture stamp tells such a row
+  apart from a seller who wrote no note. So `CAPTURE` moves to 2 and decision
+  46's lazy re-ask does the rest: each book's copies that are listed now are
+  asked about again the next time that book is checked, inside the check that
+  already runs. Ended listings are not re-asked. Approved by Alan before it
+  shipped, as a bulk run (CLAUDE.md).
+
+**The note is stored whole.** Never cut at write time: SQLite's `TEXT` has no
+length that matters here, so eBay's maximum only matters to how the page
+shows it, which is the page's business. The ends are trimmed; the inside,
+line breaks included, is the seller's.
+
+**Not yet confirmed against a real response.** The field names are eBay's
+documented ones, and the sandbox this was built in can reach neither eBay nor
+its documentation. The first re-asks in production are the check, and how
+often sellers fill the note in is measured then rather than guessed now.

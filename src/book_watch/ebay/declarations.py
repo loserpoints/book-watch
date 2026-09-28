@@ -12,11 +12,15 @@ would spend the day's budget on one book.
 
 from __future__ import annotations
 
+import json
 import sqlite3
 
 from book_watch.ebay.detail import Declared, ItemDetailClient
 
-_COLUMNS = "item_id, isbn, author, format, publisher, published, category"
+_COLUMNS = (
+    "item_id, isbn, author, format, publisher, published, category, "
+    "condition_note, photos"
+)
 
 #: Which fields the code above reads out of an eBay listing.
 #:
@@ -31,7 +35,8 @@ _COLUMNS = "item_id, isbn, author, format, publisher, published, category"
 #: column more carefully is still a change in what was captured.
 #:
 #: 1: isbn, author, format, publisher, published, category.
-CAPTURE = 1
+#: 2: the seller's condition note and every photo URL (S33, decision 58).
+CAPTURE = 2
 
 
 class Declarations:
@@ -138,6 +143,8 @@ class Declarations:
                 publisher = excluded.publisher,
                 published = excluded.published,
                 category = excluded.category,
+                condition_note = excluded.condition_note,
+                photos = excluded.photos,
                 captured_by = excluded.captured_by
             """
             if replace
@@ -146,7 +153,7 @@ class Declarations:
         self._connection.execute(
             f"""
             INSERT INTO listing_declaration ({_COLUMNS}, captured_by)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT (item_id) {resolution}
             """,
             (
@@ -157,6 +164,8 @@ class Declarations:
                 declared.publisher,
                 declared.published,
                 declared.category,
+                declared.condition_note,
+                json.dumps(list(declared.photos)) if declared.photos else None,
                 CAPTURE,
             ),
         )
@@ -171,4 +180,6 @@ def _to_declared(row: sqlite3.Row) -> Declared:
         publisher=row["publisher"],
         published=row["published"],
         category=row["category"],
+        condition_note=row["condition_note"],
+        photos=tuple(json.loads(row["photos"])) if row["photos"] else (),
     )
