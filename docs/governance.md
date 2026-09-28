@@ -7,7 +7,7 @@ Every document in this repository is one of the artifacts below. `scripts/check_
 | Artifact | Status | Path | Sections |
 |---|---|---|---|
 | Governance | active | `docs/governance.md` | Artifacts · Workflow · Writing style |
-| README | migrating | `README.md` | Value proposition · What it does · Tech stack · Running it · Repository structure |
+| README | active | `README.md` | Value proposition · What it does · Tech stack · Running it · Repository structure |
 | Agent instructions | migrating | `CLAUDE.md` | Start of session · Working rules |
 | Contributing | active | `CONTRIBUTING.md` | Building · Testing · Reviewing |
 | Jobs | active | `docs/jobs.md` | J<n> · <name> [Job (sentence) · Success signal] |
