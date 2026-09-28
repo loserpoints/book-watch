@@ -28,13 +28,6 @@ It works if, over a month, I stop searching marketplaces by hand and it finds at
 - Installs on a phone as an app.
 - Stays well inside what eBay and Open Library allow ([rate limits](docs/rules/rate-limits.md)).
 
-It does not:
-
-- Buy anything. It links to the listing.
-- Cover new books or retailers like Amazon.
-- Serve anyone but me. There are no accounts.
-- Check the library first. That step is still mine.
-
 It doesn't yet check on its own or tell me when a copy appears ([J1](docs/jobs.md#j1), [J4](docs/jobs.md#j4)). Collectible editions, where condition matters more than price, are not built.
 
 ## Tech stack
