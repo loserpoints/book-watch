@@ -6,6 +6,7 @@
 - Measure before deciding when a choice turns on a number, and measure again when the data grows.
 - Before inventing a proxy for a signal, check whether the code already has the signal and throws it away.
 - Decide a design by looking at it on real screens at phone width, and agree beforehand how many rounds a layout gets.
+- Migrations run forward only, and a rollback does not undo them. Keep a migration additive, so the previous code still works if its change is reverted.
 
 ## Testing
 
@@ -20,5 +21,6 @@
 ## Reviewing
 
 - Open a pull request as soon as a branch has something reviewable. Small and frequent beats large.
+- Merging to `main` deploys once CI passes, with nobody watching. Merge only what is ready to be live (see the [runbook](docs/runbook.md#deploy)).
 - Before pushing, re-read the diff for what would make CI reject it.
 - Review each screen by using it and asking what each part means. That finds defects the tests pass.
