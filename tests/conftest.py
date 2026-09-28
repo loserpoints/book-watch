@@ -6,7 +6,7 @@ and the suite quietly started making live requests to a non-profit on every
 run. Nothing failed. It was visible only as the suite taking four times as
 long.
 
-Decision 7 calls low volume a constraint rather than a preference, and CI
+Open Library's low volume is a constraint rather than a preference, and CI
 running on every push is exactly the kind of volume that gets an address
 blocked. So an accidental request is now a loud failure instead of a silent
 one.

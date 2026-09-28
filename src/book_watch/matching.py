@@ -3,10 +3,10 @@
 Pure logic. Nothing here opens a socket, reads a database or knows what a
 marketplace is — it is handed what is known about one listing and answers with
 a tier. That makes it testable against the 227 hand-labelled listings in
-`tests/data/`, which is the only reason the numbers in decision 33 are
+`tests/data/`, which is the only reason the S6 study's numbers are
 verifiable rather than remembered.
 
-**Nothing is rejected for being uncertain.** Decision 33 measured that every
+**Nothing is rejected for being uncertain.** The S6 study measured that every
 rule available is good at one question and bad at the other: listing text
 finds the book and cannot find the edition, `epid` finds the edition and
 misses two thirds of the copies. They fail in opposite directions, so they are
@@ -15,11 +15,10 @@ instead of being resolved by throwing listings away. Recall was 100% on both
 hunts on both books precisely because of that.
 
 The two hunts are this one function with **one** parameter: which numbers count
-as the target. Decision 33 said two, adding a stricter text floor for a
+as the target. The S6 study said two, adding a stricter text floor for a
 collector, and the corpus in `tests/data/` disproved it — that book had no
 declared numbers at all, so S6 never scored it on the collector's hunt and
-never saw that the stricter floor hides true matches. See the amendment to
-decision 33.
+never saw that the stricter floor hides true matches.
 """
 
 from __future__ import annotations
@@ -50,7 +49,7 @@ class Target:
     `isbns` is every number we have learned is this book — one for a
     collector's hunt, and however many listings have taught us for a reader's.
     It is knowledge that accumulates, never a list downloaded up front:
-    decision 7 as amended measured that about 80% of a downloaded edition list
+    about 80% of a downloaded edition list
     is never offered for sale.
 
     `author` is used only to rule a listing **out**. It was left out entirely
@@ -76,8 +75,8 @@ class Evidence:
 
     `identity` is what our notebook says the seller's declared number is —
     Open Library's title for it. `None` covers both "Open Library has no
-    record of this number" and "nobody has asked yet", and decision 33
-    requires those behave identically: neither may exclude a listing. Every
+    record of this number" and "nobody has asked yet", and those must
+    behave identically: neither may exclude a listing. Every
     unresolvable number in the measured sample was a non-English edition of
     the right book, and a listing whose number has not been looked up yet is
     simply one whose turn has not come.
@@ -238,7 +237,7 @@ def names_the_same_book(identity: str, wanted: str) -> bool:
     is a box that contains it.
 
     Comparing what Open Library called the number, rather than which work it
-    filed it under. Decision 33: *Crash* sits under five separate work ids and
+    filed it under. *Crash* sits under five separate work ids and
     *Stoner* under five, and a rule built on work-id equality threw away 21 of
     the 45 true *Crash* listings.
     """

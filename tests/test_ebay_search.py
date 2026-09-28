@@ -1,8 +1,7 @@
 """Tests for the eBay Browse search client.
 
 Everything here but the final test runs against `httpx.MockTransport`, so CI
-needs no key and does not depend on eBay being up. See docs/decisions.md
-entries 13 and 15.
+needs no key and does not depend on eBay being up.
 """
 
 from datetime import UTC, datetime

@@ -1,7 +1,7 @@
-/* Every screen's styles. No build step and no framework, by decision 2.
+/* Every screen's styles. No build step and no framework.
 
    Colours, typefaces, type sizes, spacing and corner radii come only from the
-   tokens (`web/tokens.toml`, decision 57), which arrive as custom properties
+   tokens (`web/tokens.toml`), which arrive as custom properties
    in each page's head. `tests/test_tokens.py` fails on a colour, font size,
    margin, padding, gap or radius written here as a raw value. Widths and
    heights are layout, not tokens, and are written where they are used.

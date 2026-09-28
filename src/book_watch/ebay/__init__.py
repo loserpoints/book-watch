@@ -1,6 +1,6 @@
 """Client for the eBay Browse API, the anchor listing source.
 
-See docs/decisions.md entry 4 for why this API and not another.
+It is free, allows 5,000 calls a day, and prices shipping per copy.
 
 `search` is deliberately not re-exported here. It is runnable as
 `python -m book_watch.ebay.search`, and importing it into the package would

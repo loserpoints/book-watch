@@ -2,7 +2,7 @@
 
 The second half of this file scores every rule against 227 eBay listings that
 were hand-classified twice by the person who would have bought them, during
-S6. Those numbers are decision 33's whole argument, and until now they lived
+S6. Those numbers are the whole argument for grading, and until now they lived
 in a decision record and in memory. Here they are assertions, so a change that
 quietly degrades matching fails the build rather than shipping.
 
@@ -110,7 +110,7 @@ def test_a_listing_naming_a_different_book_entirely_is_excluded():
 
 
 def test_a_number_that_did_not_resolve_does_not_exclude_anything():
-    """Decision 33. Every unresolvable number in the sample was a non-English
+    """Every unresolvable number in the sample was a non-English
     edition of the right book, and one nobody has asked about yet is simply
     waiting its turn. Both arrive here as no identity at all."""
     listing = Evidence(
@@ -186,7 +186,7 @@ def test_the_corpus_is_what_it_says_it_is():
 def test_nothing_true_is_ever_hidden(book, hunt):
     """The property the whole design exists for.
 
-    Decision 33 chose grading over filtering precisely so that recall stays
+    Matching chose grading over filtering precisely so that recall stays
     complete — an uncertain listing is labelled uncertain and shown lower
     down, never discarded. This is the assertion that keeps that true.
     """
@@ -212,7 +212,7 @@ def test_a_reader_can_trust_the_certain_tier(book, floor):
 )
 def test_a_collector_can_mostly_trust_the_certain_tier(book, floor):
     """*Crash* is left out on purpose: six right-edition listings is not a
-    sample, and decision 33 records that its `epid` over-merges. Pinning a
+    sample, and the S6 study found its `epid` over-merges. Pinning a
     number to it would be pinning noise."""
     tiers, _, _ = scored(book, "collector", "is_edition")
 
@@ -228,7 +228,7 @@ def test_the_certain_tier_is_worth_having(book):
 
 
 def test_identifiers_beat_text_where_it_matters_most():
-    """The finding decision 33 turns on, as a test rather than a memory.
+    """The finding matching turns on, as a test rather than a memory.
 
     Text finds the book and cannot find the edition. Identifiers find the
     edition. They fail in opposite directions, which is what makes them

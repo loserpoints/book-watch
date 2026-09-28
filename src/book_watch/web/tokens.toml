@@ -1,4 +1,4 @@
-# Every colour, typeface and size the app uses, defined once. Decision 57.
+# Every colour, typeface and size the app uses, defined once.
 #
 # This file is the only place a colour or a size is written. The web pages get
 # it as CSS custom properties, generated when the app starts (`tokens.css()`);
@@ -6,7 +6,7 @@
 # email clients ignore custom properties and need them inlined. A test fails
 # on a colour or size written anywhere else.
 #
-# The values are the direction chosen in S27 (`docs/design.md`): a warm dark
+# The values are the direction chosen in S27: a warm dark
 # shelf, dodger blue for anything current or tappable, green and coral for
 # under and over the limit. Dark is tuned first; light is kept working.
 #

@@ -33,7 +33,7 @@ class LazyBrowseSearch:
     `EBAY_CLIENT_ID` while booting would fail to start in production. That
     endpoint carries an uptime obligation which has nothing to do with the
     rest of the app — eBay re-validates it on its own schedule and disables
-    the keyset when the check fails (decisions.md entry 16).
+    the keyset when the check fails.
 
     So a missing key breaks searching, loudly, and breaks nothing else.
     """

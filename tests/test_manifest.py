@@ -58,7 +58,7 @@ def test_the_app_serves_it():
 
 
 def test_its_colours_are_the_tokens():
-    """So the splash and status bar cannot drift from the app (decision 57)."""
+    """So the splash and status bar cannot drift from the app."""
     body = served().json()
 
     assert body["background_color"] == tokens.colour("bg")
@@ -88,8 +88,8 @@ def test_every_page_links_the_manifest_and_its_icons():
 
 
 def test_no_service_worker_is_registered():
-    """Decision 59. A worker that caches pages would serve yesterday's copies
-    as today's, the failure decision 48 fixed."""
+    """A worker that caches pages would serve yesterday's copies
+    as today's."""
     for path in [*WEB.rglob("*.html"), *WEB.rglob("*.js"), *WEB.rglob("*.py")]:
         if path.name.endswith(".min.js"):
             continue  # htmx, vendored; it mentions nothing of the kind anyway

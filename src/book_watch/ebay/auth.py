@@ -3,8 +3,8 @@
 eBay issues an *application* access token — it identifies this app, not a user,
 which is all a read-only search needs. The token is valid for two hours, so
 this module mints one and holds it rather than exchanging credentials per
-request. That matters for more than latency: the daily call budget is finite
-(decisions.md entry 4), and spending it on authentication would be a waste of
+request. That matters for more than latency: the daily call budget is finite,
+and spending it on authentication would be a waste of
 the headroom the choice of API was justified by.
 """
 
@@ -73,7 +73,7 @@ class EbayTokenProvider:
 
     Not thread-safe: two threads racing on a cold cache would each mint a
     token. Harmless — eBay issues both — but wasteful. The scheduler this will
-    sit behind runs one job at a time (decisions.md entry 8), so a lock would
+    sit behind runs one job at a time, so a lock would
     be machinery for a problem this app does not have. Revisit if that changes.
     """
 

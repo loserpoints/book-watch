@@ -2,13 +2,13 @@
 
 Both put prices on one horizontal scale, the way a dot plot does:
 
-- **The range strip** shows every asking price seen for a book (decision 53's
-  seen population), with the lowest and highest labelled under the ends in
+- **The range strip** shows every asking price seen for a book,
+  with the lowest and highest labelled under the ends in
   whole dollars and the limit as a dashed guide. Every dot is the same
   colour: the cheapest is always the left end, so emphasising it would say
   nothing (S27).
-- **The rank strip** shows the copies of one kind listed now (decision 53's
-  rank population), with this copy as the large dot. It replaces "2nd of 3",
+- **The rank strip** shows the copies of one kind listed now,
+  with this copy as the large dot. It replaces "2nd of 3",
   which did not say it was about price.
 
 Drawn in Python rather than in the browser, so they appear on first paint and

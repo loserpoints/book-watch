@@ -3,7 +3,7 @@
 Nothing secret is ever read from a file that git tracks. In development the
 values come from a gitignored `.env`; in production they come from the
 platform's own secret store. `.env.example` documents the names and holds no
-values. See docs/decisions.md entry 11.
+values.
 """
 
 from __future__ import annotations

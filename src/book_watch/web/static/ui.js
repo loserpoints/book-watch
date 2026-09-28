@@ -2,7 +2,7 @@
 //
 // Everything here works on markup the macros in templates/_ui.html emit, by
 // data attributes, so no screen writes its own script. No framework and no
-// build step (decision 2). Without JavaScript the page still reads; only the
+// build step. Without JavaScript the page still reads; only the
 // sheets and the enlarged photo need it.
 
 (function () {

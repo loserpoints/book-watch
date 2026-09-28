@@ -11,8 +11,7 @@ class Candidate:
 
     `edition_count` is a count Open Library reports, not a list it sends. The
     distinction matters: *Pride and Prejudice* reports 4,042 editions in under
-    a kilobyte of response, and this app never asks for them. Decision 7, as
-    amended, has the measurement behind that.
+    a kilobyte of response, and this app never asks for them.
     """
 
     work_id: str
@@ -37,8 +36,7 @@ class EditionIdentity:
     No author. The matching rule does not use one — removing the author check
     changed zero answers out of 227 hand-labelled listings — and Open Library
     holds authors only as internal references, so turning them into names
-    would cost a request per author for something nothing reads. The gap this
-    leaves is recorded in decision 7.
+    would cost a request per author for something nothing reads.
 
     `published` stays a string because Open Library's dates are not a date
     type: "2003", "April 1, 1994" and "xxxx" all appear. Parsing them into

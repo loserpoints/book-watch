@@ -70,7 +70,7 @@ def test_a_listing_shows_everything_needed_to_judge_it_without_clicking():
 
 
 def test_unknown_shipping_is_shown_as_unknown_rather_than_as_a_total():
-    """The three-valued rule from decision 22, carried through to the page."""
+    """The three-valued shipping rule, carried through to the page."""
     listing = a_listing(shipping_cost=None)
     page = client_for(returning(listing)).get("/search?isbn=x").text
 
@@ -173,7 +173,7 @@ def test_the_app_does_not_read_ebay_credentials_at_startup(monkeypatch):
     """Load them eagerly and the deployed compliance endpoint stops booting.
 
     Production holds the deletion secrets and not the eBay keys, and that
-    endpoint has an uptime obligation of its own (decision 16). This is the
+    endpoint has an uptime obligation of its own. This is the
     test that stops someone making the search client eager for tidiness.
     """
 
@@ -264,7 +264,7 @@ def test_a_book_on_the_list_shows_what_is_for_sale(book_client):
 
     assert page.status_code == 200
     assert "Crash" in page.text
-    # Delivered, as every price is (decision 51); the word went in S27.
+    # Delivered, as every price is; the word went in S27.
     assert "$12.98" in visible(page.text)
     assert "https://www.ebay.com/itm/123" in page.text
 
@@ -425,7 +425,7 @@ def test_copies_nobody_has_examined_yet_are_said_to_be_unexamined(book_client):
 
 
 def test_a_copy_only_the_title_matches_goes_below_the_fold(book_client):
-    """Text alone never reaches certain. Decision 33: 36% precision on the
+    """Text alone never reaches certain: 36% precision on the
     edition question, 12% on one book."""
     client = book_client(returning(a_listing(title="Crash by J. G. Ballard")))
     add_book(client, "9780099448396", "Crash")
@@ -724,7 +724,7 @@ def test_a_copy_with_no_stated_shipping_says_so_rather_than_guessing(book_client
 def make_certain(client, isbn="9780099448396", title="Crash"):
     """Give every stored copy a declaration the catalogue recognises.
 
-    Copies reach `certain` on identifiers, never on text (decision 33), and
+    Copies reach `certain` on identifiers, never on text, and
     only a certain copy carries a standing — a rank against a set of copies it
     might not belong to would be a rank for a different book.
     """
@@ -903,7 +903,7 @@ def test_a_copy_with_words_but_no_code_does_not_contradict_itself(book_client):
 
 
 def test_nothing_on_the_page_says_a_copy_sold(book_client):
-    """Decision 47. We observe that a copy was listed at a price and later was
+    """We observe that a copy was listed at a price and later was
     not; why it went is not something eBay will tell us. The wording is where
     that distinction gets lost, so it is asserted rather than trusted."""
     client = book_client(
@@ -935,7 +935,7 @@ def test_nothing_on_the_page_says_a_copy_sold(book_client):
 def test_the_range_on_the_page_spans_copies_that_have_stopped_appearing(book_client):
     """The page must hand the range the wider population, not the copies it is
     drawing. Wiring a correct function to the narrower input passes every
-    unit test and is the failure decision 48 describes: a rank and a range
+    unit test and is a real failure: a rank and a range
     answer different questions and cannot read the same list.
 
     A copy that has gone still happened. Losing it would leave the range
@@ -1049,7 +1049,7 @@ def all_certain(client):
 
 
 def test_opening_the_want_list_spends_nothing(book_client):
-    """Decision 54, and the reason decision 48 gave for not doing this at all:
+    """The reason the want list reads the store:
     a list that spent ten seconds before rendering would be a worse list."""
     client, asked = a_shelf(book_client)
 

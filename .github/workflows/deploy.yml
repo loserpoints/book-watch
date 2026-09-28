@@ -1,8 +1,7 @@
 name: Deploy
 
 # Deploys run here rather than from a laptop, so Fly's credentials live in
-# GitHub's secret store and never sit on a personal machine. See
-# docs/decisions.md entry 18.
+# GitHub's secret store and never sit on a personal machine.
 #
 # Requires two repository secrets:
 #   FLY_API_TOKEN            a deploy token, scoped to this app only

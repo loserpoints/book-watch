@@ -213,7 +213,7 @@ class CountingDetail:
 
 
 def test_a_listing_is_asked_about_once_and_then_never_again(database):
-    """Decision 33: the per-listing call is affordable only on this basis."""
+    """The per-listing call is affordable only on this basis."""
     detail = CountingDetail({"v1|1|0": Declared("v1|1|0", isbn="9781590171998")})
     declarations = Declarations(database, detail)
 

@@ -5,7 +5,7 @@ about the object itself. The ISBN, format, publisher and year come from a
 second call per item — `getItem` — under `localizedAspects`. The same response
 carries the seller's condition note and every photo, kept since S33.
 
-Decision 33 measured that the declared ISBN is the strongest signal available
+The S6 matching study measured that the declared ISBN is the strongest signal available
 for deciding whether a listing is the book: 100% precision on the book
 question, and the only thing that catches an omnibus. So the extra call earns
 itself, and it is affordable because an item's aspects never change. One

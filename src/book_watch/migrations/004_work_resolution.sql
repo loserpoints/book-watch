@@ -14,7 +14,7 @@
 -- first is usually a mistyped digit and the reader's to act on.
 --
 -- Inferring it from whether `openlibrary_work_id` is set was the alternative,
--- and is exactly what decision 33 forbids — that column is a reference for
+-- and is exactly what matching forbids — that column is a reference for
 -- looking something up by hand, never identity and never a flag.
 --
 -- Null for the rows 003 carried across, which is true: nothing has looked

@@ -234,7 +234,7 @@ def test_a_number_open_library_does_not_hold_has_no_cover(connection):
 
 
 def test_text_typed_for_a_book_with_no_isbn_is_not_asked_about(connection):
-    """Decision 29's override. It is not a number, so there is no question."""
+    """The override for text. It is not a number, so there is no question."""
     work_id = added_by_number(connection, typed="Stoner, 1965 Viking first")
     catalogue = Catalogue(6928523)
 

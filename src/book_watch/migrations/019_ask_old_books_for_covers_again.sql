@@ -7,7 +7,7 @@
 -- *State of Grace* showed a placeholder while Open Library holds two covers
 -- for it.
 --
--- Those books have an ISBN, and the lookup now asks by it (decision 56). This
+-- Those books have an ISBN, and the lookup now asks by it. This
 -- clears the conclusion for exactly them, so the next view asks. A book whose
 -- recorded "no cover" came from asking its work is left alone: that one was
 -- an answer.

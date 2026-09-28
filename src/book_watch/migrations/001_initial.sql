@@ -3,8 +3,7 @@
 -- One row is one ISBN I would accept a copy of. That is deliberately not the
 -- same as "one book": a reading copy and a collectible edition of the same
 -- title are different ISBNs, and until edition resolution lands a title I
--- would take in any edition means several rows. See docs/decisions.md entry
--- 26 for why that is the right stopgap rather than the model.
+-- would take in any edition means several rows. That is a stopgap, not the model.
 --
 -- No `mode` column. M1 does not distinguish reading from collectible, and a
 -- column nothing reads is a column that silently stops meaning anything.

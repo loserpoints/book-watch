@@ -4,7 +4,7 @@
 placeholder** — an earlier version of this docstring called it one. There is
 no other reason to click a book's title than to find out what is listed
 *now*, and the version that searched only on a book's first-ever view showed
-copies that may have sold days earlier (decision 48). A sweep is gated to one
+copies that may have sold days earlier. A sweep is gated to one
 an hour per scope so the list holds still long enough to act on, and a button
 ignores the gate on demand.
 
@@ -59,7 +59,7 @@ def _configured_enrichment(connect: ConnectFn) -> EnrichFn:
 
     Built lazily for the same reason everything else here is: nothing that
     could fail for want of a credential may run while the compliance endpoint
-    is trying to boot (decision 24).
+    is trying to boot.
     """
 
     def start(work_id: int) -> object:
@@ -155,7 +155,7 @@ def build_router(
                 "search.html",
                 {"isbn": "", "book": None, "listings": [], "error": None},
             )
-        # Keyword, not GTIN — decisions.md entry 21. Sellers put the ISBN in
+        # Keyword, not GTIN. Sellers put the ISBN in
         # the title and leave eBay's structured fields empty.
         return search_and_render(request, query, limit)
 
@@ -171,10 +171,9 @@ def build_router(
         """What is for sale for one book, graded by how sure we are.
 
         The page reads the store. It searches eBay only when this book has
-        never been searched for, or when asked to refresh — decision 48,
-        which amended decision 40. It never fetches a listing's detail:
-        measured at 0.51s each, fifty of them is twenty-five seconds, and
-        that work belongs to the background.
+        never been searched for, or when asked to refresh. It never fetches a
+        listing's detail: measured at 0.51s each, fifty of them is
+        twenty-five seconds, and that work belongs to the background.
         """
         # Nothing is persisted. A toggle that quietly changed what every later
         # visit searched for would be a setting wearing a link's clothes, and
@@ -278,7 +277,7 @@ def build_router(
             "scope": scope,
             "ceiling": ceiling,
             # The verdict per copy, worked out once here rather than in the
-            # template. Decision 43: derived on read, never stored.
+            # template. Derived on read, never stored.
             "verdict": verdicts,
             # Deliberately independent of the ceiling. A rank is about the
             # market and a ceiling is about you, so a copy over your limit

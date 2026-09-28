@@ -12,7 +12,7 @@
 -- At two books and forty calls that was the right trade. At fifty books it is
 -- not, and re-asking is the only part of a logic change that is not free.
 --
--- Deriving is free (decision 43). This makes the one thing that is not
+-- Deriving is free. This makes the one thing that is not
 -- as small as it can be.
 
 -- Existing rows are stamped 1 rather than 0, and that is knowable rather than

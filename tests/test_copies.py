@@ -458,7 +458,7 @@ def test_without_a_ceiling_nothing_is_judged():
 
 
 def test_a_ceiling_never_hides_or_reorders_anything(database):
-    """The ceiling annotates. Decision 33 chose grading over filtering because
+    """The ceiling annotates. Matching chose grading over filtering because
     a copy just over the line is exactly the one worth seeing."""
     book = a_book(database, "Stoner", "John Williams")
     swept(
@@ -611,7 +611,7 @@ def test_like_new_is_still_a_used_copy(database):
 
 
 def test_the_class_comes_from_the_id_and_never_from_the_words(database):
-    """Decision 33 lost seven listings to trusting eBay's category strings.
+    """The S6 matching study lost seven listings to trusting eBay's category strings.
     The display string is localized and re-worded; the number is not. So a
     copy whose words say one thing and whose id says another follows the id."""
     book = a_book(database, "Stoner", "John Williams")
@@ -744,7 +744,7 @@ def test_a_copy_without_a_delivered_price_cannot_be_placed(database):
 
 def test_currencies_do_not_pool(database):
     """A range from £5 to $36 is not a range, and a symbol would not make it
-    one. Decision 50 refuses the same comparison for the ceiling."""
+    one. The ceiling refuses the same comparison."""
     book = a_book(database, "Stoner", "John Williams")
     a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
     a_certain_copy(database, book.work_id, "v1|2|0", price="5.00", currency="GBP")
@@ -895,7 +895,7 @@ def test_two_copies_at_one_price_are_not_a_range_either(database):
 
 
 def test_currencies_are_separate_markets(database):
-    """Decision 50's refusal, applied to a range: £5 to $36 is not a range and
+    """The ceiling's refusal, applied to a range: £5 to $36 is not a range and
     a symbol would not make it one."""
     book = a_book(database, "Stoner", "John Williams")
     a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
@@ -993,7 +993,7 @@ def test_uncertain_copies_are_counted_rather_than_called_nothing(database):
     book = a_book(database, "Stoner", "John Williams")
     # Carries the title and nothing that proves the book — no number from the
     # seller, no product the catalogue recognises. Text alone never reaches
-    # certain (decision 33), so this is the "might be this book" pile.
+    # certain, so this is the "might be this book" pile.
     a_copy_declaring(database, book.work_id, "v1|1|0", STONER, title="Stoner")
     database.execute("DELETE FROM listing_declaration WHERE item_id = 'v1|1|0'")
     database.commit()

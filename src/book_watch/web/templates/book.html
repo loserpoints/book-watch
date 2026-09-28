@@ -12,7 +12,7 @@
 <div class="book-hero">
   {#- The image straight from Open Library when its id is known, our route
       that learns it when it is not, and the placeholder alone when there is
-      none (decision 56). -#}
+      none. -#}
   {{ ui.cover(book.name, book.author,
               (book.cover | cover_url) if book.cover
               else (none if book.has_no_cover else '/books/%d/cover' % book.id),
@@ -67,9 +67,9 @@
   </p>
 {% else %}
   {#- P7: what each market is asking, once per market. New and used never
-      pool (decision 52). Every figure is delivered and every figure is an
-      *asking* price (decisions 47, 51): the count is what is listed now, and
-      the strip spans every copy seen (decision 53). -#}
+      pool. Every figure is delivered and every figure is an
+      *asking* price: the count is what is listed now, and
+      the strip spans every copy seen. -#}
   {% if market_lines %}
   <div class="markets">
     {% for line in market_lines %}{{ ui.market(line.text, line.strip) }}{% endfor %}

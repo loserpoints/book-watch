@@ -1,6 +1,6 @@
 -- What we have learned from Open Library, so we never ask twice.
 --
--- This is the notebook described in decision 7 as amended: one line per ISBN
+-- This is a notebook: one line per ISBN
 -- we have met in a listing, written the first time we meet it. Matching reads
 -- this table and never Open Library.
 --
@@ -16,7 +16,7 @@ CREATE TABLE openlibrary_edition (
     -- 1: Open Library holds this number. 0: it told us it does not.
     --
     -- A recorded 0 is an answer, not a failure, and it is why this column
-    -- exists rather than the row simply being absent. Decision 33: a number
+    -- exists rather than the row simply being absent. A number
     -- Open Library does not hold must not exclude a listing, and re-asking on
     -- every poll is the behaviour they ask people not to have.
     --

@@ -5,7 +5,7 @@ phone caches `app.css` until it actually changes and never shows yesterday's
 styles against today's markup. The tag is computed once, at startup: a file
 under `static/` changes with a deploy, never while the app is running.
 
-This is not a build step (decision 2). Nothing is compiled or rewritten; the
+This is not a build step. Nothing is compiled or rewritten; the
 file served is the file in the repository.
 """
 

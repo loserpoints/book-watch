@@ -1,4 +1,4 @@
--- Which cover each book shows. Decision 56.
+-- Which cover each book shows.
 --
 -- Only the id is stored. The image stays on Open Library's cover server and
 -- the page points at it, which is what their covers API asks for: it is meant
@@ -13,7 +13,7 @@
 -- Collapsing the first two would draw the "no cover" placeholder over every
 -- book added before this migration — a confident claim about something we
 -- never asked. The same reasoning gave a condition class three answers
--- rather than two (decision 52).
+-- rather than two.
 
 ALTER TABLE work ADD COLUMN cover_id INTEGER;
 

@@ -211,7 +211,7 @@ def test_a_second_pass_learns_nothing_new_and_asks_ebay_nothing(database):
 
 
 def test_the_ceiling_stops_the_pass_rather_than_being_retried(database):
-    """Decision 39: retrying this on a timer is the exact failure it prevents."""
+    """Retrying this on a timer is the exact failure it prevents."""
     _, connection = database
     a_copy(connection, "v1|1|0")
     detail = CountingDetail({"v1|1|0": Declared("v1|1|0", isbn="9781590171998")})

@@ -37,7 +37,7 @@ CREATE TABLE sighting (
     work_id  INTEGER NOT NULL REFERENCES work(id) ON DELETE CASCADE,
     sweep_id INTEGER NOT NULL REFERENCES sweep(id) ON DELETE CASCADE,
 
-    -- Strings, as everywhere else money is stored. Decision 1: "8.99" parsed
+    -- Strings, as everywhere else money is stored: "8.99" parsed
     -- into a float and written back is a different number.
     price    TEXT    NOT NULL,
     currency TEXT    NOT NULL,

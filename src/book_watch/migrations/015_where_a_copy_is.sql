@@ -37,7 +37,7 @@ CREATE INDEX sweep_by_work_and_scope ON sweep (work_id, scope, id);
 --
 -- One row per copy per scope rather than per copy per sweep. Which sweeps saw
 -- a copy is a fact we could keep, and keeping it would cost a row on every
--- visit for every copy — the unbounded growth decision 44 avoided by logging
+-- visit for every copy — the unbounded growth sweeps avoid by logging
 -- only changes. What the page needs is the *latest* per scope, which is
 -- bounded at two rows a copy.
 CREATE TABLE copy_seen (

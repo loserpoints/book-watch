@@ -7,7 +7,7 @@ Two phases, in order, because the second needs the first:
 2. **What is that number?** One Open Library call per number never asked
    about, paced at one every 1.5 seconds and counted against a daily ceiling.
 
-Neither can run while somebody waits. Decision 40 measured why: a book with
+Neither can run while somebody waits: a book with
 fifty copies is twenty-five seconds of eBay alone, against a page that should
 answer in two. So the page shows what is known, this fills in the rest, and
 the copies firm up from *possible* to *certain* as it goes.
@@ -172,7 +172,7 @@ def _run(
             resolver.identify(isbn)
         except BudgetExhausted as exc:
             connection.commit()
-            # Not retried, and not treated as an outage. Decision 39: a caller
+            # Not retried, and not treated as an outage. A caller
             # that retries this on a timer is the exact failure it prevents.
             logger.warning("Enriching %s stopped at the ceiling: %s", work_id, exc)
             return Pass(examined, resolved, stopped_because="over budget")
@@ -186,7 +186,7 @@ def _run(
 
     # The same queue on the other side. A catalogue record has no ended state,
     # so every outdated number is worth re-asking about, and the pace and
-    # ceiling of decision 39 apply here exactly as they do to a first ask —
+    # ceiling apply here exactly as they do to a first ask —
     # this goes through the same resolver and spends the same budget.
     for isbn in resolver.outdated(sorted(numbers)):
         try:

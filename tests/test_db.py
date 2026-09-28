@@ -260,7 +260,7 @@ def old_shape_with_rows(database):
         INSERT INTO book (id, isbn, title, added_at)
         VALUES (2, '9781590171998', NULL, '2026-09-02 10:00:00');
 
-        -- An override under decision 29: a book that never had an ISBN.
+        -- An override: a book that never had an ISBN.
         INSERT INTO book (id, isbn, title, added_at)
         VALUES (3, 'The Riddle of the Sands 1903', 'Childers',
                 '2026-09-03 10:00:00');
@@ -325,7 +325,7 @@ def test_a_real_isbn_becomes_what_the_entry_was_typed_with(old_shape_with_rows):
 
 
 def test_an_override_survives_as_text_rather_than_a_fake_edition(old_shape_with_rows):
-    """Decision 29's escape hatch. It is not an ISBN, so it does not become one.
+    """The override for text. It is not an ISBN, so it does not become one.
 
     It lives in the same column as a typed ISBN, because it is the same kind
     of thing: what somebody put in the form. Whether it parses as a number is
@@ -407,7 +407,7 @@ def both_kinds_of_row(database):
         INSERT INTO entry (id, work_id, hunt) VALUES (2, 2, 'reader');
         INSERT INTO edition (work_id, isbn) VALUES (2, '9780099448396');
 
-        -- Added through decision 29's override.
+        -- Added through the override for text.
         INSERT INTO entry (id, work_id, hunt, search_text)
         VALUES (3, 3, 'reader', 'The Riddle of the Sands 1903');
         """

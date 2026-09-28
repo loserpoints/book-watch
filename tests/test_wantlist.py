@@ -112,7 +112,7 @@ def test_a_new_entry_is_a_reader_looking_for_any_edition(connection):
 def test_a_new_entry_claims_no_work_is_outstanding_yet(connection):
     """Nothing has been found to examine, so there is nothing to dig through.
 
-    Decision 7: the Open Library questions happen afterwards. But "afterwards"
+    The Open Library questions happen afterwards. But "afterwards"
     starts when copies exist, not when the book is added, and the want-list
     must not advertise work that has not started.
     """
@@ -134,7 +134,7 @@ def test_an_entry_with_copies_and_no_answers_is_outstanding(connection):
 def test_two_numbers_for_the_same_book_become_one_entry(connection):
     """Once resolution has connected two ISBNs to one work, they are one book.
 
-    This is the gap decision 26 named as its cost: a reader who would take any
+    This is the gap the one-ISBN model named as its cost: a reader who would take any
     printing had to add each one separately, and saw a fraction of what was
     for sale.
     """
@@ -262,7 +262,7 @@ def test_a_book_without_an_isbn_can_still_be_stored(connection):
     assert book.title == "Childers"
     # It is not an ISBN, so it does not become an edition pretending to be one.
     assert book.edition_count == 0
-    # And it is still searched for exactly as written (decision 29).
+    # And it is still searched for exactly as written.
     assert book.search_query == "The Riddle of the Sands 1903"
 
 

@@ -1,7 +1,7 @@
 """SQLite connections and the migration runner.
 
 Plain numbered `.sql` files applied in filename order, with a table recording
-which have run. No ORM and no Alembic — decisions.md entry 3 explains why the
+which have run. No ORM and no Alembic: the
 schema is written as SQL a person can read rather than inferred from Python
 classes.
 

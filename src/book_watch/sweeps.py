@@ -13,7 +13,7 @@ and a page that confuses the two shows copies that sold days ago (decision
 A sweep **adds**. It used to delete a book's copies and reinsert them, which
 answered the page's question by destroying the answer to a later one — what a
 copy has cost over time is the cheapest evidence we will ever have for judging
-a price, and it arrives in a search we already ran (decision 44).
+a price, and it arrives in a search we already ran.
 """
 
 from __future__ import annotations

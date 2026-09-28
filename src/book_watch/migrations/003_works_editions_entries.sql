@@ -1,9 +1,9 @@
 -- A want-list entry names a book, and says which hunt it is on.
 --
--- This supersedes the model in 001, where one row was one ISBN. Decision 26
--- called that a stopgap and named the cost: searching one ISBN finds copies of
+-- This supersedes the model in 001, where one row was one ISBN. That was
+-- a stopgap and named the cost: searching one ISBN finds copies of
 -- one edition, so someone who would happily take any printing sees a fraction
--- of what is for sale. Decision 33 measured the way out of that, and this is
+-- of what is for sale. The S6 matching study measured the way out of that, and this is
 -- the shape it needs.
 --
 -- Three tables, because the old `book` meant three things at once:
@@ -27,13 +27,13 @@ CREATE TABLE work (
     -- knows what it was added with. See `Entry.search_query`.
     title    TEXT,
 
-    -- Null until Open Library or a person supplies one. Decision 33: the eBay
+    -- Null until Open Library or a person supplies one. The eBay
     -- search uses title and author together, so this is worth having.
     author   TEXT,
 
     -- A reference for looking something up by hand, and nothing else.
     --
-    -- Decision 33: Open Library files the same book under several of these —
+    -- Open Library files the same book under several of these —
     -- Crash under five, Stoner under five — and a title search returns two
     -- separate Pride and Prejudice works. Anything that joined on this, or
     -- treated it as unique per book, would be quietly wrong. It is not
@@ -44,7 +44,7 @@ CREATE TABLE work (
     -- has never completed, which is what the want-list reads to say it is
     -- still working.
     --
-    -- Decision 7 as amended: a new book costs 10-15 Open Library requests and
+    -- A new book costs 10-15 Open Library requests and
     -- they cannot run while someone waits, so a book is added and shown
     -- immediately with this still null.
     enriched_at TEXT
@@ -78,7 +78,7 @@ CREATE TABLE entry (
     id      INTEGER PRIMARY KEY,
     work_id INTEGER NOT NULL REFERENCES work(id) ON DELETE CASCADE,
 
-    -- Which hunt this entry is on. Decision 33 measured that the two share a
+    -- Which hunt this entry is on. The S6 matching study measured that the two share a
     -- pipeline and differ in what an entry points at, so this is decided here
     -- rather than migrated over live rows a second time later.
     --
@@ -93,7 +93,7 @@ CREATE TABLE entry (
     -- says rather than leaving to the code.
     edition_id INTEGER REFERENCES edition(id) ON DELETE RESTRICT,
 
-    -- What was typed, when it was not an ISBN. Decision 29: some books never
+    -- What was typed, when it was not an ISBN. Some books never
     -- had one, and those entries are searched for as written.
     search_text TEXT,
 
@@ -121,7 +121,7 @@ CREATE UNIQUE INDEX one_collector_entry_per_edition ON entry (edition_id)
 -- the list.
 --
 -- A stored value is a real ISBN if it is thirteen digits. Anything else is an
--- override typed by hand under decision 29 — it becomes the entry's search
+-- override typed by hand — it becomes the entry's search
 -- text and gets no edition row, because it is not one.
 
 INSERT INTO work (id, title)

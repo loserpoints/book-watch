@@ -2,7 +2,7 @@
 
     Each macro takes plain values, not the app's own objects, so a screen maps
     its data onto them and `/design` can draw every state from sample values.
-    Styles are in `static/app.css`, on the tokens only (decision 57).
+    Styles are in `static/app.css`, on the tokens only.
 
     Import with:  {% import "_ui.html" as ui %}  -#}
 
@@ -23,7 +23,7 @@
 
 {#- A cover, over its placeholder. The placeholder is always there, so a slow
     or missing image leaves the book recognisable rather than an empty frame.
-    `url` is the image, or the route that learns it (decision 56), or none
+    `url` is the image, or the route that learns it, or none
     when Open Library holds no cover. -#}
 {% macro cover(title, author=None, url=None, size="md") -%}
 <div class="cover cover-{{ size }}" aria-hidden="true">
@@ -35,7 +35,7 @@
 {%- endmacro %}
 
 
-{#- The headline price, delivered (decision 51). Colour and a mark together,
+{#- The headline price, delivered. Colour and a mark together,
     never colour alone: ✓ for at or under the limit, the amount over for over.
     `verdict` is under, over, or none (no limit, or cannot tell). -#}
 {% macro price(text, verdict=None, over_by=None, prefix="") -%}
@@ -168,7 +168,7 @@
 
 
 {#- What each market is asking, above the copies: a line of words and the
-    range strip, once per market rather than once per copy (decision 53). -#}
+    range strip, once per market rather than once per copy. -#}
 {% macro market(listed_text, strip=None) -%}
 <div class="market-line"><span class="meta">{{ listed_text }}</span>{% if strip %}{{ strip }}{% endif %}</div>
 {%- endmacro %}

@@ -66,7 +66,7 @@ def test_under_and_cannot_tell_carry_no_amount():
 
 
 def test_another_currency_says_it_cannot_be_compared():
-    """Decision 50: which reason, said, rather than an uncoloured silence."""
+    """Which reason, said, rather than an uncoloured silence."""
     c = row(a_copy("5.00", "2.00", currency="GBP"))
 
     assert c["verdict"] is None
