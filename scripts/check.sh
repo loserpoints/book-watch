@@ -23,5 +23,8 @@ uv run ruff check .
 echo "==> ruff format --check"
 uv run ruff format --check .
 
+echo "==> docs"
+uv run python scripts/check_docs.py
+
 echo "==> pytest"
 uv run pytest "$@"
