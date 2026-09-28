@@ -14,12 +14,19 @@
         grading over filtering: a copy just over the line is exactly the one
         worth seeing, and hiding it turns a judgement into a disappearance.
 
+        Over is said as plainly as under, in the same words the want-list
+        uses, so the two screens agree. An over copy whose shipping is
+        unknown is over on its price alone (postage cannot be negative) and
+        says so the same way: the cost line already says shipping is unknown.
+
         "Cannot tell" is a real answer alongside under and over, and which of
         the two reasons produced it is worth saying — the seller's silence
         about postage is a different problem from a price we cannot compare. -#}
     {% set says = verdict[copy.item_id] if verdict else 'no ceiling' %}
     {% if says == 'under' %}
       <div class="under">Under your limit</div>
+    {% elif says == 'over' %}
+      <div class="over-text">Over your limit</div>
     {% elif says == 'shipping unstated' %}
       <div class="muted">Shipping not stated — can't tell if it's under</div>
     {% elif says == 'another currency' %}

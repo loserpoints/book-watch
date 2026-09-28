@@ -433,6 +433,22 @@ def test_unstated_shipping_cannot_be_judged():
     assert priced("5.00", None).against(EIGHT) == "shipping unstated"
 
 
+def test_a_price_alone_over_the_ceiling_is_over_whatever_the_postage():
+    """Postage cannot be negative, so this is a bound rather than a guess —
+    the one unstated-shipping case that is never wrong."""
+    assert priced("9.00", None).against(EIGHT) == "over"
+
+
+def test_a_price_exactly_at_the_ceiling_with_unstated_postage_cannot_be_judged():
+    """The boundary: free postage would make it under, so it is not over."""
+    assert priced("8.00", None).against(EIGHT) == "shipping unstated"
+
+
+def test_a_price_alone_over_in_another_currency_is_still_not_compared():
+    """£9 against an $8 ceiling says nothing, postage or not."""
+    assert priced("9.00", None, currency="GBP").against(EIGHT) == "shipping unstated"
+
+
 def test_another_currency_cannot_be_judged():
     assert priced("5.00", "2.00", currency="GBP").against(EIGHT) == "another currency"
 

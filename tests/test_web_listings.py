@@ -603,6 +603,25 @@ def test_setting_a_ceiling_marks_what_is_under_it(book_client):
     # Both copies still shown: the ceiling marks, it never filters.
     assert "v1|1|0" in page or "itm/123" in page
     assert page.count("Under your limit") == 1
+    # Over is said, not left silent: a copy over the limit must not look like
+    # a copy with no limit set.
+    assert page.count("Over your limit") == 1
+
+
+def test_a_copy_whose_price_alone_is_over_is_marked_over(book_client):
+    """Postage cannot be negative, so unknown shipping does not make this one
+    unjudgeable."""
+    client = book_client(
+        returning(a_listing(price=Money(Decimal("30.00"), "USD"), shipping_cost=None))
+    )
+    add_book(client, "9780099448396", "Crash")
+    client.get("/book/1")
+    client.post("/book/1/ceiling", data={"ceiling": "8.00", "currency": "USD"})
+
+    page = client.get("/book/1").text
+
+    assert "Over your limit" in page
+    assert "Shipping not stated" not in page
 
 
 def test_a_ceiling_can_be_cleared(book_client):
