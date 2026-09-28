@@ -6,8 +6,8 @@
    margin, padding, gap or radius written here as a raw value. Widths and
    heights are layout, not tokens, and are written where they are used.
 
-   This is S28's stylesheet: the old screens on the new tokens. S30 rebuilds
-   the screens themselves. */
+   This is S28's stylesheet: the old screens on the new tokens. the screens slice
+   (#98) rebuilds the screens themselves. */
 
 @font-face {
   font-family: "IBM Plex Sans";

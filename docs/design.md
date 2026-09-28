@@ -149,7 +149,7 @@ design:
 Candidates looked at and not chosen: *Update (2)* / *Check all*, where the
 count says how many are stale and reads *All current* at zero; *Refresh* /
 *Refresh everything*; *Check what's stale* / *Check all now*. Revisit in S27
-or S30, with the look in front of us.
+or when the screens are rebuilt, with the look in front of us.
 
 **Why "not checked yet" survives S23.** Adding a book starts its check from
 the page, so closing the tab first leaves it unchecked. A check that fails is
@@ -297,7 +297,7 @@ IBM Plex Sans for everything else, and a round + in thumb reach.
   and "10mo ago" would force a wrap. "Still digging" becomes the word
   *digging* with a slow shimmer, instead of three dots. At 390px wide,
   "added 2d · digging" fits exactly, and "added 10mo · digging" overflows by
-  about 8px. That is a rare pair; S30 decides how the line gives way.
+  about 8px. That is a rare pair; the screens slice (#98) decides how the line gives way.
 - **The copy's text sits beside the photo again.** Only the condition note
   runs full width underneath. Wrapping everything under the photo looked bad.
 - **"1st of 3" becomes a small strip beside the price**, because the old
