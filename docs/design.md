@@ -461,6 +461,9 @@ limit sheet opens from its chip and closes on Escape; the dots follow a
 swipe. The three chips need about 430px and wrap to two lines, because each is
 44px tall for the thumb (principle 7). With the header, the book and the
 market strip, the first copy starts about 450px down a 780px screen.
+**Left as it is for now, by Alan's call:** use it for a while first. The
+options were smaller chips with the same 44px tap area, or an icon-first
+"↻ 4m" for the checked chip.
 
 ## Open
 
