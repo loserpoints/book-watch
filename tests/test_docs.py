@@ -106,10 +106,18 @@ def scope(slices):
     )
 
 
-def test_a_planned_milestone_is_its_original_scope_alone(repo):
-    write(repo, "docs/milestones/m08-always-current/original-scope.md", scope(""))
+def test_a_milestone_in_progress_is_its_original_scope_alone(repo):
+    write(repo, "docs/milestones/m08-always-current/original-scope.md", scope(ISSUE))
 
     assert check_docs.check(repo) == []
+
+
+def test_an_original_scope_names_its_slices(repo):
+    """No planned milestones: a folder exists once a milestone has started,
+    and by then its issues have become slices."""
+    write(repo, "docs/milestones/m08-always-current/original-scope.md", scope(""))
+
+    assert any("'Slices' is empty" in e for e in check_docs.check(repo))
 
 
 def test_a_milestone_closes_with_both_files_together(repo):
@@ -223,13 +231,13 @@ def test_contributing_is_checked(repo):
     assert any("CONTRIBUTING.md: sections must be" in e for e in check_docs.check(repo))
 
 
-def test_planned_slices_are_issues_not_pull_requests(repo):
+def test_original_slices_are_issues_not_pull_requests(repo):
     write(repo, "docs/milestones/m08-always-current/original-scope.md", scope(PR))
 
     assert any("more than issue links" in e for e in check_docs.check(repo))
 
 
-def test_planned_slices_carry_the_slice_label(repo):
+def test_original_slices_carry_the_slice_label(repo):
     write(repo, "docs/milestones/m08-always-current/original-scope.md", scope(ISSUE))
 
     unlabelled = check_docs.check(repo, labels=lambda number: {"bug"})

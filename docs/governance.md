@@ -14,7 +14,7 @@ Every document in this repository is one of the artifacts below. `scripts/check_
 | Design system | active | `docs/design-system.md` | Principles · Tokens · Components |
 | Rules | active | `docs/rules/*.md` | Purpose (sentence) · Rules · Open issues (links) |
 | Surface | active | `docs/surfaces/{add-a-book,want-list,active-listings}.md` | Purpose (sentence) · What it shows · What you can do · Open issues (links) |
-| Original scope | active | `docs/milestones/*/original-scope.md` | Goal (sentence) · Jobs advanced (job links) · Slices (slice links, may be empty) |
+| Original scope | active | `docs/milestones/*/original-scope.md` | Goal (sentence) · Jobs advanced (job links) · Slices (slice links) |
 | Delivered scope | active | `docs/milestones/*/delivered-scope.md` | Goal (sentence) · Jobs advanced (job links) · Slices (links) |
 | Learnings | active | `docs/milestones/*/learnings.md` | Learnings (routed) · Carried forward (links, may be empty) |
 | Runbook | active | `docs/runbook.md` | Deploy · Roll back · Restore data · Post-deploy checks · Known gaps (links, may be empty) |
@@ -38,7 +38,7 @@ Every document in this repository is one of the artifacts below. `scripts/check_
 
 A Rules section may group its rules under `###` headings, chosen per document.
 
-**Milestones.** Each milestone is a folder, `docs/milestones/mNN-name/`. A planned milestone has only `original-scope.md`, whose slices are filled in before it starts. `delivered-scope.md` and `learnings.md` are added together when it closes. The two scope files share their sections so they can be compared.
+**Milestones.** Each milestone is a folder, `docs/milestones/mNN-name/`, created when the milestone starts. There are no planned milestones: what comes next is chosen from the open issues at each close. `delivered-scope.md` and `learnings.md` are added together when it closes. The two scope files share their sections so they can be compared.
 
 **Current state and history.** Surfaces, rules, the design system and the runbook describe the product as it is now and carry no history. History lives in milestone learnings, and beyond that in git, pull requests and closed issues.
 
@@ -46,21 +46,22 @@ A Rules section may group its rules under `###` headings, chosen per document.
 
 **Issues and slices.** An issue is anything noticed: a bug, a want, an outcome worth having. A slice is an issue a milestone has taken on. It carries the `slice` label and the milestone, is titled `S## · outcome`, and follows the slice template: Outcome in one sentence, Acceptance ending in `scripts/check.sh`, and Decisions it forces.
 
-**An issue becomes a slice** when its milestone starts, by editing it in place into the slice template. Related issues can become one slice: one is edited, and the others are closed as duplicates of it. An issue that still needs design waits until it can be written as a slice.
+**An issue becomes a slice** when a milestone takes it on, by editing it in place into the slice template. Related issues can become one slice: one is edited, and the others are closed as duplicates of it. An issue that still needs design waits until it can be written as a slice.
 
 **A slice can ship as several pull requests** when its parts share one outcome and one acceptance list.
 
 **Starting a milestone:**
 
-1. Turn the issues it takes on into slices.
-2. Write `original-scope.md`.
+1. Choose its issues from the open issues.
+2. Turn them into slices.
+3. Create its folder and write `original-scope.md`.
 
 **Closing a milestone:**
 
 1. Write `delivered-scope.md`.
 2. Route each learning into the document that should change because of it: `CONTRIBUTING.md`, `CLAUDE.md`, the runbook, a rules or surface doc, the design system, or this file. Make the change, then record the learning in `learnings.md` with a link to where it went. A learning with nowhere to go is dropped.
 3. List the issues carried forward.
-4. Review the planned milestones against what this one taught.
+4. Choose the next milestone from the open issues.
 
 ## Writing style
 
