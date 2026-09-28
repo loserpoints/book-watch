@@ -187,6 +187,12 @@ class Copy:
         So there is a third answer and the page says which of the two reasons
         produced it.
 
+        **One unstated-shipping case is not a guess.** Postage cannot be
+        negative, so a copy whose price *alone* is above the ceiling is over
+        whatever the postage turns out to be. That is a bound, not a guess,
+        and it is never wrong. A price exactly at the ceiling stays "can't
+        tell": free postage would make it under.
+
         This differs on purpose from `sort_key`, which ranks an unknown total
         by its price alone. **A sort has to put the row somewhere; a claim does
         not.** Guessing to order a list is a lesser sin than guessing in an
@@ -195,6 +201,11 @@ class Copy:
         if ceiling is None:
             return "no ceiling"
         if self.shipping is None:
+            if (
+                self.price.currency == ceiling.currency
+                and self.price.amount > ceiling.amount
+            ):
+                return "over"
             return "shipping unstated"
         landed = self.landed_cost
         if landed is None or landed.currency != ceiling.currency:

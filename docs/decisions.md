@@ -2278,12 +2278,29 @@ currency (decision 1). For an $8 ceiling:
 | $7.00 + $3.00 | $10.00 | over |
 | $8.00 + $0.00 | $8.00 | **under** — a limit is what you will pay, not what you will not |
 | $5.00, postage unstated | unknown | **cannot tell, and it says which reason** |
+| $8.00, postage unstated | unknown | **cannot tell** — free postage would make it under |
+| $9.00, postage unstated | over $9.00 | **over** — see below |
 | £5.00 + £2.00 | unknown | **cannot tell, and it says which reason** |
 
 The two shortcuts were both rejected. *Unstated postage as free* flatters the
 copy and invents a bargain, which is the wasted-trust failure the brief exists
 to prevent. *Unstated postage as over* is right most of the time and wrong
 sometimes, with nothing to say which times.
+
+**Amended in S31 (#103): a price alone over the limit is over.** Postage
+cannot be negative, so when the price by itself is already above the ceiling,
+the delivered price is too, whatever postage turns out to be. That is a bound
+rather than a guess, and it is never wrong, so the reasoning above does not
+reach it. Only the same-currency case: £9 against an $8 ceiling still says
+nothing. It is marked exactly like any other over copy — the cost line already
+says shipping is unknown, and a second clause saying so would be text for its
+own sake. This keeps decision 51's rule that a copy is never placed on a
+guess, for the same reason.
+
+As first built, **over was computed and never shown**: the copy row rendered
+under and the two cannot-tells, and an over copy said nothing, so it looked
+exactly like a copy with no ceiling set while the want-list said "over your
+limit". Fixed in the same slice; a page test now asserts over is said.
 
 The two unjudgeable cases are told apart on the page, because a seller's
 silence about postage is a different problem from a price in a currency we

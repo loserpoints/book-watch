@@ -214,8 +214,8 @@ text-heavy. It has to get more visual.
 | C1 | Tapping the photo enlarges it |
 | C9 | The price/shipping split goes. The delivered price alone is enough (both stay stored, decision 51) |
 | C3 | "Can't tell" copies sort below every copy with a known delivered price, rather than by their price alone — #104 |
-| C3 | A copy whose price alone is already over the limit is over, whatever the postage — #103 |
-| C3 | Over the limit must be marked. It is computed and never rendered — a bug against decision 50, #103 |
+| C3 | A copy whose price alone is already over the limit is over, whatever the postage — #103. **Done in S31**, marked the same as any other over copy |
+| C3 | Over the limit must be marked. It is computed and never rendered — a bug against decision 50, #103. **Done in S31**: "Over your limit", in the over colour |
 | new | Dismiss a copy into a collapsed *Dismissed* group — #105. Imperfect across relists, and accepted as such |
 | C1 | Confirmed: tapping the photo enlarges it — and with #106, shows every photo |
 | C9 | Confirmed: the split is stored and not displayed |
