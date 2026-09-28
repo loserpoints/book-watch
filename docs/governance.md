@@ -8,7 +8,7 @@ Every document in this repository is one of the artifacts below. `scripts/check_
 |---|---|---|---|
 | Governance | active | `docs/governance.md` | Artifacts · Workflow · Writing style |
 | README | active | `README.md` | Value proposition · What it does · Tech stack · Running it · Repository structure |
-| Agent instructions | migrating | `CLAUDE.md` | Start of session · Working rules |
+| Agent instructions | active | `CLAUDE.md` | Start of session · Working rules |
 | Contributing | active | `CONTRIBUTING.md` | Building · Testing · Reviewing |
 | Jobs | active | `docs/jobs.md` | J<n> · <name> [Job (sentence) · Success signal] |
 | Design system | active | `docs/design-system.md` | Principles · Tokens · Components |

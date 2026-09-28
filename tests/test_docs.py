@@ -177,6 +177,12 @@ def test_each_job_has_its_two_parts(repo):
 
 
 def test_retiring_and_migrating_documents_are_known_but_not_checked(repo):
+    governance = repo / "docs" / "governance.md"
+    governance.write_text(
+        governance.read_text().replace(
+            "| Agent instructions | active |", "| Agent instructions | migrating |"
+        )
+    )
     write(repo, "docs/decisions.md", "no title, no sections")
     write(repo, "CLAUDE.md", "# Anything\n\n## Whatever\n")
 

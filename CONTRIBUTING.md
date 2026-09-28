@@ -7,6 +7,10 @@
 - Before inventing a proxy for a signal, check whether the code already has the signal and throws it away.
 - Decide a design by looking at it on real screens at phone width, and agree beforehand how many rounds a layout gets.
 - Migrations run forward only, and a rollback does not undo them. Keep a migration additive, so the previous code still works if its change is reverted.
+- Every step runs from a browser. Deploys and other privileged actions run in CI, with credentials in GitHub or Fly secrets. Say so before building on anything that needs a local install or a local credential.
+- Never commit a key, token or password. Credentials come from environment variables. `.env` is gitignored and `.env.example` lists the names with no values. A committed secret stays in git history, so the only remedy is rotating it.
+- Running cost is about $2–3 a month, all hosting. Say so before adding anything with a recurring cost.
+- Every request to an outside service follows the [rate limits](docs/rules/rate-limits.md).
 
 ## Testing
 
@@ -24,3 +28,6 @@
 - Merging to `main` deploys once CI passes, with nobody watching. Merge only what is ready to be live (see the [runbook](docs/runbook.md#deploy)).
 - Before pushing, re-read the diff for what would make CI reject it.
 - Review each screen by using it and asking what each part means. That finds defects the tests pass.
+- Never push to `main`. Before pushing to a branch, check its pull request is still open. A merged pull request cannot take new work, so start a new branch from `main`.
+- Before building on another pull request, check it has merged.
+- When a change makes a doc untrue, update the doc in the same pull request.
