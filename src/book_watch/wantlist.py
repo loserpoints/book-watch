@@ -2,7 +2,7 @@
 
 Plain SQL against a connection the caller owns. There is no session, no unit
 of work and no repository interface to implement — one user, one writer, and a
-handful of queries (decisions.md entry 3).
+handful of queries.
 
 Three tables sit behind one `Entry`. A **work** is the book in the abstract, an
 **edition** is one printing of it, and an **entry** is a row on the list
@@ -25,7 +25,7 @@ from book_watch.isbn import normalise
 
 #: Which hunt an entry is on. A reader will take any edition of the book; a
 #: collector wants one particular printing. Every entry is one or the other,
-#: and only "reader" is written today — decision 33 leaves the collector
+#: and only "reader" is written today, which leaves the collector
 #: surface waiting on its own labelling exercise.
 Hunt = Literal["reader", "collector"]
 
@@ -39,7 +39,7 @@ class Entry:
     """One row on the want-list, with the work it names.
 
     `typed` is exactly what somebody put in the add form: an ISBN, or the
-    text for a book that never had one (decision 29). It is a fact about
+    text for a book that never had one. It is a fact about
     their intent and can never be wrong, which is why it lives here rather
     than among the editions a rule inferred — those are conclusions, and
     conclusions from rules that keep changing have to stay re-derivable.
@@ -90,8 +90,8 @@ class Entry:
     def will_pay(self) -> Money | None:
         """The ceiling as money, or None when there is not one.
 
-        Parsed here rather than stored as a number, for the reason decision 1
-        gives: a price that has been through a float is a different price.
+        Parsed here rather than stored as a number, because a price that has
+        been through a float is a different price.
         """
         if self.ceiling is None or self.ceiling_currency is None:
             return None
@@ -111,7 +111,7 @@ class Entry:
 
     @property
     def searched_as_text(self) -> bool:
-        """Was this added as text that is not an ISBN — decision 29's override?
+        """Was this added as text that is not an ISBN, through the override?
 
         Only then does eBay get a search for words somebody typed, with worse
         matches than usual. A book picked from a title search has nothing
@@ -145,8 +145,8 @@ class Entry:
         """What to search a marketplace for.
 
         Today that is the number or text the entry was added with, which is
-        what M1 searched and what decision 21 chose. Once a work has several
-        known editions there is no single number to use, and decision 33's
+        what M1 searched. Once a work has several
+        known editions there is no single number to use, and the
         answer — one search on title and author — takes over. S10 makes that
         the only path; this keeps both true in the meantime.
         """
@@ -163,7 +163,7 @@ class Entry:
         want-list says nothing — the app does not advertise work it has not
         started.
 
-        Decision 7 as amended: examining a book costs ten to fifteen Open
+        Examining a book costs ten to fifteen Open
         Library requests that cannot run while somebody waits, so it happens
         afterwards and the list says so while it does.
         """
@@ -269,7 +269,7 @@ def add(connection: sqlite3.Connection, isbn: str, title: str | None = None) -> 
 
     Two callers, both deliberate. A number Open Library has no record of,
     added anyway because the person holding the book says it is real. And
-    decision 29's override: text that is not an ISBN at all, for the books
+    the override: text that is not an ISBN at all, for the books
     that never had one, searched exactly as written.
 
     `resolved_at` is set for the first and left null for the second. Asking
@@ -395,7 +395,7 @@ def set_ceiling(
 def remove(connection: sqlite3.Connection, entry_id: int) -> bool:
     """Delete an entry. Returns whether there was one to delete.
 
-    A hard delete, by decision 27 — of the entry only. The work and its
+    A hard delete, of the entry only. The work and its
     editions stay: they are what we learned from Open Library and eBay rather
     than something the person put there, re-adding the book then costs no
     requests at all, and a second entry on the same work may still want them.

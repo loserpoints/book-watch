@@ -11,7 +11,7 @@
 #   scripts/check.sh -k listing   the same, passing arguments to pytest
 #
 # Network tests stay opt-in and are never run here — CI holds no eBay
-# credentials, by decision 15. Run those by hand:
+# credentials. Run those by hand:
 #
 #   uv run pytest -m network
 

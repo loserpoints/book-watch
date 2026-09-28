@@ -9,7 +9,7 @@
 -- It is a delivered price. Shipping is the difference between a good copy and
 -- a bad deal, and `Copy.landed_cost` already computes it.
 
--- Stored as a string, like every other amount here. Decision 1: "8.99" parsed
+-- Stored as a string, like every other amount here: "8.99" parsed
 -- into a float and written back is a different number, and this one gets
 -- compared against prices eBay sent as strings.
 --

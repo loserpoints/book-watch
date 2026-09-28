@@ -34,7 +34,7 @@
     {% if candidates %}
       <p class="sheet-note">{{ note or "Which one?" }} Tap it to add.</p>
       <ul class="ui-list candidate-list">{% for c in candidates %}{{ ui.candidate_row(c) }}{% endfor %}</ul>
-      {#- Decision 7 as amended: the counts are numbers Open Library reports in
+      {#- The counts are numbers Open Library reports in
           the search response. The editions themselves are never fetched. -#}
       <p class="sheet-note">Not here? Switch to ISBN.</p>
     {% endif %}

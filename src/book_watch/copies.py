@@ -9,7 +9,7 @@ This module answers "what is for sale, and is it the right book". What a
 sweep *recorded* lives in `sweeps`, and where a copy sits among the others in
 `standing` — they were one module until it reached 971 lines and five jobs.
 
-Everything here is derived on read (decision 43). Which numbers count as this
+Everything here is derived on read. Which numbers count as this
 book is a query over things we observed, never a conclusion somebody stored,
 so changing a rule re-judges every book on the next page view for nothing.
 """
@@ -130,7 +130,7 @@ class Copy:
     tier: Tier
     condition: str | None = None
     #: eBay's numeric condition id, kept because the display string beside it
-    #: cannot be grouped on. Decision 33 lost seven listings to trusting
+    #: cannot be grouped on. The S6 matching study lost seven listings to trusting
     #: eBay's category strings; these are localized and re-worded, and the
     #: number is the part that holds still.
     condition_id: str | None = None
@@ -141,7 +141,7 @@ class Copy:
     declared_format: str | None = None
     declared_publisher: str | None = None
     declared_year: str | None = None
-    #: The seller's own note on condition, whole (decision 58). None until
+    #: The seller's own note on condition, whole. None until
     #: this listing has been asked about since S33, or when they wrote none.
     condition_note: str | None = None
     #: Every photo's URL, main one first. Empty until asked about since S33;
@@ -374,7 +374,7 @@ def _target(connection: sqlite3.Connection, entry: Entry) -> Target:
         isbns.add(typed)
 
     # A product id counts when a copy carrying it declared one of the numbers
-    # above. eBay's `epid` over-merges (decision 33), so it is only ever
+    # above. eBay's `epid` over-merges, so it is only ever
     # reached this way — through a number — never asserted on its own.
     epids = {
         row["epid"]

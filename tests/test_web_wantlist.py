@@ -239,7 +239,7 @@ def test_a_title_cannot_inject_markup(client):
 
 
 def test_the_catalogue_title_is_shown_rather_than_the_one_typed(client):
-    """Decision 32, and the reason this slice touches the ISBN path at all.
+    """The reason this slice touches the ISBN path at all.
 
     A valid ISBN that names the wrong book is invisible to every check this
     project has. Keeping the typed title would hide the one thing that reveals
@@ -421,7 +421,7 @@ def test_open_library_being_down_during_a_search_says_so(tmp_path):
 
 
 def test_adding_a_book_costs_one_request(catalogue, client):
-    """Decision 7: the ten to fifteen a book eventually costs are its listings'."""
+    """The ten to fifteen a book eventually costs are its listings'."""
     add(client, "9780099448396")
 
     assert len(catalogue.asked) == 1
@@ -429,7 +429,7 @@ def test_adding_a_book_costs_one_request(catalogue, client):
 
 def test_the_app_does_not_open_the_database_at_startup(monkeypatch):
     """Same rule as the eBay client: the compliance endpoint must start even
-    when everything else is misconfigured (decision 24)."""
+    when everything else is misconfigured."""
 
     def explode(*args, **kwargs):
         raise AssertionError("the database must not be opened at startup")
@@ -480,7 +480,7 @@ def test_a_finished_book_stops_saying_it(client):
 
 # --- covers -----------------------------------------------------------------
 #
-# Decision 56. The page points at Open Library's cover server; only the ids
+# The page points at Open Library's cover server; only the ids
 # are ours, and learning one is never allowed to hold up the list.
 
 STONER_COVER = 6980524

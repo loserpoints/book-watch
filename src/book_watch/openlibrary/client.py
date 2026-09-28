@@ -7,11 +7,11 @@ Three questions and nothing else:
     work_cover("OL3511459W")                 -> which cover the work has
 
 Cover *images* are never fetched here. Open Library asks that pages point at
-`covers.openlibrary.org` directly rather than download from it (decision 56),
+`covers.openlibrary.org` directly rather than download from it,
 so an image is a URL the browser loads, and only the id is ours to know.
 
 Open Library is a non-profit that states its API is not intended as a backend
-for third-party services (decision 7). Everything here is shaped by that.
+for third-party services. Everything here is shaped by that.
 
 The pause between requests is enforced here rather than left to callers,
 because "remember to sleep in the loop" fails the first time somebody writes a
@@ -104,7 +104,7 @@ class OpenLibraryClient:
     ) -> None:
         # Required, with no default. A default here would be a way to opt out
         # of being counted without noticing, which is how the test suite
-        # quietly started calling Open Library for real (decision 36).
+        # quietly started calling Open Library for real.
         self._budget = budget
         self._min_interval = min_interval_seconds
         # Monotonic rather than wall-clock: this measures a gap between two
@@ -135,7 +135,7 @@ class OpenLibraryClient:
         whole list.
 
         `cover_i` is the sixth, and costs a few bytes: it is what lets a new
-        book have a cover without a second request (decision 56).
+        book have a cover without a second request.
         """
         query = f"{title} {author}".strip() if author else title.strip()
         if not query:
@@ -162,7 +162,7 @@ class OpenLibraryClient:
 
         `None` is an answer, not a failure: Open Library told us it holds
         nothing for this number. Failing to ask raises `OpenLibraryUnavailable`
-        instead. Decision 33 sends those two down different paths — an
+        instead. Matching sends those two down different paths — an
         unheld number must not exclude a listing — so they must not be
         catchable by the same `except`.
         """
@@ -302,7 +302,7 @@ def _work_id(key: Any) -> str | None:
     """`/works/OL3511459W` -> `OL3511459W`.
 
     Stored as a reference for looking something up by hand, never as identity.
-    Decision 33: *Crash* is filed under five separate work ids and a title
+    *Crash* is filed under five separate work ids and a title
     search returns two different *Pride and Prejudice* works, so anything that
     joined on this would be quietly wrong.
     """

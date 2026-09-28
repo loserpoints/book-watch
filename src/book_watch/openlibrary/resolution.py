@@ -6,7 +6,7 @@ and writes down whatever it learns.
 
 The three states a number can be in — never asked about, known, or known to be
 absent from Open Library — are handled here so callers see only two: an
-identity, or `None`. Decision 33 needs that `None` to mean "Open Library does
+identity, or `None`. Matching needs that `None` to mean "Open Library does
 not hold this", and nothing else, which is why being unable to reach Open
 Library raises instead.
 """

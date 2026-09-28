@@ -4,7 +4,7 @@
 question `ItemDetailClient.declared_by` does, but reads what we already know
 first and writes down whatever it learns.
 
-One request per item, ever. Decision 33: the per-listing detail call is
+One request per item, ever. The per-listing detail call is
 affordable only on that basis — a fifty-result search is fifty calls against a
 5,000-a-day allowance, and a version of this that re-asked on every page view
 would spend the day's budget on one book.
@@ -35,7 +35,7 @@ _COLUMNS = (
 #: column more carefully is still a change in what was captured.
 #:
 #: 1: isbn, author, format, publisher, published, category.
-#: 2: the seller's condition note and every photo URL (S33, decision 58).
+#: 2: the seller's condition note and every photo URL (S33).
 CAPTURE = 2
 
 

@@ -63,7 +63,7 @@ def _report_isbn(client: OpenLibraryClient, isbn: str) -> int:
     if identity is None:
         print(f"{isbn}: Open Library has no record of this number.")
         print("  That is an answer, not a failure — it does not mean the")
-        print("  listing is the wrong book. See decision 33.")
+        print("  listing is the wrong book.")
         return EXIT_OK
     print(f"{identity.isbn}")
     print(f"  title      {identity.title}")
@@ -90,7 +90,7 @@ def _report_title(client: OpenLibraryClient, title: str, author: str | None) -> 
             f"{editions} editions"
         )
     print()
-    print("Edition counts are reported, never fetched. See decision 7.")
+    print("Edition counts are reported, never fetched.")
     return EXIT_OK
 
 

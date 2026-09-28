@@ -71,7 +71,7 @@ def _price(entry: Entry, glance: Glance) -> dict:
 
     The strip is drawn only when there are at least two different prices:
     one price is a point, not a shape (#76's floor). Every dot is one copy
-    ever seen, certain and in this market only (decisions 47, 52, 53).
+    ever seen, certain and in this market only.
     """
     lead = glance.headline
     assert lead is not None
@@ -107,7 +107,7 @@ def _price(entry: Entry, glance: Glance) -> dict:
 
 def _cover(entry: Entry) -> str | None:
     """Open Library's image when its id is known, our route that learns it
-    when it is not, and nothing when there is none (decision 56)."""
+    when it is not, and nothing when there is none."""
     if entry.cover:
         return covers.url(entry.cover)
     return None if entry.has_no_cover else f"/books/{entry.id}/cover"
@@ -115,7 +115,7 @@ def _cover(entry: Entry) -> str | None:
 
 def candidate(found, on_list: set[str]) -> dict:
     """One Open Library search result, as `ui.candidate_row` takes it, with
-    the fields the add form posts back (decision 25: one user, so the form
+    the fields the add form posts back (one user, so the form
     carries them rather than a second request fetching them again)."""
     author = ", ".join(found.authors) or None
     return {

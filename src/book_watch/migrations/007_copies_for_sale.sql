@@ -1,6 +1,6 @@
 -- Copies offered for sale, as last seen.
 --
--- Decision 30 as amended: the page reads this store, and a refresh writes to
+-- The page reads this store, and a refresh writes to
 -- it. Re-searching eBay on every page view was the stopgap M1 shipped, and it
 -- is not the model.
 --
@@ -23,8 +23,7 @@ CREATE TABLE copy (
     title       TEXT NOT NULL,
     url         TEXT NOT NULL,
 
-    -- Money is stored as the string eBay sent. Decision 1's reasoning applied
-    -- to storage: "8.99" parsed into a float and written back is a different
+    -- Money is stored as the string eBay sent: "8.99" parsed into a float and written back is a different
     -- number, and this column is read to add shipping to a price.
     price       TEXT NOT NULL,
     currency    TEXT NOT NULL,

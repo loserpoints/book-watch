@@ -4,16 +4,16 @@ Two questions with two different populations, and keeping them apart is most
 of what this module is. A **rank** counts copies listed now, because you
 cannot be cheapest of a set including four that are gone. A **range** spans
 every copy ever recorded, because a copy that has left was still a real book
-at a real asking price (decision 53).
+at a real asking price.
 
 New and used never pool. They are two markets rather than two grades on one
 scale — a new copy priced by distributor economics through bulk sellers, a
 used one by scarcity and wear — so mixing them puts a floor under the used
-number that has nothing to do with the used market (decision 52).
+number that has nothing to do with the used market.
 
-Every figure is a delivered price (decision 51) and every figure is an
+Every figure is a delivered price and every figure is an
 *asking* price. What a sweep observes is that a copy was listed at a price and
-later was not; why it went is not available to us (decision 47). Nothing here
+later was not; why it went is not available to us. Nothing here
 may imply a copy sold, or sold for this.
 """
 
@@ -77,12 +77,12 @@ def standings(listed: list[Copy], seen: list[Copy]) -> dict[str, Standing]:
     """Place each listed copy among the others, by item id.
 
     **Certain copies only, on both sides.** The possible tier ran at 8–14%
-    precision on the edition question (decision 33), so a range averaged
+    precision on the edition question, so a range averaged
     across it would mostly be other books, and a rank against it would be a
     rank against a different title.
 
     **Grouped by class and by currency.** The class split is the substantive
-    one and decision 51 argues it. The currency split is the same refusal to
+    one. The currency split is the same refusal to
     compare that `against` makes: a range from £5 to $36 is not a range, and
     putting a symbol on it would not make it one.
 
@@ -295,7 +295,7 @@ class Glance:
     """One book as the want-list shows it, read entirely from the store.
 
     No request is made to build this. The list renders from what the last
-    sweep left behind, and checking is a separate, explicit act — decision 54.
+    sweep left behind, and checking is a separate, explicit act.
     """
 
     #: When this book was last searched in this scope, or None if never. The

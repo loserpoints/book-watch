@@ -1,8 +1,8 @@
 """Tests for the Open Library client and the notebook it writes to.
 
 Everything here but the final test runs against `httpx.MockTransport`, so CI
-makes no request to a non-profit that has asked not to be used as a backend
-(decision 7). The recorded bodies are real responses, kept from the S6
+makes no request to a non-profit that has asked not to be used as a backend.
+The recorded bodies are real responses, kept from the S6
 measurement, trimmed to the fields this app reads.
 """
 
@@ -133,7 +133,7 @@ def test_identifies_what_a_number_is():
 def test_an_edition_with_no_format_is_still_an_identity():
     """Open Library does not know the target *Crash* edition is a paperback.
 
-    A missing format is ordinary, not an error. Decision 33 records that its
+    A missing format is ordinary, not an error. The S6 study found its
     format coverage is worse than eBay's, which is why eBay's aspects remain
     the fallback rather than the other way round.
     """
@@ -169,7 +169,7 @@ def test_the_omnibus_comes_back_under_its_own_title():
 def test_a_number_open_library_does_not_hold_is_an_answer_not_a_failure():
     """The five misses in S6's sample were non-English editions of the right book.
 
-    Decision 33: a number Open Library cannot resolve must not exclude a
+    A number Open Library cannot resolve must not exclude a
     listing, so this has to be a value a caller can act on.
     """
     client = build_client(responds_with({"error": "notfound"}, status_code=404))
@@ -361,7 +361,7 @@ def test_a_failed_request_still_counts_as_having_bothered_them():
 
 # --- covers -----------------------------------------------------------------
 #
-# Only ids. Decision 56: the images stay on Open Library's cover server and
+# Only ids. The images stay on Open Library's cover server and
 # the page points at them, so nothing here fetches one.
 
 

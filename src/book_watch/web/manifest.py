@@ -6,8 +6,8 @@ rather than a browser tab. Its colours come from the tokens, so the splash
 and the status bar are the app's own and cannot drift from them.
 
 **No service worker**, deliberately. A worker that caches pages is the
-easiest way to serve yesterday's copies as today's, which is the failure
-decision 48 fixed; offline behaviour deserves its own slice (decision 59).
+easiest way to serve yesterday's copies as today's, which the page was
+built to prevent; offline behaviour deserves its own slice.
 """
 
 from __future__ import annotations

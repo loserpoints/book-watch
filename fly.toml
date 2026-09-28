@@ -1,4 +1,4 @@
-# Fly.io deployment. See docs/decisions.md entries 10 and 16.
+# Fly.io deployment. See docs/runbook.md.
 #
 # The app name fixes the hostname, and the hostname is hashed into every
 # challenge response. Changing it later means updating EBAY_DELETION_ENDPOINT_URL
@@ -16,7 +16,7 @@ primary_region = "iad"
   # Deliberately not scaling to zero. eBay re-validates the deletion endpoint
   # on its own schedule and marks the keyset non-compliant if the check fails,
   # so a cold start that misses the timeout has a cost well beyond one slow
-  # request. A continuously running 256MB machine is what decision 10 costed.
+  # request. A continuously running 256MB machine is within the budget.
   auto_stop_machines = false
   min_machines_running = 1
 
@@ -28,8 +28,7 @@ primary_region = "iad"
     timeout = "5s"
 
 # The SQLite file lives here, not on the machine's own filesystem, which is
-# rebuilt on every deploy. Decision 10 costed this volume; decision 28 records
-# what mounting it actually constrains.
+# rebuilt on every deploy.
 [mounts]
   source = "book_watch_data"
   destination = "/data"

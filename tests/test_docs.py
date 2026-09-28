@@ -251,3 +251,26 @@ def test_original_slices_carry_the_slice_label(repo):
 
     assert any("#105 is not labelled 'slice'" in e for e in unlabelled)
     assert labelled == []
+
+
+# --- the retired decision log -------------------------------------------------
+
+
+def test_code_that_points_at_a_decision_number_fails(repo):
+    write(repo, "src/app.py", "# Stored as a string (decision 1).\n")
+
+    assert check_docs.check(repo) == [
+        "src/app.py:1: refers to a decision; state the reason"
+    ]
+
+
+def test_code_that_states_the_reason_passes(repo):
+    write(repo, "src/app.py", "# Stored as a string: a float changes the price.\n")
+
+    assert check_docs.check(repo) == []
+
+
+def test_the_retiring_log_may_number_its_decisions(repo):
+    write(repo, "docs/decisions.md", "## 1. Python\n\nSee decision 2.\n")
+
+    assert check_docs.check(repo) == []

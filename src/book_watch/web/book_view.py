@@ -5,7 +5,7 @@ them from samples. This is the other half: the app's own objects turned into
 those values, once, here, so the template only lays them out.
 
 Nothing here decides anything new. Every verdict, rank and range is the one
-`copies` and `standing` already derived (decision 43); this only chooses how
+`copies` and `standing` already derived; this only chooses how
 each is written down.
 """
 
@@ -52,7 +52,7 @@ def copy_row(
     delivered = copy.landed_cost
     place = _place(copy, placed, listed)
     if verdict == "another currency":
-        # Decision 50: a price we cannot compare with the limit says so, and
+        # A price we cannot compare with the limit says so, and
         # says which reason, rather than going uncoloured in silence. It takes
         # the rank's place: the limit is what the reader came to judge by.
         place = {"place": None, "place_text": "can't compare: another currency"}
@@ -77,7 +77,7 @@ def copy_row(
         "abroad": copy.located_in
         if copy.located_in and copy.located_in != "US"
         else None,
-        # Delivered when it can be known (decision 51); otherwise the asking
+        # Delivered when it can be known; otherwise the asking
         # price, and the row says shipping is unknown rather than implying it.
         "price_text": money(delivered) if delivered else money(copy.price),
         "shipping_unknown": delivered is None and copy.shipping is None,
@@ -90,7 +90,7 @@ def _against(copy: Copy, verdict: Verdict, ceiling: Money | None) -> dict:
     """Colour, and how far over.
 
     Over is written the same way whether or not shipping is known. When it is
-    not, the copy is over on its price alone (decision 50 as amended in S31),
+    not, the copy is over on its price alone,
     so the amount is a floor and carries a +: "$2+ over".
     """
     if verdict == "under":
@@ -130,7 +130,7 @@ def _place(copy: Copy, placed: Standing | None, listed: Prices) -> dict:
 def market_line(market: Market, seen: Prices, ceiling: Money | None) -> dict:
     """One market, as `ui.market` takes it: what is listed now, and the strip
     of every asking price ever seen, with the limit where it applies."""
-    # Two populations, both named (decision 53): what a rank counts, and what
+    # Two populations, both named: what a rank counts, and what
     # the strip spans. "Seen" is left off when it would repeat the count.
     words = f"{market.listed} {market.condition_class} listed now"
     if market.seen > market.listed:

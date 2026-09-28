@@ -3,7 +3,7 @@
 Two readers, deliberately. The web pages get CSS custom properties from
 `css()`. The email, when *Tell me* builds it, gets plain values from
 `colour()` and friends, because email clients ignore custom properties and
-want every style inlined (decision 2, as revisited). One file feeds both, so
+want every style inlined. One file feeds both, so
 the email is built inside the system rather than restyled to look like it.
 """
 
@@ -19,7 +19,7 @@ TOKENS_PATH = Path(__file__).parent / "tokens.toml"
 Theme = Literal["dark", "light"]
 
 #: Dark is the theme tuned first, so it is the default and light is the
-#: exception a phone asks for (principle 8 in `docs/design.md`).
+#: exception a phone asks for.
 DEFAULT_THEME: Theme = "dark"
 
 

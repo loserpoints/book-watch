@@ -38,7 +38,7 @@ src = ["src", "tests"]
 [tool.ruff.lint]
 # Ruff's default set is only pyflakes plus a few pycodestyle errors. These add
 # import sorting (I), modern-syntax rewrites (UP), likely-bug checks (B) and
-# readability suggestions (SIM). See docs/decisions.md entry 13.
+# readability suggestions (SIM).
 select = ["E", "F", "I", "UP", "B", "SIM"]
 
 [tool.pytest.ini_options]

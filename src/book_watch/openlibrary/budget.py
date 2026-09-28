@@ -66,7 +66,7 @@ class CallBudget:
         that counted only successes would let a loop of failures run for ever.
 
         Checking and recording are not atomic, so N callers racing could
-        between them go N-1 over. There is one caller (decision 8), and a
+        between them go N-1 over. There is one caller, and a
         ceiling whose job is to catch a runaway does not need to be exact at
         its edge.
         """

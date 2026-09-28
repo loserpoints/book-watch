@@ -2,7 +2,7 @@
 
 eBay requires every production application either to receive account-deletion
 notifications or to be granted an exemption, and restricts the keyset until one
-of those is true. This is the receiving half. See docs/decisions.md entry 16.
+of those is true. This is the receiving half.
 
 Two jobs:
 
@@ -67,7 +67,7 @@ def build_router(config: DeletionEndpointConfig) -> APIRouter:
         # Acknowledged and nothing deleted, because nothing is stored: this
         # application keeps listings, not the people who posted them. If that
         # ever changes, the deletion has to happen here — and the signature
-        # check deferred in decisions.md entry 17 has to land first.
+        # verification this endpoint skips has to land first.
         #
         # The payload is deliberately not logged. It identifies the very user
         # whose data eBay is asking us to erase, and a log line is storage.

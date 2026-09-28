@@ -3,7 +3,7 @@
 Only cover *ids* are ours. The images stay on Open Library's cover server and
 the page points at them, because that is what their covers API is for — it is
 "intended for displaying covers on public facing websites and not for bulk
-download" (decision 56). So nothing here fetches an image, and nothing stores
+download". So nothing here fetches an image, and nothing stores
 one.
 
 Whose cover follows the hunt:
@@ -58,8 +58,8 @@ def look_up(connection: sqlite3.Connection, catalogue: Catalogue, work_id: int) 
     """Learn a work's cover, once, for a book that arrived without one.
 
     Runs when the browser asks for the cover, never while the list renders, so
-    the list appears at once and a cover arrives after it (decision 41's rule
-    for any slow Open Library work).
+    the list appears at once and a cover arrives after it, as with any slow
+    Open Library work.
 
     Asks by whatever the book is known by:
 
@@ -116,7 +116,7 @@ def look_up(connection: sqlite3.Connection, catalogue: Catalogue, work_id: int) 
 def _typed_isbn(connection: sqlite3.Connection, work_id: int) -> str | None:
     """The ISBN somebody added this book by, if they added it by one.
 
-    Text typed for a book that never had an ISBN (decision 29) is not one,
+    Text typed for a book that never had an ISBN is not one,
     and asking Open Library about it would be a question with no answer.
     """
     for row in connection.execute(

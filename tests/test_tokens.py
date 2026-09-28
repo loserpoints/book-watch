@@ -1,7 +1,7 @@
 """The design tokens: defined once, used everywhere, readable in both themes.
 
-Decision 57. With no build step there is no utility framework holding the
-line on colours and sizes (decision 2), so these tests do it instead.
+With no build step there is no utility framework holding the
+line on colours and sizes, so these tests do it instead.
 """
 
 import re

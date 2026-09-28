@@ -10,7 +10,7 @@ of four rows, and it means the schema is correct on a volume that was empty a
 moment ago without a startup hook that could be skipped.
 
 Adding a book makes **one** Open Library request — a title search, or one
-number looked up. That is well inside what decision 7 calls a constraint. The
+number looked up. That is well inside the Open Library limits. The
 ten to fifteen requests a book eventually costs are for the numbers sellers
 declare in its listings, and those run in the background because they cannot
 run while somebody waits.
@@ -51,7 +51,7 @@ class LazyCatalogue:
     """Holds one Open Library client for the life of the application.
 
     One, rather than one per request, and this is load-bearing. The pause
-    between requests that decision 7 requires is kept *inside* the client, as
+    between Open Library requests is kept *inside* the client, as
     a note of when it last spoke. A fresh client per request forgets that
     every time, so the pacing would silently never happen — the promise would
     still be in the code and no longer true of the process.
@@ -87,8 +87,8 @@ class LazyCatalogue:
 def open_configured_database() -> sqlite3.Connection:
     """Connect using the configured path, migrating if needed.
 
-    Deferred to the first request for the same reason the eBay client is
-    (decisions.md entry 24): the compliance endpoint must start even when
+    Deferred to the first request for the same reason the eBay client is:
+    the compliance endpoint must start even when
     everything else is misconfigured.
     """
     connection = db.connect(load_database_path())
@@ -117,7 +117,7 @@ def build_router(
         """What each book's market looks like, read from the store alone.
 
         No request is made here. Opening this page is not a request to search
-        ten books — that is what the button is for (decision 54), and a page
+        ten books — that is what the button is for, and a page
         that spent ten seconds before rendering would be a worse page.
         """
         return {book.id: standing.glance(connection, book) for book in books}
@@ -300,7 +300,7 @@ def build_router(
                 status_code=404,
             )
 
-        # Decision 32: read the title back, so a number that names the wrong
+        # Read the title back, so a number that names the wrong
         # book is caught now rather than by a coincidence a week later.
         return store(
             request,
@@ -362,7 +362,7 @@ def build_router(
         The fields come back from the form they were rendered into rather than
         being fetched again. That saves a second request to a service that asks
         for low volume, and it is safe here only because there is one user and
-        no authentication (decision 25). Worth revisiting if either changes.
+        no authentication. Worth revisiting if either changes.
         """
         return store(
             request,

@@ -104,7 +104,7 @@ class Listing:
     #: is never called an import on the strength of a missing field.
     located_in: str | None = None
     #: eBay's own product id, where its catalogue matched this listing to one.
-    #: Decision 33: it is one of three identifier signals and the least
+    #: It is one of three identifier signals and the least
     #: trustworthy — it over-merges, so distinct Crash editions share one —
     #: but it finds 80% of the copies of a given edition, which nothing else
     #: does. Absent on about a fifth of used-book listings.

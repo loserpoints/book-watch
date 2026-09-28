@@ -15,7 +15,7 @@
 --
 -- `search_text` is folded in rather than kept alongside. It held the same
 -- thing for the other case: text somebody typed that was never an ISBN
--- (decision 29). One column, one meaning — whether it parses as a number is
+-- One column, one meaning — whether it parses as a number is
 -- a question to ask it, not a reason to store it twice.
 
 ALTER TABLE entry ADD COLUMN typed TEXT;

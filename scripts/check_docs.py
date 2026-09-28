@@ -31,6 +31,14 @@ REPO_API = "https://api.github.com/repos/loserpoints/book-watch/issues/{}"
 Labels = Callable[[int], set[str]]
 MILESTONE_DIR = re.compile(r"^m\d{2}-[a-z0-9-]+$")
 SENTENCE_END = re.compile(r"[.!?](?=\s|$)")
+#: "decision 33", "decisions 47, 52", "decisions.md entry 4". The decision
+#: log is retired: a reason is stated where it applies, not pointed at.
+DECISION_REF = re.compile(r"\b[Dd]ecisions?(\.md)?( entry| entries)? \d+")
+#: Where decision references are looked for. This file and its tests hold the
+#: pattern on purpose.
+SOURCE_SUFFIXES = {".py", ".html", ".js", ".css", ".toml", ".sql", ".sh", ".yml"}
+SOURCE_SUFFIXES |= {".md", ".json", ".example"}
+NOT_SCANNED = {"scripts/check_docs.py", "tests/test_docs.py"}
 
 
 @dataclass
@@ -267,6 +275,34 @@ def documents(root: Path) -> list[str]:
     )
 
 
+def sources(root: Path) -> list[Path]:
+    """Every text file in the repository, skipping hidden directories but
+    `.github`, and the environment and caches."""
+    skip = {".venv", "__pycache__", "node_modules"}
+    found = []
+    for path in root.rglob("*"):
+        parts = path.relative_to(root).parts
+        if any(p in skip or (p.startswith(".") and p != ".github") for p in parts[:-1]):
+            continue
+        if path.is_file() and (
+            path.suffix in SOURCE_SUFFIXES or path.name == "Dockerfile"
+        ):
+            found.append(path)
+    return found
+
+
+def check_decision_refs(root: Path, retiring: set[str]) -> list[str]:
+    errors = []
+    for path in sources(root):
+        rel = path.relative_to(root).as_posix()
+        if rel in NOT_SCANNED or rel in retiring:
+            continue
+        for n, line in enumerate(path.read_text(errors="ignore").splitlines(), 1):
+            if DECISION_REF.search(line):
+                errors.append(f"{rel}:{n}: refers to a decision; state the reason")
+    return errors
+
+
 def check(root: Path, labels: Labels | None = None) -> list[str]:
     artifacts = load_artifacts(root)
     errors = []
@@ -279,7 +315,13 @@ def check(root: Path, labels: Labels | None = None) -> list[str]:
             errors.append(f"{rel}: not an artifact in {GOVERNANCE}")
         elif owner.status == "active":
             errors += check_file(root, rel, owner, labels)
-    return errors + check_milestones(root)
+    retiring = {
+        rel
+        for rel in documents(root)
+        for a in artifacts
+        if a.status == "retiring" and any(fnmatch.fnmatch(rel, p) for p in a.paths)
+    }
+    return errors + check_milestones(root) + check_decision_refs(root, retiring)
 
 
 def github_labels(token: str) -> Labels:
