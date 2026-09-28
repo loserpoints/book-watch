@@ -327,6 +327,22 @@ def get(connection: sqlite3.Connection, entry_id: int) -> Entry:
     return _to_entry(row)
 
 
+def listed_works(connection: sqlite3.Connection) -> set[str]:
+    """The Open Library works already on the list, so a search result for one
+    can say *On your list* instead of offering to add it again (S27, S34).
+
+    One local query; Open Library is not asked anything.
+    """
+    rows = connection.execute(
+        """
+        SELECT DISTINCT work.openlibrary_work_id AS id
+          FROM entry JOIN work ON work.id = entry.work_id
+         WHERE work.openlibrary_work_id IS NOT NULL
+        """
+    )
+    return {row["id"] for row in rows}
+
+
 def all_books(connection: sqlite3.Connection) -> list[Entry]:
     """Every entry, most recently added first.
 

@@ -1,6 +1,7 @@
 """Tests for the want-list screens, driven through the real templates."""
 
 import dataclasses
+import re
 from contextlib import closing
 
 import pytest
@@ -325,6 +326,70 @@ def test_picking_a_candidate_puts_it_on_the_list(tmp_path):
     assert response.status_code == 200
     assert "Stoner" in response.text
     assert "Nothing on the list yet" not in response.text
+
+
+# --- the add sheet (S34) ----------------------------------------------------
+
+
+def test_adding_is_a_button_and_a_sheet_not_a_form_on_the_list(client):
+    """S26 L1: too much room for something done occasionally."""
+    page = client.get("/").text
+
+    assert 'class="fab" data-open="add-sheet"' in page
+    assert '<dialog class="sheet" id="add-sheet"' in page
+    # Closed until asked for: nothing came back from a search yet.
+    assert "data-autoopen" not in page
+
+
+def test_the_sheet_reopens_with_the_results(tmp_path):
+    """The answer appears where the question was asked."""
+    client = build_client(tmp_path, FakeCatalogue(candidates=CANDIDATES))
+
+    page = find(client, "stoner").text
+
+    assert 'id="add-sheet" aria-labelledby="add-sheet-title" data-autoopen' in page
+    assert 'value="title" checked' in page
+
+
+def test_each_result_is_one_button_that_adds_it(tmp_path):
+    """Principle 5: the whole row is the target, and it posts what the
+    picker needs rather than making it ask Open Library again."""
+    client = build_client(tmp_path, FakeCatalogue(candidates=CANDIDATES))
+
+    page = find(client, "stoner").text
+
+    assert page.count('class="candidate-hit"') == len(CANDIDATES)
+    assert 'aria-label="Add Stoner by John Williams, 1965"' in page
+    assert 'name="work_id" value="OL3511459W"' in page
+    # Never inside the search form: a browser drops a form nested in a form,
+    # and the row's button then submits the search instead. It did, once.
+    search_form = re.search(
+        r'<form class="sheet-form"[^>]*action="/books">.*?</form>', page, re.S
+    )
+    assert search_form and "candidate-hit" not in search_form.group(0)
+
+
+def test_a_result_already_on_the_list_says_so_instead_of_adding(tmp_path):
+    """S27: *On your list*, as nzb360's *In Library* does."""
+    client = build_client(tmp_path, FakeCatalogue(candidates=CANDIDATES))
+    client.post(
+        "/books/chosen",
+        data={"title": "Stoner", "author": "John Williams", "work_id": "OL3511459W"},
+    )
+
+    page = find(client, "stoner").text
+
+    assert "On your list" in page
+    assert 'name="work_id" value="OL3511459W"' not in page
+    assert page.count('class="candidate-hit"') == len(CANDIDATES) - 1
+
+
+def test_an_isbn_error_reopens_the_sheet_on_the_isbn_side(client):
+    page = add(client, "9780099448391").text
+
+    assert "data-autoopen" in page
+    assert 'value="isbn" checked' in page
+    assert "not a valid ISBN" in page
 
 
 def test_a_title_search_finding_nothing_says_so_and_suggests_the_isbn(tmp_path):

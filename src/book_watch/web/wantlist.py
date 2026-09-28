@@ -159,6 +159,7 @@ def build_router(
             books = wantlist.all_books(connection)
             glances = at_a_glance(connection, books)
             stale = out_of_date(connection, books)
+            on_list = wantlist.listed_works(connection) if candidates else set()
         return templates.TemplateResponse(
             request,
             "wantlist.html",
@@ -175,7 +176,9 @@ def build_router(
                 "error": error,
                 "note": note,
                 "offer_override": offer_override,
-                "candidates": candidates,
+                "candidates": [
+                    list_view.candidate(found, on_list) for found in candidates or []
+                ],
                 "isbn": isbn,
                 "title": title,
                 "author": author,

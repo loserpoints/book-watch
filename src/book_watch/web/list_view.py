@@ -111,3 +111,24 @@ def _cover(entry: Entry) -> str | None:
     if entry.cover:
         return covers.url(entry.cover)
     return None if entry.has_no_cover else f"/books/{entry.id}/cover"
+
+
+def candidate(found, on_list: set[str]) -> dict:
+    """One Open Library search result, as `ui.candidate_row` takes it, with
+    the fields the add form posts back (decision 25: one user, so the form
+    carries them rather than a second request fetching them again)."""
+    author = ", ".join(found.authors) or None
+    return {
+        "title": found.title,
+        "author": author,
+        "year": found.first_published,
+        "editions": found.edition_count,
+        "cover_url": covers.url(found.cover_id) if found.cover_id else None,
+        "on_list": found.work_id in on_list,
+        "post": {
+            "title": found.title,
+            "author": author or "",
+            "work_id": found.work_id,
+            "cover_id": found.cover_id or "",
+        },
+    }
