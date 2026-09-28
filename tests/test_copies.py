@@ -485,6 +485,28 @@ def test_a_ceiling_never_hides_or_reorders_anything(database):
     }
 
 
+# --- what the seller wrote and photographed (S33) -----------------------------
+
+
+def test_a_copy_carries_its_condition_note_and_every_photo(database):
+    book = a_book(database, "Stoner", "John Williams")
+    swept(database, book.work_id, [a_listing("v1|1|0"), a_listing("v1|2|0")])
+    database.execute(
+        "INSERT INTO listing_declaration (item_id, condition_note, photos) "
+        "VALUES ('v1|1|0', 'Ex-library.', '[\"https://ebay/a.jpg\", "
+        '"https://ebay/b.jpg"]\')'
+    )
+    database.commit()
+
+    found = {copy.item_id: copy for copy in copies.for_entry(database, book)}
+
+    assert found["v1|1|0"].condition_note == "Ex-library."
+    assert found["v1|1|0"].photos == ("https://ebay/a.jpg", "https://ebay/b.jpg")
+    # Not yet asked about: nothing, rather than a failure.
+    assert found["v1|2|0"].condition_note is None
+    assert found["v1|2|0"].photos == ()
+
+
 # --- where this copy sits among the others -----------------------------------
 #
 # Two populations, and keeping them apart is most of what these assert. A rank

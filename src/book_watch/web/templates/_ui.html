@@ -101,10 +101,17 @@
 {#- One copy for sale. Price leads, with where it sits among its kind; the
     listing title is the way to eBay; the seller's claim about the edition and
     their condition note run full width under the photo (S27). -#}
+{#- Every photo goes in `data-photos` as URLs only. The enlarged view builds
+    its images when tapped, so none of them can load before then (S33). A
+    copy not yet asked about since S33 has only the search's one photo, and
+    enlarges that, as before. -#}
 {% macro copy_row(c) -%}
 <li class="copy-row">
   {%- if c.photo_url %}
-  <button type="button" class="copy-photo" data-open="photo-view" data-photo="{{ larger_photo(c.photo_url) }}" data-photo-small="{{ c.photo_url }}" aria-label="Enlarge the seller's photo"><img src="{{ c.photo_url }}" alt="" loading="lazy"></button>
+  {%- set all_photos = c.photos or [c.photo_url] %}
+  <button type="button" class="copy-photo" data-open="photo-view" data-photo="{{ larger_photo(c.photo_url) }}" data-photo-small="{{ c.photo_url }}" data-photos='{{ all_photos | map("larger_photo") | list | tojson }}' aria-label="Enlarge the seller's photo{% if all_photos | length > 1 %}, one of {{ all_photos | length }}{% endif %}"><img src="{{ c.photo_url }}" alt="" loading="lazy">
+    {%- if all_photos | length > 1 %}<span class="photo-count" aria-hidden="true">{{ all_photos | length }}</span>{% endif -%}
+  </button>
   {%- else %}
   <span class="copy-photo" aria-hidden="true"></span>
   {%- endif %}
@@ -218,10 +225,11 @@
 {%- endmacro %}
 
 
-{#- The enlarged photo. One per page; a copy's photo button fills it. -#}
+{#- The enlarged photos. One per page; a copy's photo button fills it with
+    every photo that copy has, side by side, swiped through. -#}
 {% macro photo_dialog() -%}
-<dialog class="photo-view" id="photo-view" aria-label="The seller's photo">
-  <img alt="The seller's photo, enlarged">
+<dialog class="photo-view" id="photo-view" aria-label="The seller's photos">
+  <div class="photo-strip"></div>
   <button type="button" class="btn btn-plain photo-close" data-close>Close</button>
 </dialog>
 {%- endmacro %}
