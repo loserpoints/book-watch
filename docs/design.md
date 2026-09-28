@@ -391,6 +391,29 @@ from sample values. Four calls were settled with Alan before building:
   paragraph first and the piece falls apart, so an explained fact sits in a
   `<div>` or `<span>`.
 
+## Controls (S30, #110)
+
+Buttons, the + button, fields, the Title/ISBN switch, bottom sheets and the
+enlarged photo are macros in `templates/_ui.html`. `static/ui.js`, about fifty
+lines, opens and closes `<dialog>`s through `data-open` and `data-close`.
+
+- **The switch is radio buttons**, so the choice needs no script and submits
+  with the form. CSS `:has()` shows only the chosen side's fields.
+- **Sheets are modal `<dialog>`s.** The browser provides Escape, the back
+  gesture, and returning focus to whatever opened them. `ui.js` adds only
+  "tap outside to close".
+- **The enlarged photo asks eBay for the same image at 1600px**, rewriting
+  `…/s-l225.jpg` to `…/s-l1600.jpg` (`web/photos.py`). It rewrites only a URL
+  that matches that exact shape, and falls back to the small photo if the
+  large one fails. The pattern is eBay's convention, not a documented
+  contract. *Not yet confirmed against a real stored URL:* the repo keeps
+  none, and the build sandbox cannot reach eBay or production.
+
+**Found by driving it in a browser, not by the tests:** the first draft laid
+each side of the switch out with an inline `display`, which beat the rule
+that hides the side not chosen, so both showed. The sides now lay themselves
+out by class, and a test forbids an inline style on a switched side.
+
 ## Open
 
 - **A signature.** Something that makes it feel like itself — possibly how

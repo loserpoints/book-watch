@@ -103,7 +103,11 @@
     their condition note run full width under the photo (S27). -#}
 {% macro copy_row(c) -%}
 <li class="copy-row">
-  <span class="copy-photo">{% if c.photo_url %}<img src="{{ c.photo_url }}" alt="" loading="lazy">{% endif %}</span>
+  {%- if c.photo_url %}
+  <button type="button" class="copy-photo" data-open="photo-view" data-photo="{{ larger_photo(c.photo_url) }}" data-photo-small="{{ c.photo_url }}" aria-label="Enlarge the seller's photo"><img src="{{ c.photo_url }}" alt="" loading="lazy"></button>
+  {%- else %}
+  <span class="copy-photo" aria-hidden="true"></span>
+  {%- endif %}
   <div class="copy-main">
     <div class="copy-price">
       {%- if c.verdict == 'unknown' -%}
@@ -148,4 +152,76 @@
 
 {% macro trash() -%}
 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5"/></svg>
+{%- endmacro %}
+
+
+
+{#- ---------------------------------------------------------------------
+    S30: the controls (#110). Interactive pieces, on the same tokens.
+    Dialogs are opened by [data-open] and closed by [data-close] through
+    static/ui.js; everything else is plain HTML.
+    --------------------------------------------------------------------- -#}
+
+
+{#- A button. `kind` is primary (the one thing to do), plain, or ghost. -#}
+{% macro button(label, kind="plain", type="button", open=None, close=False, disabled=False, name=None, value=None) -%}
+<button type="{{ type }}" class="btn btn-{{ kind }}"
+  {%- if open %} data-open="{{ open }}"{% endif %}
+  {%- if close %} data-close{% endif %}
+  {%- if name %} name="{{ name }}"{% endif %}
+  {%- if value %} value="{{ value }}"{% endif %}
+  {%- if disabled %} disabled{% endif %}>{{ label }}</button>
+{%- endmacro %}
+
+
+{#- The round + in thumb reach, bottom right (S27). -#}
+{% macro fab(label, open) -%}
+<button type="button" class="fab" data-open="{{ open }}" aria-label="{{ label }}"><span aria-hidden="true">+</span></button>
+{%- endmacro %}
+
+
+{#- A labelled text field. The label is always visible; a hint says what the
+    field is for, and an optional field says so rather than leaving it to a
+    guess. -#}
+{% macro field(id, label, value="", name=None, hint=None, optional=False, inputmode=None, placeholder=None) -%}
+<div class="field">
+  <label for="{{ id }}">{{ label }}{% if optional %} <span class="field-optional">(optional)</span>{% endif %}</label>
+  <input id="{{ id }}" name="{{ name or id }}" value="{{ value }}" autocomplete="off"
+    {%- if inputmode %} inputmode="{{ inputmode }}"{% endif %}
+    {%- if placeholder %} placeholder="{{ placeholder }}"{% endif %}
+    {%- if hint %} aria-describedby="{{ id }}-hint"{% endif %}>
+  {%- if hint %}<p class="field-hint" id="{{ id }}-hint">{{ hint }}</p>{% endif %}
+</div>
+{%- endmacro %}
+
+
+{#- One tap between two ways in (principle 4). Radios under the hood, so the
+    choice needs no JavaScript and submits with the form; the sheet shows the
+    matching fields with CSS :has(). -#}
+{% macro switch(name, options, selected) -%}
+<div class="switch" role="radiogroup">
+  {%- for value, label in options %}
+  <label class="switch-option"><input type="radio" name="{{ name }}" value="{{ value }}"{% if value == selected %} checked{% endif %}><span>{{ label }}</span></label>
+  {%- endfor %}
+</div>
+{%- endmacro %}
+
+
+{#- A bottom sheet: a native <dialog> opened as a modal, so focus, Escape and
+    the back gesture behave. The caller supplies the contents. -#}
+{% macro sheet(id, title) -%}
+<dialog class="sheet" id="{{ id }}" aria-labelledby="{{ id }}-title">
+  <div class="sheet-grab" aria-hidden="true"></div>
+  <h2 class="sheet-title" id="{{ id }}-title">{{ title }}</h2>
+  {{ caller() }}
+</dialog>
+{%- endmacro %}
+
+
+{#- The enlarged photo. One per page; a copy's photo button fills it. -#}
+{% macro photo_dialog() -%}
+<dialog class="photo-view" id="photo-view" aria-label="The seller's photo">
+  <img alt="The seller's photo, enlarged">
+  <button type="button" class="btn btn-plain photo-close" data-close>Close</button>
+</dialog>
 {%- endmacro %}

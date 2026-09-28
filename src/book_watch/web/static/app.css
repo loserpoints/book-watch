@@ -508,3 +508,130 @@ details.copy-note[open] > summary { display: block; }
 .ui-list { margin: 0; padding: 0; }
 .pieces > * { margin: var(--space-2) 0; }
 .cover-shelf { display: flex; align-items: flex-end; gap: var(--space-3); }
+
+/* ---------------------------------------------------------------------------
+   S30: the controls (#110). Macros in templates/_ui.html, behaviour in
+   static/ui.js. Every one is at least a 44px target.
+   --------------------------------------------------------------------------- */
+
+.btn {
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn-ghost { background: transparent; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn:focus-visible, .fab:focus-visible, .icon-btn:focus-visible, .chip:focus-visible,
+.copy-photo:focus-visible, .switch-option:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.fab {
+  position: fixed;
+  right: var(--space-4);
+  bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  width: 56px;
+  height: 56px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: var(--text-xxl);
+  box-shadow: 0 6px 18px var(--shadow);
+  cursor: pointer;
+}
+.controls-demo .fab { position: static; }
+
+.field { display: grid; gap: var(--space-1); }
+.field label { color: var(--muted); font-size: var(--text-sm); }
+.field-optional { opacity: 0.75; }
+.field input {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--fg);
+  font-size: var(--text-base);
+}
+.field input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.field-hint { margin: 0; color: var(--muted); font-size: var(--text-xs); }
+
+.switch {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+.switch-option { position: relative; cursor: pointer; }
+.switch-option input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.switch-option span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+.switch-option input:checked + span { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+
+/* The sheet's two ways in: only the chosen side's fields show. The sides lay
+   themselves out by class, never inline: an inline display would beat this
+   rule and show both. */
+.sheet-side { display: grid; gap: var(--space-3); }
+.sheet:has(input[name="way"][value="isbn"]:checked) [data-when="title"],
+.sheet:not(:has(input[name="way"][value="isbn"]:checked)) [data-when="isbn"] {
+  display: none;
+}
+
+/* A bottom sheet: a modal <dialog> pinned to the foot of the screen. */
+dialog.sheet {
+  width: 100%;
+  max-width: 46rem;
+  max-height: 85vh;
+  margin: auto auto 0;
+  padding: 0 var(--space-4) calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--surface);
+  color: var(--fg);
+  overflow: auto;
+}
+dialog.sheet[open] { display: grid; gap: var(--space-3); }
+dialog.sheet::backdrop, dialog.photo-view::backdrop { background: var(--shadow); }
+.sheet-grab {
+  justify-self: center;
+  width: 36px;
+  height: 4px;
+  margin-top: var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--line);
+}
+.sheet-title { margin: 0; font-family: var(--font-title); font-size: var(--text-xl); }
+.sheet-actions { display: flex; gap: var(--space-2); justify-content: flex-end; flex-wrap: wrap; }
+.sheet-note { margin: 0; color: var(--muted); font-size: var(--text-sm); }
+
+/* The copy's photo is a button now: tapping it enlarges it. */
+button.copy-photo { padding: 0; border: 0; cursor: zoom-in; }
+
+dialog.photo-view {
+  max-width: min(46rem, 100%);
+  padding: var(--space-2);
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+dialog.photo-view[open] { display: grid; gap: var(--space-2); justify-items: center; }
+dialog.photo-view img { max-width: 100%; max-height: 75vh; object-fit: contain; }
+.controls-demo { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.controls-demo + .controls-demo { margin-top: var(--space-3); }

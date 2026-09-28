@@ -18,7 +18,7 @@ from pathlib import Path
 from jinja2 import Environment
 from markupsafe import Markup
 
-from book_watch.web import strips, tokens
+from book_watch.web import photos, strips, tokens
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -38,6 +38,7 @@ def register(env: Environment) -> None:
     env.globals["static_url"] = static_url
     env.globals["range_strip"] = strips.range_strip
     env.globals["rank_strip"] = strips.rank_strip
+    env.globals["larger_photo"] = photos.larger
     # Marked safe because it is ours, generated from `tokens.toml`, and because
     # escaping it breaks it: autoescape turns the quotes around "IBM Plex Sans"
     # into &#34;, which inside <style> is not decoded, so every font silently
