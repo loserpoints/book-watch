@@ -1,155 +1,87 @@
 # book-watch
 
-A personal tool that watches a want-list of specific books across used-book
-marketplaces and emails me when a copy appears under my price threshold.
+## Value proposition
 
-## Why this exists
+I get most of my books from the library. When it doesn't have one, I buy a cheap used copy, read it and donate it. Finding that copy means searching marketplaces title by title, reading condition notes that use no common vocabulary, adding shipping to learn the real price, and doing it again next week because stock turns over. The copy I want often appears, just not on the day I looked.
 
-I get most of my books from the library. When an author's work isn't fully
-available there, I buy an inexpensive used copy, read it, and donate it.
-Finding those copies means searching several marketplaces title by title,
-comparing condition, price and shipping — every time, for every title.
+book-watch keeps a want list of books and shows every copy for sale, judged against a price limit I set, so I stop searching by hand.
 
-Separately, for a handful of favourite authors I collect nice editions. Same
-search burden, opposite criteria.
+Nothing else covers this:
 
-Nothing existing covers this. BookFinder aggregates but keeps no watchlist.
-AbeBooks and Biblio have want-lists, but each only searches its own inventory.
-BookScouter alerts on *selling* books. BiblioPrice is built for reseller
-arbitrage. General marketplace alert tools are keyword-based and have no
-concept of an edition.
-
-## The two modes
-
-A want-list entry is either:
-
-| Mode | Optimises for | Condition | Edition |
-|---|---|---|---|
-| `reading` | Lowest landed cost (price + shipping) | Floor: readable | Any |
-| `collectible` | Edition quality — printing, jacket, signature | Primary signal | Specific |
-
-Same fetch, same duplicate detection, same email. Different matching and
-ranking.
-
-## Status
-
-**Usable, narrowly.** You can add a book to a want-list by ISBN, open it, and
-see what is for sale on eBay right now — condition, seller, and what a copy
-actually costs delivered — then click through to buy it.
-
-Built: the eBay Browse client, the account-deletion compliance endpoint
-(deployed and verified, which is what makes the production keyset work), the
-want-list with its SQLite schema, and the two screens.
-
-Not built, and each is the point of a later milestone: edition resolution, so
-a title means every edition of it rather than one ISBN; the daily poll, so
-listings are stored rather than fetched per page view; and the email digest,
-so finding a copy does not depend on remembering to look.
-
-See `docs/jobs.md` for what this is trying to get done, `docs/milestones.md`
-for what is being built now, and `docs/decisions.md` for why each choice was
-made.
-
-## Sources
-
-| Source | Status |
+| Tool | Why it isn't this |
 |---|---|
-| eBay Browse API | Anchor source. Free, 5,000 calls/day. |
-| Biblio | Second source. API key granted on request via their affiliate program. |
-| Open Library | Edition and ISBN resolution. Free, no key. Cached aggressively — see below. |
-| AbeBooks | **Not viable.** Public API deprecated and closed to new developers. |
-| Alibris | Deprioritised. Developer portal appears stale. |
+| [BookFinder](https://www.bookfinder.com/) | Searches on demand. No want list, no alerts. |
+| [AbeBooks](https://www.abebooks.com/) and [Biblio](https://www.biblio.com/) want lists | Each searches only its own stock. |
+| [BookScouter](https://bookscouter.com/) | Alerts on buyback prices, for selling books. |
+| [BiblioPrice](https://biblioprice.com/) | Built for reseller arbitrage. |
+| Marketplace keyword alerts | No idea what an edition is. |
 
-Open Library is a non-profit that asks not to be used as a backend service, so
-edition resolution is cached in SQLite and refreshed monthly. The daily polling
-loop never calls it directly.
+It works if, over a month, I stop searching marketplaces by hand and it finds at least one book I buy that I wouldn't otherwise have found. The [jobs](docs/jobs.md) say what it has to get done to earn that.
 
-## Stack
+## What it does
 
-Python, FastAPI + Jinja2 + HTMX (server-rendered, no JS build step), SQLite,
-APScheduler for the daily poll, Resend for email. Containerised, deployable to
-Fly.io or self-hosted. Running cost is roughly $2–3/month, all of it hosting.
+- Adds a book by title and author, or by ISBN, in a few taps ([add a book](docs/surfaces/add-a-book.md)).
+- Works out which editions are the same book, using Open Library's works and editions ([matching](docs/rules/matching.md)).
+- Searches eBay for every copy of each book, and prices each one delivered, against the book's limit ([pricing](docs/rules/pricing.md)).
+- Shows the whole list at a glance, with the cheapest copy of each book and whether it is under the limit ([want list](docs/surfaces/want-list.md)).
+- Shows every copy of one book with its condition, the seller's note and its photos, so I can judge it without opening the listing ([active listings](docs/surfaces/active-listings.md)).
+- Installs on a phone as an app.
+- Stays well inside what eBay and Open Library allow ([rate limits](docs/rules/rate-limits.md)).
 
-## Layout
+It doesn't yet check on its own or tell me when a copy appears ([J1](docs/jobs.md#j1), [J4](docs/jobs.md#j4)). Collectible editions, where condition matters more than price, are not built.
 
-```
-docs/                  product brief and decision record
-src/book_watch/ebay/   eBay API client
-src/book_watch/web/    FastAPI app: want-list, listings, compliance endpoint
-tests/                 offline by default; `-m network` opts into real requests
-```
+## Tech stack
+
+| Piece | Choice | Why |
+|---|---|---|
+| App | Python, FastAPI, Jinja templates, htmx | Server-rendered pages with no JavaScript build step. |
+| Data | SQLite on a Fly volume | One user and one file. Snapshotted daily by Fly. |
+| Hosting | Fly.io | About $2–3 a month, the project's whole running cost. |
+| Listings | eBay Browse API | Free, 5,000 calls a day, and prices shipping per copy. |
+| Editions | Open Library | Free, with a works and editions model. Every answer is cached. |
+| CI and deploy | GitHub Actions | Every step runs from a browser, with credentials held as secrets. |
+
+AbeBooks closed its API to new developers, so eBay is the only marketplace for now.
 
 ## Running it
 
-Requires [uv](https://docs.astral.sh/uv/). It installs the right Python itself.
+It runs at [book-watch.fly.dev](https://book-watch.fly.dev). Merging to `main` deploys it ([runbook](docs/runbook.md)).
+
+To work on it, with [uv](https://docs.astral.sh/uv/) installed:
 
 ```sh
 uv sync                              # create the environment
-cp .env.example .env                 # then fill in your eBay keys
-scripts/check.sh                     # lint, formatting, offline tests
-uv run python -m book_watch.ebay     # verify the eBay keys work (one request)
+cp .env.example .env                 # then fill in the eBay keys
+scripts/check.sh                     # lint, format, docs check and offline tests
+uv run python -m book_watch.ebay     # check the eBay keys work (one request)
 ```
 
-The last command makes a real call to eBay. Everything above it is offline.
+Setting up a new deployment, once:
 
-## eBay compliance endpoint
+1. **Fly:** create an organisation-scoped deploy token under Account → Access Tokens. An app-scoped token cannot create its own app.
+2. **GitHub:** add two repository secrets: `FLY_API_TOKEN`, the Fly token, and `EBAY_VERIFICATION_TOKEN`, a string you invent of 32–80 letters, digits, `_` or `-`.
+3. **Fly:** set `app` in `fly.toml` and run Actions → Deploy. It creates the app, deploys, and checks the eBay endpoint answers correctly.
+4. **Fly:** add `EBAY_CLIENT_ID` (the production App ID) and `EBAY_CLIENT_SECRET` (its Cert ID) under the app's Secrets. Nothing in GitHub reads them, so they live only on Fly.
+5. **eBay:** under Alerts & Notifications → Marketplace Account Deletion, enter the endpoint URL and the token, and save. eBay disables a production keyset until this works.
 
-eBay disables a production keyset until the application either receives
-marketplace account deletion notifications or is granted an exemption. This
-repo takes the first route (decision 16), which means the endpoint has to be
-live before the API works at all.
+## Repository structure
 
-The endpoint URL is hashed into every response eBay validates against, so it
-must be settled first and must match eBay's copy exactly.
-
-Deployment runs from GitHub Actions rather than a local machine (decision 18),
-so the whole setup happens in a browser. Three things to do once:
-
-**1. On Fly** — create a deploy token under *Account → Access Tokens*. It must
-be **organisation-scoped**: an app-scoped token cannot create the app it is
-scoped to (decision 18).
-
-**2. On GitHub** — add two repository secrets under *Settings → Secrets and
-variables → Actions*:
-
-| Secret | Value |
-|---|---|
-| `FLY_API_TOKEN` | The Fly deploy token |
-| `EBAY_VERIFICATION_TOKEN` | A string you invent: 32–80 chars, `[A-Za-z0-9_-]` |
-
-**3. Set `app` in `fly.toml`** to the app name you want, then run the **Deploy**
-workflow from the Actions tab.
-
-**4. On Fly, once the app exists** — add the eBay search keys as secrets, under
-the app's *Secrets* page. These are deliberately **not** GitHub secrets:
-nothing in GitHub reads them, and a second copy in a second system is leak
-surface for no benefit. See decision 25.
-
-| Fly secret | Value |
-|---|---|
-| `EBAY_CLIENT_ID` | The **App ID** of your *production* keyset |
-| `EBAY_CLIENT_SECRET` | The **Cert ID** of the same keyset, not the Dev ID |
-
-One run does everything: creates the app if it does not exist, pushes its
-settings, deploys, then asks the live endpoint for a challenge response and
-compares it against one it computes itself, and finally searches eBay through
-the deployed app. Either check failing fails the run, rather than becoming a
-confusing rejection in eBay's console or a green deploy whose only useful page
-is broken.
-
-Dispatch is manual on purpose — a push-triggered deploy runs alongside CI
-rather than after it, so it could ship a build CI is about to reject.
-
-Nothing is typed into Fly's dashboard. The endpoint URL is derived from
-`fly.toml`, so Fly's copy of it cannot drift from the real one, and the app is
-created by the workflow rather than by Fly's own GitHub deployment flow — which
-would build this repo on its own schedule alongside ours.
-
-**Finally, on eBay** — once the run is green, enter the endpoint URL and the
-token under **Alerts & Notifications → Marketplace Account Deletion** and save.
-The keyset should stop reporting *Non Compliant*, after which
-`uv run python -m book_watch.ebay` is the check that it worked.
-
-## License
-
-MIT
+```
+src/book_watch/            the app
+  ebay/                    eBay client
+  openlibrary/             Open Library client
+  web/                     pages, templates, design tokens
+  migrations/              database schema, applied in order
+tests/                     offline by default; `-m network` makes real requests
+scripts/                   check.sh, the docs check, icon rendering
+docs/
+  governance.md            what each doc holds and how work flows
+  jobs.md                  what the app must get done
+  design-system.md         principles and components
+  surfaces/                each screen, as it is now
+  rules/                   pricing, matching, rate limits
+  milestones/              what each milestone set out to do, did, and learned
+  runbook.md               deploy, roll back, restore
+CONTRIBUTING.md            how to build, test and review
+LICENSE                    MIT
+```

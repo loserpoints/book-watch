@@ -178,7 +178,7 @@ def test_each_job_has_its_two_parts(repo):
 
 def test_retiring_and_migrating_documents_are_known_but_not_checked(repo):
     write(repo, "docs/decisions.md", "no title, no sections")
-    write(repo, "README.md", "# Anything\n\n## Whatever\n")
+    write(repo, "CLAUDE.md", "# Anything\n\n## Whatever\n")
 
     assert check_docs.check(repo) == []
 
