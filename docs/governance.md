@@ -9,7 +9,7 @@ Every document in this repository is one of the artifacts below. `scripts/check_
 | Governance | active | `docs/governance.md` | Artifacts · Writing style |
 | README | migrating | `README.md` | Value proposition · What it does · Tech stack · Running it · Repository structure |
 | Agent instructions | migrating | `CLAUDE.md` | Start of session · Working rules |
-| Jobs | migrating | `docs/jobs.md` | J<n> · <name> [Job (sentence) · Success signal] |
+| Jobs | active | `docs/jobs.md` | J<n> · <name> [Job (sentence) · Success signal] |
 | Design system | active | `docs/design-system.md` | Principles · Tokens · Components |
 | Rules | active | `docs/rules/*.md` | Purpose (sentence) · Rules · Open issues (links) |
 | Surface | active | `docs/surfaces/{add-a-book,want-list,active-listings}.md` | Purpose (sentence) · What it shows · What you can do · Open issues (links) |
