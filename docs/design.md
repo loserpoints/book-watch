@@ -500,6 +500,40 @@ to checking; the trash asked before removing.
 **The add form stays as it was** until the third PR replaces it with the +
 and its sheet.
 
+### Adding a book
+
+The form on the list is gone. A round **+** in thumb reach opens a sheet on
+*Title & author*, with a switch to *ISBN* (S27).
+
+- **Each side of the switch is its own form**, so neither sends the other's
+  leftovers and the server needed no change.
+- **The sheet reopens itself** when a search comes back with results or an
+  error, on the side the question was asked from, so the answer appears where
+  it was asked.
+- **Every result is one button** covering the whole row (principle 5).
+  Tapping adds it and closes the sheet, and the book starts checking on the
+  list. A result already on the list says *On your list* instead, from one
+  local query (Alan's call; no Open Library request).
+- **Results sit outside the search form.** Each is its own form, and a form
+  nested in a form is dropped by the browser: the first build turned a tap on
+  a result into a second search. Found by driving it in a browser; a test now
+  forbids it.
+- **Adding several at once and author-only search are #101**, as S27 settled.
+- **The ISBN side has no title box**, as S27 drew it. The old form let a
+  number added anyway carry a typed name; now it goes on the list untitled
+  ("Unrecognized ISBN") until Open Library knows it. Worth revisiting with
+  #101, which already asks where *Add anyway* belongs.
+
+**Measured at 360px** in both themes, in Chromium: + opens the sheet; a
+search reopens it with four results; tapping one adds it and closes; the
+same search then shows *On your list*; the switch shows one side at a time;
+an ISBN typo reopens on the ISBN side with the error and *Add anyway*. No
+sideways scroll.
+
+**"added 10mo · digging"**, the decision #98 forced: it wraps onto the next
+line within the row's facts column, which the row already allows. Nothing is
+truncated.
+
 ## Open
 
 - **A signature.** Something that makes it feel like itself — possibly how

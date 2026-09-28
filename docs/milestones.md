@@ -76,7 +76,8 @@ issues that sit directly under those screens:
 order they matter to J3: the book page, then the want-list, then adding a
 book. Alan's call, 2026-09-28: one slice rather than three, because the
 screens share one outcome, one acceptance list and one set of pieces, and
-none needs a decision of its own. #98 closes with the third.
+none needs a decision of its own. #98 closes once Alan has checked the
+screens on his phone, which its acceptance asks for and only he can do.
 
 **Why the home screen waits for the screens.** An installed app is opened
 daily. Installing the old screens would make the thing opened every day the

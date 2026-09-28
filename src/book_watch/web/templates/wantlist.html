@@ -1,77 +1,65 @@
 {% extends "base.html" %}
+{% import "_ui.html" as ui %}
 {% block title %}Want list · book-watch{% endblock %}
 
 {% block content %}
 <h1>Want list</h1>
 
-<form method="post" action="/books" class="add">
-  <label for="book-title">Title</label>
-  <input id="book-title" name="title" value="{{ title }}" autocomplete="off"
-         placeholder="Stoner">
-
-  <label for="book-author">Author</label>
-  <input id="book-author" name="author" value="{{ author }}" autocomplete="off"
-         placeholder="John Williams">
-
-  <label for="isbn">ISBN <span class="muted">(instead of a title)</span></label>
-  <input id="isbn" name="isbn" value="{{ isbn }}" inputmode="numeric"
-         autocomplete="off" placeholder="9781590171998">
-
-  <button type="submit">Add</button>
-</form>
-
-{% if error %}
-  <p class="error">{{ error }}</p>
-  {% if offer_override %}
-    {# Some books never had an ISBN, and Open Library does not hold every one
-       that does. The app cannot tell either apart from a typo, so the person
-       holding the book decides. #}
-    <form method="post" action="/books" class="override">
-      <input type="hidden" name="isbn" value="{{ isbn }}">
-      <input type="hidden" name="title" value="{{ title }}">
-      <input type="hidden" name="author" value="{{ author }}">
-      <input type="hidden" name="override" value="1">
-      <p class="muted">
-        Add it anyway and it will be searched for as written.
-      </p>
-      <button type="submit" class="secondary">Add “{{ isbn }}” anyway</button>
-    </form>
-  {% endif %}
-{% endif %}
-
-{% if candidates %}
-  <div class="candidates">
-    <p class="muted">{{ note }}</p>
-    {% for candidate in candidates %}
-      <form method="post" action="/books/chosen" class="candidate">
-        <input type="hidden" name="title" value="{{ candidate.title }}">
-        <input type="hidden" name="author" value="{{ candidate.authors | join(', ') }}">
-        <input type="hidden" name="work_id" value="{{ candidate.work_id }}">
-        <input type="hidden" name="cover_id" value="{{ candidate.cover_id or '' }}">
-        {#- No route to fall back on: a candidate's search result already says
-            whether there is a cover, and one that is never chosen should cost
-            nothing more. -#}
-        {% with cover_id = candidate.cover_id, cover_name = candidate.title, cover_route = none %}
-          {% include "_cover.html" %}
-        {% endwith %}
-        <div class="details">
-          <div class="title">{{ candidate.title }}</div>
-          <div class="muted">
-            {{ candidate.authors | join(', ') or 'author unknown' }}
-            {%- if candidate.first_published %} · {{ candidate.first_published }}{% endif -%}
-            {%- if candidate.edition_count %} · {{ candidate.edition_count }} edition{{ '' if candidate.edition_count == 1 else 's' }}{% endif -%}
-          </div>
-        </div>
-        <button type="submit" class="secondary">This one</button>
-      </form>
-    {% endfor %}
-    <p class="muted">
-      {# Decision 7 as amended: the count is a number Open Library reports in
-         the search response. The editions themselves are never fetched. #}
-      Not here? Add it by ISBN instead.
-    </p>
-  </div>
-{% endif %}
-
 {% include "_list.html" %}
+
+{#- Adding is occasional, so it takes no room on the list: a round + in thumb
+    reach opens a sheet (S26 L1, S27). The sheet reopens itself when the
+    server answers a search with results or an error, so the answer appears
+    where the question was asked. -#}
+{{ ui.fab("Add a book", "add-sheet") }}
+
+{% set by_number = isbn != "" %}
+{% call ui.sheet("add-sheet", "Add a book", autoopen=(error or candidates)) %}
+  {#- Two ways in, and they look like two: an ISBN is a hard match and a
+      title is a search. Each side is its own form, so neither can send the
+      other's leftovers. -#}
+  {{ ui.switch("way", [("title", "Title & author"), ("isbn", "ISBN")], "isbn" if by_number else "title") }}
+
+  <div class="sheet-side" data-when="title">
+    <form class="sheet-form" method="post" action="/books">
+      <p class="sheet-note">A title is enough. Add the author to narrow it down.</p>
+      {{ ui.field("book-title", "Title", title, name="title", placeholder="Stoner") }}
+      {{ ui.field("book-author", "Author", author, name="author", optional=True, placeholder="John Williams") }}
+      {% if error and not by_number %}<p class="sheet-error" role="alert">{{ error }}</p>{% endif %}
+      <div class="sheet-actions">{{ ui.button("Search", "primary", type="submit") }}</div>
+    </form>
+    {#- Outside the search form, never inside it: each result is its own form,
+        and a form inside a form is dropped by the browser, which turned a tap
+        on a result into a second search. Found in the browser, not the tests. -#}
+    {% if candidates %}
+      <p class="sheet-note">{{ note or "Which one?" }} Tap it to add.</p>
+      <ul class="ui-list candidate-list">{% for c in candidates %}{{ ui.candidate_row(c) }}{% endfor %}</ul>
+      {#- Decision 7 as amended: the counts are numbers Open Library reports in
+          the search response. The editions themselves are never fetched. -#}
+      <p class="sheet-note">Not here? Switch to ISBN.</p>
+    {% endif %}
+  </div>
+
+  <div class="sheet-side" data-when="isbn">
+    <form class="sheet-form" method="post" action="/books">
+      <p class="sheet-note">An exact edition, by its number.</p>
+      {{ ui.field("isbn", "ISBN", isbn, inputmode="numeric", placeholder="9781590171998") }}
+      {% if error and by_number %}<p class="sheet-error" role="alert">{{ error }}</p>{% endif %}
+      <div class="sheet-actions">{{ ui.button("Add", "primary", type="submit") }}</div>
+    </form>
+    {% if offer_override %}
+      {#- Some books never had an ISBN, and Open Library does not hold every
+          one that does. The app cannot tell either apart from a typo, so the
+          person holding the book decides. -#}
+      <form class="sheet-form" method="post" action="/books">
+        <input type="hidden" name="isbn" value="{{ isbn }}">
+        <input type="hidden" name="title" value="{{ title }}">
+        <input type="hidden" name="author" value="{{ author }}">
+        <input type="hidden" name="override" value="1">
+        <p class="sheet-note">Add it anyway and eBay is searched for exactly what you typed.</p>
+        <div class="sheet-actions">{{ ui.button("Add “%s” anyway" % isbn, type="submit") }}</div>
+      </form>
+    {% endif %}
+  </div>
+{% endcall %}
 {% endblock %}

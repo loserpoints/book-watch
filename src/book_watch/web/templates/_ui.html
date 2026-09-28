@@ -149,6 +149,14 @@
     already on the list says so instead of offering to add it again. -#}
 {% macro candidate_row(c) -%}
 <li class="candidate-row{% if c.on_list %} is-on-list{% endif %}">
+  {#- On the real sheet, a row not already on the list is a form whose one
+      button covers the whole row (principle 5): tapping anywhere adds it. -#}
+  {%- if c.post and not c.on_list %}
+  <form class="candidate-add" method="post" action="/books/chosen">
+    {%- for name, value in c.post.items() %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endfor %}
+    <button type="submit" class="candidate-hit" aria-label="Add {{ c.title }}{% if c.author %} by {{ c.author }}{% endif %}{% if c.year %}, {{ c.year }}{% endif %}"></button>
+  </form>
+  {%- endif %}
   {{ cover(c.title, c.author, c.cover_url, size="sm") }}
   <span class="candidate-main">
     <span class="candidate-title">{{ c.title }}</span>
@@ -225,8 +233,10 @@
 
 {#- A bottom sheet: a native <dialog> opened as a modal, so focus, Escape and
     the back gesture behave. The caller supplies the contents. -#}
-{% macro sheet(id, title) -%}
-<dialog class="sheet" id="{{ id }}" aria-labelledby="{{ id }}-title">
+{#- `autoopen` opens it as the page loads: for a sheet whose form went to the
+    server and came back with something to show (S34). -#}
+{% macro sheet(id, title, autoopen=False) -%}
+<dialog class="sheet" id="{{ id }}" aria-labelledby="{{ id }}-title"{% if autoopen %} data-autoopen{% endif %}>
   <div class="sheet-grab" aria-hidden="true"></div>
   <h2 class="sheet-title" id="{{ id }}-title">{{ title }}</h2>
   {{ caller() }}

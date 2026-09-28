@@ -56,6 +56,20 @@
     }
   });
 
+  // A sheet that went to the server and came back with results or an error
+  // reopens itself, so the answer appears where the question was asked.
+  function openWaiting() {
+    var waiting = document.querySelector("dialog[data-autoopen]");
+    if (waiting && !waiting.open && typeof waiting.showModal === "function") {
+      waiting.showModal();
+    }
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", openWaiting);
+  } else {
+    openWaiting();
+  }
+
   // Browser storage can be missing or refuse (a private window); the only
   // cost is being asked again.
   function remembered(key) {
