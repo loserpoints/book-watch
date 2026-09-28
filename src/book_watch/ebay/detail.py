@@ -2,7 +2,8 @@
 
 eBay's search response carries a title, a price and a product id, and nothing
 about the object itself. The ISBN, format, publisher and year come from a
-second call per item — `getItem` — under `localizedAspects`.
+second call per item — `getItem` — under `localizedAspects`. The same response
+carries the seller's condition note and every photo, kept since S33.
 
 Decision 33 measured that the declared ISBN is the strongest signal available
 for deciding whether a listing is the book: 100% precision on the book
@@ -66,6 +67,12 @@ class Declared:
     publisher: str | None = None
     published: str | None = None
     category: str | None = None
+    #: The seller's own note on condition — `conditionDescription`, a short
+    #: plain-text field, not the listing description, which is arbitrary HTML
+    #: and deliberately never read. Kept whole, never truncated.
+    condition_note: str | None = None
+    #: Every photo's URL, the main one first. URLs only: eBay serves them.
+    photos: tuple[str, ...] = ()
 
 
 class ItemDetailClient:
@@ -158,7 +165,25 @@ def _declared(item_id: str, payload: Any) -> Declared:
         category=_optional(payload.get("categoryPath", "").rsplit("|", 1)[-1])
         if isinstance(payload.get("categoryPath"), str)
         else None,
+        condition_note=_text(payload.get("conditionDescription")),
+        photos=_photos(payload),
     )
+
+
+def _photos(payload: dict[str, Any]) -> tuple[str, ...]:
+    """The main image, then the additional ones, each once and in order."""
+    images = [payload.get("image")]
+    additional = payload.get("additionalImages")
+    if isinstance(additional, list):
+        images.extend(additional)
+    found: list[str] = []
+    for image in images:
+        if not isinstance(image, dict):
+            continue
+        url = _text(image.get("imageUrl"))
+        if url and url not in found:
+            found.append(url)
+    return tuple(found)
 
 
 def _aspects(raw: Any) -> dict[str, str]:
@@ -196,6 +221,12 @@ def declared_isbn(aspects: dict[str, str]) -> str | None:
 def _optional(value: str) -> str | None:
     stripped = value.strip()
     return stripped or None
+
+
+def _text(value: Any) -> str | None:
+    """A string field that may be missing or the wrong type, stripped at the
+    ends only — what is inside a seller's note is theirs."""
+    return _optional(value) if isinstance(value, str) else None
 
 
 def _has_ended(payload: dict[str, Any]) -> bool:

@@ -424,6 +424,30 @@ def test_a_stale_declaration_on_a_live_listing_is_replaced(database):
     assert result.stale_remaining == 0
 
 
+def test_a_copy_captured_before_s33_gets_its_note_and_photos_when_re_asked(database):
+    """The reason CAPTURE moved to 2: rows written before S33 never read these
+    fields, and nothing but the stamp tells them apart from a seller who
+    wrote no note."""
+    _, connection = database
+    a_copy(connection, "v1|1|0")
+    detail = CountingDetail({"v1|1|0": Declared("v1|1|0", isbn="9781590171998")})
+    run(database, detail, {"9781590171998": STONER})
+    captured_long_ago(connection, item_id="v1|1|0")
+
+    detail.answers["v1|1|0"] = Declared(
+        "v1|1|0",
+        isbn="9781590171998",
+        condition_note="Ex-library.",
+        photos=("https://ebay/a.jpg",),
+    )
+    result, _ = run(database, detail, {"9781590171998": STONER})
+
+    row = declaration(connection, "v1|1|0")
+    assert result.recaptured == 1
+    assert row["condition_note"] == "Ex-library."
+    assert row["photos"] == '["https://ebay/a.jpg"]'
+
+
 def test_a_seller_clearing_a_field_on_a_live_listing_clears_ours(database):
     """The other half of the same rule, and the reason it is not "keep the
     non-null one": a live seller removing a value is telling us something."""
@@ -525,5 +549,5 @@ def test_the_capture_versions_are_pinned():
     constants are pinned rather than left to be changed silently alongside
     the code that reads a new field.
     """
-    assert declarations_module.CAPTURE == 1
+    assert declarations_module.CAPTURE == 2
     assert resolution.CAPTURE == 1

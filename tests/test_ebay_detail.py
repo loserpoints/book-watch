@@ -99,6 +99,56 @@ def test_an_item_that_has_gone_is_not_an_error():
     )
 
 
+def test_the_condition_note_and_every_photo_are_kept():
+    """S33. Where "ex-library" and "price clipped" are written, and what a
+    clipped jacket looks like — from the response we already ask for."""
+    item = {
+        **STONER_ITEM,
+        "conditionDescription": (
+            "  Ex-library copy.\nStamps inside, jacket price clipped.  "
+        ),
+        "image": {"imageUrl": "https://i.ebayimg.com/images/g/aaa/s-l1600.jpg"},
+        "additionalImages": [
+            {"imageUrl": "https://i.ebayimg.com/images/g/bbb/s-l1600.jpg"},
+            # The main image repeated, which is not a second photo.
+            {"imageUrl": "https://i.ebayimg.com/images/g/aaa/s-l1600.jpg"},
+            {"imageUrl": "https://i.ebayimg.com/images/g/ccc/s-l1600.jpg"},
+            {"height": 100},
+        ],
+    }
+
+    declared = build_client(responds_with(item)).declared_by("v1|123456789|0")
+
+    # Whole, line break included; only the ends are trimmed.
+    assert declared.condition_note == (
+        "Ex-library copy.\nStamps inside, jacket price clipped."
+    )
+    assert declared.photos == (
+        "https://i.ebayimg.com/images/g/aaa/s-l1600.jpg",
+        "https://i.ebayimg.com/images/g/bbb/s-l1600.jpg",
+        "https://i.ebayimg.com/images/g/ccc/s-l1600.jpg",
+    )
+
+
+def test_a_long_condition_note_is_never_cut_at_write_time(database):
+    """Shortening is the page's business. What is stored is what was said."""
+    note = "Very good. " * 300
+    detail = CountingDetail({"v1|1|0": Declared("v1|1|0", condition_note=note)})
+    Declarations(database, detail).of("v1|1|0")
+
+    stored = database.execute(
+        "SELECT condition_note FROM listing_declaration WHERE item_id = 'v1|1|0'"
+    ).fetchone()
+    assert stored["condition_note"] == note
+
+
+def test_no_note_and_no_photos_is_nothing_rather_than_a_failure():
+    declared = build_client(responds_with(BARE_ITEM)).declared_by("v1|987654321|0")
+
+    assert declared.condition_note is None
+    assert declared.photos == ()
+
+
 def test_an_ebay_failure_is_an_error():
     with pytest.raises(EbaySearchError):
         build_client(responds_with({"errors": []}, 500)).declared_by("v1|111|0")
@@ -197,6 +247,25 @@ def test_what_a_listing_declared_survives_a_restart(database, tmp_path):
         reopened.close()
 
     assert again.format == "Hardcover"
+    assert detail.asked == ["v1|1|0"]
+
+
+def test_the_note_and_photos_survive_a_restart_in_order(database, tmp_path):
+    photos = ("https://ebay/a.jpg", "https://ebay/b.jpg", "https://ebay/c.jpg")
+    detail = CountingDetail(
+        {"v1|1|0": Declared("v1|1|0", condition_note="Price clipped.", photos=photos)}
+    )
+    Declarations(database, detail).of("v1|1|0")
+    database.commit()
+
+    reopened = db.connect(tmp_path / "book-watch.db")
+    try:
+        again = Declarations(reopened, detail).of("v1|1|0")
+    finally:
+        reopened.close()
+
+    assert again.condition_note == "Price clipped."
+    assert again.photos == photos
     assert detail.asked == ["v1|1|0"]
 
 
