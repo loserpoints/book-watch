@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "_ui.html" as ui %}
 {% block title %}Design · book-watch{% endblock %}
 {% block content %}
 <h1>Design</h1>
@@ -8,7 +9,33 @@
   57, and the direction in <code>docs/design.md</code>.
 </p>
 
-<h2 class="design-h">Colour</h2>
+<nav class="muted">Pieces: <a href="#book-rows">book rows</a> · <a href="#copy-rows">copy rows</a> · <a href="#candidates">adding</a> · <a href="#pieces">small pieces</a>. Tokens: <a href="#colour">colour</a> · <a href="#type">type</a> · <a href="#space">space</a> · <a href="#radius">radius</a></nav>
+
+<h2 class="design-h" id="book-rows">Book rows</h2>
+<p class="muted">Every state a book on the want-list can be in. Checked with a price under, over and with no limit; a long title; maybes; checking; couldn't check; not checked yet; nothing listed; still digging.</p>
+<ul class="ui-list">{% for b in books %}{{ ui.book_row(b) }}{% endfor %}</ul>
+
+<h2 class="design-h" id="copy-rows">Copy rows</h2>
+<p class="muted">Under, under from abroad, over with a condition note, the only new listing, and shipping unknown with a long note. Tap a note to open it.</p>
+{{ ui.market("3 used listed now", market_strip) }}
+<ul class="ui-list">{% for c in copies %}{{ ui.copy_row(c) }}{% endfor %}</ul>
+{% call ui.fold("1 maybe") %}<p class="muted">Copies that carry the title but nothing that proves the book.</p>{% endcall %}
+{% call ui.fold("Dismissed · 0") %}<p class="muted">Nothing dismissed.</p>{% endcall %}
+
+<h2 class="design-h" id="candidates">Adding a book</h2>
+<ul class="ui-list">{% for c in candidates %}{{ ui.candidate_row(c) }}{% endfor %}</ul>
+
+<h2 class="design-h" id="pieces">Small pieces</h2>
+<div class="pieces">
+  <p>{{ ui.price("$10.49", "under") }} · {{ ui.price("$27", "over", "$15") }} · {{ ui.price("$21") }}</p>
+  <p>{{ ui.tag("Very Good", strong=True) }} {{ ui.tag("ships from GB") }}</p>
+  <p>{{ ui.chip("Limit", "$12", icon="✎") }} {{ ui.chip("US", icon="▾") }} {{ ui.chip("Checked 4m", icon="↻") }}</p>
+  <div class="meta">added 2d · {{ ui.digging() }}</div>
+  <div>{{ ui.explain("Why the hour?", "A book checked in the last hour is skipped, so a quick second look does not spend another search.") }}</div>
+  <div class="cover-shelf">{{ ui.cover("Crash", "J. G. Ballard", size="lg") }} {{ ui.cover("Honored Guest", "Joy Williams") }} {{ ui.cover("Stoner", "John Williams", size="sm") }}</div>
+</div>
+
+<h2 class="design-h" id="colour">Colour</h2>
 <p class="muted">Contrast is against the page background. AA asks for 4.5 for body text and 3 for large text and marks.</p>
 <div class="swatches">
   {% for c in colours %}
@@ -29,7 +56,7 @@
   {% endfor %}
 </div>
 
-<h2 class="design-h">Type</h2>
+<h2 class="design-h" id="type">Type</h2>
 <div class="type-samples">
   <p class="sample-title">Breaking and Entering</p>
   <p class="sample-figure"><span class="under">✓ from $10.49</span> &nbsp; <span class="over-text">$27 $15 over</span></p>
@@ -41,7 +68,7 @@
   {% endfor %}
 </div>
 
-<h2 class="design-h">Space</h2>
+<h2 class="design-h" id="space">Space</h2>
 {% for name, size in space.items() %}
   <div class="space-step">
     <span class="space-bar" style="width: var(--space-{{ name }})"></span>
@@ -49,7 +76,7 @@
   </div>
 {% endfor %}
 
-<h2 class="design-h">Radius</h2>
+<h2 class="design-h" id="radius">Radius</h2>
 <div class="radii">
   {% for name, size in radius.items() %}
     <div class="radius-step">

@@ -70,6 +70,16 @@ dark = "#cfc4b2"
 light = "#5d5142"
 use = "The title written on that placeholder"
 
+[colour.shadow]
+dark = "#00000059"
+light = "#5a46302e"
+use = "The shadow a cover casts, as a book on a shelf. Not text"
+
+[colour.spine]
+dark = "#ffffff1f"
+light = "#ffffff40"
+use = "The highlight down a cover's spine edge. Not text"
+
 # --- type ---------------------------------------------------------------------
 
 [font]

@@ -6,8 +6,8 @@
    margin, padding, gap or radius written here as a raw value. Widths and
    heights are layout, not tokens, and are written where they are used.
 
-   This is S28's stylesheet: the old screens on the new tokens. S30 rebuilds
-   the screens themselves. */
+   This is S28's stylesheet: the old screens on the new tokens. the screens slice
+   (#98) rebuilds the screens themselves. */
 
 @font-face {
   font-family: "IBM Plex Sans";
@@ -139,12 +139,6 @@ form.override { margin-top: var(--space-2); }
 #sweep-runner:empty { display: none; }
 /* Only while a walk is actually running, so a finished list is quiet. */
 .sweeping { font-style: italic; }
-/* The dotted underline is the only thing telling a reader there is more to
-   read. Without it the hover is a secret. S29 replaces it with tap-to-explain. */
-span.digging[title], .digging span[title] {
-  border-bottom: 1px dotted currentColor;
-  cursor: help;
-}
 details.maybe { margin-top: var(--space-5); }
 details.maybe summary { cursor: pointer; font-weight: 600; padding: var(--space-2) 0; }
 /* The candidate picker reuses .entry's row shape, so a book being chosen and
@@ -222,3 +216,295 @@ form.candidate .details { flex: 1 1 auto; }
 .radius-step { display: grid; gap: var(--space-1); justify-items: center; }
 .radius-box { width: 56px; height: 40px; background: var(--surface); border: 1px solid var(--line); }
 code { font-family: var(--font-figure); font-size: var(--text-sm); }
+
+/* ---------------------------------------------------------------------------
+   S29: the display pieces (#97). Macros in templates/_ui.html; every state is
+   drawn on /design. The screens adopt them in the screens slice (#98).
+   --------------------------------------------------------------------------- */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.meta { color: var(--muted); font-size: var(--text-xs); }
+
+/* Tap to explain, in place. The whole summary is the target (principle 5). */
+details.explain { display: inline; }
+details.explain > summary {
+  display: inline;
+  cursor: pointer;
+  list-style: none;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+details.explain > summary::-webkit-details-marker { display: none; }
+details.explain[open] { display: block; }
+.explain-text {
+  margin: var(--space-1) 0 0;
+  padding: var(--space-2) var(--space-3);
+  border-left: 2px solid var(--accent);
+  background: var(--surface);
+  color: var(--fg);
+  font-size: var(--text-sm);
+}
+
+/* Still digging: the word shimmers while the app is working. */
+details.digging > summary {
+  color: var(--accent);
+  text-decoration: none;
+  background: linear-gradient(90deg, var(--muted) 0%, var(--accent) 50%, var(--muted) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: dig-shimmer 1.6s linear infinite;
+}
+@keyframes dig-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+.checking { animation: dig-pulse 1.2s ease-in-out infinite; }
+@keyframes dig-pulse { 50% { opacity: 0.45; } }
+@media (prefers-reduced-motion: reduce) {
+  details.digging > summary { animation: none; -webkit-text-fill-color: var(--accent); }
+  .checking { animation: none; }
+}
+
+/* A cover on a shelf: spine highlight down the left edge, a cast shadow. The
+   placeholder underneath is the book's name typed on a plain board. */
+.cover {
+  position: relative;
+  flex: none;
+  width: 52px;
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--placeholder-bg);
+  box-shadow: 2px 3px 0 var(--shadow);
+}
+.cover-sm { width: 40px; }
+.cover-lg { width: 72px; }
+.cover::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--spine);
+}
+.cover img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cover-ph {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--space-1);
+  color: var(--placeholder-fg);
+}
+.cover-ph-title {
+  /* The body face, not the typewriter: at 40-52px wide the narrower letters
+     fit whole words that Courier would have to break. */
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--text-xxs);
+  line-height: 1.15;
+  /* Hyphenate at syllables where the browser can ("Break-ing"). Where it
+     cannot, break the word rather than clip it: a clipped "Breakin" reads
+     as a different word, a broken one does not. */
+  hyphens: auto;
+  overflow-wrap: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cover-ph-author { font-size: var(--text-xxs); opacity: 0.8; }
+.cover-lg .cover-ph-title { font-size: var(--text-xs); }
+
+/* The headline price. Colour and a mark together, never colour alone. */
+.price {
+  font-family: var(--font-figure);
+  font-weight: 700;
+  font-size: var(--text-lg);
+  white-space: nowrap;
+}
+.price-under { color: var(--under); }
+.price-over { color: var(--over); }
+.price-plain { color: var(--fg); }
+.price-over-by { font-family: var(--font-figure); font-size: var(--text-xs); color: var(--over); }
+
+/* Strips: dots on one scale, the limit as a dashed guide. */
+.strip { display: block; overflow: visible; }
+.strip-axis { stroke: var(--line); }
+.strip-limit { stroke: var(--fg); stroke-dasharray: 2 2; opacity: 0.7; }
+.strip-dot { fill: var(--accent); }
+.strip-peer { fill: var(--muted); }
+.strip-mine { fill: var(--accent); }
+.strip-label { fill: var(--muted); font-family: var(--font-figure); font-size: var(--text-xxs); }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+.tag-strong { font-weight: 600; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--fg);
+  font-size: var(--text-sm);
+  text-decoration: none;
+}
+.chip b { font-family: var(--font-figure); }
+
+/* Icon buttons: small to look at, 44px to hit. */
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: calc(-1 * var(--space-3));
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+details.fold { border-top: 1px solid var(--line); }
+details.fold > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.market-line { display: grid; gap: var(--space-1); padding: var(--space-1) 0; }
+.market-line .strip { width: 100%; }
+
+/* A book on the want-list: title full width above the cover. */
+.book-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--space-1) var(--space-3);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--line);
+  list-style: none;
+}
+.book-row-title {
+  grid-column: 1 / 3;
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: var(--text-base);
+  line-height: 1.2;
+  color: var(--fg);
+  text-decoration: none;
+}
+.book-row-remove { grid-column: 3; justify-self: end; }
+.book-row .cover { grid-column: 1; }
+.book-row-body {
+  grid-column: 2 / 4;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.book-row-facts { display: grid; gap: var(--space-1); min-width: 0; }
+.book-row-author { color: var(--muted); font-size: var(--text-sm); }
+.book-row-price { display: grid; justify-items: end; gap: var(--space-1); }
+
+/* A copy for sale: price leads; the seller's claim and note run full width. */
+.copy-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--space-1) var(--space-3);
+  align-items: start;
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--line);
+  list-style: none;
+}
+.copy-photo {
+  width: 64px;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  overflow: hidden;
+}
+.copy-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.copy-main { display: grid; gap: var(--space-1); min-width: 0; }
+.copy-price { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.copy-tags { display: flex; gap: var(--space-1); flex-wrap: wrap; }
+.copy-listing {
+  color: var(--fg);
+  font-size: var(--text-sm);
+  text-decoration-color: var(--line);
+  text-underline-offset: 2px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.copy-dismiss { grid-column: 3; grid-row: 1; }
+.copy-says {
+  grid-column: 1 / 4;
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+.copy-says b { color: var(--fg); font-weight: 600; }
+details.copy-note { grid-column: 1 / 4; }
+details.copy-note > summary {
+  list-style: none;
+  cursor: pointer;
+  font-style: italic;
+  font-size: var(--text-sm);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+details.copy-note > summary::-webkit-details-marker { display: none; }
+details.copy-note[open] > summary { display: block; }
+
+/* A result when adding a book: the whole row is the target. */
+.candidate-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--line);
+  list-style: none;
+  cursor: pointer;
+}
+.candidate-main { display: grid; gap: var(--space-1); flex: 1; min-width: 0; }
+.candidate-title { font-family: var(--font-title); font-weight: 700; }
+.candidate-act { color: var(--accent); font-size: var(--text-sm); white-space: nowrap; }
+.candidate-row.is-on-list { cursor: default; }
+.candidate-row.is-on-list .candidate-act { color: var(--muted); }
+
+.ui-list { margin: 0; padding: 0; }
+.pieces > * { margin: var(--space-2) 0; }
+.cover-shelf { display: flex; align-items: flex-end; gap: var(--space-3); }

@@ -2812,4 +2812,4 @@ login yet, so it exposes nothing new. If book-watch ever has other users, it
 moves into an admin area.
 
 **What S28 does not do.** The screens keep their old layout, on the new
-tokens. S30 rebuilds them.
+tokens. The screens slice (#98) rebuilds them.

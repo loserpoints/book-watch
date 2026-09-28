@@ -149,7 +149,7 @@ design:
 Candidates looked at and not chosen: *Update (2)* / *Check all*, where the
 count says how many are stale and reads *All current* at zero; *Refresh* /
 *Refresh everything*; *Check what's stale* / *Check all now*. Revisit in S27
-or S30, with the look in front of us.
+or when the screens are rebuilt, with the look in front of us.
 
 **Why "not checked yet" survives S23.** Adding a book starts its check from
 the page, so closing the tab first leaves it unchecked. A check that fails is
@@ -297,7 +297,7 @@ IBM Plex Sans for everything else, and a round + in thumb reach.
   and "10mo ago" would force a wrap. "Still digging" becomes the word
   *digging* with a slow shimmer, instead of three dots. At 390px wide,
   "added 2d · digging" fits exactly, and "added 10mo · digging" overflows by
-  about 8px. That is a rare pair; S30 decides how the line gives way.
+  about 8px. That is a rare pair; the screens slice (#98) decides how the line gives way.
 - **The copy's text sits beside the photo again.** Only the condition note
   runs full width underneath. Wrapping everything under the photo looked bad.
 - **"1st of 3" becomes a small strip beside the price**, because the old
@@ -363,6 +363,33 @@ and nowhere else (decision 57). Every colour has a dark and a light value and
 a line saying what it is for. `/design` on the running app draws them all.
 Light mode's green and coral were darkened slightly from the S27 page to pass
 AA on the cream surface.
+
+## Pieces (S29, #97)
+
+The display pieces live as Jinja macros in `templates/_ui.html`, each taking
+plain values so a screen maps its data onto them. `/design` draws every state
+from sample values. Four calls were settled with Alan before building:
+
+- **Tap-to-explain opens in place**, as `<details>`, with no JavaScript. A test
+  fails on any `title=` in a template: a phone has no hover.
+- **Bottom sheets use the browser's `<dialog>`** (built in S30, #110).
+- **The strips are SVG drawn by the server** (`web/strips.py`) to one scale,
+  tested for positions. The email will need its own treatment.
+- **The enlarged photo** rests on eBay's size pattern in its image URLs, to
+  be checked in S30.
+
+**Found while building:**
+
+- **Placeholder titles set in Courier had to break mid-word** at 52px wide
+  ("Breakin|g"), so they use the body face, hyphenate where the browser can,
+  and break rather than clip where it cannot. A clipped "Breakin" reads as
+  another word; a broken one does not.
+- **The author shows on a placeholder only at the large size.** At 40-52px
+  there is room for the title or the name, and the title is what is
+  recognised.
+- **A `<details>` inside a `<p>` is invalid HTML.** The browser closes the
+  paragraph first and the piece falls apart, so an explained fact sits in a
+  `<div>` or `<span>`.
 
 ## Open
 
