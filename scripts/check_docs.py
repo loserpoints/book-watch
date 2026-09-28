@@ -9,8 +9,12 @@ governance holds what to check. Exit status 1 lists every violation.
 from __future__ import annotations
 
 import fnmatch
+import json
+import os
 import re
 import sys
+import urllib.request
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -19,6 +23,12 @@ ISSUE_LINK = re.compile(
     r"^- \[[^\]]+\]\(https://github\.com/loserpoints/book-watch/(issues|pull)/\d+\)$"
 )
 JOB_LINK = re.compile(r"^- \[[^\]]+\]\((\.\./)*jobs\.md#j\d+[^)]*\)$")
+#: A link to a document in this repository, from a learning to where it went.
+DOC_LINK = re.compile(r"\]\((?!https?://)([^)#]+\.md)(#[^)]*)?\)")
+REPO_API = "https://api.github.com/repos/loserpoints/book-watch/issues/{}"
+
+#: Given an issue number, its label names.
+Labels = Callable[[int], set[str]]
 MILESTONE_DIR = re.compile(r"^m\d{2}-[a-z0-9-]+$")
 SENTENCE_END = re.compile(r"[.!?](?=\s|$)")
 
@@ -113,7 +123,14 @@ def headings(text: str, level: int) -> list[tuple[str, str]]:
     return [(h, "\n".join(body).strip()) for h, body in found if h]
 
 
-def check_body(where: str, section: Section, body: str) -> list[str]:
+def check_body(
+    where: str,
+    section: Section,
+    body: str,
+    *,
+    doc: Path | None = None,
+    labels: Labels | None = None,
+) -> list[str]:
     lines = [line for line in body.splitlines() if line.strip()]
     if not lines:
         if "may be empty" in section.flags:
@@ -132,10 +149,52 @@ def check_body(where: str, section: Section, body: str) -> list[str]:
         bad = [line for line in lines if not JOB_LINK.match(line)]
         if bad:
             return [f"{where}: '{section.name}' holds more than job links: {bad[0]!r}"]
+    if "slice links" in section.flags:
+        return check_slices(where, section, lines, labels)
+    if "routed" in section.flags:
+        return check_routed(where, section, lines, doc)
     return []
 
 
-def check_file(root: Path, rel: str, artifact: Artifact) -> list[str]:
+def check_slices(
+    where: str, section: Section, lines: list[str], labels: Labels | None
+) -> list[str]:
+    """Issue links only, and each issue labelled `slice` when labels are known."""
+    errors = []
+    for line in lines:
+        match = ISSUE_LINK.match(line)
+        if not match or match.group(1) != "issues":
+            errors.append(
+                f"{where}: '{section.name}' holds more than issue links: {line!r}"
+            )
+            continue
+        number = int(line.rstrip(")").rsplit("/", 1)[1])
+        if labels is not None and "slice" not in labels(number):
+            errors.append(f"{where}: #{number} is not labelled 'slice'")
+    return errors
+
+
+def check_routed(
+    where: str, section: Section, lines: list[str], doc: Path | None
+) -> list[str]:
+    """Every bullet links the document it changed, and that document exists."""
+    errors = []
+    for line in lines:
+        links = DOC_LINK.findall(line) if line.startswith("- ") else []
+        if not links:
+            errors.append(
+                f"{where}: each learning must link the document it changed: {line!r}"
+            )
+            continue
+        for target, _ in links:
+            if doc is not None and not (doc.parent / target).resolve().exists():
+                errors.append(f"{where}: '{target}' does not exist")
+    return errors
+
+
+def check_file(
+    root: Path, rel: str, artifact: Artifact, labels: Labels | None = None
+) -> list[str]:
     text = (root / rel).read_text()
     errors = []
     titles = [line for line in text.splitlines() if line.startswith("# ")]
@@ -158,7 +217,9 @@ def check_file(root: Path, rel: str, artifact: Artifact) -> list[str]:
                 errors.append(f"{rel}: '{heading}' needs {wanted}, has {names}")
                 continue
             for child, (_, sub_body) in zip(spec.children, subs, strict=True):
-                errors += check_body(f"{rel} › {heading}", child, sub_body)
+                errors += check_body(
+                    f"{rel} › {heading}", child, sub_body, doc=root / rel, labels=labels
+                )
         return errors
 
     names = [heading for heading, _ in found]
@@ -167,7 +228,7 @@ def check_file(root: Path, rel: str, artifact: Artifact) -> list[str]:
         errors.append(f"{rel}: sections must be {wanted}, found {names}")
         return errors
     for section, (_, body) in zip(artifact.sections, found, strict=True):
-        errors += check_body(rel, section, body)
+        errors += check_body(rel, section, body, doc=root / rel, labels=labels)
     return errors
 
 
@@ -197,11 +258,16 @@ def documents(root: Path) -> list[str]:
         if p.is_file()
     ]
     return sorted(
-        found + [name for name in ("README.md", "CLAUDE.md") if (root / name).exists()]
+        found
+        + [
+            name
+            for name in ("README.md", "CLAUDE.md", "CONTRIBUTING.md")
+            if (root / name).exists()
+        ]
     )
 
 
-def check(root: Path) -> list[str]:
+def check(root: Path, labels: Labels | None = None) -> list[str]:
     artifacts = load_artifacts(root)
     errors = []
     for rel in documents(root):
@@ -212,12 +278,38 @@ def check(root: Path) -> list[str]:
         if owner is None:
             errors.append(f"{rel}: not an artifact in {GOVERNANCE}")
         elif owner.status == "active":
-            errors += check_file(root, rel, owner)
+            errors += check_file(root, rel, owner, labels)
     return errors + check_milestones(root)
 
 
+def github_labels(token: str) -> Labels:
+    """Read an issue's labels from GitHub, once per issue."""
+    seen: dict[int, set[str]] = {}
+
+    def labels(number: int) -> set[str]:
+        if number not in seen:
+            request = urllib.request.Request(
+                REPO_API.format(number),
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Accept": "application/vnd.github+json",
+                },
+            )
+            with urllib.request.urlopen(request, timeout=20) as response:
+                seen[number] = {
+                    label["name"] for label in json.load(response)["labels"]
+                }
+        return seen[number]
+
+    return labels
+
+
 def main() -> int:
-    errors = check(Path.cwd())
+    token = os.environ.get("GITHUB_TOKEN")
+    if os.environ.get("CI") and not token:
+        print("GITHUB_TOKEN is not set, so slice labels cannot be checked")
+        return 1
+    errors = check(Path.cwd(), github_labels(token) if token else None)
     for error in errors:
         print(error)
     return 1 if errors else 0

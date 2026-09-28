@@ -2,12 +2,12 @@
 
 ## Learnings
 
-- Driving each slice in a browser caught what the tests could not: a tap on a search result that searched again, an icon rendered in the wrong font, and chips that wrapped. Every slice gets run and looked at.
-- Ask the platform, not memory. Chromium's own tools showed the app installs without a service worker, which the project had believed it needed.
-- Build a piece once, in the design system. Notes and photos went into the shared copy row instead of the old page, and reached the page when the screens were rebuilt.
-- Tests should check what a reader sees, not the markup. Tests written that way survived three rebuilt screens with only their wording changed.
-- A bound is not a guess. A copy whose price alone is over the limit is over, whatever the shipping.
-- One slice can ship as several pull requests when its parts share one outcome and one acceptance list.
+- Driving each slice in a browser caught a tap that searched again, an icon in the wrong font and wrapping chips, none of which a test caught. [CONTRIBUTING](../../../CONTRIBUTING.md#testing)
+- Chromium's own tools showed the app installs without a service worker, which the project believed it needed. [CONTRIBUTING](../../../CONTRIBUTING.md#building)
+- Notes and photos went into the shared copy row instead of the old page, so they were built once. [Design system](../../design-system.md#components)
+- Tests that check what a reader sees survived three rebuilt screens with only their wording changed. [CONTRIBUTING](../../../CONTRIBUTING.md#testing)
+- A copy whose price alone is over the limit is over, whatever the shipping. [Pricing](../../rules/pricing.md#limits)
+- The screens shipped as one slice in three pull requests. [Governance](../../governance.md#workflow)
 
 ## Carried forward
 
