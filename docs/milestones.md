@@ -48,49 +48,6 @@ renumbers. Two rules keep that from costing anything:
 
 ---
 
-## M7 · Judge a copy at a glance
-
-**Goal.** The want-list, the book page and adding a book are rebuilt from M6's
-building blocks, so a bad copy can be ruled out from the list without reading
-it word by word. The app then installs on a phone's home screen.
-
-**Jobs advanced.**
-
-- **J3**: *reject a bad copy — ex-library, wrong edition, a clipped jacket —
-  from the results list alone.* The screens make it quick, and the seller's
-  condition note and every photo (#106) make it possible for the two cases no
-  field captured.
-- **J2** and **J6** follow: what comes to the top has to look like it came to
-  the top, and a list is only trusted if it is legible and true.
-
-**What is in it.** The screens rebuilt; the home-screen install; and three
-issues that sit directly under those screens:
-
-- **#103**: "over" is computed and never shown, and some "can't tell" copies
-  are known to be over.
-- **#102**: every book added by title wrongly warns that it is not an ISBN.
-- **#106**: the seller's condition note and all photos, from the item call the
-  app already makes.
-
-**The screens slice (S34, #98) ships as three PRs**, one screen each, in the
-order they matter to J3: the book page, then the want-list, then adding a
-book. Alan's call, 2026-09-28: one slice rather than three, because the
-screens share one outcome, one acceptance list and one set of pieces, and
-none needs a decision of its own. #98 closes once Alan has checked the
-screens on his phone, which its acceptance asks for and only he can do.
-
-**Why the home screen waits for the screens.** An installed app is opened
-daily. Installing the old screens would make the thing opened every day the
-thing about to be replaced.
-
-**Deliberately not in it.** Unknown-shipping copies sorting last (#104) and
-dismissing a copy (#105) are J3 too, and small. They wait: this milestone's
-job is an initial app experience, and priorities get reassessed once there is
-one to use.
-
----
-
-
 ## M8 · Two kinds of hunt
 
 **Goal.** An entry is a reading copy or a collectible, and the mode changes what
@@ -222,9 +179,8 @@ Real, wanted, and not yet worth a position in the order.
   in the workflow and puts out of scope for v1.
 
 *Removed at M6's close:* seller descriptions, ruled out in S26 as long HTML
-full of seller banners. The seller's short condition note takes their place
-in *Judge a copy at a glance* (#106), at no extra requests. Relative dates
-(#22) are delivered by the screens slice there.
+full of seller banners. The seller's short condition note took their place
+in *Judge a copy at a glance* (#106), at no extra requests.
 
 ---
 
@@ -581,3 +537,65 @@ gesture closing a sheet needs a phone.
   (#22) and the shape of prices (#76) are delivered by the screens slice. The
   S26 finds that are wanted but unplaced are listed: author search (#101) and
   a default limit per hunt (#107).
+
+### M7 · Judge a copy at a glance
+
+**Delivered 2026-09-28.** The three screens are rebuilt from M6's pieces and
+it installs on Alan's phone as **bookwatch**, opening full screen from a
+**bw.** icon. The book page leads with the copies: price coloured under or
+over and by how much, where each sits among its kind, the seller's condition
+note and every photo. The want-list gives each book its cheapest copy and the
+shape of its prices, and adding a book is a + and a sheet. Five slices, eight
+PRs: #103 and #102 fixed first (over is shown; the false "not an ISBN"
+warning is gone), #106 in two (store, then show), the screens in three (book
+page, want-list, adding), and the home screen. #22 and #76 closed on the way.
+
+**What it taught.**
+
+- **Driving it in a browser caught what the suite could not, every slice.**
+  Tapping a search result ran the search again, because a form inside a form
+  is silently dropped. The icon rendered in a generic serif because the page
+  could not load its font. "Digging" came out as a large headline. The chips
+  wrapped to two lines. None of these failed a test; each was found by
+  running it at 360px and looking. M6 said "render every slice, and look at
+  it". M7 confirms it is the rule, not a habit.
+- **Ask the platform, not memory.** Decision 2 recorded that installing needs
+  a service worker. Chromium's own devtools, asked directly, said it no
+  longer does, and the worker the app deliberately does not want was never
+  needed (decision 59). The same went for eBay's photo-size pattern, settled
+  by one real URL from production rather than by reasoning about it.
+- **Build it once, in the system.** Showing notes and photos (#106) was about
+  to be built into the old book page and then rebuilt in S34. Building it
+  into the system's copy row, and letting the screens slice put it on the
+  page, cost a few days' wait and saved doing it twice.
+- **A test should assert the fact, not the markup that carries it.** Rebuilt
+  screens changed nearly every sentence. Tests that read the page as a
+  reader sees it (`visible()`) needed only their wording updated. Two
+  negative tests would have passed vacuously once "still digging" became
+  "digging"; they now assert the element, not the absence of a phrase.
+- **A bound is not a guess.** A copy whose price alone is over the limit is
+  over whatever the postage, so decision 50's refusal to guess never applied
+  to it (#103). The distinction is between what is unknown and what is
+  unknown but bounded.
+- **One slice can be several PRs.** The screens shipped as one slice in three
+  PRs, by Alan's call: one outcome and one acceptance list, reviewed a screen
+  at a time. Splitting it into milestones would have been ceremony.
+
+**On process.** A whole session's Bash failed with "auto mode classifier gave
+no verdict" in Alan's personal account while it worked in his work one. The
+cause is not known; switching that session to *accept edits* worked around
+it. `pkill -f` matched its own shell twice, because the pattern also
+appeared in the same command line; stopping a server is now its own
+command.
+
+**Carried forward, unconfirmed.** eBay's field names for the condition note
+and photos (`conditionDescription`, `additionalImages`) were taken from
+documentation this sandbox could not reach. They are confirmed when notes and
+photo counts appear on copies re-asked since S33; if every copy stays empty,
+the names were wrong.
+
+**The review of what remains** is held with Alan as its own step, straight
+after this close. The question M6's close deferred to here is whether
+*Always current* or *Two kinds of hunt* comes next. It now has a third
+candidate: whatever using the rebuilt screens turns up. #104 and #105 sit in
+*Always current*; #101 and #107 stay unscheduled until then.
