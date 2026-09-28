@@ -28,7 +28,7 @@ from fastapi import APIRouter, BackgroundTasks, Form, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from book_watch import copies, enrichment, standing, sweeps, wantlist
+from book_watch import copies, covers, enrichment, standing, sweeps, wantlist
 from book_watch.config import MissingCredentialError, load_ebay_credentials
 from book_watch.ebay.auth import EbayTokenProvider
 from book_watch.ebay.errors import EbayError
@@ -38,7 +38,7 @@ from book_watch.ebay.search import (
     Scope,
 )
 from book_watch.isbn import normalise
-from book_watch.web import assets, filters
+from book_watch.web import assets, book_view, filters
 from book_watch.web.searching import LazyBrowseSearch, SearchFn
 from book_watch.web.wantlist import ConnectFn, open_configured_database
 
@@ -88,6 +88,7 @@ def build_router(
     templates = Jinja2Templates(directory=TEMPLATES_DIR)
     filters.register(templates.env)
     assets.register(templates.env)
+    templates.env.filters["cover_url"] = covers.url
     run_search: SearchFn = search if search is not None else LazyBrowseSearch()
     open_database: ConnectFn = (
         connect if connect is not None else open_configured_database
@@ -245,6 +246,24 @@ def build_router(
             background.add_task(start_enrichment, book.work_id)
 
         shown = [copy for copy in for_sale if copy.tier != "excluded"]
+        verdicts = {copy.item_id: copy.against(ceiling) for copy in for_sale}
+        listed_prices = standing.prices(for_sale)
+        seen_prices = standing.prices(seen)
+        market_list = standing.markets(placed)
+
+        def rows(tier_wanted: bool) -> list[dict]:
+            return [
+                book_view.copy_row(
+                    copy,
+                    verdicts[copy.item_id],
+                    placed.get(copy.item_id),
+                    ceiling,
+                    listed_prices,
+                )
+                for copy in shown
+                if (copy.tier == "certain") == tier_wanted
+            ]
+
         context = {
             "isbn": book.search_query,
             "book": book,
@@ -260,7 +279,7 @@ def build_router(
             "ceiling": ceiling,
             # The verdict per copy, worked out once here rather than in the
             # template. Decision 43: derived on read, never stored.
-            "verdict": {copy.item_id: copy.against(ceiling) for copy in for_sale},
+            "verdict": verdicts,
             # Deliberately independent of the ceiling. A rank is about the
             # market and a ceiling is about you, so a copy over your limit
             # still counts in what the copies under it are cheaper *than*.
@@ -268,8 +287,16 @@ def build_router(
             # The same numbers lifted to the book. A range is a property of a
             # condition class, so stating it per copy says one fact once per
             # copy — eight times on a twelve-copy book.
-            "markets": standing.markets(placed),
+            "markets": market_list,
             "is_isbn": not book.searched_as_text,
+            # The same facts, as the system's pieces take them (S34).
+            "copy_rows": rows(True),
+            "maybe_rows": rows(False),
+            "market_lines": [
+                book_view.market_line(market, seen_prices, ceiling)
+                for market in market_list
+            ],
+            "ceiling_text": book_view.money(ceiling) if ceiling else None,
         }
         return templates.TemplateResponse(
             request, "book.html", context, status_code=error[1] if error else 200

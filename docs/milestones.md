@@ -72,6 +72,12 @@ issues that sit directly under those screens:
 - **#106**: the seller's condition note and all photos, from the item call the
   app already makes.
 
+**The screens slice (S34, #98) ships as three PRs**, one screen each, in the
+order they matter to J3: the book page, then the want-list, then adding a
+book. Alan's call, 2026-09-28: one slice rather than three, because the
+screens share one outcome, one acceptance list and one set of pieces, and
+none needs a decision of its own. #98 closes with the third.
+
 **Why the home screen waits for the screens.** An installed app is opened
 daily. Installing the old screens would make the thing opened every day the
 thing about to be replaced.

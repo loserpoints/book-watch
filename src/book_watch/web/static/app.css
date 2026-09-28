@@ -646,6 +646,14 @@ dialog.photo-view[open] { display: grid; gap: var(--space-2); justify-items: cen
   object-fit: contain;
   scroll-snap-align: center;
 }
+.photo-dots { display: flex; gap: var(--space-1); justify-content: center; }
+.photo-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--line);
+}
+.photo-dots i.on { background: var(--accent); }
 .copy-photo { position: relative; }
 .photo-count {
   position: absolute;
@@ -659,3 +667,18 @@ dialog.photo-view[open] { display: grid; gap: var(--space-2); justify-items: cen
 }
 .controls-demo { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
 .controls-demo + .controls-demo { margin-top: var(--space-3); }
+
+/* ---------------------------------------------------------------------------
+   The book page (S34, #98): the book, three chips, the markets, the copies.
+   --------------------------------------------------------------------------- */
+.back { margin: 0 0 var(--space-2); font-size: var(--text-sm); }
+.back a { color: var(--muted); }
+.book-hero { display: flex; gap: var(--space-3); align-items: flex-start; margin-bottom: var(--space-3); }
+.book-hero-text { display: grid; gap: var(--space-1); min-width: 0; }
+.book-title { font-family: var(--font-title); overflow-wrap: anywhere; margin: 0; }
+.book-isbn { font-family: var(--font-figure); }
+.warning { margin: 0 0 var(--space-3); }
+.chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+.markets { display: grid; gap: var(--space-2); margin-bottom: var(--space-3); }
+.match-count { margin: 0 0 var(--space-1); }
+.sheet-form { display: grid; gap: var(--space-3); }
