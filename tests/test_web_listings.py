@@ -473,6 +473,31 @@ def test_a_real_isbn_carries_no_such_warning(book_client):
     assert "not an ISBN" not in client.get("/book/1").text
 
 
+def test_a_book_picked_from_a_title_search_carries_no_such_warning(book_client):
+    """Nothing was typed: it is searched on the title and author Open Library
+    confirmed, which is the normal search for it, not a worse one (#102)."""
+    client = book_client(returning(a_listing()))
+    client.post(
+        "/books/chosen",
+        data={"title": "Stoner", "author": "John Williams", "work_id": "OL3511459W"},
+    )
+
+    page = client.get("/book/1").text
+
+    assert "Stoner" in page
+    assert "not an ISBN" not in page
+
+
+def test_a_valid_isbn_open_library_does_not_know_carries_no_such_warning(
+    book_client,
+):
+    """Added anyway, and searched by its number — an ISBN search like any other."""
+    client = book_client(returning(a_listing()))
+    add_book(client, "9781590171998")
+
+    assert "not an ISBN" not in client.get("/book/1").text
+
+
 def test_the_want_list_links_to_each_book(book_client):
     client = book_client(returning())
     add_book(client, "9780099448396", "Crash")

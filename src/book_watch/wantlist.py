@@ -21,6 +21,7 @@ from typing import Literal
 
 from book_watch import covers
 from book_watch.ebay.search import Money
+from book_watch.isbn import normalise
 
 #: Which hunt an entry is on. A reader will take any edition of the book; a
 #: collector wants one particular printing. Every entry is one or the other,
@@ -107,6 +108,18 @@ class Entry:
         learned would be answering a different question.
         """
         return self.typed
+
+    @property
+    def searched_as_text(self) -> bool:
+        """Was this added as text that is not an ISBN — decision 29's override?
+
+        Only then does eBay get a search for words somebody typed, with worse
+        matches than usual. A book picked from a title search has nothing
+        typed: it is searched on the title and author Open Library confirmed,
+        which is the normal search for it. Asking whether `search_query` is an
+        ISBN got that wrong for every such book (#102).
+        """
+        return self.typed is not None and normalise(self.typed) is None
 
     @property
     def name(self) -> str:
