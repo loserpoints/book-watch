@@ -423,6 +423,48 @@ each side of the switch out with an inline `display`, which beat the rule
 that hides the side not chosen, so both showed. The sides now lay themselves
 out by class, and a test forbids an inline style on a switched side.
 
+## The screens (S34, #98)
+
+Three PRs in one slice: the book page, then the want-list, then adding a
+book (`docs/milestones.md`).
+
+### The book page
+
+Built from the system's pieces, in S27's order: the book (cover, title, the
+ISBN it was added by, *digging*), three chips, each market with its strip,
+the match count, the copies, and a fold for the maybes. `web/book_view.py`
+turns the app's copies into the plain values the pieces take, so the
+template only lays them out and nothing is decided twice.
+
+- **The chips.** *Limit $12 ✎* opens a sheet holding the limit box; *US* /
+  *Everywhere* switches scope (two states, so a toggle, principle 4);
+  *Checked 4m ↻* re-runs the search.
+- **Each market** says what is listed now and, when it differs, how many
+  were seen: "3 used listed now, 12 seen". Its strip spans every asking price
+  seen, labelled at the ends, with the limit as the dashed guide (decision
+  53's two populations, both named).
+- **Over says by how much, the same way whether or not shipping is known.**
+  Alan's call: "$15 over" when the delivered price is known, "$2+ over" when
+  the copy is over on its price alone and postage can only add to it.
+- **A price in another currency** is shown in its own currency, uncoloured,
+  with "can't compare: another currency" where the rank would go. Converting
+  is out of scope.
+- **No ✕ on a copy** until dismissing exists (#105): a button that does
+  nothing breaks principle 2. `/design` still draws it.
+- **The enlarged photos show dots**, one per photo with the current one lit,
+  since nothing else on screen said there was more to swipe to.
+- **Unknown-shipping copies still sort by their price alone.** Moving them to
+  the bottom, as the S27 page drew, is #104 and a change in behaviour.
+
+**Measured at 360px** in both themes, in Chromium: no sideways scroll; the
+limit sheet opens from its chip and closes on Escape; the dots follow a
+swipe. The three chips need about 430px and wrap to two lines, because each is
+44px tall for the thumb (principle 7). With the header, the book and the
+market strip, the first copy starts about 450px down a 780px screen.
+**Left as it is for now, by Alan's call:** use it for a while first. The
+options were smaller chips with the same 44px tap area, or an icon-first
+"↻ 4m" for the checked chip.
+
 ## Open
 
 - **A signature.** Something that makes it feel like itself — possibly how

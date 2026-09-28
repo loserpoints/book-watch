@@ -62,7 +62,37 @@
       strip.appendChild(img);
     });
     strip.scrollLeft = 0;
+
+    // One dot per photo, the one in view filled: the only sign on screen that
+    // there is more to swipe to. Nothing to show for a single photo.
+    var dots = dialog.querySelector(".photo-dots");
+    if (!dots) return;
+    dots.replaceChildren();
+    if (urls.length < 2) return;
+    urls.forEach(function () {
+      dots.appendChild(document.createElement("i"));
+    });
+    showDot(strip, dots);
   }
+
+  function showDot(strip, dots) {
+    var width = strip.clientWidth || 1;
+    var current = Math.round(strip.scrollLeft / width);
+    Array.prototype.forEach.call(dots.children, function (dot, index) {
+      dot.classList.toggle("on", index === current);
+    });
+  }
+
+  document.addEventListener(
+    "scroll",
+    function (event) {
+      var strip = event.target;
+      if (!(strip instanceof Element) || !strip.classList.contains("photo-strip")) return;
+      var dots = strip.parentElement.querySelector(".photo-dots");
+      if (dots && dots.children.length) showDot(strip, dots);
+    },
+    true
+  );
 
   // If the large photo does not exist, fall back to the one already shown.
   document.addEventListener(

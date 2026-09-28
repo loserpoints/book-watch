@@ -17,6 +17,7 @@ def register(env: Environment) -> None:
     """Add these filters to a template environment."""
     env.filters["ago"] = ago
     env.filters["ordinal"] = ordinal
+    env.filters["since"] = since
 
 
 def ordinal(n: int) -> str:
@@ -54,3 +55,23 @@ def ago(when: datetime | None) -> str:
 def _size_of_next(unit: str) -> int:
     """How many of `unit` fit before the next unit up takes over."""
     return {"minute": 60, "hour": 24, "day": 14}[unit]
+
+
+def since(when: datetime | None) -> str:
+    """How long ago, in the fewest characters: "just now", "4m", "2h", "3d",
+    "3w", "10mo". For a chip or a row that has no room for "ago" (S27)."""
+    if when is None:
+        return "never"
+    seconds = (datetime.now(UTC) - when).total_seconds()
+    if seconds < 90:
+        return "just now"
+    for size, unit, limit in (
+        (60, "m", 60),
+        (3600, "h", 24),
+        (86400, "d", 14),
+        (604800, "w", 9),
+    ):
+        count = int(seconds // size)
+        if count < limit:
+            return f"{count}{unit}"
+    return f"{max(2, int(seconds // 2629800))}mo"

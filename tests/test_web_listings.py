@@ -4,6 +4,7 @@ No network: the router takes its search function as an argument, so these
 drive the real templates against listings the test made up.
 """
 
+import html
 import re
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -263,7 +264,8 @@ def test_a_book_on_the_list_shows_what_is_for_sale(book_client):
 
     assert page.status_code == 200
     assert "Crash" in page.text
-    assert "12.98 USD delivered" in page.text
+    # Delivered, as every price is (decision 51); the word went in S27.
+    assert "$12.98" in visible(page.text)
     assert "https://www.ebay.com/itm/123" in page.text
 
 
@@ -299,8 +301,9 @@ def test_the_page_says_when_it_fetched(book_client):
         "fetched 20" in book_client(returning(a_listing())).get("/search?isbn=x").text
     )
     page = client.get("/book/1").text
-    assert "Checked just now" in page
-    assert "Re-run search" in page
+    # A chip since S34: tapping it is the re-run.
+    assert "Checked just now" in visible(page)
+    assert re.search(r'href="/book/1\?refresh=1"', page)
 
 
 # --- the page reads the store ----------------------------------------------
@@ -436,7 +439,7 @@ def test_an_empty_result_says_when_it_checked(book_client):
     client = book_client(returning())
     add_book(client, "9780099448396", "Crash")
 
-    page = client.get("/book/1").text
+    page = visible(client.get("/book/1").text)
 
     assert "Nothing listed in the US right now" in page
     assert "Checked just now" in page
@@ -624,13 +627,15 @@ def test_setting_a_ceiling_marks_what_is_under_it(book_client):
     client.post("/book/1/ceiling", data={"ceiling": "8.00", "currency": "USD"})
     page = client.get("/book/1").text
 
-    assert "Under your limit" in page
+    seen = visible(page)
+    # Colour and a mark, never colour alone: ✓ and the words for a reader who
+    # cannot see the green; the amount for over. $4 + $3.99, and $30 + $3.99.
+    assert seen.count("(under your limit)") == 1
     # Both copies still shown: the ceiling marks, it never filters.
     assert "v1|1|0" in page or "itm/123" in page
-    assert page.count("Under your limit") == 1
     # Over is said, not left silent: a copy over the limit must not look like
     # a copy with no limit set.
-    assert page.count("Over your limit") == 1
+    assert seen.count("$25.99 over") == 1
 
 
 def test_a_copy_whose_price_alone_is_over_is_marked_over(book_client):
@@ -643,10 +648,25 @@ def test_a_copy_whose_price_alone_is_over_is_marked_over(book_client):
     client.get("/book/1")
     client.post("/book/1/ceiling", data={"ceiling": "8.00", "currency": "USD"})
 
+    page = visible(client.get("/book/1").text)
+
+    # Over on its price alone, so the amount is a floor (S31, S34).
+    assert "$22+ over" in page
+
+
+def test_the_book_page_is_built_from_the_system(book_client):
+    """S34. The limit is a sheet opened from a chip, the photos have somewhere
+    to open, and nothing offers to dismiss a copy before dismissing exists
+    (#105): a button that does nothing breaks principle 2."""
+    client = book_client(returning(a_listing()))
+    add_book(client, "9780099448396", "Crash")
+
     page = client.get("/book/1").text
 
-    assert "Over your limit" in page
-    assert "Shipping not stated" not in page
+    assert 'data-open="limit-sheet"' in page
+    assert '<dialog class="sheet" id="limit-sheet"' in page
+    assert '<dialog class="photo-view" id="photo-view"' in page
+    assert "Dismiss this copy" not in page
 
 
 def test_a_ceiling_can_be_cleared(book_client):
@@ -692,10 +712,10 @@ def test_a_copy_with_no_stated_shipping_says_so_rather_than_guessing(book_client
     client.get("/book/1")
     client.post("/book/1/ceiling", data={"ceiling": "8.00", "currency": "USD"})
 
-    page = client.get("/book/1").text
+    page = visible(client.get("/book/1").text)
 
-    assert "Shipping not stated" in page
-    assert "Under your limit" not in page
+    assert "$4 + shipping?" in page
+    assert "(under your limit)" not in page
 
 
 # --- where this copy sits among the others -----------------------------------
@@ -731,6 +751,15 @@ def as_read(page):
     return " ".join(page.split())
 
 
+def visible(page):
+    """What a reader sees, and what a screen reader hears: tags gone, entities
+    decoded, whitespace collapsed. Since S34 a fact is often split across
+    elements (a chip's label and its value), and asserting on markup would
+    test the markup rather than the fact."""
+    kept = re.sub(r'aria-label="([^"]*)"', r"> \1 <", page)
+    return " ".join(html.unescape(re.sub(r"<[^>]+>", " ", kept)).split())
+
+
 def test_a_copy_says_where_it_sits_among_the_others(book_client):
     client = book_client(
         returning(
@@ -752,11 +781,14 @@ def test_a_copy_says_where_it_sits_among_the_others(book_client):
     client.get("/book/1")
     make_certain(client)
 
-    page = as_read(client.get("/book/1").text)
+    page = visible(client.get("/book/1").text)
 
-    assert "2 used copies listed now, asking 4.00–30.00 USD delivered" in page
-    assert "Cheapest of 2 used copies." in page
-    assert "2nd cheapest of 2 used copies." in page
+    # The market once, and the strip of what it asks (S34).
+    assert "2 used listed now" in page
+    assert "2 asking prices seen, $4 to $30" in page
+    # Each copy's place, drawn: every dot a copy of its kind listed now.
+    assert "1 of 2 by price among copies listed now" in page
+    assert "2 of 2 by price among copies listed now" in page
 
 
 def test_the_range_is_stated_once_however_many_copies_there_are(book_client):
@@ -780,14 +812,12 @@ def test_the_range_is_stated_once_however_many_copies_there_are(book_client):
     client.get("/book/1")
     make_certain(client)
 
-    page = as_read(client.get("/book/1").text)
+    page = visible(client.get("/book/1").text)
 
-    # The range clause itself, not the word "asking" — that also appears in a
-    # stylesheet comment, which is exactly the kind of loose assertion that
-    # passes for the wrong reason later.
-    assert page.count("asking 4.00–9.00 USD delivered across 6 seen") == 1
+    # The range itself, drawn once as the market's strip.
+    assert page.count("6 asking prices seen, $4 to $9") == 1
     # And every copy still says where it sits.
-    assert page.lower().count("cheapest of 6 used copies") == 6
+    assert page.count("of 6 by price among copies listed now") == 6
 
 
 def test_a_new_copy_and_a_used_one_are_never_counted_together(book_client):
@@ -813,14 +843,14 @@ def test_a_new_copy_and_a_used_one_are_never_counted_together(book_client):
     client.get("/book/1")
     make_certain(client)
 
-    page = as_read(client.get("/book/1").text)
+    page = visible(client.get("/book/1").text)
 
-    assert "The only used copy listed." in page
-    assert "The only new copy listed." in page
-    # Two markets, stated separately, neither pooled into a count of three.
-    assert "1 used copy listed now." in page
-    assert "1 new copy listed now." in page
-    assert "copies listed now" not in page
+    assert "only used listing" in page
+    assert "only new listing" in page
+    # Two markets, stated separately, neither pooled into a count of two.
+    assert "1 used listed now" in page
+    assert "1 new listed now" in page
+    assert "2 used listed now" not in page
 
 
 def test_a_copy_with_no_stated_condition_says_so_rather_than_ranking(book_client):
@@ -839,10 +869,10 @@ def test_a_copy_with_no_stated_condition_says_so_rather_than_ranking(book_client
     client.get("/book/1")
     make_certain(client)
 
-    page = as_read(client.get("/book/1").text)
+    page = visible(client.get("/book/1").text)
 
-    assert "didn&#39;t state a condition" in page or "didn't state a condition" in page
-    assert "cheapest" not in page.lower()
+    assert "can't place: condition unstated" in page
+    assert "by price among" not in page
 
 
 def test_a_copy_with_words_but_no_code_does_not_contradict_itself(book_client):
@@ -865,11 +895,11 @@ def test_a_copy_with_words_but_no_code_does_not_contradict_itself(book_client):
     client.get("/book/1")
     make_certain(client)
 
-    page = as_read(client.get("/book/1").text)
+    page = visible(client.get("/book/1").text)
 
     assert "Good" in page
-    assert "No condition code on this one" in page
-    assert "state a condition" not in page
+    assert "can't place: no condition code" in page
+    assert "condition unstated" not in page
 
 
 def test_nothing_on_the_page_says_a_copy_sold(book_client):
@@ -933,10 +963,11 @@ def test_the_range_on_the_page_spans_copies_that_have_stopped_appearing(book_cli
     stock.pop()  # the $30 copy stops appearing
     page = as_read(client.get("/book/1?refresh=1").text)
 
-    assert "The only used copy listed." in page
-    assert (
-        "1 used copy listed now, asking 4.00–30.00 USD delivered across 2 seen." in page
-    )
+    page = visible(page)
+    assert "only used listing" in page
+    # One listed now, two seen, and the strip spans both.
+    assert "1 used listed now, 2 seen" in page
+    assert "2 asking prices seen, $4 to $30" in page
 
 
 # --- checking the whole list -------------------------------------------------

@@ -2,15 +2,35 @@
 {% import "_ui.html" as ui %}
 {% block title %}{{ book.name }} · book-watch{% endblock %}
 
+{#- The book page, built from the system's pieces (S34, #98). Every fact S26
+    listed as P1–P9 is still here; what changed is that they are consolidated
+    so the copies start near the top of a phone screen. -#}
 {% block content %}
-<p class="muted"><a href="/">← Want list</a></p>
-<h1>{{ book.name }}</h1>
-{% if book.added_by %}<p class="muted">{{ book.added_by }}</p>{% endif %}
+<p class="back"><a href="/">← Want list</a></p>
 
+{#- P1 and P8: the book, and whether we are still working on it. -#}
+<div class="book-hero">
+  {#- The image straight from Open Library when its id is known, our route
+      that learns it when it is not, and the placeholder alone when there is
+      none (decision 56). -#}
+  {{ ui.cover(book.name, book.author,
+              (book.cover | cover_url) if book.cover
+              else (none if book.has_no_cover else '/books/%d/cover' % book.id),
+              size="lg") }}
+  <div class="book-hero-text">
+    <h1 class="book-title">{{ book.name }}</h1>
+    {% if book.author %}<span class="meta">{{ book.author }}</span>{% endif %}
+    {% if book.added_by %}<span class="meta book-isbn">{{ book.added_by }}</span>{% endif %}
+    {#- Honest rather than hidden: the first look at a new book is genuinely
+        less certain than the second. Tapping says why (S29). -#}
+    {% if unlooked and (copies or uncertain) %}<div class="meta">{{ ui.digging("Still digging through the shelves.") }}</div>{% endif %}
+  </div>
+</div>
+
+{#- P2. An overridden entry: eBay gets a keyword search for the text as
+    typed, so "nothing listed" here is a much weaker statement than usual. -#}
 {% if not is_isbn %}
-  {# An overridden entry. eBay gets a keyword search for the text as typed,
-     so "nothing listed" here is a much weaker statement than usual. #}
-  <p class="muted">
+  <p class="meta warning">
     This entry is not an ISBN, so eBay is being searched for the text as
     written. Expect worse matches than usual.
   </p>
@@ -18,109 +38,79 @@
 
 {% if error %}<p class="error">{{ error }}</p>{% endif %}
 
-{# What this book is worth paying, delivered. An empty box clears it — a
-   ceiling you can set and not unset is a trap, and this is the only place to
-   change your mind. #}
-<form class="ceiling" method="post" action="/book/{{ book.id }}/ceiling">
-  <label for="ceiling">Most I'll pay, delivered</label>
-  <input type="text" id="ceiling" name="ceiling" inputmode="decimal"
-         value="{{ book.ceiling or '' }}" placeholder="no limit" size="8">
-  <input type="hidden" name="currency" value="{{ book.ceiling_currency or 'USD' }}">
-  <button type="submit">Save</button>
-  {% if ceiling %}<span class="muted">{{ ceiling.currency }}</span>{% endif %}
-</form>
-
-{# Opening this page searched eBay, unless it was searched within the hour.
-   The pill says which, because a soft "now" is fine only while the page never
-   pretends otherwise. The button ignores the gate on purpose: one that did
-   nothing for fifty-nine minutes would be worse than no button. #}
+{#- P3, P5, P6 as chips. The limit opens a sheet; the scope switches between
+    its two states (principle 4); checked re-runs the search, ignoring the
+    hour on purpose — a button that did nothing for fifty-nine minutes would
+    be worse than no button. -#}
 {% set here = '?everywhere=1' if scope == 'everywhere' else '' %}
-{% set checked_pill %}
-  <span class="checked">Checked {{ checked | ago }}</span>
-  <a href="/book/{{ book.id }}{{ here }}{{ '&' if here else '?' }}refresh=1">Re-run search</a>
-{% endset %}
-
-{# Copies are shown from the newest sweep of *this* scope. The two are
-   different questions rather than one filtered from the other: searching
-   everywhere finds fewer US copies, because imports take up slots. #}
-{% set toggle %}
-  {% if scope == 'everywhere' %}
-    Showing copies from anywhere.
-    <a href="/book/{{ book.id }}">Only show US sellers</a>
-  {% else %}
-    Showing copies in the US.
-    <a href="/book/{{ book.id }}?everywhere=1">Look everywhere</a>
-  {% endif %}
-{% endset %}
+<div class="chips">
+  {{ ui.chip("Limit", ceiling_text or "none", href="#limit", icon="✎", open="limit-sheet") }}
+  {%- if scope == 'everywhere' %}
+    {{ ui.chip("Everywhere", href="/book/%d" % book.id, icon="⇄") }}
+  {%- else %}
+    {{ ui.chip("US", href="/book/%d?everywhere=1" % book.id, icon="⇄") }}
+  {%- endif %}
+  {{ ui.chip("Checked", checked | since, href="/book/%d%s%srefresh=1" % (book.id, here, '&' if here else '?'), icon="↻") }}
+</div>
 
 {% if not copies and not uncertain %}
-  <p class="muted">
+  <p class="meta">
     {% if scope == 'everywhere' %}
-      Nothing listed anywhere right now. {{ checked_pill }}
+      Nothing listed anywhere right now.
     {% else %}
-      {# The empty US list is the whole reason the toggle exists, so it says
-         what to do next rather than leaving a blank page. #}
+      {#- The empty US list is the whole reason the scope chip exists, so it
+          says what to do next rather than leaving a blank page. -#}
       Nothing listed in the US right now.
       <a href="/book/{{ book.id }}?everywhere=1">Look everywhere</a> —
       an overseas copy takes longer and may cost more to land.
-      {{ checked_pill }}
     {% endif %}
   </p>
 {% else %}
-  <p class="muted">
-    {{ copies | length }} match{{ '' if copies | length == 1 else 'es' }}.
-    {{ checked_pill }}
-  </p>
-  <p class="muted">{{ toggle }}</p>
-
-  {#- What each market this book sits in is asking, stated once.
-
-      New and used never pool: they are two markets rather than two grades,
-      priced by different things (decision 52). So this is one line each
-      rather than one line about all of them, and a book with copies in only
-      one market gets only one line.
-
-      Every figure is delivered and every figure is an *asking* price. What a
-      sweep sees is that a copy was listed at a price and later was not; why
-      it went is not something eBay will tell us (decision 47).
-
-      The unknown class is absent on purpose. It has no range worth stating,
-      so it is mentioned only on the copies themselves. -#}
-  {% for market in markets %}
-    <p class="muted market">
-      {{ market.listed }}
-      {{- ' ' }}{{ market.condition_class }}
-      {{- ' ' }}cop{{ 'y' if market.listed == 1 else 'ies' }} listed now
-      {%- if market.has_range %},
-        asking {{ "%.2f"|format(market.low.amount) }}–{{ market.high }}
-        delivered across {{ market.seen }} seen
-      {%- endif -%}.
-    </p>
-  {% endfor %}
-
-  {% if unlooked %}
-    {# Honest rather than hidden: the first look at a new book is genuinely
-       less certain than the second, and a spinner would claim otherwise.
-
-       The visible sentence is the whole fact; tapping it gives the reason,
-       in place (S29). It used to sit on hover, which a phone does not have. #}
-    <div class="muted">{{ ui.digging("Still digging through the shelves.") }}</div>
+  {#- P7: what each market is asking, once per market. New and used never
+      pool (decision 52). Every figure is delivered and every figure is an
+      *asking* price (decisions 47, 51): the count is what is listed now, and
+      the strip spans every copy seen (decision 53). -#}
+  {% if market_lines %}
+  <div class="markets">
+    {% for line in market_lines %}{{ ui.market(line.text, line.strip) }}{% endfor %}
+  </div>
   {% endif %}
 
-  {% for copy in copies %}{% include "_copy.html" %}{% endfor %}
+  {#- P4 -#}
+  <p class="meta match-count">{{ copies | length }} match{{ '' if copies | length == 1 else 'es' }}</p>
 
-  {% if uncertain %}
-    <details class="maybe">
-      <summary>
-        {{ uncertain | length }} more that might be this book
-      </summary>
-      <p class="muted">
+  <ul class="ui-list copies">
+    {% for c in copy_rows %}{{ ui.copy_row(c, dismiss=False) }}{% endfor %}
+  </ul>
+
+  {% if maybe_rows %}
+    {% call ui.fold("%d more that might be this book" % maybe_rows | length) %}
+      <p class="meta">
         These carry the title but nothing that proves the book — no ISBN from
         the seller, and no product the catalogue recognises. Mostly other
         books by the same author.
       </p>
-      {% for copy in uncertain %}{% include "_copy.html" %}{% endfor %}
-    </details>
+      <ul class="ui-list copies">
+        {% for c in maybe_rows %}{{ ui.copy_row(c, dismiss=False) }}{% endfor %}
+      </ul>
+    {% endcall %}
   {% endif %}
 {% endif %}
+
+{#- What this book is worth paying, delivered. An empty box clears it — a
+    ceiling you can set and not unset is a trap, and this is the only place to
+    change your mind. -#}
+{% call ui.sheet("limit-sheet", "Most I'll pay, delivered") %}
+  <form class="sheet-form" id="limit" method="post" action="/book/{{ book.id }}/ceiling">
+    {{ ui.field("ceiling", "Limit", value=book.ceiling or "", inputmode="decimal",
+                placeholder="no limit", hint="Shipping included. Leave it empty for no limit.") }}
+    <input type="hidden" name="currency" value="{{ book.ceiling_currency or 'USD' }}">
+    <div class="sheet-actions">
+      {{ ui.button("Cancel", close=True) }}
+      {{ ui.button("Save", kind="primary", type="submit") }}
+    </div>
+  </form>
+{% endcall %}
+
+{{ ui.photo_dialog() }}
 {% endblock %}

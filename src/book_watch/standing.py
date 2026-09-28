@@ -95,16 +95,7 @@ def standings(listed: list[Copy], seen: list[Copy]) -> dict[str, Standing]:
     at all. Silence would read as "nothing to report about this copy", when
     what is true is "this copy withheld what the comparison needs".
     """
-    listed_prices: dict[tuple[str, str], list[Decimal]] = {}
-    seen_prices: dict[tuple[str, str], list[Decimal]] = {}
-    for copies_in, prices in ((listed, listed_prices), (seen, seen_prices)):
-        for copy in copies_in:
-            placed = _placeable(copy)
-            if placed is None:
-                continue
-            prices.setdefault((copy.condition_class, placed.currency), []).append(
-                placed.amount
-            )
+    listed_prices, seen_prices = prices(listed), prices(seen)
 
     standing: dict[str, Standing] = {}
     for copy in listed:
@@ -146,6 +137,24 @@ def standings(listed: list[Copy], seen: list[Copy]) -> dict[str, Standing]:
             seen=len(everything),
         )
     return standing
+
+
+def prices(copies_in: list[Copy]) -> dict[tuple[str, str], list[Decimal]]:
+    """Delivered prices by class and currency — the populations a rank and a
+    range are drawn from.
+
+    Public so a page can draw those populations (the strips) from the same
+    derivation that ranked them, rather than a second one that could drift.
+    """
+    found: dict[tuple[str, str], list[Decimal]] = {}
+    for copy in copies_in:
+        placed = _placeable(copy)
+        if placed is None:
+            continue
+        found.setdefault((copy.condition_class, placed.currency), []).append(
+            placed.amount
+        )
+    return found
 
 
 @dataclass(frozen=True, slots=True)

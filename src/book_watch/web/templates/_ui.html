@@ -54,8 +54,10 @@
 
 
 {#- A chip: a small control or fact that sits in a row of them. -#}
-{% macro chip(label, value=None, href="#", icon=None) -%}
-<a class="chip" href="{{ href }}">{{ label }}{% if value %} <b>{{ value }}</b>{% endif %}{% if icon %} <span aria-hidden="true">{{ icon }}</span>{% endif %}</a>
+{#- `open` makes the chip open a sheet instead of following its link; the
+    link stays as the no-script fallback. -#}
+{% macro chip(label, value=None, href="#", icon=None, open=None) -%}
+<a class="chip" href="{{ href }}"{% if open %} data-open="{{ open }}"{% endif %}>{{ label }}{% if value %} <b>{{ value }}</b>{% endif %}{% if icon %} <span aria-hidden="true">{{ icon }}</span>{% endif %}</a>
 {%- endmacro %}
 
 
@@ -105,7 +107,9 @@
     its images when tapped, so none of them can load before then (S33). A
     copy not yet asked about since S33 has only the search's one photo, and
     enlarges that, as before. -#}
-{% macro copy_row(c) -%}
+{#- `dismiss` draws the ✕. Off until dismissing exists (#105): a button
+    that does nothing breaks principle 2. -#}
+{% macro copy_row(c, dismiss=True) -%}
 <li class="copy-row">
   {%- if c.photo_url %}
   {%- set all_photos = c.photos or [c.photo_url] %}
@@ -120,14 +124,16 @@
       {%- if c.verdict == 'unknown' -%}
         <span class="price price-plain">{{ c.price_text }} + shipping?</span>
       {%- else -%}
-        {{ price(c.price_text, c.verdict, c.over_by) }}
+        {{ price(c.price_text ~ (' + shipping?' if c.shipping_unknown else ''), c.verdict, c.over_by) }}
       {%- endif %}
       {%- if c.place_text %} <span class="meta">{{ c.place_text }}</span>{% else %} {{ c.place }}{% endif %}
     </div>
     <div class="copy-tags">{{ tag(c.condition, strong=True) }}{% if c.abroad %}{{ tag('ships from ' ~ c.abroad) }}{% endif %}</div>
     <a class="copy-listing" href="{{ c.url }}" rel="noopener noreferrer" target="_blank">{{ c.listing_title }}</a>
   </div>
+  {%- if dismiss %}
   <button class="icon-btn copy-dismiss" type="button" aria-label="Dismiss this copy">✕</button>
+  {%- endif %}
   {% if c.edition %}<p class="copy-says"><b>{{ c.seller }}</b> says: {{ c.edition }}</p>{% endif %}
   {#- Clamped to two lines; tapping opens it in place, and tapping again
       closes it. No JavaScript: the clamp is lifted when the details open. -#}
@@ -230,6 +236,7 @@
 {% macro photo_dialog() -%}
 <dialog class="photo-view" id="photo-view" aria-label="The seller's photos">
   <div class="photo-strip"></div>
+  <div class="photo-dots" aria-hidden="true"></div>
   <button type="button" class="btn btn-plain photo-close" data-close>Close</button>
 </dialog>
 {%- endmacro %}
