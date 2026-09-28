@@ -33,6 +33,8 @@ Every document in this repository is one of the artifacts below. `scripts/check_
 - *may be empty*: the section heading stays, with no list under it.
 - *[…]*: `###` headings required under each `##`, in order. `<n>` and `<name>` stand for any value.
 
+A Rules section may group its rules under `###` headings, chosen per document.
+
 **Milestones.** Each milestone is a folder, `docs/milestones/mNN-name/`. A planned milestone has only `original-scope.md`, whose slices are filled in before it starts. `delivered-scope.md` and `learnings.md` are added together when it closes. The two scope files share their sections so they can be compared.
 
 **Current state and history.** Surfaces, rules, the design system and the runbook describe the product as it is now and carry no history. History lives in milestone learnings, and beyond that in git, pull requests and closed issues.
