@@ -171,3 +171,41 @@ def test_the_tokens_reach_the_page_unescaped():
     head = page.split("</style>")[0]
     assert '"IBM Plex Sans"' in head
     assert "&#34;" not in head
+
+
+# --- the display pieces (S29) -------------------------------------------------
+
+
+@pytest.mark.parametrize("template", TEMPLATES, ids=lambda p: p.name)
+def test_nothing_is_hidden_behind_a_hover(template):
+    """A phone has no hover, so a `title` that carries information hides it
+    from the device this app is designed for first (principle 5)."""
+    assert re.findall(r"\btitle=", template.read_text()) == []
+
+
+def test_every_icon_button_is_a_44px_target():
+    """Small to look at, big enough to hit."""
+    rule = re.search(r"\.icon-btn\s*\{([^}]*)\}", STYLESHEET.read_text()).group(1)
+    assert "width: 44px" in rule
+    assert "height: 44px" in rule
+
+
+def test_the_design_page_draws_every_row_state():
+    app = FastAPI()
+    app.include_router(design.build_router())
+    page = TestClient(app).get("/design").text
+
+    for sample in design.sample_books():
+        assert sample["title"].replace("'", "&#39;") in page
+    for words in (
+        "Checking…",
+        "Couldn't check just now",
+        "Not checked yet",
+        "2 maybes",
+        "0 listed",
+        "can&#39;t place",
+        "only new listing",
+        "On your list",
+        "$15 over",
+    ):
+        assert words in page, words

@@ -414,10 +414,11 @@ def test_copies_nobody_has_examined_yet_are_said_to_be_unexamined(book_client):
 
     page = client.get("/book/1").text
 
-    # The visible sentence is the whole fact. Only the reason is on hover,
-    # because `title` does not survive a touchscreen.
+    # The visible sentence is the whole fact; tapping it gives the reason in
+    # place. It used to be a hover `title`, which a touchscreen never shows.
     assert "Still digging through the shelves." in page
-    assert 'title="We ask the public catalogues slowly on purpose.' in page
+    assert "We ask the public catalogues slowly on purpose" in page
+    assert 'title="We ask' not in page
 
 
 def test_a_copy_only_the_title_matches_goes_below_the_fold(book_client):

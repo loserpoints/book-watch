@@ -18,7 +18,7 @@ from pathlib import Path
 from jinja2 import Environment
 from markupsafe import Markup
 
-from book_watch.web import tokens
+from book_watch.web import strips, tokens
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -36,6 +36,8 @@ def static_url(name: str) -> str:
 def register(env: Environment) -> None:
     """Give a template environment the stylesheet link and the tokens."""
     env.globals["static_url"] = static_url
+    env.globals["range_strip"] = strips.range_strip
+    env.globals["rank_strip"] = strips.rank_strip
     # Marked safe because it is ours, generated from `tokens.toml`, and because
     # escaping it breaks it: autoescape turns the quotes around "IBM Plex Sans"
     # into &#34;, which inside <style> is not decoded, so every font silently

@@ -1,3 +1,4 @@
+{% import "_ui.html" as ui %}
 {# One book as the want-list shows it.
 
    Rendered from two places and it must look identical from both: the list
@@ -23,8 +24,7 @@
         {# Only while there is work outstanding. A book nobody has opened has
            no copies either, so there is nothing to dig through and this says
            nothing — the app does not advertise work it has not started. #}
-        <span class="digging" title="We ask the public catalogues slowly on
-purpose. They're free and we'd like them to stay that way.">still digging</span>
+        {{ ui.digging("still digging") }}
       {%- endif %}
     </div>
 

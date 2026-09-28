@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "_ui.html" as ui %}
 {% block title %}{{ book.name }} · book-watch{% endblock %}
 
 {% block content %}
@@ -101,13 +102,9 @@
     {# Honest rather than hidden: the first look at a new book is genuinely
        less certain than the second, and a spinner would claim otherwise.
 
-       The visible sentence is the whole fact. Only the reason sits on hover,
-       because `title` does not survive a touchscreen and is not reliably read
-       out — so nothing a reader needs may live there alone. #}
-    <p class="muted digging">
-      <span title="We ask the public catalogues slowly on purpose. They're free
-and we'd like them to stay that way.">Still digging through the shelves.</span>
-    </p>
+       The visible sentence is the whole fact; tapping it gives the reason,
+       in place (S29). It used to sit on hover, which a phone does not have. #}
+    <div class="muted">{{ ui.digging("Still digging through the shelves.") }}</div>
   {% endif %}
 
   {% for copy in copies %}{% include "_copy.html" %}{% endfor %}

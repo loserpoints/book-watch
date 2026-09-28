@@ -1,0 +1,151 @@
+{#- The display pieces every screen is made of. S29, #97.
+
+    Each macro takes plain values, not the app's own objects, so a screen maps
+    its data onto them and `/design` can draw every state from sample values.
+    Styles are in `static/app.css`, on the tokens only (decision 57).
+
+    Import with:  {% import "_ui.html" as ui %}  -#}
+
+
+{#- A tap that explains, opening in place. Replaces every hover title: a phone
+    has no hover (principle 5). The whole summary is the target. -#}
+{% macro explain(label, text, cls="") -%}
+<details class="explain {{ cls }}"><summary>{{ label }}</summary><p class="explain-text">{{ text }}</p></details>
+{%- endmacro %}
+
+
+{#- Still digging: the app is working out which copies are really this book.
+    The word shimmers; tapping it says why it takes a while. -#}
+{% macro digging(label="digging") -%}
+{{ explain(label, "Checking which of these copies are really this book. We ask the public catalogues slowly on purpose: they're free, and we'd like them to stay that way.", "digging") }}
+{%- endmacro %}
+
+
+{#- A cover, over its placeholder. The placeholder is always there, so a slow
+    or missing image leaves the book recognisable rather than an empty frame.
+    `url` is the image, or the route that learns it (decision 56), or none
+    when Open Library holds no cover. -#}
+{% macro cover(title, author=None, url=None, size="md") -%}
+<div class="cover cover-{{ size }}" aria-hidden="true">
+  {#- The author only on the large size: at 40-52px wide there is room for a
+      title or a name, not both, and the title is what is recognised. -#}
+  <span class="cover-ph" lang="en"><span class="cover-ph-title">{{ title }}</span>{% if author and size == 'lg' %}<span class="cover-ph-author">{{ author }}</span>{% endif %}</span>
+  {%- if url %}<img src="{{ url }}" alt="" loading="lazy" onerror="this.remove()">{% endif %}
+</div>
+{%- endmacro %}
+
+
+{#- The headline price, delivered (decision 51). Colour and a mark together,
+    never colour alone: ✓ for at or under the limit, the amount over for over.
+    `verdict` is under, over, or none (no limit, or cannot tell). -#}
+{% macro price(text, verdict=None, over_by=None, prefix="") -%}
+<span class="price price-{{ verdict or 'plain' }}">
+  {%- if verdict == 'under' %}<span class="price-mark" aria-hidden="true">✓ </span>{% endif -%}
+  {{ prefix }}{{ text }}
+  {%- if verdict == 'under' %}<span class="sr-only"> (under your limit)</span>{% endif -%}
+</span>
+{%- if verdict == 'over' and over_by %} <span class="price-over-by">{{ over_by }} over</span>{% endif %}
+{%- endmacro %}
+
+
+{% macro tag(text, strong=False) -%}
+<span class="tag{% if strong %} tag-strong{% endif %}">{{ text }}</span>
+{%- endmacro %}
+
+
+{#- A chip: a small control or fact that sits in a row of them. -#}
+{% macro chip(label, value=None, href="#", icon=None) -%}
+<a class="chip" href="{{ href }}">{{ label }}{% if value %} <b>{{ value }}</b>{% endif %}{% if icon %} <span aria-hidden="true">{{ icon }}</span>{% endif %}</a>
+{%- endmacro %}
+
+
+{#- A collapsed group at the foot of a list: maybes, dismissed. -#}
+{% macro fold(label) -%}
+<details class="fold"><summary>{{ label }}</summary><div class="fold-body">{{ caller() }}</div></details>
+{%- endmacro %}
+
+
+{#- One book on the want-list. Title full width above the cover (S27), then
+    the facts beside the cover and the price with its range strip on the
+    right. `state` is ok, checking, failed, unchecked, maybes or none. -#}
+{% macro book_row(b) -%}
+<li class="book-row">
+  <a class="book-row-title" href="{{ b.href }}">{{ b.title }}</a>
+  <button class="icon-btn book-row-remove" type="button" aria-label="Remove {{ b.title }}">{{ trash() }}</button>
+  {{ cover(b.title, b.author, b.cover_url) }}
+  <div class="book-row-body">
+    <div class="book-row-facts">
+      {% if b.author %}<span class="book-row-author">{{ b.author }}</span>{% endif %}
+      <span class="meta">
+        {%- if b.state == 'ok' -%}{{ b.listed }} listed · checked {{ b.checked }}
+        {%- elif b.state == 'none' -%}0 listed · checked {{ b.checked }}
+        {%- elif b.state == 'maybes' -%}{{ b.maybes }} maybe{{ '' if b.maybes == 1 else 's' }} · checked {{ b.checked }}
+        {%- elif b.state == 'checking' -%}<span class="checking">Checking…</span>
+        {%- elif b.state == 'failed' -%}Couldn't check just now
+        {%- else -%}Not checked yet
+        {%- endif -%}
+      </span>
+      <span class="meta">added {{ b.added }}{% if b.digging %} · {{ digging() }}{% endif %}</span>
+    </div>
+    {% if b.state == 'ok' %}
+      <div class="book-row-price">
+        {{ price(b.price_text, b.verdict, b.over_by, prefix="from ") }}
+        {{ b.strip }}
+      </div>
+    {% endif %}
+  </div>
+</li>
+{%- endmacro %}
+
+
+{#- One copy for sale. Price leads, with where it sits among its kind; the
+    listing title is the way to eBay; the seller's claim about the edition and
+    their condition note run full width under the photo (S27). -#}
+{% macro copy_row(c) -%}
+<li class="copy-row">
+  <span class="copy-photo">{% if c.photo_url %}<img src="{{ c.photo_url }}" alt="" loading="lazy">{% endif %}</span>
+  <div class="copy-main">
+    <div class="copy-price">
+      {%- if c.verdict == 'unknown' -%}
+        <span class="price price-plain">{{ c.price_text }} + shipping?</span>
+      {%- else -%}
+        {{ price(c.price_text, c.verdict, c.over_by) }}
+      {%- endif %}
+      {%- if c.place_text %} <span class="meta">{{ c.place_text }}</span>{% else %} {{ c.place }}{% endif %}
+    </div>
+    <div class="copy-tags">{{ tag(c.condition, strong=True) }}{% if c.abroad %}{{ tag('ships from ' ~ c.abroad) }}{% endif %}</div>
+    <a class="copy-listing" href="{{ c.url }}" rel="noopener noreferrer" target="_blank">{{ c.listing_title }}</a>
+  </div>
+  <button class="icon-btn copy-dismiss" type="button" aria-label="Dismiss this copy">✕</button>
+  {% if c.edition %}<p class="copy-says"><b>{{ c.seller }}</b> says: {{ c.edition }}</p>{% endif %}
+  {#- Clamped to two lines; tapping opens it in place, and tapping again
+      closes it. No JavaScript: the clamp is lifted when the details open. -#}
+  {% if c.note %}<details class="copy-note"><summary>“{{ c.note }}”</summary></details>{% endif %}
+</li>
+{%- endmacro %}
+
+
+{#- One result when adding a book. The whole row is the target; a book
+    already on the list says so instead of offering to add it again. -#}
+{% macro candidate_row(c) -%}
+<li class="candidate-row{% if c.on_list %} is-on-list{% endif %}">
+  {{ cover(c.title, c.author, c.cover_url, size="sm") }}
+  <span class="candidate-main">
+    <span class="candidate-title">{{ c.title }}</span>
+    <span class="meta">{{ c.author or 'author unknown' }}{% if c.year %} · {{ c.year }}{% endif %}{% if c.editions %} · {{ c.editions }} edition{{ '' if c.editions == 1 else 's' }}{% endif %}</span>
+  </span>
+  <span class="candidate-act">{{ 'On your list' if c.on_list else 'Add' }}</span>
+</li>
+{%- endmacro %}
+
+
+{#- What each market is asking, above the copies: a line of words and the
+    range strip, once per market rather than once per copy (decision 53). -#}
+{% macro market(listed_text, strip=None) -%}
+<div class="market-line"><span class="meta">{{ listed_text }}</span>{% if strip %}{{ strip }}{% endif %}</div>
+{%- endmacro %}
+
+
+{% macro trash() -%}
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5"/></svg>
+{%- endmacro %}
