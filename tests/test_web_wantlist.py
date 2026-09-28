@@ -133,7 +133,8 @@ def test_a_book_is_added_and_appears_on_the_list(client):
 
     assert response.status_code == 200
     assert "Crash" in response.text
-    assert "9780099448396" in response.text
+    # The ISBN left the row in S34 (S26 B3); it stays on the book page.
+    assert 'href="/book/1"' in response.text
     assert "Nothing on the list yet" not in response.text
 
 
@@ -141,7 +142,10 @@ def test_an_isbn10_is_stored_as_the_isbn13_of_the_same_book(client):
     """Otherwise the same book could be added twice under two spellings."""
     add(client, "0099448394")
 
-    assert "9780099448396" in client.get("/").text
+    # Read from the store: the ISBN is no longer on the list row (S34).
+    with client.app.state.connect() as connection:
+        typed = connection.execute("SELECT typed FROM entry").fetchone()["typed"]
+    assert typed == "9780099448396"
 
 
 def test_a_mistyped_isbn_is_refused_and_not_added(client):
@@ -386,7 +390,7 @@ def test_a_book_with_copies_nobody_has_examined_says_so(client):
         connection.execute("UPDATE work SET copies_fetched_at = datetime('now')")
         connection.commit()
 
-    assert "still digging" in client.get("/").text
+    assert 'class="explain digging"' in client.get("/").text
 
 
 def test_a_book_nobody_has_opened_does_not_claim_to_be_working(client):
@@ -394,7 +398,7 @@ def test_a_book_nobody_has_opened_does_not_claim_to_be_working(client):
     work it has not started."""
     add(client, "9780099448396", "Crash")
 
-    assert "still digging" not in client.get("/").text
+    assert 'class="explain digging"' not in client.get("/").text
 
 
 def test_a_finished_book_stops_saying_it(client):
@@ -406,7 +410,7 @@ def test_a_finished_book_stops_saying_it(client):
         )
         connection.commit()
 
-    assert "still digging" not in client.get("/").text
+    assert 'class="explain digging"' not in client.get("/").text
 
 
 # --- covers -----------------------------------------------------------------
@@ -455,7 +459,7 @@ def test_a_picked_book_open_library_has_no_cover_for_shows_the_placeholder(tmp_p
 
     page = pick(client).text
 
-    assert 'class="cover-name">Stoner<' in page
+    assert 'class="cover-ph-title">Stoner<' in page
     # Nothing to load: Open Library already said so, and asking again on
     # every view would be asking for an answer we have.
     assert "/cover" not in page.split('id="want-list"')[1]

@@ -37,7 +37,7 @@ from book_watch.openlibrary import (
     OpenLibraryClient,
     OpenLibraryUnavailable,
 )
-from book_watch.web import assets, filters
+from book_watch.web import assets, filters, list_view
 from book_watch.web.searching import LazyBrowseSearch, SearchFn
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
@@ -106,6 +106,7 @@ def build_router(
     filters.register(templates.env)
     assets.register(templates.env)
     templates.env.filters["cover_url"] = covers.url
+    templates.env.globals["want_row"] = list_view.row
     open_database: ConnectFn = (
         connect if connect is not None else open_configured_database
     )
@@ -121,14 +122,24 @@ def build_router(
         """
         return {book.id: standing.glance(connection, book) for book in books}
 
+    def out_of_date(connection: sqlite3.Connection, books: list) -> int:
+        """How many books Update would check: the same gate `check_all` uses,
+        so the count on the button is what pressing it costs."""
+        return sum(
+            1
+            for book in books
+            if sweeps.due_for_sweep(connection, book.work_id, scope="us")
+        )
+
     def render_list(request: Request, *, checking: int | None = None) -> HTMLResponse:
         with closing(open_database()) as connection:
             books = wantlist.all_books(connection)
             glances = at_a_glance(connection, books)
+            stale = out_of_date(connection, books)
         return templates.TemplateResponse(
             request,
             "_list.html",
-            {"books": books, "glances": glances, "checking": checking},
+            {"books": books, "glances": glances, "checking": checking, "stale": stale},
         )
 
     def render_page(
@@ -147,12 +158,14 @@ def build_router(
         with closing(open_database()) as connection:
             books = wantlist.all_books(connection)
             glances = at_a_glance(connection, books)
+            stale = out_of_date(connection, books)
         return templates.TemplateResponse(
             request,
             "wantlist.html",
             {
                 "books": books,
                 "glances": glances,
+                "stale": stale,
                 # The book just added, which starts checking itself on load.
                 # Adding a book is an explicit act, so this is not an
                 # exception to "nothing sweeps on page load" — and it means a

@@ -1066,7 +1066,7 @@ def test_a_book_never_checked_says_so_rather_than_nothing_listed(book_client):
 
     page = as_read(client.get("/").text)
 
-    assert page.count("Not checked yet.") == 3
+    assert page.count("Not checked yet") == 3
     assert "Nothing listed" not in page
 
 
@@ -1130,7 +1130,7 @@ def test_a_failed_search_leaves_that_row_saying_so_and_carries_on(book_client):
     steps = follow(client, "/books/check")
 
     assert sorted(asked) == sorted(TITLES)
-    assert any("Couldn't check this one just now." in as_read(s) for s in steps)
+    assert any("Couldn't check just now" in as_read(s) for s in steps)
     assert "Checked 3 books." in as_read(steps[-1])
 
 
@@ -1155,10 +1155,43 @@ def test_a_checked_book_leads_with_its_cheapest_used_copy(book_client):
     follow(client, "/books/check")
     all_certain(client)
 
-    page = as_read(client.get("/").text)
+    page = visible(client.get("/").text)
 
-    assert page.count("cheapest used 10.00 USD") == 3
-    assert page.count("3 listed, seen 10.00–12.00 USD") == 3
+    # The cheapest, delivered (S34: "from", no market word, S26 B5), and the
+    # range as the row's strip (#76).
+    assert page.count("from $10") == 3
+    assert page.count("3 listed") == 3
+    assert page.count("3 asking prices seen, $10 to $12") == 3
+
+
+def test_update_counts_what_it_would_check_and_check_all_asks_first(book_client):
+    """S27's pair. Update's count is what pressing it costs; Check all
+    overrides the hour, so it asks first and offers Update instead."""
+    client, _ = a_shelf(book_client)
+
+    before = visible(client.get("/").text)
+    # Nothing checked yet: all three are out of date, so Check all is the same
+    # request as Update and has nothing to warn about.
+    assert "Update 3" in before
+    assert "check-all-sheet" not in client.get("/").text
+
+    follow(client, "/books/check")
+    after = client.get("/").text
+
+    assert "All current" in visible(after)
+    assert 'data-open="check-all-sheet"' in after
+    assert "3 of them were checked within the last hour" in visible(after)
+    assert "Don't ask me again" in visible(after)
+
+
+def test_a_row_can_be_removed_and_asks_first(book_client):
+    """S26 B6: a trash icon, and it keeps its confirmation."""
+    client, _ = a_shelf(book_client)
+
+    page = client.get("/").text
+
+    assert 'hx-confirm="Remove Crash from the list?"' in page
+    assert 'hx-delete="/books/2"' in page
 
 
 def test_the_ceiling_shows_against_the_cheapest_copy(book_client):

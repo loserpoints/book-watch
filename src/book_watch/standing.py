@@ -20,7 +20,7 @@ may imply a copy sold, or sold for this.
 from __future__ import annotations
 
 import sqlite3
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from typing import Literal
@@ -311,6 +311,10 @@ class Glance:
     #: they are on the market, we just cannot swear they are this book.
     uncertain: int
     headline: Headline | None
+    #: Every asking price seen, by class and currency, for the list's price
+    #: strip (S34, #76). The same populations `standings` ranked, so the strip
+    #: cannot disagree with the rank. Empty until something is placeable.
+    seen_prices: dict[tuple[str, str], list[Decimal]] = field(default_factory=dict)
 
 
 def glance(
@@ -324,6 +328,7 @@ def glance(
         listed=sum(1 for one in here if one.tier == "certain"),
         uncertain=sum(1 for one in here if one.tier not in ("certain", "excluded")),
         headline=headline(here, standing, entry.will_pay),
+        seen_prices=prices(seen),
     )
 
 
