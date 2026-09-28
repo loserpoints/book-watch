@@ -1,0 +1,227 @@
+"""Check every document against the artifact table in docs/governance.md.
+
+    uv run python scripts/check_docs.py
+
+The rules are read from that table, so this file holds how to check and
+governance holds what to check. Exit status 1 lists every violation.
+"""
+
+from __future__ import annotations
+
+import fnmatch
+import re
+import sys
+from dataclasses import dataclass, field
+from pathlib import Path
+
+GOVERNANCE = Path("docs/governance.md")
+ISSUE_LINK = re.compile(
+    r"^- \[[^\]]+\]\(https://github\.com/loserpoints/book-watch/(issues|pull)/\d+\)$"
+)
+JOB_LINK = re.compile(r"^- \[[^\]]+\]\((\.\./)*jobs\.md#j\d+[^)]*\)$")
+MILESTONE_DIR = re.compile(r"^m\d{2}-[a-z0-9-]+$")
+SENTENCE_END = re.compile(r"[.!?](?=\s|$)")
+
+
+@dataclass
+class Section:
+    name: str
+    flags: set[str] = field(default_factory=set)
+    #: For a repeating section, the `###` sections required under each one.
+    children: list[Section] = field(default_factory=list)
+
+    @property
+    def pattern(self) -> re.Pattern[str]:
+        text = re.escape(self.name)
+        text = text.replace(re.escape("<n>"), r"\d+")
+        text = text.replace(re.escape("<name>"), r".+")
+        return re.compile(f"^{text}$")
+
+
+@dataclass
+class Artifact:
+    name: str
+    status: str
+    paths: list[str]
+    sections: list[Section]
+
+    @property
+    def repeating(self) -> bool:
+        return len(self.sections) == 1 and bool(self.sections[0].children)
+
+
+def parse_section(text: str) -> Section:
+    match = re.fullmatch(r"(.+?)(?: \(([^)]*)\))?", text.strip())
+    assert match, text
+    flags = {flag.strip() for flag in (match.group(2) or "").split(",") if flag}
+    return Section(match.group(1).strip(), flags)
+
+
+def parse_sections(cell: str) -> list[Section]:
+    cell = cell.strip()
+    if not cell:
+        return []
+    # A repeating section: "J<n> · <name> [Job (sentence) · Success signal]".
+    repeating = re.fullmatch(r"(.+?) \[(.+)\]", cell)
+    if repeating:
+        parent = parse_section(repeating.group(1))
+        parent.children = [parse_section(p) for p in repeating.group(2).split(" · ")]
+        return [parent]
+    return [parse_section(part) for part in cell.split(" · ")]
+
+
+def expand(path: str) -> list[str]:
+    """`a/{b,c}.md` -> `a/b.md`, `a/c.md`."""
+    braces = re.search(r"\{([^}]*)\}", path)
+    if not braces:
+        return [path]
+    head, tail = path[: braces.start()], path[braces.end() :]
+    return [
+        p for option in braces.group(1).split(",") for p in expand(head + option + tail)
+    ]
+
+
+def load_artifacts(root: Path) -> list[Artifact]:
+    artifacts = []
+    for line in (root / GOVERNANCE).read_text().splitlines():
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if len(cells) != 4 or cells[1] not in ("active", "migrating", "retiring"):
+            continue
+        name, status, path, sections = cells
+        artifacts.append(
+            Artifact(name, status, expand(path.strip("`")), parse_sections(sections))
+        )
+    return artifacts
+
+
+def headings(text: str, level: int) -> list[tuple[str, str]]:
+    """(heading, body) pairs at one level, ignoring fenced code."""
+    found: list[tuple[str, list[str]]] = []
+    fenced = False
+    marker = "#" * level + " "
+    for line in text.splitlines():
+        if line.startswith("```"):
+            fenced = not fenced
+        if not fenced and line.startswith(marker):
+            found.append((line[len(marker) :].strip(), []))
+            continue
+        if not fenced and re.match(rf"^#{{1,{level}}} ", line):
+            found.append(("", []))  # a heading at a higher level ends the body
+            continue
+        if found:
+            found[-1][1].append(line)
+    return [(h, "\n".join(body).strip()) for h, body in found if h]
+
+
+def check_body(where: str, section: Section, body: str) -> list[str]:
+    lines = [line for line in body.splitlines() if line.strip()]
+    if not lines:
+        if "may be empty" in section.flags:
+            return []
+        return [f"{where}: '{section.name}' is empty"]
+    one_sentence = "\n\n" not in body and len(SENTENCE_END.findall(body)) == 1
+    if "sentence" in section.flags and not one_sentence:
+        return [f"{where}: '{section.name}' must be one sentence"]
+    if "links" in section.flags:
+        bad = [line for line in lines if not ISSUE_LINK.match(line)]
+        if bad:
+            return [
+                f"{where}: '{section.name}' holds more than issue links: {bad[0]!r}"
+            ]
+    if "job links" in section.flags:
+        bad = [line for line in lines if not JOB_LINK.match(line)]
+        if bad:
+            return [f"{where}: '{section.name}' holds more than job links: {bad[0]!r}"]
+    return []
+
+
+def check_file(root: Path, rel: str, artifact: Artifact) -> list[str]:
+    text = (root / rel).read_text()
+    errors = []
+    titles = [line for line in text.splitlines() if line.startswith("# ")]
+    if not text.lstrip().startswith("# ") or len(titles) != 1:
+        errors.append(f"{rel}: must open with one '#' title")
+    found = headings(text, 2)
+
+    if artifact.repeating:
+        spec = artifact.sections[0]
+        if not found:
+            errors.append(f"{rel}: needs at least one '{spec.name}' section")
+        for heading, body in found:
+            if not spec.pattern.match(heading):
+                errors.append(f"{rel}: '{heading}' does not match '{spec.name}'")
+                continue
+            subs = headings(f"## {heading}\n{body}", 3)
+            names = [h for h, _ in subs]
+            wanted = [child.name for child in spec.children]
+            if names != wanted:
+                errors.append(f"{rel}: '{heading}' needs {wanted}, has {names}")
+                continue
+            for child, (_, sub_body) in zip(spec.children, subs, strict=True):
+                errors += check_body(f"{rel} › {heading}", child, sub_body)
+        return errors
+
+    names = [heading for heading, _ in found]
+    wanted = [section.name for section in artifact.sections]
+    if names != wanted:
+        errors.append(f"{rel}: sections must be {wanted}, found {names}")
+        return errors
+    for section, (_, body) in zip(artifact.sections, found, strict=True):
+        errors += check_body(rel, section, body)
+    return errors
+
+
+def check_milestones(root: Path) -> list[str]:
+    base = root / "docs" / "milestones"
+    if not base.is_dir():
+        return []
+    errors = []
+    for folder in sorted(p for p in base.iterdir() if p.is_dir()):
+        where = f"docs/milestones/{folder.name}"
+        if not MILESTONE_DIR.match(folder.name):
+            errors.append(f"{where}: folder must be named mNN-name")
+        if not (folder / "original-scope.md").exists():
+            errors.append(f"{where}: needs original-scope.md")
+        closed = [(folder / f).exists() for f in ("delivered-scope.md", "learnings.md")]
+        if any(closed) and not all(closed):
+            errors.append(
+                f"{where}: delivered-scope.md and learnings.md are added together"
+            )
+    return errors
+
+
+def documents(root: Path) -> list[str]:
+    found = [
+        p.relative_to(root).as_posix()
+        for p in (root / "docs").rglob("*")
+        if p.is_file()
+    ]
+    return sorted(
+        found + [name for name in ("README.md", "CLAUDE.md") if (root / name).exists()]
+    )
+
+
+def check(root: Path) -> list[str]:
+    artifacts = load_artifacts(root)
+    errors = []
+    for rel in documents(root):
+        owner = next(
+            (a for a in artifacts if any(fnmatch.fnmatch(rel, p) for p in a.paths)),
+            None,
+        )
+        if owner is None:
+            errors.append(f"{rel}: not an artifact in {GOVERNANCE}")
+        elif owner.status == "active":
+            errors += check_file(root, rel, owner)
+    return errors + check_milestones(root)
+
+
+def main() -> int:
+    errors = check(Path.cwd())
+    for error in errors:
+        print(error)
+    return 1 if errors else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
