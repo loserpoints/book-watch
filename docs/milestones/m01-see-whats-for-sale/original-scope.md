@@ -1,0 +1,19 @@
+# M1 · See what's for sale
+
+## Goal
+
+Add a book by ISBN and see the eBay listings for it right now.
+
+## Jobs advanced
+
+- [J1 · Keep looking so I don't have to](../../jobs.md#j1--keep-looking-so-i-dont-have-to)
+- [J3 · Judge one copy without opening the listing](../../jobs.md#j3--judge-one-copy-without-opening-the-listing)
+- [J6 · Take a book off the list when I'm done with it](../../jobs.md#j6--take-a-book-off-the-list-when-im-done-with-it)
+
+## Slices
+
+- [S1 · eBay Browse search client](https://github.com/loserpoints/book-watch/issues/10)
+- [S2 · Results page for a query in the URL](https://github.com/loserpoints/book-watch/issues/11)
+- [S3 · Schema and migration runner](https://github.com/loserpoints/book-watch/issues/12)
+- [S4 · Want-list screens](https://github.com/loserpoints/book-watch/issues/13)
+- [S5 · Want-list entry to its live listings](https://github.com/loserpoints/book-watch/issues/14)

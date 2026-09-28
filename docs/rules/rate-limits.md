@@ -20,6 +20,7 @@ These rules keep the app's requests to eBay and Open Library small, spaced out a
 
 - The daily allowance is 5,000 calls.
 - A search asks for 50 results.
+- A search result carries each copy's price and shipping, so a delivered price costs no extra call.
 - Opening a book searches eBay only if that book was not searched in the last hour for the same scope. Tapping Checked searches regardless.
 - Update searches only the books not searched in the last hour. Check all searches every book.
 - Checking several books searches them one at a time, never in parallel.
