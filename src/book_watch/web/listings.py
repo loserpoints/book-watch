@@ -269,7 +269,7 @@ def build_router(
             # condition class, so stating it per copy says one fact once per
             # copy — eight times on a twelve-copy book.
             "markets": standing.markets(placed),
-            "is_isbn": normalise(book.search_query) is not None,
+            "is_isbn": not book.searched_as_text,
         }
         return templates.TemplateResponse(
             request, "book.html", context, status_code=error[1] if error else 200

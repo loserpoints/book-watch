@@ -199,7 +199,8 @@ copies start near the top of a phone screen.
 Found on the way:
 
 - **The P2 warning shows on every book added by title**, where it is false —
-  #102. It should show only for text added in place of an ISBN.
+  #102. It should show only for text added in place of an ISBN. **Done in
+  S32**: the want-list entry now answers `searched_as_text` itself.
 - **That text lives in the ISBN field**, which accepts anything after one
   refusal. A better home is the title search, when it finds nothing — logged
   on #101.

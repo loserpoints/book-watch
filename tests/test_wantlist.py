@@ -240,6 +240,20 @@ def test_asking_for_a_book_that_does_not_exist_raises(connection):
         wantlist.get(connection, 999)
 
 
+def test_only_typed_text_that_is_not_an_isbn_is_searched_as_text(connection):
+    """#102. The question is what somebody typed, never what we search with."""
+    typed_text = wantlist.add(connection, "The Riddle of the Sands 1903")
+    typed_number = wantlist.add(connection, "9780099448396")
+    picked = wantlist.add_identified(
+        connection, title="Stoner", author="John Williams", openlibrary_work_id=None
+    )
+
+    assert typed_text.searched_as_text
+    assert not typed_number.searched_as_text
+    # Nothing typed, so it is searched on title and author — the normal search.
+    assert not picked.searched_as_text
+
+
 def test_a_book_without_an_isbn_can_still_be_stored(connection):
     """The override case: text that is not an ISBN at all."""
     book = wantlist.add(connection, "The Riddle of the Sands 1903", "Childers")
