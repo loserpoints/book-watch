@@ -26,4 +26,4 @@ Tests enforce the rules:
 
 ## Components
 
-Jinja macros in `src/book_watch/web/templates/_ui.html`. Each takes plain values, so a screen maps its data onto them. The [design page](https://book-watch.fly.dev/design) draws every component in every state, and a new component is added there when it is added here.
+Jinja macros in `src/book_watch/web/templates/_ui.html`. Each takes plain values, so a screen maps its data onto them. The [design page](https://book-watch.fly.dev/design) draws every component in every state, and a new component is added there when it is added here. A screen uses these pieces and never builds its own version of one.

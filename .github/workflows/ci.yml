@@ -7,6 +7,12 @@ on:
     branches: [main]
   pull_request:
 
+# The docs check reads issue labels, to confirm a milestone's slices are
+# labelled `slice`. Read-only, and nothing else.
+permissions:
+  contents: read
+  issues: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -32,3 +38,5 @@ jobs:
       # No eBay keys here: tests marked `network` are deselected by default.
       - name: Check
         run: scripts/check.sh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

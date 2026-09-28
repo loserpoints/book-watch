@@ -182,3 +182,58 @@ def test_headings_inside_code_blocks_do_not_count(repo):
     write(repo, "docs/rules/pricing.md", text)
 
     assert check_docs.check(repo) == []
+
+
+# --- workflow: slices and routed learnings -----------------------------------
+
+
+def learnings(bullet):
+    return f"# M7\n\n## Learnings\n\n{bullet}\n\n## Carried forward\n"
+
+
+def test_a_learning_must_link_the_document_it_changed(repo):
+    folder = "docs/milestones/m07-judge-a-copy"
+    write(repo, f"{folder}/original-scope.md", scope(ISSUE))
+    write(repo, f"{folder}/delivered-scope.md", scope(PR))
+    write(repo, f"{folder}/learnings.md", learnings("- Tests missed layout."))
+
+    assert any("must link the document" in e for e in check_docs.check(repo))
+
+
+def test_a_learning_links_a_document_that_exists(repo):
+    folder = "docs/milestones/m07-judge-a-copy"
+    write(repo, f"{folder}/original-scope.md", scope(ISSUE))
+    write(repo, f"{folder}/delivered-scope.md", scope(PR))
+    bullet = "- Tests missed layout. [Contributing](../../../CONTRIBUTING.md#testing)"
+    write(repo, f"{folder}/learnings.md", learnings(bullet))
+
+    assert any("does not exist" in e for e in check_docs.check(repo))
+
+    write(
+        repo,
+        "CONTRIBUTING.md",
+        "# C\n\n## Building\n\n- A.\n\n## Testing\n\n- B.\n\n## Reviewing\n\n- C.\n",
+    )
+    assert check_docs.check(repo) == []
+
+
+def test_contributing_is_checked(repo):
+    write(repo, "CONTRIBUTING.md", "# Contributing\n\n## Testing\n\n- A.\n")
+
+    assert any("CONTRIBUTING.md: sections must be" in e for e in check_docs.check(repo))
+
+
+def test_planned_slices_are_issues_not_pull_requests(repo):
+    write(repo, "docs/milestones/m08-always-current/original-scope.md", scope(PR))
+
+    assert any("more than issue links" in e for e in check_docs.check(repo))
+
+
+def test_planned_slices_carry_the_slice_label(repo):
+    write(repo, "docs/milestones/m08-always-current/original-scope.md", scope(ISSUE))
+
+    unlabelled = check_docs.check(repo, labels=lambda number: {"bug"})
+    labelled = check_docs.check(repo, labels=lambda number: {"slice"})
+
+    assert any("#105 is not labelled 'slice'" in e for e in unlabelled)
+    assert labelled == []
