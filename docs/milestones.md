@@ -48,19 +48,18 @@ renumbers. Two rules keep that from costing anything:
 
 ---
 
-## M6 · Judge a copy at a glance
+## M6 · A look of its own
 
-**Goal.** A visual language the whole app is built in, so a copy can be ruled
-out from the list without reading it word by word.
+**Goal.** Every book has a cover, and the app has a design of its own: a
+direction chosen on real screens, tokens that hold every colour and size, and
+the building blocks every later screen is made of, drawn on `/design`.
 
 **Jobs advanced.**
 
-- **J3**, which is substantially a presentation problem: *reject a bad copy —
-  ex-library, wrong edition, a clipped jacket — from the results list alone.*
-  Everything that judgement needs is now on the page, and it is on the page as
-  undifferentiated text.
-- **J2** and **J6** follow from the same work: what comes to the top has to
-  *look* like it came to the top, and a list is only trusted if it is legible.
+- **J6**, in part. Covers make the list recognisable at a glance, and a list
+  is only trusted if it is legible.
+- It is mostly foundation. **J3** was this milestone's first name and moved to
+  *Judge a copy at a glance* with the work that delivers it. See below.
 
 **Why here, rather than at the end.** Because everything after it is more
 screens. *Two kinds of hunt* adds a mode, a second ranking and condition
@@ -78,16 +77,56 @@ still fits. It does, for new reasons recorded under decision 2: the platform
 now carries what a build step used to, and nothing in the design needs a
 framework. The principles the system is built to live in `docs/design.md`.
 
-**Covers come first.** The reference apps lean on artwork, and the want-list
-has no cover for a book. Open Library already returns cover ids in responses
-the app makes and discards, so the first slice stores them and caches the
-images, and the tokens and primitives are then designed around real covers
-and real gaps rather than a mock-up.
+**Covers came first.** The reference apps lean on artwork, and the want-list
+had no cover for a book. Open Library already returned cover ids in responses
+the app made and discarded, so the first slice stored them (decision 56).
+
+**Split, 2026-09-28.** This began as *Judge a copy at a glance* and grew into
+the largest milestone yet: covers, two design slices, tokens, and building
+blocks that turned out to be two slices on their own. Rebuilding the screens,
+which is where J3 is actually delivered, would have made it larger still. So
+it ends at the building blocks, and the screens start the next milestone,
+which takes the name that describes them.
+
+---
+
+## M7 · Judge a copy at a glance
+
+**Goal.** The want-list, the book page and adding a book are rebuilt from M6's
+building blocks, so a bad copy can be ruled out from the list without reading
+it word by word. The app then installs on a phone's home screen.
+
+**Jobs advanced.**
+
+- **J3**: *reject a bad copy — ex-library, wrong edition, a clipped jacket —
+  from the results list alone.* The screens make it quick, and the seller's
+  condition note and every photo (#106) make it possible for the two cases no
+  field captured.
+- **J2** and **J6** follow: what comes to the top has to look like it came to
+  the top, and a list is only trusted if it is legible and true.
+
+**What is in it.** The screens rebuilt; the home-screen install; and three
+issues that sit directly under those screens:
+
+- **#103**: "over" is computed and never shown, and some "can't tell" copies
+  are known to be over.
+- **#102**: every book added by title wrongly warns that it is not an ISBN.
+- **#106**: the seller's condition note and all photos, from the item call the
+  app already makes.
+
+**Why the home screen waits for the screens.** An installed app is opened
+daily. Installing the old screens would make the thing opened every day the
+thing about to be replaced.
+
+**Deliberately not in it.** Unknown-shipping copies sorting last (#104) and
+dismissing a copy (#105) are J3 too, and small. They wait: this milestone's
+job is an initial app experience, and priorities get reassessed once there is
+one to use.
 
 ---
 
 
-## M7 · Two kinds of hunt
+## M8 · Two kinds of hunt
 
 **Goal.** An entry is a reading copy or a collectible, and the mode changes what
 matches and how it ranks: lowest landed cost and a readable floor for one,
@@ -111,7 +150,7 @@ is really "show me everything and let me read", is not yet known.
 
 ---
 
-## M8 · Always current, without my looking
+## M9 · Always current, without my looking
 
 **Goal.** The daily poll runs, listings are stored, and opening a book shows
 what is there — already fetched, already dated, with what is new since I last
@@ -170,7 +209,7 @@ are five separable things.
 
 ---
 
-## M9 · Tell me, so I stop looking
+## M10 · Tell me, so I stop looking
 
 **Goal.** An email when a copy appears under the ceiling set in *What I will
 pay*, and no email otherwise. Not a digest — J4's open question was answered on
