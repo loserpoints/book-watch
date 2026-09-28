@@ -9,7 +9,7 @@
   57, and the direction in <code>docs/design.md</code>.
 </p>
 
-<nav class="muted">Pieces: <a href="#book-rows">book rows</a> · <a href="#copy-rows">copy rows</a> · <a href="#candidates">adding</a> · <a href="#pieces">small pieces</a>. Tokens: <a href="#colour">colour</a> · <a href="#type">type</a> · <a href="#space">space</a> · <a href="#radius">radius</a></nav>
+<nav class="muted">Pieces: <a href="#book-rows">book rows</a> · <a href="#copy-rows">copy rows</a> · <a href="#candidates">adding</a> · <a href="#pieces">small pieces</a> · <a href="#controls">controls</a>. Tokens: <a href="#colour">colour</a> · <a href="#type">type</a> · <a href="#space">space</a> · <a href="#radius">radius</a></nav>
 
 <h2 class="design-h" id="book-rows">Book rows</h2>
 <p class="muted">Every state a book on the want-list can be in. Checked with a price under, over and with no limit; a long title; maybes; checking; couldn't check; not checked yet; nothing listed; still digging.</p>
@@ -34,6 +34,41 @@
   <div>{{ ui.explain("Why the hour?", "A book checked in the last hour is skipped, so a quick second look does not spend another search.") }}</div>
   <div class="cover-shelf">{{ ui.cover("Crash", "J. G. Ballard", size="lg") }} {{ ui.cover("Honored Guest", "Joy Williams") }} {{ ui.cover("Stoner", "John Williams", size="sm") }}</div>
 </div>
+
+<h2 class="design-h" id="controls">Controls</h2>
+<p class="muted">Tap the photos above to enlarge them. Sheets open from the buttons below and close with Escape, the back gesture, a tap outside, or their own buttons.</p>
+<div class="controls-demo">
+  {{ ui.button("Check all", "primary") }} {{ ui.button("Update 2") }} {{ ui.button("Cancel", "ghost") }} {{ ui.button("Disabled", disabled=True) }}
+</div>
+<div class="controls-demo">
+  {{ ui.button("Add a book…", "primary", open="add-sheet") }} {{ ui.button("Check all…", open="check-sheet") }} {{ ui.fab("Add a book", "add-sheet") }}
+</div>
+<div class="controls-demo">{{ ui.switch("way-demo", [("title", "Title & author"), ("isbn", "ISBN")], "title") }}</div>
+<div class="controls-demo" style="display: grid">{{ ui.field("demo-title", "Title", "stoner") }}{{ ui.field("demo-author", "Author", optional=True, hint="Narrows a title search.") }}</div>
+
+{% call ui.sheet("add-sheet", "Add a book") %}
+  {{ ui.switch("way", [("title", "Title & author"), ("isbn", "ISBN")], "title") }}
+  <div class="sheet-side" data-when="title">
+    <p class="sheet-note">A title is enough. Add the author to narrow it down.</p>
+    {{ ui.field("sheet-title", "Title", "stoner") }}
+    {{ ui.field("sheet-author", "Author", "john williams", optional=True) }}
+    <div class="sheet-actions">{{ ui.button("Search", "primary") }}</div>
+    <ul class="ui-list">{% for c in candidates %}{{ ui.candidate_row(c) }}{% endfor %}</ul>
+  </div>
+  <div class="sheet-side" data-when="isbn">
+    <p class="sheet-note">An exact edition, by its number.</p>
+    {{ ui.field("sheet-isbn", "ISBN", "", inputmode="numeric", placeholder="9781590171998") }}
+    <div class="sheet-actions">{{ ui.button("Add", "primary") }}</div>
+  </div>
+{% endcall %}
+
+{% call ui.sheet("check-sheet", "Check all 7 books?") %}
+  <p class="sheet-note">5 of them were checked within the last hour and will be searched again. To check only the 2 that are out of date, use Update.</p>
+  <label class="sheet-note"><input type="checkbox"> Don't ask me again</label>
+  <div class="sheet-actions">{{ ui.button("Update 2", close=True) }}{{ ui.button("Check all 7", "primary", close=True) }}</div>
+{% endcall %}
+
+{{ ui.photo_dialog() }}
 
 <h2 class="design-h" id="colour">Colour</h2>
 <p class="muted">Contrast is against the page background. AA asks for 4.5 for body text and 3 for large text and marks.</p>

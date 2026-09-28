@@ -19,7 +19,11 @@ TEMPLATES = sorted((WEB / "templates").glob("*.html"))
 
 HEX = re.compile(r"#[0-9a-fA-F]{3,8}\b")
 FUNCTION_COLOUR = re.compile(r"\b(?:rgba?|hsla?|hwb|lab|lch|oklch|oklab)\(")
-RAW_LENGTH = re.compile(r"(?<![\w-])\d*\.?\d+(?:px|rem|em|pt)\b")
+#: A length written as a number. Zero is not one: it is zero in any unit, and
+#: `env(safe-area-inset-bottom, 0px)` needs it as a fallback.
+RAW_LENGTH = re.compile(
+    r"(?<![\w.-])(?!0+(?:\.0+)?(?:px|rem|em|pt)\b)\d*\.?\d+(?:px|rem|em|pt)\b"
+)
 
 #: Properties whose values must come from a token. Widths, heights and
 #: borders are layout, and stay where they are used.
@@ -128,6 +132,8 @@ def test_the_check_catches_what_it_is_for():
     assert violations(".a { border-radius: 3px; }")
     assert not violations(".a { width: 72px; border: 1px solid var(--line); }")
     assert not violations(".a { padding: var(--space-2) 0; }")
+    assert not violations(".a { padding: calc(var(--space-5) + env(x, 0px)); }")
+    assert violations(".a { padding: calc(var(--space-5) + 0.5px); }")
 
 
 @pytest.mark.parametrize("template", TEMPLATES, ids=lambda p: p.name)

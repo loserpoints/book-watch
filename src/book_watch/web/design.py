@@ -127,7 +127,7 @@ def sample_copies() -> list[dict]:
     used = [10.49, 12.0, 27.0]
     common = {
         "url": "#",
-        "photo_url": None,
+        "photo_url": SAMPLE_PHOTO,
         "seller": "betterworldbooks",
         "edition": "Paperback · Vintage · 1995",
         "abroad": None,
@@ -193,6 +193,18 @@ def sample_copies() -> list[dict]:
             ),
         },
     ]
+
+
+#: A stand-in seller's photo: sample content, not interface, so it carries its
+#: own colours. A real one is an eBay image URL, which `photos.larger` enlarges.
+SAMPLE_PHOTO = (
+    "data:image/svg+xml;utf8,"
+    "<svg xmlns='http://www.w3.org/2000/svg' width='225' height='300'>"
+    "<rect width='225' height='300' fill='%23443a2e'/>"
+    "<rect x='45' y='40' width='135' height='210' rx='4' fill='%236b563f'/>"
+    "<text x='112' y='150' font-family='serif' font-size='22' fill='%23f1e6d2' "
+    "text-anchor='middle'>CRASH</text></svg>"
+)
 
 
 def sample_candidates() -> list[dict]:
