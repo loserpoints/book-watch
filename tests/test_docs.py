@@ -176,6 +176,16 @@ def test_each_job_has_its_two_parts(repo):
     assert any("needs ['Job', 'Success signal']" in e for e in check_docs.check(repo))
 
 
+def retire(repo, path):
+    """Add a retiring row to this repository's copy of governance."""
+    governance = repo / "docs" / "governance.md"
+    text = governance.read_text()
+    runbook = next(line for line in text.splitlines() if line.startswith("| Runbook |"))
+    governance.write_text(
+        text.replace(runbook, f"{runbook}\n| Old notes | retiring | `{path}` | |")
+    )
+
+
 def test_retiring_and_migrating_documents_are_known_but_not_checked(repo):
     governance = repo / "docs" / "governance.md"
     governance.write_text(
@@ -183,6 +193,7 @@ def test_retiring_and_migrating_documents_are_known_but_not_checked(repo):
             "| Agent instructions | active |", "| Agent instructions | migrating |"
         )
     )
+    retire(repo, "docs/decisions.md")
     write(repo, "docs/decisions.md", "no title, no sections")
     write(repo, "CLAUDE.md", "# Anything\n\n## Whatever\n")
 
@@ -271,6 +282,7 @@ def test_code_that_states_the_reason_passes(repo):
 
 
 def test_the_retiring_log_may_number_its_decisions(repo):
+    retire(repo, "docs/decisions.md")
     write(repo, "docs/decisions.md", "## 1. Python\n\nSee decision 2.\n")
 
     assert check_docs.check(repo) == []

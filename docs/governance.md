@@ -18,13 +18,8 @@ Every document in this repository is one of the artifacts below. `scripts/check_
 | Delivered scope | active | `docs/milestones/*/delivered-scope.md` | Goal (sentence) · Jobs advanced (job links) · Slices (links) |
 | Learnings | active | `docs/milestones/*/learnings.md` | Learnings (routed) · Carried forward (links, may be empty) |
 | Runbook | active | `docs/runbook.md` | Deploy · Roll back · Restore data · Post-deploy checks · Known gaps (links, may be empty) |
-| Decision log | retiring | `docs/decisions.md` | |
-| Milestone log | retiring | `docs/milestones.md` | |
-| Design notes | retiring | `docs/design.md` | |
-| Operating notes | retiring | `docs/operating.md` | |
-| Product brief | retiring | `docs/product-brief.md` | |
 
-**Status.** An *active* artifact is checked. A *migrating* one exists in its old form and is checked once it is rewritten. A *retiring* one is deleted when the migration finishes. Only active remains after that.
+**Status.** An *active* artifact is checked. A *migrating* one exists in its old form and is checked once it is rewritten. A *retiring* one is deleted when its migration finishes.
 
 **Sections** are the document's `##` headings, in order, with nothing added. Every document opens with one `#` title.
 
@@ -40,7 +35,7 @@ A Rules section may group its rules under `###` headings, chosen per document.
 
 **Milestones.** Each milestone is a folder, `docs/milestones/mNN-name/`, created when the milestone starts. There are no planned milestones: what comes next is chosen from the open issues at each close. `delivered-scope.md` and `learnings.md` are added together when it closes. The two scope files share their sections so they can be compared.
 
-**Current state and history.** Surfaces, rules, the design system and the runbook describe the product as it is now and carry no history. History lives in milestone learnings, and beyond that in git, pull requests and closed issues.
+**Current state and history.** Surfaces, rules, the design system and the runbook describe the product as it is now and carry no history. History lives in milestone learnings, and beyond that in git, pull requests and closed issues. Decisions made before these documents existed are in the [decision log](https://github.com/loserpoints/book-watch/blob/537d5ea30621c8756ddfc8c74969d584b2694c62/docs/decisions.md), frozen as it stood when it was retired.
 
 ## Workflow
 

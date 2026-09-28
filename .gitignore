@@ -1,4 +1,4 @@
-# Secrets — never commit credentials. See docs/decisions.md.
+# Secrets — never commit credentials. See CONTRIBUTING.md.
 .env
 .env.*
 !.env.example
