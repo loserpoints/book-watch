@@ -723,3 +723,18 @@ dialog.photo-view[open] { display: grid; gap: var(--space-2); justify-items: cen
 .candidate-hit:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .sheet-error { margin: 0; color: var(--over); font-size: var(--text-sm); }
 .sheet-form .candidate-list { margin: 0; padding: 0; }
+
+/* Something wrong with the morning check, under the list's buttons. The
+   chip's shape in the error colour; absent when nothing is wrong. */
+.list-alert { margin: var(--space-2) 0; }
+details.alert-pill > summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--over);
+  border-radius: var(--radius-pill);
+  color: var(--over);
+  font-size: var(--text-sm);
+  text-decoration: none;
+}

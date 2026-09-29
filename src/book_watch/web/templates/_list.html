@@ -34,6 +34,9 @@
       {%- endif %}
     </span>
   </div>
+  {#- Only when the morning check failed, stopped at the Open Library
+      ceiling, or did not happen. -#}
+  {% if daily %}<div class="list-alert">{{ ui.alert_pill(daily.label, daily.explanation) }}</div>{% endif %}
 
   {#- A book just added arrives with the walk already primed for it, so it
       checks itself without the page having asked for anything else. -#}

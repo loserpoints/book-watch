@@ -53,7 +53,7 @@ _guard = threading.Lock()
 EnrichFn = Callable[[int], object]
 
 
-def queued(start: EnrichFn, work_id: int) -> Callable[[], None]:
+def queued(start: EnrichFn, work_id: int) -> Callable[[], object]:
     """Mark a pass for this book as about to run, and return the call that
     runs it.
 
@@ -64,9 +64,9 @@ def queued(start: EnrichFn, work_id: int) -> Callable[[], None]:
     with _guard:
         _queued.add(work_id)
 
-    def run() -> None:
+    def run() -> object:
         try:
-            start(work_id)
+            return start(work_id)
         finally:
             with _guard:
                 _queued.discard(work_id)
