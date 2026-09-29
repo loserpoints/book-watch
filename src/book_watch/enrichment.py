@@ -74,6 +74,13 @@ def queued(start: EnrichFn, work_id: int) -> Callable[[], None]:
     return run
 
 
+def forget_passes() -> None:
+    """Clear the record of passes running or queued. For tests."""
+    with _guard:
+        _in_progress.clear()
+        _queued.clear()
+
+
 def busy(work_id: int) -> bool:
     """Whether a pass for this book is running, or about to."""
     with _guard:

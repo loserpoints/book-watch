@@ -12,7 +12,8 @@ The want list shows every book I'm watching and whether any copy is worth my att
 - A strip of every asking price seen, with the limit as a dashed line, when there are at least two different prices.
 - How many copies are listed, and how long ago the book was checked: "3 listed · checked 2h".
 - When the book was added: "added 3w".
-- "digging" while the app is still working out which copies are this book. Tapping it explains.
+- "digging" while the app is working out which copies are this book. The row updates itself when that finishes. Tapping it explains.
+- "Throttled" when that work is waiting because the day's Open Library requests are used up. Tapping it explains.
 - A row's state when there is no price: Checking…, Couldn't check just now, Not checked yet, 2 maybes, or 0 listed.
 - How many books are on the list, and whether any need checking: "Update 2", or "All current".
 - "Nothing on the list yet" when the list is empty.
@@ -27,6 +28,5 @@ The want list shows every book I'm watching and whether any copy is worth my att
 
 ## Open issues
 
-- [A newly added book shows "digging" until the app is reopened](https://github.com/loserpoints/book-watch/issues/129)
 - [Reorder the want-list by recency, lowest price, or by hand](https://github.com/loserpoints/book-watch/issues/131)
 - [Filter the want-list to books with a copy under their limit](https://github.com/loserpoints/book-watch/issues/132)

@@ -471,7 +471,9 @@ def test_a_digging_row_asks_for_itself_until_it_is_done(client):
     work_id = outstanding(client)
     run = enrichment.queued(lambda work_id: None, work_id)
 
-    assert 'hx-get="/books/1/row"' in client.get("/").text
+    row = re.search(r'<li class="book-row"[^>]*>', client.get("/").text).group(0)
+    assert 'hx-get="/books/1/row"' in row
+    assert 'hx-trigger="every ' in row
     run()
     row = client.get("/books/1/row").text
 

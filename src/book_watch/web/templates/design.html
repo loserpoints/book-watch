@@ -11,7 +11,7 @@
 <nav class="muted">Pieces: <a href="#book-rows">book rows</a> · <a href="#copy-rows">copy rows</a> · <a href="#candidates">adding</a> · <a href="#pieces">small pieces</a> · <a href="#controls">controls</a>. Tokens: <a href="#colour">colour</a> · <a href="#type">type</a> · <a href="#space">space</a> · <a href="#radius">radius</a></nav>
 
 <h2 class="design-h" id="book-rows">Book rows</h2>
-<p class="muted">Every state a book on the want-list can be in. Checked with a price under, over and with no limit; a long title; maybes; checking; couldn't check; not checked yet; nothing listed; still digging.</p>
+<p class="muted">Every state a book on the want-list can be in. Checked with a price under, over and with no limit; a long title; maybes; checking; couldn't check; not checked yet; nothing listed; still digging; throttled.</p>
 <ul class="ui-list">{% for b in books %}{{ ui.book_row(b) }}{% endfor %}</ul>
 
 <h2 class="design-h" id="copy-rows">Copy rows</h2>

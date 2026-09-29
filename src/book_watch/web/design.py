@@ -66,6 +66,7 @@ def sample_books() -> list[dict]:
             "listed": 5,
             "checked": "1d",
             "added": "4mo",
+            "examining": "throttled",
             "price_text": "$21",
             "verdict": None,
             "strip": strips.range_strip([21, 23, 25, 30, 36]),
