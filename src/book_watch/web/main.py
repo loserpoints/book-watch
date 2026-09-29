@@ -6,7 +6,7 @@ not require the environment to be configured.
 
 import logging
 
-from book_watch import daily, enrichment
+from book_watch import alerts, daily, enrichment
 from book_watch.openlibrary import CallBudget
 from book_watch.web.app import create_app
 from book_watch.web.searching import LazyBrowseSearch
@@ -29,4 +29,5 @@ daily.start(
     LazyBrowseSearch(),
     enrichment.configured(open_configured_database),
     CallBudget(open_configured_database).spent,
+    notify=lambda: alerts.notify(open_configured_database),
 )

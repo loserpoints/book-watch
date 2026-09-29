@@ -26,6 +26,7 @@ from datetime import time as clock_time
 from zoneinfo import ZoneInfo
 
 from book_watch import enrichment, sweeps, wantlist
+from book_watch.alerts import AlertError
 from book_watch.config import MissingCredentialError
 from book_watch.ebay.errors import EbayError
 from book_watch.ebay.search import DEFAULT_LIMIT
@@ -35,6 +36,8 @@ logger = logging.getLogger(__name__)
 ConnectFn = Callable[[], sqlite3.Connection]
 SearchFn = Callable[..., list]
 SpentFn = Callable[[], int]
+#: Sends the morning email, returning how many copies it listed (S40).
+NotifyFn = Callable[[], int]
 
 #: When the run starts. New York time, so it stays at 7am across daylight
 #: saving.
@@ -86,6 +89,7 @@ def run(
     search: SearchFn,
     enrich: enrichment.EnrichFn,
     spent: SpentFn,
+    notify: NotifyFn | None = None,
 ) -> int:
     """Search every book once, examining new copies as it goes, and record
     how it went. Returns the run's id.
@@ -103,6 +107,8 @@ def run(
     failed = 0
     throttled = False
     crashed = False
+    emailed = 0
+    email_failed = False
     try:
         for book_id in books:
             with closing(connect()) as connection:
@@ -128,24 +134,42 @@ def run(
                 result = enrichment.queued(enrich, book.work_id)()
                 if getattr(result, "stopped_because", None) == "over budget":
                     throttled = True
+        # After every book, so the email covers the whole morning.
+        if notify is not None:
+            try:
+                emailed = notify()
+            except AlertError as exc:
+                logger.warning("Daily check could not send its email: %s", exc)
+                email_failed = True
     except Exception:
         crashed = True
         raise
     finally:
-        outcome = "failed" if failed or crashed else "throttled" if throttled else "ok"
+        broke = failed or crashed or email_failed
+        outcome = "failed" if broke else "throttled" if throttled else "ok"
         with closing(connect()) as connection:
             connection.execute(
                 "UPDATE daily_run SET finished_at = datetime('now'), outcome = ?, "
-                "books = ?, failed = ?, openlibrary_spent = ? WHERE id = ?",
-                (outcome, len(books), failed, spent() - before, run_id),
+                "books = ?, failed = ?, openlibrary_spent = ?, emailed = ?, "
+                "email_failed = ? WHERE id = ?",
+                (
+                    outcome,
+                    len(books),
+                    failed,
+                    spent() - before,
+                    emailed,
+                    int(email_failed),
+                    run_id,
+                ),
             )
             connection.commit()
     logger.info(
-        "Daily check: %s, %d books, %d failed, %d Open Library requests",
+        "Daily check: %s, %d books, %d failed, %d Open Library requests, %d emailed",
         outcome,
         len(books),
         failed,
         spent() - before,
+        emailed,
     )
     return run_id
 
@@ -156,11 +180,12 @@ def tick(
     enrich: enrichment.EnrichFn,
     spent: SpentFn,
     now: datetime,
+    notify: NotifyFn | None = None,
 ) -> int | None:
     """Run the check if it is due. Returns the run's id, or `None`."""
     with closing(connect()) as connection:
         owed = due(connection, now)
-    return run(connect, search, enrich, spent) if owed else None
+    return run(connect, search, enrich, spent, notify) if owed else None
 
 
 def start(
@@ -169,6 +194,7 @@ def start(
     enrich: enrichment.EnrichFn,
     spent: SpentFn,
     *,
+    notify: NotifyFn | None = None,
     now: Callable[[], datetime] = lambda: datetime.now(UTC),
 ) -> threading.Thread:
     """Start the thread that runs the check when it is due."""
@@ -176,7 +202,7 @@ def start(
     def loop() -> None:
         while True:
             try:
-                tick(connect, search, enrich, spent, now())
+                tick(connect, search, enrich, spent, now(), notify)
             except Exception:
                 # A run that raised has recorded itself as failed, if it got
                 # as far as starting. Either way the thread lives to try again.
@@ -198,6 +224,7 @@ class Status:
     finished: datetime | None
     books: int = 0
     failed: int = 0
+    email_failed: bool = False
 
     @property
     def label(self) -> str:
@@ -210,6 +237,11 @@ class Status:
     @property
     def explanation(self) -> str:
         when = _local(self.finished)
+        if self.kind == "failed" and self.email_failed and not self.failed:
+            return (
+                f"The check that finished {when} couldn't send its email. "
+                "It tries the same copies again tomorrow."
+            )
         if self.kind == "failed":
             return (
                 f"The check that finished {when} couldn't search {self.failed} "
@@ -238,7 +270,7 @@ def status(connection: sqlite3.Connection, now: datetime) -> Status | None:
     there is nothing to say. Silence is the normal case: each row already
     says when its book was checked."""
     latest = connection.execute(
-        "SELECT finished_at, outcome, books, failed FROM daily_run "
+        "SELECT finished_at, outcome, books, failed, email_failed FROM daily_run "
         "WHERE finished_at IS NOT NULL ORDER BY id DESC LIMIT 1"
     ).fetchone()
     finished = _read(latest["finished_at"]) if latest else None
@@ -251,5 +283,11 @@ def status(connection: sqlite3.Connection, now: datetime) -> Status | None:
             return None
         return Status("missed", finished)
     if latest["outcome"] in ("failed", "throttled"):
-        return Status(latest["outcome"], finished, latest["books"], latest["failed"])
+        return Status(
+            latest["outcome"],
+            finished,
+            latest["books"],
+            latest["failed"],
+            bool(latest["email_failed"]),
+        )
     return None
