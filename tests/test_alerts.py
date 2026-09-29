@@ -306,3 +306,17 @@ def test_new_copies_and_drops_share_one_email(drops):
     assert notify(drops, resend) == 2
     assert len(resend.sent) == 1
     assert resend.sent[0]["json"]["subject"] == "2 copies under your limit"
+
+
+def test_raising_a_limit_never_sends_an_email(connect):
+    """A copy over the old limit, under the new one, at an unchanged price.
+    The old price is judged against the limit as it is now, so a raise can
+    only remove drops, never make one."""
+    a_copy(connect, CRASH, "unchanged", "12.00", "0.00", "-4 days", "-4 days")
+    a_past_price(connect, CRASH, "unchanged", "12.00", "0.00", "-3 days")
+    with closing(connect()) as connection:
+        connection.execute(
+            "UPDATE entry SET ceiling = '15.00' WHERE typed = ?", (CRASH,)
+        )
+        connection.commit()
+        assert alerts.due(connection) == []
