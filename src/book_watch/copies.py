@@ -19,13 +19,14 @@ from __future__ import annotations
 import json
 import sqlite3
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from typing import Literal
 
 from book_watch.ebay.search import Money, Scope
 from book_watch.isbn import normalise
 from book_watch.matching import Evidence, Target, Tier, grade, is_this_book
-from book_watch.wantlist import Entry
+from book_watch.wantlist import Entry, moment
 
 #: Everything the grader needs about one copy, in one query rather than three
 #: lookups per row. The joins are left joins throughout: a copy nobody has
@@ -49,6 +50,8 @@ SELECT copy.item_id,
        copy.epid,
        copy.located_in,
        copy.seen_at,
+       copy.first_seen_at,
+       copy.listed_at,
        declaration.item_id AS asked_ebay,
        declaration.isbn    AS declared_isbn,
        declaration.author  AS declared_author,
@@ -155,6 +158,11 @@ class Copy:
     #: Whether eBay has been asked what this seller declared. False means the
     #: copy is graded on its listing name alone and may firm up later.
     looked_at: bool = True
+    #: When we first saw this copy, and when eBay says it was listed. A
+    #: relisted copy has a new item id and its original listing date, which
+    #: is what keeps it from being new (see `is_new`).
+    first_seen: datetime | None = None
+    listed: datetime | None = None
 
     @property
     def condition_class(self) -> ConditionClass:
@@ -231,6 +239,28 @@ class Copy:
         """
         landed = self.landed_cost
         return landed.amount if landed else self.price.amount
+
+
+#: How long before I looked a copy can have been listed and still be new.
+#: eBay's search can show a new listing an hour or more after it was listed,
+#: so a copy listed just before I looked and found just after is still one I
+#: have not seen. The cost: a copy relisted within this long of first being
+#: listed shows as new.
+LISTING_LAG = timedelta(days=1)
+
+
+def is_new(copy: Copy, since: datetime | None) -> bool:
+    """Whether this copy appeared after `since`, when I last looked (S39).
+
+    First seen after I looked, and listed no more than `LISTING_LAG` before
+    it. A relist keeps its original listing date, so an old copy relisted
+    under a new item id is not new. A copy with no listing date falls back to
+    when it was first seen: showing a relist as new is the smaller mistake
+    than hiding a new copy. Nothing is new on a book never opened.
+    """
+    if since is None or copy.first_seen is None or copy.first_seen <= since:
+        return False
+    return copy.listed is None or copy.listed >= since - LISTING_LAG
 
 
 def for_entry(
@@ -419,6 +449,8 @@ def _to_copy(row: sqlite3.Row, target: Target, entry: Entry) -> Copy:
         photos=_photos(row["photos"]),
         located_in=row["located_in"],
         looked_at=row["asked_ebay"] is not None,
+        first_seen=moment(row["first_seen_at"]),
+        listed=moment(row["listed_at"]),
     )
 
 

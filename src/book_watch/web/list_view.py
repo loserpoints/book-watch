@@ -73,11 +73,12 @@ def row(
             **values,
             "state": "ok",
             "listed": lead.market.listed,
+            "new": glance.new,
             **_price(entry, glance),
         }
     if glance.listed:
         # Copies, but nothing comparable yet: a count is still worth having.
-        return {**values, "state": "ok", "listed": glance.listed}
+        return {**values, "state": "ok", "listed": glance.listed, "new": glance.new}
     if glance.uncertain:
         return {**values, "state": "maybes", "maybes": glance.uncertain}
     return {**values, "state": "none"}

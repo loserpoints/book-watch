@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import sqlite3
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from typing import Literal
 
@@ -63,6 +63,11 @@ class Entry:
     #: together or neither is: a number with no currency is not a price.
     ceiling: str | None = None
     ceiling_currency: str | None = None
+    #: When this visit to the book began, and when the one before it did
+    #: (S39). Copies are new against `looked_before` on the book's page, and
+    #: against `looked_at` on the want-list.
+    looked_at: str | None = None
+    looked_before: str | None = None
     #: The work's cover id, and when anybody asked. See migration 018 for why
     #: those are three states and not two.
     work_cover: int | None = None
@@ -170,6 +175,16 @@ class Entry:
         return self.copies_fetched_at is not None and self.enriched_at is None
 
     @property
+    def last_looked(self) -> datetime | None:
+        """When this visit to the book began, or `None` if never opened."""
+        return moment(self.looked_at)
+
+    @property
+    def looked_before_this(self) -> datetime | None:
+        """When the visit before this one began, or `None`."""
+        return moment(self.looked_before)
+
+    @property
     def added_on(self) -> date | None:
         """The day this was added, or `None` if the stored value is unreadable.
 
@@ -193,6 +208,8 @@ SELECT entry.id,
        entry.added_at,
        entry.ceiling,
        entry.ceiling_currency,
+       entry.looked_at,
+       entry.looked_before,
        work.title,
        work.author,
        work.resolved_at,
@@ -392,6 +409,45 @@ def set_ceiling(
     return get(connection, entry_id)
 
 
+#: Opening a book again within this long is the same visit. Tapping a chip on
+#: the page reloads it, and that must not clear the copies it just marked new.
+SAME_VISIT = timedelta(minutes=30)
+
+
+def moment(raw: str | None) -> datetime | None:
+    """A stored time as a UTC datetime, or `None`.
+
+    Two formats reach here: SQLite's `datetime('now')`, which is UTC and says
+    nothing about it, and eBay's listing dates, stored with their offset.
+    """
+    if raw is None:
+        return None
+    try:
+        parsed = datetime.fromisoformat(raw)
+    except ValueError:
+        # A hand-edited row should not take the page down with it.
+        return None
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
+
+
+def look(connection: sqlite3.Connection, entry_id: int, now: datetime) -> None:
+    """Record that the book was opened. A new visit moves this visit's start
+    to `looked_before`; a reopen within `SAME_VISIT` changes nothing."""
+    row = connection.execute(
+        "SELECT looked_at FROM entry WHERE id = ?", (entry_id,)
+    ).fetchone()
+    if row is None:
+        return
+    began = moment(row["looked_at"])
+    if began is not None and now - began < SAME_VISIT:
+        return
+    connection.execute(
+        "UPDATE entry SET looked_before = looked_at, looked_at = ? WHERE id = ?",
+        (now.astimezone(UTC).strftime("%Y-%m-%d %H:%M:%S"), entry_id),
+    )
+    connection.commit()
+
+
 def remove(connection: sqlite3.Connection, entry_id: int) -> bool:
     """Delete an entry. Returns whether there was one to delete.
 
@@ -439,6 +495,8 @@ def _to_entry(row: sqlite3.Row) -> Entry:
         copies_fetched_at=row["copies_fetched_at"],
         ceiling=row["ceiling"],
         ceiling_currency=row["ceiling_currency"],
+        looked_at=row["looked_at"],
+        looked_before=row["looked_before"],
         work_cover=row["work_cover"],
         cover_asked_at=row["cover_asked_at"],
         edition_cover=row["edition_cover"],

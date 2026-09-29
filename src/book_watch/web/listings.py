@@ -189,6 +189,13 @@ def build_router(
                 except EbayError as exc:
                     error = (f"eBay could not be searched: {exc}", 502)
 
+            # Recorded after the search, so a copy this visit's own search
+            # found is never new on the want-list afterwards: I have seen it.
+            wantlist.look(connection, book_id, datetime.now(UTC))
+            book = wantlist.get(connection, book_id)
+            # Marked against the visit before this one (S39, #142).
+            since = book.looked_before_this
+
             ceiling = book.will_pay
             checked = sweeps.swept_at(connection, book.work_id, scope=scope)
             # Where each copy sits among the others. The rank reads what is
@@ -226,6 +233,7 @@ def build_router(
                     placed.get(copy.item_id),
                     ceiling,
                     listed_prices,
+                    new=copies.is_new(copy, since),
                 )
                 for copy in shown
                 if (copy.tier == "certain") == tier_wanted

@@ -36,7 +36,16 @@ These rules decide which eBay listings are copies of the book being watched, and
 - Possible and probable copies are folded under "might be this book".
 - Excluded copies are not shown.
 
+### What is new
+
+- Opening a book records a visit. Opening it again within 30 minutes is the same visit.
+- On a book's page, a copy is new when it was first seen after the previous visit began and eBay listed it no more than a day before that.
+- On the want list, the count is of copies certainly this book that are new since the latest visit.
+- A relisted copy gets a new item id and keeps its original listing date, so it is not new.
+- The day's margin covers eBay's search showing a listing after it was listed. A copy relisted within a day of first being listed shows as new.
+- A copy with no listing date is new when it was first seen after the visit.
+- Nothing is new on a book never opened.
+
 ## Open issues
 
 - [A reading copy is searched across every edition](https://github.com/loserpoints/book-watch/issues/130)
-- [A relisted copy is recognized as the copy already seen](https://github.com/loserpoints/book-watch/issues/126)

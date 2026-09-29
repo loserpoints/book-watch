@@ -38,6 +38,7 @@ def sample_books() -> list[dict]:
             "author": "J. G. Ballard",
             "state": "ok",
             "listed": 3,
+            "new": 2,
             "checked": "4m",
             "added": "3w",
             "price_text": "$10.49",
@@ -141,6 +142,7 @@ def sample_copies() -> list[dict]:
             "verdict": "under",
             "place": strips.rank_strip(used, 10.49),
             "condition": "Good",
+            "new": True,
             "listing_title": (
                 "Crash by J. G. Ballard (1995, Vintage paperback) good reading copy"
             ),
