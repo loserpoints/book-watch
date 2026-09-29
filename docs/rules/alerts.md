@@ -9,6 +9,8 @@ These rules decide when the app emails me about a copy, so that an email is alwa
 ### What goes in the email
 
 - A copy is in the morning email when its book has a limit, it is certainly this book, its delivered price is at or under the limit (see [pricing](pricing.md)), it is new since the book was last opened (see [matching](matching.md)), and it has never been in an email.
+- A copy that was over the limit when the book was last opened, and is at or under it now, is in the email too, marked as a price drop with its old price. The old price is read from the copy's price history.
+- Raising a limit does not email the copies seen when it was raised, since they were seen at the new limit.
 - A copy with unknown shipping is never in the email.
 - Each copy shows its book, its delivered price against the limit, its condition, a link to the listing and a link to the book in the app.
 
@@ -26,5 +28,4 @@ These rules decide when the app emails me about a copy, so that an email is alwa
 
 ## Open issues
 
-- [S41 · Copies that drop under their limit join the morning email](https://github.com/loserpoints/book-watch/issues/165)
 - [Track daily checks, emails and API calls somewhere I can see them](https://github.com/loserpoints/book-watch/issues/168)
