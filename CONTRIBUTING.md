@@ -20,7 +20,7 @@
 - Tests check what a reader sees, not the markup that carries it, so they survive a redesign.
 - A check proves nothing until it has been seen to fail. Break the code on purpose, on a committed tree, and confirm the break applied.
 - Keep labelled real data in the repository as test fixtures, so a study becomes a regression test.
-- Verify a change against a copy of production data as well as a fresh database. Tests start empty and miss what production holds.
+- Tests start empty and miss what production holds. After a change deploys, Alan checks it on his phone against the live data, and its pull request says what to check.
 
 ## Reviewing
 
