@@ -18,7 +18,8 @@ import logging
 import sqlite3
 from collections.abc import Callable
 from contextlib import closing
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from decimal import Decimal
 
 import httpx
 
@@ -26,6 +27,7 @@ from book_watch import copies, wantlist
 from book_watch.config import AlertConfig, MissingCredentialError, load_alert_config
 from book_watch.copies import Copy
 from book_watch.ebay.auth import USER_AGENT
+from book_watch.ebay.search import Money
 from book_watch.wantlist import Entry
 from book_watch.web.book_view import money
 
@@ -52,10 +54,15 @@ class Alert:
 
     entry: Entry
     copy: Copy
+    #: What it cost at my last visit, when it is here because it dropped
+    #: under the limit since then (S41). None for a new copy.
+    was: Money | None = None
 
 
 def due(connection: sqlite3.Connection) -> list[Alert]:
-    """Every copy that belongs in this morning's email."""
+    """Every copy that belongs in this morning's email: under its book's
+    limit, never emailed, and either new since I last opened the book or
+    over the limit when I did."""
     found = []
     for entry in wantlist.all_books(connection):
         ceiling = entry.will_pay
@@ -63,13 +70,47 @@ def due(connection: sqlite3.Connection) -> list[Alert]:
             continue
         for copy in copies.for_entry(connection, entry, scope="us"):
             if (
-                copy.tier == "certain"
-                and copy.against(ceiling) == "under"
-                and copies.is_new(copy, entry.last_looked)
-                and not _emailed(connection, copy.item_id, entry.work_id)
+                copy.tier != "certain"
+                or copy.against(ceiling) != "under"
+                or _emailed(connection, copy.item_id, entry.work_id)
             ):
+                continue
+            if copies.is_new(copy, entry.last_looked):
                 found.append(Alert(entry, copy))
+                continue
+            then = _at_last_visit(connection, entry, copy)
+            if then is not None and then.against(ceiling) == "over":
+                found.append(Alert(entry, copy, was=then.landed_cost or then.price))
     return found
+
+
+def _at_last_visit(
+    connection: sqlite3.Connection, entry: Entry, copy: Copy
+) -> Copy | None:
+    """This copy as it was priced when I last opened the book, or None if it
+    had not been seen by then.
+
+    Read from the price history: its last sighting at or before that visit.
+    """
+    if entry.looked_at is None:
+        return None
+    row = connection.execute(
+        "SELECT sighting.price, sighting.currency, sighting.shipping "
+        "FROM sighting JOIN sweep ON sweep.id = sighting.sweep_id "
+        "WHERE sighting.work_id = ? AND sighting.item_id = ? AND sweep.at <= ? "
+        "ORDER BY sighting.sweep_id DESC LIMIT 1",
+        (entry.work_id, copy.item_id, entry.looked_at),
+    ).fetchone()
+    if row is None:
+        return None
+    currency = row["currency"]
+    return replace(
+        copy,
+        price=Money(Decimal(row["price"]), currency),
+        shipping=Money(Decimal(row["shipping"]), currency)
+        if row["shipping"] is not None
+        else None,
+    )
 
 
 def _emailed(connection: sqlite3.Connection, item_id: str, work_id: int) -> bool:
@@ -93,6 +134,8 @@ def compose(alerts: list[Alert]) -> tuple[str, str, str]:
         limit = entry.will_pay
         assert delivered is not None and limit is not None  # `due` checked both.
         price = f"{money(delivered)} delivered, limit {money(limit)}"
+        if alert.was is not None:
+            price = f"Price drop from {money(alert.was)}: {price}"
         condition = copy.condition or "condition unstated"
         book_url = f"{APP_URL}/book/{entry.id}"
         parts_html.append(
