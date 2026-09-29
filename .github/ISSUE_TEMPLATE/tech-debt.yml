@@ -1,0 +1,19 @@
+name: Tech debt
+description: "An internal change I would never see: code, infrastructure or compliance"
+labels: ["tech debt"]
+body:
+  - type: textarea
+    id: wrong
+    attributes:
+      label: What's wrong
+      description: "What the code or setup does now."
+    validations:
+      required: true
+
+  - type: textarea
+    id: cost
+    attributes:
+      label: What it costs if left
+      description: "The risk, or the work it makes harder."
+    validations:
+      required: true

@@ -39,9 +39,23 @@ A Rules section may group its rules under `###` headings, chosen per document.
 
 ## Workflow
 
-**Issues and slices.** An issue is anything noticed: a bug, a want, an outcome worth having. A slice is an issue a milestone has taken on. It carries the `slice` label and the milestone, is titled `S## · outcome`, and follows the slice template: Outcome in one sentence, Acceptance ending in `scripts/check.sh`, and Decisions it forces.
+**Issues.** Every issue is one of four types, each with its own template and label. Blank issues are turned off.
 
-**An issue becomes a slice** when a milestone takes it on, by editing it in place into the slice template. Related issues can become one slice: one is edited, and the others are closed as duplicates of it. An issue that still needs design waits until it can be written as a slice.
+| Type | Label | Is | Template asks |
+|---|---|---|---|
+| Defect | `defect` | The app does something its surface or rules doc says it shouldn't. | What happens · What should happen |
+| Enhancement | `enhancement` | Something new I could see or do. | What I could do · Job it advances |
+| Tech debt | `tech debt` | An internal change I would never see: code, infrastructure or compliance. | What's wrong · What it costs if left |
+| Process gap | `process gap` | How we work is missing something: a doc, a workflow or an operating step. | What went wrong or is missing · Which doc or workflow should change |
+
+**Slices.** A slice is an issue a milestone has taken on. It keeps its type label, adds the `slice` label and the milestone, and is titled `S## · outcome`. Its body is rewritten in place into four sections:
+
+- **Outcome:** one sentence. What exists after this that didn't before.
+- **Acceptance:** a checklist that can be checked mechanically, ending in `scripts/check.sh` passes.
+- **Decisions it forces:** what the slice settles. Anything expensive to reverse goes in the rules or surface doc it changes, in the same pull request.
+- **External calls:** requests to eBay, Open Library or anything else, how many, and when.
+
+Related issues can become one slice: one is refined, and the others are closed as duplicates of it. An issue that still needs design waits until it can be written as a slice.
 
 **A slice can ship as several pull requests** when its parts share one outcome and one acceptance list.
 

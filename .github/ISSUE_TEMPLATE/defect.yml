@@ -1,0 +1,19 @@
+name: Defect
+description: "The app does something its surface or rules doc says it shouldn't"
+labels: ["defect"]
+body:
+  - type: textarea
+    id: happens
+    attributes:
+      label: What happens
+      description: "Where, and what you did to see it."
+    validations:
+      required: true
+
+  - type: textarea
+    id: should
+    attributes:
+      label: What should happen
+      description: "Link the surface or rule it breaks."
+    validations:
+      required: true
