@@ -1,0 +1,19 @@
+name: Process gap
+description: "How we work is missing something: a doc, a workflow or an operating step"
+labels: ["process gap"]
+body:
+  - type: textarea
+    id: missing
+    attributes:
+      label: What went wrong or is missing
+      description: "What happened, or what can't be done today."
+    validations:
+      required: true
+
+  - type: textarea
+    id: change
+    attributes:
+      label: Which doc or workflow should change
+      description: "Link it."
+    validations:
+      required: true

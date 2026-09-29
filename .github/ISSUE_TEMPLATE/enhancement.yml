@@ -1,0 +1,19 @@
+name: Enhancement
+description: "Something new I could see or do"
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: could
+    attributes:
+      label: What I could do
+      description: "One or two sentences, from my side of the screen."
+    validations:
+      required: true
+
+  - type: textarea
+    id: job
+    attributes:
+      label: Job it advances
+      description: "Link the job in docs/jobs.md."
+    validations:
+      required: true
