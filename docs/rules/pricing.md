@@ -36,6 +36,13 @@ These rules decide what a copy costs, whether it is under a book's limit, and wh
 - The want-list shows each book's cheapest certain copy in its leading market. Used leads when it has copies listed; otherwise new.
 - Copies sort by delivered price within their tier. A copy without one sorts by its price alone.
 
+### The morning email
+
+- A copy is in the morning email when its book has a limit, it is certain, it is under the limit, it is new since the book was last opened (see [matching](matching.md)), and it has never been in an email.
+- A copy with unknown shipping is never in the email.
+- One email a morning at most, sent after the daily check. No such copy, no email.
+- A copy is in at most one email, ever. A failed send records nothing, so the next morning tries the same copies.
+
 ## Open issues
 
 - [Copies with unstated shipping sort to the bottom](https://github.com/loserpoints/book-watch/issues/104)
