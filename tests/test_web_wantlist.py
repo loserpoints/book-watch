@@ -703,3 +703,33 @@ def test_a_book_added_by_number_before_work_ids_gets_its_cover(tmp_path):
     assert response.status_code == 302
     assert "b/id/240726-M.jpg" in response.headers["location"]
     assert catalogue.asked == [CRASH.isbn]
+
+
+# --- the morning check ------------------------------------------------------
+
+
+def test_the_list_says_when_the_morning_check_failed(client):
+    add(client, "9780099448396", "Crash")
+    with client.app.state.connect() as connection:
+        connection.execute(
+            "INSERT INTO daily_run (finished_at, outcome, books, failed) "
+            "VALUES (datetime('now'), 'failed', 1, 1)"
+        )
+        connection.commit()
+
+    page = client.get("/").text
+
+    assert "Daily check failed" in page
+    assert "couldn&#39;t search 1 of 1 books" in page
+
+
+def test_the_list_says_nothing_when_the_morning_check_went_well(client):
+    add(client, "9780099448396", "Crash")
+    with client.app.state.connect() as connection:
+        connection.execute(
+            "INSERT INTO daily_run (finished_at, outcome, books) "
+            "VALUES (datetime('now'), 'ok', 1)"
+        )
+        connection.commit()
+
+    assert "Daily check" not in client.get("/").text

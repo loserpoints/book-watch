@@ -21,13 +21,14 @@ from __future__ import annotations
 import sqlite3
 from collections.abc import Callable
 from contextlib import closing
+from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
-from book_watch import covers, db, enrichment, standing, sweeps, wantlist
+from book_watch import covers, daily, db, enrichment, standing, sweeps, wantlist
 from book_watch.config import MissingCredentialError, load_database_path
 from book_watch.ebay.errors import EbayError
 from book_watch.ebay.search import DEFAULT_LIMIT
@@ -150,6 +151,7 @@ def build_router(
             books = wantlist.all_books(connection)
             glances = at_a_glance(connection, books)
             stale = out_of_date(connection, books)
+            morning = daily.status(connection, datetime.now(UTC))
         return templates.TemplateResponse(
             request,
             "_list.html",
@@ -159,6 +161,7 @@ def build_router(
                 "checking": checking,
                 "stale": stale,
                 "throttled": throttled(books),
+                "daily": morning,
             },
         )
 
@@ -179,6 +182,7 @@ def build_router(
             books = wantlist.all_books(connection)
             glances = at_a_glance(connection, books)
             stale = out_of_date(connection, books)
+            morning = daily.status(connection, datetime.now(UTC))
             on_list = wantlist.listed_works(connection) if candidates else set()
         return templates.TemplateResponse(
             request,
@@ -188,6 +192,7 @@ def build_router(
                 "glances": glances,
                 "stale": stale,
                 "throttled": throttled(books),
+                "daily": morning,
                 # The book just added, which starts checking itself on load.
                 # Adding a book is an explicit act, so this is not an
                 # exception to "nothing sweeps on page load" — and it means a

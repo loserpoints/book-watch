@@ -16,6 +16,7 @@ The want list shows every book I'm watching and whether any copy is worth my att
 - "Throttled" when that work is waiting because the day's Open Library requests are used up. Tapping it explains.
 - A row's state when there is no price: Checking…, Couldn't check just now, Not checked yet, 2 maybes, or 0 listed.
 - How many books are on the list, and whether any need checking: "Update 2", or "All current".
+- Under those buttons, only when something is wrong with the daily check: "Daily check failed", "Daily check throttled" or "Daily check didn't run". Tapping it says when and why.
 - "Nothing on the list yet" when the list is empty.
 
 ## What you can do
@@ -30,3 +31,4 @@ The want list shows every book I'm watching and whether any copy is worth my att
 
 - [Reorder the want-list by recency, lowest price, or by hand](https://github.com/loserpoints/book-watch/issues/131)
 - [Filter the want-list to books with a copy under their limit](https://github.com/loserpoints/book-watch/issues/132)
+- [Tap anywhere on a want-list row to open its listings](https://github.com/loserpoints/book-watch/issues/159)

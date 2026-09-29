@@ -28,6 +28,13 @@
 {%- endmacro %}
 
 
+{#- Something wrong, said once where it applies, and explained on tap. Absent
+    when nothing is wrong, so its appearance means something. -#}
+{% macro alert_pill(label, text) -%}
+<details class="explain alert-pill"><summary>{{ label }}</summary><p class="explain-text">{{ text }}</p></details>
+{%- endmacro %}
+
+
 {#- A cover, over its placeholder. The placeholder is always there, so a slow
     or missing image leaves the book recognisable rather than an empty frame.
     `url` is the image, or the route that learns it, or none

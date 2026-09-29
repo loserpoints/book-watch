@@ -29,7 +29,8 @@
   <p>{{ ui.price("$10.49", "under") }} · {{ ui.price("$27", "over", "$15") }} · {{ ui.price("$21") }}</p>
   <p>{{ ui.tag("Very Good", strong=True) }} {{ ui.tag("ships from GB") }}</p>
   <p>{{ ui.chip("Limit", "$12", icon="✎") }} {{ ui.chip("US", icon="▾") }} {{ ui.chip("Checked 4m", icon="↻") }}</p>
-  <div class="meta">added 2d · {{ ui.digging() }}</div>
+  <div class="meta">added 2d · {{ ui.digging() }} · {{ ui.throttled() }}</div>
+  <div>{{ ui.alert_pill("Daily check failed", "The check that finished Sep 29 at 7:04am couldn't search 2 of 6 books. Update checks them now.") }}</div>
   <div>{{ ui.explain("Why the hour?", "A book checked in the last hour is skipped, so a quick second look does not spend another search.") }}</div>
   <div class="cover-shelf">{{ ui.cover("Crash", "J. G. Ballard", size="lg") }} {{ ui.cover("Honored Guest", "Joy Williams") }} {{ ui.cover("Stoner", "John Williams", size="sm") }}</div>
 </div>

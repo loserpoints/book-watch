@@ -25,6 +25,7 @@ These rules keep the app's requests to eBay and Open Library small, spaced out a
 - Opening a book searches eBay only if that book was not searched in the last hour for the same scope. Tapping Checked searches regardless.
 - Update searches only the books not searched in the last hour. Check all searches every book.
 - Checking several books searches them one at a time, never in parallel.
+- Every book is searched once a day at 7am New York time, one at a time, and each book's new copies are examined before the next book is searched. A run the app was down for runs when it starts again. Each run records how many Open Library requests it spent.
 - Each listing's details are fetched once, ever. A listing is fetched again only when the app starts reading a new field, and only while it is listed.
 
 ### Both
