@@ -15,7 +15,9 @@ from __future__ import annotations
 
 import html
 import logging
+import re
 import sqlite3
+import sys
 from collections.abc import Callable
 from contextlib import closing
 from dataclasses import dataclass, replace
@@ -203,3 +205,57 @@ def notify(
         )
         connection.commit()
     return len(alerts)
+
+
+#: The line the workflow looks for, so a run that printed nothing useful
+#: still fails.
+TEST_SENT = "Test email sent."
+
+
+def send_test(
+    *,
+    config: Callable[[], AlertConfig] = load_alert_config,
+    post: PostFn = httpx.post,
+) -> str:
+    """Send one fixed test email with the live settings (S42, #172), and
+    return what to print. Raises `MissingCredentialError` or `AlertError`.
+
+    Touches no database: a test is never recorded as an alert and never
+    changes what the morning email will say.
+    """
+    settings = config()
+    send(
+        settings,
+        "book-watch test email",
+        "<p>This is a test from book-watch. The morning email is set up.</p>",
+        "This is a test from book-watch. The morning email is set up.\n",
+        post,
+    )
+    return TEST_SENT
+
+
+def main(argv: list[str], *, run: Callable[[], str] = send_test) -> int:
+    """`python -m book_watch.alerts test`. Prints one line, and never the
+    key or the recipient: the workflow that runs this has public logs, and
+    Resend's errors can quote the recipient back."""
+    if argv != ["test"]:
+        print("Usage: python -m book_watch.alerts test")
+        return 2
+    try:
+        print(run())
+        return 0
+    except MissingCredentialError as exc:
+        print(f"Email is off: {exc}")
+    except AlertError as exc:
+        print(f"Test email failed: {_scrubbed(str(exc))}")
+    return 1
+
+
+def _scrubbed(text: str) -> str:
+    """The message with any email address or Resend key in it replaced."""
+    text = re.sub(r"[\w.+-]+@[\w-]+(\.[\w-]+)+", "<address>", text)
+    return re.sub(r"\bre_\w+", "<key>", text)
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

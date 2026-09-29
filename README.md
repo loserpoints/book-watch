@@ -66,7 +66,7 @@ Setting up a new deployment, once:
 3. **Fly:** set `app` in `fly.toml` and run Actions → Deploy. It creates the app, deploys, and checks the eBay endpoint answers correctly.
 4. **Fly:** add `EBAY_CLIENT_ID` (the production App ID) and `EBAY_CLIENT_SECRET` (its Cert ID) under the app's Secrets. Nothing in GitHub reads them, so they live only on Fly.
 5. **eBay:** under Alerts & Notifications → Marketplace Account Deletion, enter the endpoint URL and the token, and save. eBay disables a production keyset until this works.
-6. **Resend:** sign up with the address the email should go to, and create an API key with "Sending access" only. On Fly, add it as `RESEND_API_KEY`, and that address as `ALERT_EMAIL_TO`. Without either, the app runs and sends no email.
+6. **Resend:** sign up with the address the email should go to, and create an API key with "Sending access" only. On Fly, add it as `RESEND_API_KEY`, and that address as `ALERT_EMAIL_TO`. Without either, the app runs and sends no email. Then run Actions → Send a test email to check both.
 
 ## Repository structure
 
