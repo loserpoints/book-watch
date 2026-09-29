@@ -21,6 +21,13 @@
 {%- endmacro %}
 
 
+{#- Examining stopped because Open Library's daily allowance is spent. Meant
+    never to show: if it does, the checking cadence needs rethinking. -#}
+{% macro throttled() -%}
+{{ explain("Throttled", "We've used today's allowance of Open Library requests, so these copies wait. They're examined on the next check after it resets.", "throttled") }}
+{%- endmacro %}
+
+
 {#- A cover, over its placeholder. The placeholder is always there, so a slow
     or missing image leaves the book recognisable rather than an empty frame.
     `url` is the image, or the route that learns it, or none
@@ -73,7 +80,10 @@
 {#- On the real list a row carries its id, so a check can swap it back in
     out of band (`oob`), and the trash asks before it removes (S26 B6). -#}
 {% macro book_row(b, oob=False) -%}
-<li class="book-row"{% if b.id %} id="entry-{{ b.id }}"{% endif %}{% if oob %} hx-swap-oob="true"{% endif %}>
+{#- A row that is digging asks for itself again until it isn't, so it clears
+    without a reload. A row not digging never asks. -#}
+<li class="book-row"{% if b.id %} id="entry-{{ b.id }}"{% endif %}{% if oob %} hx-swap-oob="true"{% endif %}
+  {%- if b.id and b.examining == 'digging' and b.state != 'checking' %} hx-get="/books/{{ b.id }}/row" hx-trigger="every 5s" hx-swap="outerHTML"{% endif %}>
   <a class="book-row-title" href="{{ b.href }}">{{ b.title }}</a>
   <button class="icon-btn book-row-remove" type="button" aria-label="Remove {{ b.title }}"
     {%- if b.id %} hx-delete="/books/{{ b.id }}" hx-target="#want-list" hx-swap="outerHTML" hx-confirm="Remove {{ b.title }} from the list?"{% endif %}>{{ trash() }}</button>
@@ -90,7 +100,7 @@
         {%- else -%}Not checked yet
         {%- endif -%}
       </span>
-      <span class="meta">added {{ b.added }}{% if b.digging %} · {{ digging() }}{% endif %}</span>
+      <span class="meta">added {{ b.added }}{% if b.examining == 'digging' %} · {{ digging() }}{% elif b.examining == 'throttled' %} · {{ throttled() }}{% endif %}</span>
     </div>
     {% if b.state == 'ok' and b.price_text %}
       <div class="book-row-price">

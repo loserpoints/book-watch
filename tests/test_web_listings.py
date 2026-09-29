@@ -14,6 +14,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from book_watch import db
+from book_watch import enrichment as enrichment_module
 from book_watch import sweeps as sweeps_module
 from book_watch.config import DeletionEndpointConfig, MissingCredentialError
 from book_watch.ebay.errors import EbaySearchError
@@ -181,11 +182,11 @@ def test_the_app_does_not_read_ebay_credentials_at_startup(monkeypatch):
         raise AssertionError("eBay credentials must not be read at startup")
 
     # Both modules that can reach a credential. The search client reads them
-    # in `searching` and the enrichment wiring in `listings`, and patching
+    # in `searching` and the enrichment wiring in `enrichment`, and patching
     # only one leaves the other free to go eager without failing this test —
     # which is what happened when the search client moved out.
     monkeypatch.setattr(searching_module, "load_ebay_credentials", explode)
-    monkeypatch.setattr(listings_module, "load_ebay_credentials", explode)
+    monkeypatch.setattr(enrichment_module, "load_ebay_credentials", explode)
 
     client = TestClient(create_app(DELETION_CONFIG))
 
@@ -234,15 +235,14 @@ def book_client(tmp_path):
         catch, but only after the request had already returned 200.
         """
         app = FastAPI()
+        examine = enrich or (lambda work_id: None)
+        app.include_router(listings_module.build_router(search, connect, examine))
+        # The want-list searches and examines too, now that it owns checking —
+        # so it gets the same stubs. Without them it reaches for the real
+        # clients and conftest's guard fires, which is how this was caught.
         app.include_router(
-            listings_module.build_router(
-                search, connect, enrich or (lambda work_id: None)
-            )
+            web_wantlist.build_router(connect, search=search, enrich=examine)
         )
-        # The want-list searches too, now that it owns checking — so it gets
-        # the same stub. Without this it reaches for the real client and
-        # conftest's guard fires, which is how this was caught.
-        app.include_router(web_wantlist.build_router(connect, search=search))
         client = TestClient(app)
         # So a test can set up a state the routes cannot reach on their own —
         # a database with history, which is what production has.
@@ -999,7 +999,7 @@ def follow(client, url, *, limit=12):
     return seen
 
 
-def a_shelf(book_client, *, fails=()):
+def a_shelf(book_client, *, fails=(), enrich=None):
     """Three books, each with its own copies, and a search that counts calls."""
     asked = []
 
@@ -1018,7 +1018,7 @@ def a_shelf(book_client, *, fails=()):
             for n in range(3)
         ]
 
-    client = book_client(search)
+    client = book_client(search, enrich)
     for isbn, title in TITLES.items():
         add_book(client, isbn, title)
     return client, asked
@@ -1148,6 +1148,53 @@ def test_adding_a_book_starts_checking_it(book_client):
     runner = re.search(r'<div id="sweep-runner"[^>]*>', page)
     assert runner and 'hx-get="/books/4/check' in runner.group(0)
     assert 'hx-trigger="load"' in runner.group(0)
+
+
+def test_checking_from_the_list_examines_the_new_copies(book_client):
+    """As opening the book does. Before, only opening it started the pass, so
+    a book checked from the list said "digging" until somebody opened it
+    (#129)."""
+    examined = []
+    client, _ = a_shelf(book_client, enrich=examined.append)
+
+    follow(client, "/books/check")
+
+    assert len(examined) == 3
+
+
+def test_a_checked_row_says_digging_while_its_pass_runs(book_client):
+    during = []
+
+    def examine(work_id):
+        during.append(enrichment_module.busy(work_id))
+
+    client, _ = a_shelf(book_client, enrich=examine)
+
+    steps = [visible(step) for step in follow(client, "/books/check")]
+
+    assert during == [True, True, True]
+    assert all("digging" in step for step in steps[1:])
+    assert not any(enrichment_module.busy(n) for n in (1, 2, 3))
+
+
+def test_a_failed_check_starts_no_pass(book_client):
+    examined = []
+    client, _ = a_shelf(book_client, fails=set(TITLES), enrich=examined.append)
+
+    follow(client, "/books/check")
+
+    assert examined == []
+
+
+def test_a_book_already_being_examined_is_not_examined_twice(book_client):
+    examined = []
+    client, _ = a_shelf(book_client, enrich=examined.append)
+    run = enrichment_module.queued(lambda work_id: None, 1)
+
+    follow(client, "/books/check")
+    run()
+
+    assert len(examined) == 2
 
 
 def test_a_checked_book_leads_with_its_cheapest_used_copy(book_client):

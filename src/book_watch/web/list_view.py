@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from book_watch import covers
+from book_watch import covers, enrichment
 from book_watch.standing import Glance
 from book_watch.wantlist import Entry
 from book_watch.web import book_view, strips
@@ -27,7 +27,24 @@ def added(entry: Entry) -> datetime | None:
         return None
 
 
-def row(entry: Entry, glance: Glance | None, state: str = "idle") -> dict:
+def examining(entry: Entry, throttled: bool = False) -> str | None:
+    """What the row says about the work of examining its copies.
+
+    "digging" only while a pass is running or about to, since a row that says
+    it is working has to be. "throttled" when the pass cannot run because
+    Open Library's daily ceiling is spent. Nothing otherwise: the next check
+    starts the pass again.
+    """
+    if not entry.being_enriched:
+        return None
+    if enrichment.busy(entry.work_id):
+        return "digging"
+    return "throttled" if throttled else None
+
+
+def row(
+    entry: Entry, glance: Glance | None, state: str = "idle", throttled: bool = False
+) -> dict:
     """One book, as `ui.book_row` takes it.
 
     `state` is the walk's: idle, checking or failed. The row's own state says
@@ -42,7 +59,7 @@ def row(entry: Entry, glance: Glance | None, state: str = "idle") -> dict:
         "author": entry.author,
         "cover_url": _cover(entry),
         "added": since(added(entry)),
-        "digging": entry.being_enriched,
+        "examining": examining(entry, throttled),
         "state": "unchecked",
     }
     if state in ("checking", "failed"):

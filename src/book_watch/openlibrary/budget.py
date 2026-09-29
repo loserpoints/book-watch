@@ -88,6 +88,11 @@ class CallBudget:
         with closing(self._connect()) as connection:
             return self._spent(connection)
 
+    def exhausted(self) -> bool:
+        """Whether the ceiling has been reached, so the next request would be
+        refused."""
+        return self.spent() >= self._ceiling
+
     def _spent(self, connection: sqlite3.Connection) -> int:
         row = connection.execute(
             "SELECT count(*) AS n FROM openlibrary_call WHERE at > datetime('now', ?)",

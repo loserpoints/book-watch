@@ -18,7 +18,6 @@ checking live in `wantlist`; the search wiring both need is in `searching`.
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from contextlib import closing
 from datetime import UTC, datetime
 from pathlib import Path
@@ -29,8 +28,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from book_watch import copies, covers, enrichment, standing, sweeps, wantlist
-from book_watch.config import MissingCredentialError, load_ebay_credentials
-from book_watch.ebay.auth import EbayTokenProvider
+from book_watch.config import MissingCredentialError
 from book_watch.ebay.errors import EbayError
 from book_watch.ebay.search import (
     DEFAULT_LIMIT,
@@ -49,40 +47,10 @@ CEILING_PATH = "/book/{book_id}/ceiling"
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
 
-#: Start a background pass over one book's copies. Injected, like everything
-#: else that reaches a third party, so a test cannot reach one by omission.
-EnrichFn = Callable[[int], object]
-
-
-def _configured_enrichment(connect: ConnectFn) -> EnrichFn:
-    """Wire an enrichment pass to real eBay and real Open Library.
-
-    Built lazily for the same reason everything else here is: nothing that
-    could fail for want of a credential may run while the compliance endpoint
-    is trying to boot.
-    """
-
-    def start(work_id: int) -> object:
-        from book_watch.ebay.declarations import Declarations
-        from book_watch.ebay.detail import ItemDetailClient
-        from book_watch.openlibrary import CallBudget, OpenLibraryClient, Resolver
-
-        detail = ItemDetailClient(EbayTokenProvider(load_ebay_credentials()))
-        catalogue = OpenLibraryClient(CallBudget(connect))
-        return enrichment.enrich(
-            connect,
-            work_id,
-            lambda connection: Declarations(connection, detail),
-            lambda connection: Resolver(connection, catalogue),
-        )
-
-    return start
-
-
 def build_router(
     search: SearchFn | None = None,
     connect: ConnectFn | None = None,
-    enrich: EnrichFn | None = None,
+    enrich: enrichment.EnrichFn | None = None,
 ) -> APIRouter:
     router = APIRouter()
     templates = Jinja2Templates(directory=TEMPLATES_DIR)
@@ -93,8 +61,8 @@ def build_router(
     open_database: ConnectFn = (
         connect if connect is not None else open_configured_database
     )
-    start_enrichment: EnrichFn = (
-        enrich if enrich is not None else _configured_enrichment(open_database)
+    start_enrichment: enrichment.EnrichFn = (
+        enrich if enrich is not None else enrichment.configured(open_database)
     )
 
     def search_and_render(
@@ -242,7 +210,7 @@ def build_router(
         # while passing every test, because tests start from an empty
         # database and production does not.
         if book.enriched_at is None:
-            background.add_task(start_enrichment, book.work_id)
+            background.add_task(enrichment.queued(start_enrichment, book.work_id))
 
         shown = [copy for copy in for_sale if copy.tier != "excluded"]
         verdicts = {copy.item_id: copy.against(ceiling) for copy in for_sale}

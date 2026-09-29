@@ -26,6 +26,7 @@ import threading
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from book_watch.config import load_ebay_credentials
 from book_watch.ebay.declarations import Declarations
 from book_watch.ebay.errors import EbayError
 from book_watch.isbn import normalise
@@ -41,7 +42,67 @@ ConnectFn = Callable[[], sqlite3.Connection]
 #: two would ask the same questions twice. This is not a lock on the data —
 #: everything written is idempotent — it is a way of not being rude twice.
 _in_progress: set[int] = set()
+#: Books whose pass has been scheduled and not yet begun. A request schedules
+#: a pass to run after its response is written, and the response has to say
+#: "digging" already: a row that said nothing until the pass began would
+#: never know to watch for it finishing.
+_queued: set[int] = set()
 _guard = threading.Lock()
+
+#: Start a pass over one book's copies.
+EnrichFn = Callable[[int], object]
+
+
+def queued(start: EnrichFn, work_id: int) -> Callable[[], None]:
+    """Mark a pass for this book as about to run, and return the call that
+    runs it.
+
+    The mark is cleared by that call however it ends, not by the pass
+    itself. A pass that failed before it began, for want of a credential,
+    would otherwise leave its book digging for good.
+    """
+    with _guard:
+        _queued.add(work_id)
+
+    def run() -> None:
+        try:
+            start(work_id)
+        finally:
+            with _guard:
+                _queued.discard(work_id)
+
+    return run
+
+
+def busy(work_id: int) -> bool:
+    """Whether a pass for this book is running, or about to."""
+    with _guard:
+        return work_id in _in_progress or work_id in _queued
+
+
+def configured(connect: ConnectFn) -> EnrichFn:
+    """Wire a pass to real eBay and real Open Library.
+
+    Built lazily for the same reason everything else is: nothing that could
+    fail for want of a credential may run while the compliance endpoint is
+    trying to boot.
+    """
+
+    def start(work_id: int) -> object:
+        from book_watch.ebay.auth import EbayTokenProvider
+        from book_watch.ebay.detail import ItemDetailClient
+        from book_watch.openlibrary import CallBudget, OpenLibraryClient
+
+        detail = ItemDetailClient(EbayTokenProvider(load_ebay_credentials()))
+        catalogue = OpenLibraryClient(CallBudget(connect))
+        return enrich(
+            connect,
+            work_id,
+            lambda connection: Declarations(connection, detail),
+            lambda connection: Resolver(connection, catalogue),
+        )
+
+    return start
 
 
 @dataclass(frozen=True, slots=True)

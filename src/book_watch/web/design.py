@@ -52,7 +52,7 @@ def sample_books() -> list[dict]:
             "listed": 9,
             "checked": "2h",
             "added": "2d",
-            "digging": True,
+            "examining": "digging",
             "price_text": "$18",
             "verdict": "over",
             "over_by": "$3",

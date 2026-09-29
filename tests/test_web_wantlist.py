@@ -8,9 +8,10 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from book_watch import db
+from book_watch import db, enrichment
 from book_watch.config import DeletionEndpointConfig
 from book_watch.openlibrary import Candidate, EditionIdentity, OpenLibraryUnavailable
+from book_watch.openlibrary.budget import DAILY_CEILING
 from book_watch.web import wantlist as web_wantlist
 from book_watch.web.app import create_app
 
@@ -444,18 +445,85 @@ def test_the_app_does_not_open_the_database_at_startup(monkeypatch):
 # --- the tag that says work is outstanding ---------------------------------
 
 
-def test_a_book_with_copies_nobody_has_examined_says_so(client):
+def outstanding(client):
+    """A book with copies found and not yet examined. Returns its work id."""
+    add(client, "9780099448396", "Crash")
+    with client.app.state.connect() as connection:
+        connection.execute("UPDATE work SET copies_fetched_at = datetime('now')")
+        connection.commit()
+        return connection.execute("SELECT id FROM work").fetchone()["id"]
+
+
+def test_a_book_being_examined_says_so(client):
     """The tag the page renders, not just the property behind it.
 
     Asserted here because it once did not render at all: the property was
     right, the template edit silently did not apply, and nothing failed.
     """
-    add(client, "9780099448396", "Crash")
-    with client.app.state.connect() as connection:
-        connection.execute("UPDATE work SET copies_fetched_at = datetime('now')")
-        connection.commit()
+    work_id = outstanding(client)
+    run = enrichment.queued(lambda work_id: None, work_id)
 
     assert 'class="explain digging"' in client.get("/").text
+    run()
+
+
+def test_a_digging_row_asks_for_itself_until_it_is_done(client):
+    work_id = outstanding(client)
+    run = enrichment.queued(lambda work_id: None, work_id)
+
+    assert 'hx-get="/books/1/row"' in client.get("/").text
+    run()
+    row = client.get("/books/1/row").text
+
+    assert 'class="explain digging"' not in row
+    assert "hx-trigger" not in row
+
+
+def test_a_book_nothing_is_examining_does_not_claim_to_be(client):
+    """Copies wait for the next check. Saying "digging" meanwhile would claim
+    work nobody is doing (#129)."""
+    outstanding(client)
+
+    page = client.get("/").text
+
+    assert 'class="explain digging"' not in page
+    assert "Throttled" not in page
+    assert "/row" not in page
+
+
+def test_a_book_waiting_on_the_open_library_ceiling_says_throttled(client):
+    outstanding(client)
+    with client.app.state.connect() as connection:
+        connection.executemany(
+            "INSERT INTO openlibrary_call (endpoint) VALUES (?)",
+            [("isbn",)] * DAILY_CEILING,
+        )
+        connection.commit()
+
+    page = client.get("/").text
+
+    assert "Throttled" in page
+    assert 'class="explain digging"' not in page
+    assert "/row" not in page
+
+
+def test_a_scheduled_pass_that_fails_to_start_stops_the_digging(client):
+    """A pass that dies before it begins, say for want of an eBay key, must
+    not leave its book digging and asking for itself for good."""
+    work_id = outstanding(client)
+
+    def no_credentials(work_id):
+        raise RuntimeError("EBAY_CLIENT_ID is not set.")
+
+    run = enrichment.queued(no_credentials, work_id)
+    with pytest.raises(RuntimeError):
+        run()
+
+    assert 'class="explain digging"' not in client.get("/").text
+
+
+def test_a_row_removed_while_digging_answers_with_nothing(client):
+    assert client.get("/books/99/row").text == ""
 
 
 def test_a_book_nobody_has_opened_does_not_claim_to_be_working(client):

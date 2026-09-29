@@ -2,12 +2,13 @@
 {#- One book as the want-list shows it, built from the system's book row
     (S34, #98).
 
-    Rendered from two places and it must look identical from both: the list
-    itself, and the endpoint that checks a single book and swaps this row back
-    in. That is why `list_view.row` decides the row's state rather than
-    either caller.
+    Rendered from three places and it must look identical from each: the
+    list itself, the endpoint that checks a single book and swaps this row
+    back in, and the endpoint a digging row asks for itself. That is why
+    `list_view.row` decides the row's state rather than any caller.
 
-    `state` is 'idle', 'checking' or 'failed'. A row never fetches anything
-    itself: the runner drives the whole walk and swaps finished rows back in
-    out of band, so there is one place that decides what happens next. -#}
-{{ ui.book_row(want_row(book, glance, state), oob=oob) }}
+    `state` is 'idle', 'checking' or 'failed'. The runner drives the whole
+    walk and swaps finished rows back in out of band, so there is one place
+    that decides what happens next. The one thing a row fetches itself is
+    its own state while digging, so it clears when the pass finishes. -#}
+{{ ui.book_row(want_row(book, glance, state, throttled=throttled | default(false)), oob=oob) }}
