@@ -28,6 +28,10 @@ These rules keep the app's requests to eBay and Open Library small, spaced out a
 - Every book is searched once a day at 7am New York time, one at a time, and each book's new copies are examined before the next book is searched. A run the app was down for runs when it starts again. Each run records how many Open Library requests it spent.
 - Each listing's details are fetched once, ever. A listing is fetched again only when the app starts reading a new field, and only while it is listed.
 
+### Resend
+
+- At most one request a day, after the daily check, and none on mornings with nothing to send.
+
 ### Both
 
 - Opening the want-list makes no requests.
