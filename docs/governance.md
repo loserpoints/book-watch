@@ -62,16 +62,21 @@ Related issues can become one slice: one is refined, and the others are closed a
 **Starting a milestone:**
 
 1. Choose its issues from the open issues.
-2. Turn them into slices.
-3. Create its folder and write `original-scope.md`.
-4. Create its GitHub milestone, titled `M8 - Always current`, with the goal sentence as its description, followed by a link to its folder on `main`.
+2. Draft its name, its goal and its slices, and have them approved before any issue is rewritten or any code is written.
+3. Turn them into slices.
+4. Create its folder and write `original-scope.md`.
+5. Create its GitHub milestone, titled `M8 - Always current`, with the goal sentence as its description, followed by a link to its folder on `main`.
+
+A milestone can start while the one before it waits to close.
 
 **Closing a milestone:**
+
+A milestone closes only once its outcome has been checked on the live app. Its close pull request is drafted on its own branch and stays open until then.
 
 1. Write `delivered-scope.md`.
 2. Route each learning into the document that should change because of it: `CONTRIBUTING.md`, `CLAUDE.md`, the runbook, a rules or surface doc, the design system, or this file. Make the change, then record the learning in `learnings.md` with a link to where it went. A learning with nowhere to go is dropped.
 3. List the issues carried forward.
-4. Choose the next milestone from the open issues.
+4. Choose the next milestone from the open issues, if one has not already started.
 
 ## Writing style
 
