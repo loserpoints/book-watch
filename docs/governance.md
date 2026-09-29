@@ -64,6 +64,7 @@ Related issues can become one slice: one is refined, and the others are closed a
 1. Choose its issues from the open issues.
 2. Turn them into slices.
 3. Create its folder and write `original-scope.md`.
+4. Create its GitHub milestone, titled `M8 - Always current`, with the goal sentence as its description, followed by a link to its folder on `main`.
 
 **Closing a milestone:**
 
