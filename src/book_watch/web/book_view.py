@@ -47,6 +47,7 @@ def copy_row(
     placed: Standing | None,
     ceiling: Money | None,
     listed: Prices,
+    new: bool = False,
 ) -> dict:
     """One copy, as `ui.copy_row` takes it."""
     delivered = copy.landed_cost
@@ -58,6 +59,7 @@ def copy_row(
         place = {"place": None, "place_text": "can't compare: another currency"}
     return {
         "url": copy.url,
+        "new": new,
         "listing_title": copy.title,
         "photo_url": copy.thumbnail,
         "photos": list(copy.photos),

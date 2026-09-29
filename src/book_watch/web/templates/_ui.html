@@ -62,8 +62,8 @@
 {%- endmacro %}
 
 
-{% macro tag(text, strong=False) -%}
-<span class="tag{% if strong %} tag-strong{% endif %}">{{ text }}</span>
+{% macro tag(text, strong=False, accent=False) -%}
+<span class="tag{% if strong %} tag-strong{% endif %}{% if accent %} tag-accent{% endif %}">{{ text }}</span>
 {%- endmacro %}
 
 
@@ -99,7 +99,7 @@
     <div class="book-row-facts">
       {% if b.author %}<span class="book-row-author">{{ b.author }}</span>{% endif %}
       <span class="meta">
-        {%- if b.state == 'ok' -%}{{ b.listed }} listed · checked {{ b.checked }}
+        {%- if b.state == 'ok' -%}{{ b.listed }} listed{% if b.new %} · <span class="new-count">{{ b.new }} new</span>{% endif %} · checked {{ b.checked }}
         {%- elif b.state == 'none' -%}0 listed · checked {{ b.checked }}
         {%- elif b.state == 'maybes' -%}{{ b.maybes }} maybe{{ '' if b.maybes == 1 else 's' }} · checked {{ b.checked }}
         {%- elif b.state == 'checking' -%}<span class="checking">Checking…</span>
@@ -148,7 +148,7 @@
       {%- endif %}
       {%- if c.place_text %} <span class="meta">{{ c.place_text }}</span>{% else %} {{ c.place }}{% endif %}
     </div>
-    <div class="copy-tags">{{ tag(c.condition, strong=True) }}{% if c.abroad %}{{ tag('ships from ' ~ c.abroad) }}{% endif %}</div>
+    <div class="copy-tags">{% if c.new %}{{ tag('new', accent=True) }}{% endif %}{{ tag(c.condition, strong=True) }}{% if c.abroad %}{{ tag('ships from ' ~ c.abroad) }}{% endif %}</div>
     <a class="copy-listing" href="{{ c.url }}" rel="noopener noreferrer" target="_blank">{{ c.listing_title }}</a>
   </div>
   {%- if dismiss %}

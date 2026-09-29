@@ -360,6 +360,9 @@ details.digging > summary {
   white-space: nowrap;
 }
 .tag-strong { font-weight: 600; }
+/* A copy that appeared since the book was last opened (S39). */
+.tag-accent { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.new-count { color: var(--accent); font-weight: 600; }
 
 .chip {
   display: inline-flex;

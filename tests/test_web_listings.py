@@ -1251,3 +1251,46 @@ def test_the_ceiling_shows_against_the_cheapest_copy(book_client):
 
     # One book has a ceiling; the other two say nothing about limits.
     assert page.count("under your limit") == 1
+
+
+# --- new since I last looked (S39, #142) -------------------------------------
+
+
+def test_copies_new_since_i_last_looked_are_marked_on_the_list_and_the_book(
+    book_client,
+):
+    client, _ = a_shelf(book_client)
+    follow(client, "/books/check")
+    all_certain(client)
+    first = client.get("/book/2").text
+    assert "tag-accent" not in first  # Nothing is new on a first visit.
+
+    # Three days pass. Since then: one copy newly listed, one relisted with its
+    # old listing date, and one I had already seen.
+    with client.app.state.connect() as connection:
+        connection.execute(
+            "UPDATE entry SET looked_at = datetime('now', '-3 days') WHERE id = 2"
+        )
+        connection.execute(
+            "UPDATE copy SET first_seen_at = datetime('now', '-4 days') "
+            "WHERE item_id LIKE '9780099448396|%'"
+        )
+        connection.execute(
+            "UPDATE copy SET first_seen_at = datetime('now', '-1 day'), "
+            "listed_at = datetime('now', '-1 day') WHERE item_id = '9780099448396|0'"
+        )
+        connection.execute(
+            "UPDATE copy SET first_seen_at = datetime('now', '-1 day'), "
+            "listed_at = '2026-01-01T00:00:00+00:00' "
+            "WHERE item_id = '9780099448396|1'"
+        )
+        connection.commit()
+
+    assert "1 new" in visible(client.get("/").text)
+
+    book = client.get("/book/2").text
+    assert book.count("tag-accent") == 1
+    # A chip tapped on the page reloads it. Same visit, same marks.
+    assert client.get("/book/2?everywhere=0").text.count("tag-accent") == 1
+    # Seen now, so the list stops counting it.
+    assert " new " not in visible(client.get("/").text)

@@ -25,7 +25,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Literal
 
-from book_watch.copies import ConditionClass, Copy, Verdict, populations
+from book_watch.copies import ConditionClass, Copy, Verdict, is_new, populations
 from book_watch.ebay.search import Money, Scope
 from book_watch.sweeps import swept_at
 from book_watch.wantlist import Entry
@@ -315,6 +315,8 @@ class Glance:
     #: strip (S34, #76). The same populations `standings` ranked, so the strip
     #: cannot disagree with the rank. Empty until something is placeable.
     seen_prices: dict[tuple[str, str], list[Decimal]] = field(default_factory=dict)
+    #: Copies certainly this book that appeared since I last opened it (S39).
+    new: int = 0
 
 
 def glance(
@@ -329,6 +331,11 @@ def glance(
         uncertain=sum(1 for one in here if one.tier not in ("certain", "excluded")),
         headline=headline(here, standing, entry.will_pay),
         seen_prices=prices(seen),
+        new=sum(
+            1
+            for one in here
+            if one.tier == "certain" and is_new(one, entry.last_looked)
+        ),
     )
 
 
