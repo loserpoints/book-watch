@@ -19,6 +19,8 @@
 - Run every change to a screen in a real browser at 360px wide, in both themes, and look at it. Tests miss layout, fonts and taps.
 - Tests check what a reader sees, not the markup that carries it, so they survive a redesign.
 - A check proves nothing until it has been seen to fail. Break the code on purpose, on a committed tree, and confirm the break applied.
+- Reset process-wide state between tests. A test that passes only because another ran first proves nothing.
+- Run the production entrypoint before trusting what only it starts, such as the daily check. No test starts it.
 - Keep labelled real data in the repository as test fixtures, so a study becomes a regression test.
 - Tests start empty and miss what production holds. After a change deploys, Alan checks it on his phone against the live data, and its pull request says what to check.
 

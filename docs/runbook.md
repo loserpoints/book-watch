@@ -7,6 +7,7 @@
 - One deploy runs at a time.
 - To redeploy without a commit, for example after changing a secret: Actions → Deploy → Run workflow, on `main`.
 - A deploy after 7am New York time, on a day whose daily check has not finished, starts that check as the app boots.
+- Each daily check logs one line, `Daily check: ok, 6 books, 0 failed, 0 Open Library requests`, readable in Fly's log viewer.
 
 ## Roll back
 
