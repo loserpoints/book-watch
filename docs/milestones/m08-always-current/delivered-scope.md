@@ -2,7 +2,7 @@
 
 ## Goal
 
-The list checks itself at 7am New York time every day, and opening the app shows which copies are new since I last opened each book.
+The list checks itself at 7am New York time every day, and opening the app shows which copies are new since I last opened each book, with J1's two-week signal to be checked at M9's close.
 
 ## Jobs advanced
 
