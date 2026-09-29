@@ -1,0 +1,37 @@
+name: Send a test email
+
+# Checks the morning email's setup (S42, #172): run it after setting or
+# changing the Resend key on Fly.
+#
+# It runs inside the live Fly machine, over `flyctl ssh console`, so it uses
+# the app's real secrets and the Resend key never has to be stored in GitHub.
+# This repository is public and so are these logs: the command prints one
+# line and never the key or the recipient.
+#
+# Requires the repository secret FLY_API_TOKEN, the one Deploy uses.
+on:
+  workflow_dispatch:
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Send one test email from the live app
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          app=$(grep -E '^app *= *' fly.toml | head -1 | cut -d'"' -f2)
+          # The success line is checked as well as the exit status, so a
+          # session that ends without running the command still fails.
+          out=$(flyctl ssh console --app "${app}" \
+            --command "/app/.venv/bin/python -m book_watch.alerts test" 2>&1) || status=$?
+          echo "${out}"
+          if [ "${status:-0}" -ne 0 ] || ! grep -q "Test email sent." <<< "${out}"; then
+            echo "::error::The test email was not sent. The line above says why."
+            exit 1
+          fi

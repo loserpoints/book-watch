@@ -320,3 +320,58 @@ def test_raising_a_limit_never_sends_an_email(connect):
         )
         connection.commit()
         assert alerts.due(connection) == []
+
+
+# --- the test email (S42, #172) ----------------------------------------------
+
+
+def test_the_test_email_sends_one_fixed_message():
+    resend = Resend()
+
+    said = alerts.send_test(config=lambda: SETTINGS, post=resend)
+
+    assert said == "Test email sent."
+    [sent] = resend.sent
+    assert sent["json"]["subject"] == "book-watch test email"
+    assert sent["json"]["to"] == ["reader@example.com"]
+
+
+def test_the_test_email_leaves_the_morning_email_alone(morning):
+    alerts.send_test(config=lambda: SETTINGS, post=Resend())
+
+    resend = Resend()
+    assert notify(morning, resend) == 1
+
+
+def test_the_command_says_email_is_off_and_which_secret(capsys):
+    def missing():
+        raise MissingCredentialError("RESEND_API_KEY is not set.")
+
+    status = alerts.main(["test"], run=lambda: alerts.send_test(config=missing))
+
+    assert status == 1
+    assert "Email is off: RESEND_API_KEY is not set." in capsys.readouterr().out
+
+
+def test_the_command_gives_resends_reason_without_the_address_or_key(capsys):
+    def rejected():
+        raise alerts.AlertError(
+            'Resend said 403: {"message": "You can only send testing emails to '
+            "your own email address (reader@example.com). Key re_abc123 lacks "
+            'access."}'
+        )
+
+    status = alerts.main(["test"], run=rejected)
+
+    out = capsys.readouterr().out
+    assert status == 1
+    assert "Test email failed: Resend said 403" in out
+    assert "reader@example.com" not in out
+    assert "re_abc123" not in out
+
+
+def test_the_command_prints_the_line_the_workflow_looks_for(capsys):
+    status = alerts.main(["test"], run=lambda: "Test email sent.")
+
+    assert status == 0
+    assert capsys.readouterr().out.strip() == "Test email sent."
