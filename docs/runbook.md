@@ -6,6 +6,7 @@
 - A failed CI run never deploys.
 - One deploy runs at a time.
 - To redeploy without a commit, for example after changing a secret: Actions → Deploy → Run workflow, on `main`.
+- A deploy after 7am New York time, on a day whose daily check has not finished, starts that check as the app boots.
 
 ## Roll back
 
