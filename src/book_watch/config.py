@@ -128,3 +128,28 @@ def load_database_path(*, use_dotenv: bool = True) -> Path:
     if use_dotenv:
         load_dotenv()
     return Path(_require("BOOK_WATCH_DB_PATH"))
+
+
+@dataclass(frozen=True, slots=True, repr=False)
+class AlertConfig:
+    """Where the morning email goes, and the key that sends it (S40).
+
+    The recipient is read from the environment, never written in the
+    repository: the repository is public and the address is a person's.
+    """
+
+    api_key: str
+    to: str
+
+    def __repr__(self) -> str:
+        return "AlertConfig(api_key=<hidden>, to=<hidden>)"
+
+
+def load_alert_config(*, use_dotenv: bool = True) -> AlertConfig:
+    """Read the Resend key and the recipient. Missing either means email is
+    off, which the caller treats as a setting rather than a failure."""
+    if use_dotenv:
+        load_dotenv()
+    return AlertConfig(
+        api_key=_require("RESEND_API_KEY"), to=_require("ALERT_EMAIL_TO")
+    )
