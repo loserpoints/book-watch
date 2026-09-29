@@ -213,16 +213,19 @@ def test_the_daily_check_records_how_many_it_emailed(connect):
     assert run["emailed"] == 3
 
 
-def test_a_failed_email_fails_the_daily_check_and_says_why(connect):
+def test_a_failed_email_is_logged_and_not_shown_in_the_app(connect, caplog):
+    """For the logs, not the app. The check itself went fine."""
+
     def broken():
         raise alerts.AlertError("Resend said 500")
 
-    daily.run(connect, no_search, lambda w: None, lambda: 0, broken)
+    with caplog.at_level("WARNING", logger="book_watch.daily"):
+        daily.run(connect, no_search, lambda w: None, lambda: 0, broken)
 
     with closing(connect()) as connection:
         run = connection.execute("SELECT * FROM daily_run").fetchone()
         said = daily.status(connection, datetime.now(UTC) + timedelta(minutes=1))
-    assert run["outcome"] == "failed"
+    assert run["outcome"] == "ok"
     assert run["email_failed"] == 1
-    assert said.label == "Daily check failed"
-    assert "couldn't send its email" in said.explanation
+    assert said is None
+    assert "could not send its email: Resend said 500" in caplog.text

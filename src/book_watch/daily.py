@@ -139,14 +139,15 @@ def run(
             try:
                 emailed = notify()
             except AlertError as exc:
+                # For the logs, not the app: the check itself went fine, and
+                # nothing was recorded as sent, so tomorrow tries again.
                 logger.warning("Daily check could not send its email: %s", exc)
                 email_failed = True
     except Exception:
         crashed = True
         raise
     finally:
-        broke = failed or crashed or email_failed
-        outcome = "failed" if broke else "throttled" if throttled else "ok"
+        outcome = "failed" if failed or crashed else "throttled" if throttled else "ok"
         with closing(connect()) as connection:
             connection.execute(
                 "UPDATE daily_run SET finished_at = datetime('now'), outcome = ?, "
@@ -224,7 +225,6 @@ class Status:
     finished: datetime | None
     books: int = 0
     failed: int = 0
-    email_failed: bool = False
 
     @property
     def label(self) -> str:
@@ -237,11 +237,6 @@ class Status:
     @property
     def explanation(self) -> str:
         when = _local(self.finished)
-        if self.kind == "failed" and self.email_failed and not self.failed:
-            return (
-                f"The check that finished {when} couldn't send its email. "
-                "It tries the same copies again tomorrow."
-            )
         if self.kind == "failed":
             return (
                 f"The check that finished {when} couldn't search {self.failed} "
@@ -270,7 +265,7 @@ def status(connection: sqlite3.Connection, now: datetime) -> Status | None:
     there is nothing to say. Silence is the normal case: each row already
     says when its book was checked."""
     latest = connection.execute(
-        "SELECT finished_at, outcome, books, failed, email_failed FROM daily_run "
+        "SELECT finished_at, outcome, books, failed FROM daily_run "
         "WHERE finished_at IS NOT NULL ORDER BY id DESC LIMIT 1"
     ).fetchone()
     finished = _read(latest["finished_at"]) if latest else None
@@ -283,11 +278,5 @@ def status(connection: sqlite3.Connection, now: datetime) -> Status | None:
             return None
         return Status("missed", finished)
     if latest["outcome"] in ("failed", "throttled"):
-        return Status(
-            latest["outcome"],
-            finished,
-            latest["books"],
-            latest["failed"],
-            bool(latest["email_failed"]),
-        )
+        return Status(latest["outcome"], finished, latest["books"], latest["failed"])
     return None

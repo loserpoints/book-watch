@@ -10,12 +10,7 @@ CREATE TABLE emailed_copy (
     PRIMARY KEY (item_id, work_id)
 );
 
--- What each daily check sent, and whether sending failed.
+-- What each daily check sent, and whether sending failed. Kept for the
+-- record only: a failed send is logged, and never shown in the app.
 ALTER TABLE daily_run ADD COLUMN emailed INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE daily_run ADD COLUMN email_failed INTEGER NOT NULL DEFAULT 0;
-
--- A book not opened since S39 has no visit, and nothing is new on a book
--- with no visit, so it could never alert. Counting now as its visit lets it
--- alert from here on, and keeps anything found before the email existed out
--- of the first one.
-UPDATE entry SET looked_at = datetime('now') WHERE looked_at IS NULL;

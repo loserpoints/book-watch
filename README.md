@@ -26,7 +26,7 @@ It works if, over a month, I stop searching marketplaces by hand and it finds at
 - Shows the whole list at a glance, with the cheapest copy of each book and whether it is under the limit ([want list](docs/surfaces/want-list.md)).
 - Shows every copy of one book with its condition, the seller's note and its photos, so I can judge it without opening the listing ([active listings](docs/surfaces/active-listings.md)).
 - Checks every book at 7am New York time, and marks the copies that are new since I last opened each book.
-- Emails me the next morning when a new copy is under its book's limit, and sends nothing on mornings with none ([pricing](docs/rules/pricing.md)).
+- Emails me the next morning when a new copy is under its book's limit, and sends nothing on mornings with none ([alerts](docs/rules/alerts.md)).
 - Installs on a phone as an app.
 - Stays well inside what eBay and Open Library allow ([rate limits](docs/rules/rate-limits.md)).
 
