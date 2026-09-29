@@ -14,6 +14,7 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 - Each copy's delivered price, green with ✓ when under the limit or with the amount over when over. A copy with unknown shipping shows its price and "+ shipping?".
 - Where each copy sits among the others of its kind, as a strip, or why it can't be placed.
 - Each copy's condition, where it ships from when outside the US, and its eBay listing title.
+- "new" on a copy that appeared since the book was last opened (see [matching](../rules/matching.md)).
 - What the seller says the copy is: "goodwill_books says: Paperback · Vintage · 1995".
 - The seller's condition note, clamped to two lines.
 - A photo of each copy, with a count when there is more than one.

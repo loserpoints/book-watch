@@ -10,7 +10,7 @@ The want list shows every book I'm watching and whether any copy is worth my att
 - The book's title, cover and author. A book with no cover shows its title on a placeholder.
 - The cheapest copy's delivered price, as "from $10.49". It is green with ✓ when under the book's limit, and shows the amount over when over (see [pricing](../rules/pricing.md)).
 - A strip of every asking price seen, with the limit as a dashed line, when there are at least two different prices.
-- How many copies are listed, and how long ago the book was checked: "3 listed · checked 2h".
+- How many copies are listed, how many are new since the book was last opened, and how long ago it was checked: "3 listed · 2 new · checked 2h".
 - When the book was added: "added 3w".
 - "digging" while the app is working out which copies are this book. The row updates itself when that finishes. Tapping it explains.
 - "Throttled" when that work is waiting because the day's Open Library requests are used up. Tapping it explains.
