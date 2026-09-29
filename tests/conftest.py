@@ -15,6 +15,7 @@ one.
 import httpx
 import pytest
 
+from book_watch import enrichment
 from book_watch.openlibrary import forget_the_pace
 
 
@@ -52,3 +53,15 @@ def a_fresh_pace():
     forget_the_pace()
     yield
     forget_the_pace()
+
+
+@pytest.fixture(autouse=True)
+def nothing_being_examined():
+    """Forget which books have a pass running or queued, between tests.
+
+    That record is process-wide, like the pace. A test that failed before its
+    pass ran would otherwise leave a book digging in the next test.
+    """
+    enrichment.forget_passes()
+    yield
+    enrichment.forget_passes()

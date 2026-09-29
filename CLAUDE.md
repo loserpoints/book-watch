@@ -14,4 +14,5 @@
 - Don't claim something works without running it.
 - This is a hobby project on a Pro account. Prefer one well-aimed search over three broad ones, and don't re-derive what the docs state.
 - Ask before running anything that makes real requests in bulk.
+- Name an issue or pull request whenever you cite its number, such as "#148 (Restore the database without a local machine)". A bare number means nothing to a reader without GitHub open.
 - If this file contradicts another doc, the other doc wins. Say so.

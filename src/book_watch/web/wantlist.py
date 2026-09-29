@@ -23,11 +23,11 @@ from collections.abc import Callable
 from contextlib import closing
 from pathlib import Path
 
-from fastapi import APIRouter, Form, Request
+from fastapi import APIRouter, BackgroundTasks, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
-from book_watch import covers, db, standing, sweeps, wantlist
+from book_watch import covers, db, enrichment, standing, sweeps, wantlist
 from book_watch.config import MissingCredentialError, load_database_path
 from book_watch.ebay.errors import EbayError
 from book_watch.ebay.search import DEFAULT_LIMIT
@@ -43,6 +43,7 @@ from book_watch.web.searching import LazyBrowseSearch, SearchFn
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 CHECK_ALL_PATH = "/books/check"
 CHECK_ONE_PATH = "/books/{book_id}/check"
+ROW_PATH = "/books/{book_id}/row"
 
 ConnectFn = Callable[[], sqlite3.Connection]
 
@@ -100,6 +101,7 @@ def build_router(
     connect: ConnectFn | None = None,
     catalogue: LazyCatalogue | None = None,
     search: SearchFn | None = None,
+    enrich: enrichment.EnrichFn | None = None,
 ) -> APIRouter:
     router = APIRouter()
     templates = Jinja2Templates(directory=TEMPLATES_DIR)
@@ -112,6 +114,18 @@ def build_router(
     )
     open_library = catalogue if catalogue is not None else LazyCatalogue(open_database)
     run_search: SearchFn = search if search is not None else LazyBrowseSearch()
+    start_enrichment: enrichment.EnrichFn = (
+        enrich if enrich is not None else enrichment.configured(open_database)
+    )
+    budget = CallBudget(open_database)
+
+    def throttled(books: list) -> bool:
+        """Whether a book waiting to be examined is waiting on the ceiling.
+
+        Counted only when some book is waiting, so a list with nothing
+        outstanding reads nothing more than it did.
+        """
+        return any(book.being_enriched for book in books) and budget.exhausted()
 
     def at_a_glance(connection: sqlite3.Connection, books: list) -> dict[int, object]:
         """What each book's market looks like, read from the store alone.
@@ -139,7 +153,13 @@ def build_router(
         return templates.TemplateResponse(
             request,
             "_list.html",
-            {"books": books, "glances": glances, "checking": checking, "stale": stale},
+            {
+                "books": books,
+                "glances": glances,
+                "checking": checking,
+                "stale": stale,
+                "throttled": throttled(books),
+            },
         )
 
     def render_page(
@@ -167,6 +187,7 @@ def build_router(
                 "books": books,
                 "glances": glances,
                 "stale": stale,
+                "throttled": throttled(books),
                 # The book just added, which starts checking itself on load.
                 # Adding a book is an explicit act, so this is not an
                 # exception to "nothing sweeps on page load" — and it means a
@@ -433,6 +454,7 @@ def build_router(
                 "book": book,
                 "glance": glance,
                 "state": state,
+                "throttled": throttled([b for b in (book, next_book) if b]),
                 "next_book": next_book,
                 "next_glance": next_glance,
                 "next_id": queue[0] if queue else None,
@@ -495,6 +517,7 @@ def build_router(
     @router.get(CHECK_ONE_PATH, response_class=HTMLResponse)
     def check_one(
         request: Request,
+        background: BackgroundTasks,
         book_id: int,
         queue: str = "",
         force: int = 0,
@@ -526,6 +549,16 @@ def build_router(
                 book = wantlist.get(connection, book_id)
             glance = standing.glance(connection, book)
 
+        # New copies are examined straight away, as opening the book does.
+        # Before this, only opening the book started the pass, so a book
+        # checked from here said "digging" until somebody opened it (#129).
+        if (
+            state != "failed"
+            and book.being_enriched
+            and not enrichment.busy(book.work_id)
+        ):
+            background.add_task(enrichment.queued(start_enrichment, book.work_id))
+
         return render_step(
             request,
             book=book,
@@ -534,6 +567,30 @@ def build_router(
             queue=rest,
             force=bool(force),
             done=done + 1,
+        )
+
+    @router.get(ROW_PATH, response_class=HTMLResponse)
+    def one_row(request: Request, book_id: int) -> HTMLResponse:
+        """One row, as the list would draw it now. A digging row asks for
+        this until it isn't digging. Reads the store only."""
+        with closing(open_database()) as connection:
+            try:
+                book = wantlist.get(connection, book_id)
+            except LookupError:
+                # Removed while it was digging. An empty answer removes the
+                # row, which is what the list would now show.
+                return HTMLResponse("")
+            glance = standing.glance(connection, book)
+        return templates.TemplateResponse(
+            request,
+            "_entry.html",
+            {
+                "book": book,
+                "glance": glance,
+                "state": "idle",
+                "oob": False,
+                "throttled": throttled([book]),
+            },
         )
 
     return router

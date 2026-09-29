@@ -14,6 +14,7 @@ These rules keep the app's requests to eBay and Open Library small, spaced out a
 - Every answer Open Library gives is stored, including "no record of this number". It is asked again only when the app starts reading a new field from it.
 - A request that fails to reach Open Library stores nothing, so the question is asked again on the next pass.
 - Adding a book costs one request. Examining one book's copies costs roughly ten to fifteen.
+- A book's new copies are examined after any check that finds them, one pass per book at a time.
 - A book's cover is looked up at most once, in no more than two requests. Cover images load from Open Library's image server, not its API.
 
 ### eBay
