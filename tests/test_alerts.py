@@ -229,3 +229,94 @@ def test_a_failed_email_is_logged_and_not_shown_in_the_app(connect, caplog):
     assert run["email_failed"] == 1
     assert said is None
     assert "could not send its email: Resend said 500" in caplog.text
+
+
+# --- price drops (S41, #165) --------------------------------------------------
+
+
+def a_past_price(connect, isbn, item, price, shipping, when):
+    """What this copy cost at a moment in the past, as the price history
+    records it. Filed under a past 'everywhere' search, so the book's current
+    US search is still the newest."""
+    with closing(connect()) as connection:
+        work_id = connection.execute(
+            "SELECT work_id FROM entry WHERE typed = ?", (isbn,)
+        ).fetchone()["work_id"]
+        sweep_id = connection.execute(
+            "INSERT INTO sweep (work_id, scope, asked_for, at) "
+            "VALUES (?, 'everywhere', 50, datetime('now', ?))",
+            (work_id, when),
+        ).lastrowid
+        connection.execute(
+            "INSERT INTO sighting (item_id, work_id, sweep_id, price, currency, "
+            "shipping) VALUES (?, ?, ?, ?, 'USD', ?)",
+            (item, work_id, sweep_id, price, shipping),
+        )
+        connection.commit()
+
+
+@pytest.fixture
+def drops(connect):
+    """Crash was last opened two days ago. Since then, one copy seen over the
+    limit dropped under it, and one was under all along."""
+    a_copy(connect, CRASH, "dropped", "8.00", "1.00", "-4 days", "-4 days")
+    a_past_price(connect, CRASH, "dropped", "12.00", "1.00", "-3 days")
+    a_past_price(connect, CRASH, "dropped", "8.00", "1.00", "-1 day")
+    a_copy(connect, CRASH, "always-under", "8.00", "0.00", "-4 days", "-4 days")
+    a_past_price(connect, CRASH, "always-under", "8.00", "0.00", "-3 days")
+    return connect
+
+
+def test_a_copy_that_dropped_under_the_limit_since_i_looked_belongs(drops):
+    with closing(drops()) as connection:
+        due = alerts.due(connection)
+
+    assert [(a.copy.item_id, str(a.was.amount)) for a in due] == [("dropped", "13.00")]
+
+
+def test_the_email_says_it_is_a_price_drop_and_from_what(drops):
+    resend = Resend()
+
+    notify(drops, resend)
+
+    body = resend.sent[0]["json"]["text"]
+    assert "Price drop from $13: $9 delivered, limit $10" in body
+
+
+def test_a_dropped_copy_is_emailed_once(drops):
+    resend = Resend()
+    notify(drops, resend)
+
+    assert notify(drops, resend) == 0
+    assert len(resend.sent) == 1
+
+
+def test_a_drop_i_have_already_seen_is_not_emailed(drops):
+    """Opened again after the drop: I have seen the new price."""
+    with closing(drops()) as connection:
+        connection.execute("UPDATE entry SET looked_at = datetime('now')")
+        connection.commit()
+        assert alerts.due(connection) == []
+
+
+def test_new_copies_and_drops_share_one_email(drops):
+    a_copy(drops, CRASH, "new-cheap", "8.00", "1.00", "-1 day", "-1 day")
+    resend = Resend()
+
+    assert notify(drops, resend) == 2
+    assert len(resend.sent) == 1
+    assert resend.sent[0]["json"]["subject"] == "2 copies under your limit"
+
+
+def test_raising_a_limit_never_sends_an_email(connect):
+    """A copy over the old limit, under the new one, at an unchanged price.
+    The old price is judged against the limit as it is now, so a raise can
+    only remove drops, never make one."""
+    a_copy(connect, CRASH, "unchanged", "12.00", "0.00", "-4 days", "-4 days")
+    a_past_price(connect, CRASH, "unchanged", "12.00", "0.00", "-3 days")
+    with closing(connect()) as connection:
+        connection.execute(
+            "UPDATE entry SET ceiling = '15.00' WHERE typed = ?", (CRASH,)
+        )
+        connection.commit()
+        assert alerts.due(connection) == []
