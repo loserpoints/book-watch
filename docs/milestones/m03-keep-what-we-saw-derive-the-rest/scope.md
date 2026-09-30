@@ -2,7 +2,7 @@
 
 ## Goal
 
-Observations are kept and never rewritten, and everything else is derived on read, so a rule change re-judges every book for free.
+Observations are kept and conclusions derived on read, copies accumulate rather than being replaced, and each observation records the code that captured it.
 
 ## Jobs advanced
 

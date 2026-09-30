@@ -106,43 +106,33 @@ def scope(slices):
     )
 
 
-def test_a_milestone_in_progress_is_its_original_scope_alone(repo):
-    write(repo, "docs/milestones/m08-always-current/original-scope.md", scope(ISSUE))
+def test_a_milestone_in_progress_is_its_scope_alone(repo):
+    write(repo, "docs/milestones/m08-always-current/scope.md", scope(ISSUE))
 
     assert check_docs.check(repo) == []
 
 
-def test_an_original_scope_names_its_slices(repo):
+def test_a_scope_names_its_slices(repo):
     """No planned milestones: a folder exists once a milestone has started,
     and by then its issues have become slices."""
-    write(repo, "docs/milestones/m08-always-current/original-scope.md", scope(""))
+    write(repo, "docs/milestones/m08-always-current/scope.md", scope(""))
 
     assert any("'Slices' is empty" in e for e in check_docs.check(repo))
 
 
-def test_a_milestone_closes_with_both_files_together(repo):
+def test_a_milestone_needs_its_scope(repo):
     folder = "docs/milestones/m07-judge-a-copy"
-    write(repo, f"{folder}/original-scope.md", scope(ISSUE))
-    write(repo, f"{folder}/delivered-scope.md", scope(PR))
-
-    assert any("added together" in e for e in check_docs.check(repo))
-
-
-def test_delivered_slices_may_not_be_empty(repo):
-    folder = "docs/milestones/m07-judge-a-copy"
-    write(repo, f"{folder}/original-scope.md", scope(ISSUE))
-    write(repo, f"{folder}/delivered-scope.md", scope(""))
     write(
         repo,
         f"{folder}/learnings.md",
         "# L\n\n## Learnings\n\n- One.\n\n## Carried forward\n",
     )
 
-    assert any("'Slices' is empty" in e for e in check_docs.check(repo))
+    assert any("needs scope.md" in e for e in check_docs.check(repo))
 
 
 def test_a_milestone_folder_is_named_by_number(repo):
-    write(repo, "docs/milestones/always-current/original-scope.md", scope(""))
+    write(repo, "docs/milestones/always-current/scope.md", scope(""))
 
     assert any("mNN-name" in e for e in check_docs.check(repo))
 
@@ -151,7 +141,7 @@ def test_jobs_advanced_link_to_jobs_only(repo):
     text = scope("").replace(
         "(../../jobs.md#j1--keep-looking-so-i-dont-have-to)", "(x.md)"
     )
-    write(repo, "docs/milestones/m08-always-current/original-scope.md", text)
+    write(repo, "docs/milestones/m08-always-current/scope.md", text)
 
     assert any("more than job links" in e for e in check_docs.check(repo))
 
@@ -218,8 +208,7 @@ def learnings(bullet):
 
 def test_a_learning_must_link_the_document_it_changed(repo):
     folder = "docs/milestones/m07-judge-a-copy"
-    write(repo, f"{folder}/original-scope.md", scope(ISSUE))
-    write(repo, f"{folder}/delivered-scope.md", scope(PR))
+    write(repo, f"{folder}/scope.md", scope(ISSUE))
     write(repo, f"{folder}/learnings.md", learnings("- Tests missed layout."))
 
     assert any("must link the document" in e for e in check_docs.check(repo))
@@ -227,8 +216,7 @@ def test_a_learning_must_link_the_document_it_changed(repo):
 
 def test_a_learning_links_a_document_that_exists(repo):
     folder = "docs/milestones/m07-judge-a-copy"
-    write(repo, f"{folder}/original-scope.md", scope(ISSUE))
-    write(repo, f"{folder}/delivered-scope.md", scope(PR))
+    write(repo, f"{folder}/scope.md", scope(ISSUE))
     bullet = "- Tests missed layout. [Contributing](../../../CONTRIBUTING.md#testing)"
     write(repo, f"{folder}/learnings.md", learnings(bullet))
 
@@ -248,14 +236,14 @@ def test_contributing_is_checked(repo):
     assert any("CONTRIBUTING.md: sections must be" in e for e in check_docs.check(repo))
 
 
-def test_original_slices_are_issues_not_pull_requests(repo):
-    write(repo, "docs/milestones/m08-always-current/original-scope.md", scope(PR))
+def test_slices_are_issues_not_pull_requests(repo):
+    write(repo, "docs/milestones/m08-always-current/scope.md", scope(PR))
 
     assert any("more than issue links" in e for e in check_docs.check(repo))
 
 
-def test_original_slices_carry_the_slice_label(repo):
-    write(repo, "docs/milestones/m08-always-current/original-scope.md", scope(ISSUE))
+def test_slices_carry_the_slice_label(repo):
+    write(repo, "docs/milestones/m08-always-current/scope.md", scope(ISSUE))
 
     unlabelled = check_docs.check(repo, labels=lambda number: {"bug"})
     labelled = check_docs.check(repo, labels=lambda number: {"slice"})

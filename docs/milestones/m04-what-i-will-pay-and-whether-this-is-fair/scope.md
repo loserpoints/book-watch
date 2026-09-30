@@ -2,7 +2,7 @@
 
 ## Goal
 
-A price limit per book, and enough context to act on a listing without opening a second tab to check it.
+Each book has a delivered-price limit that marks copies, searches cover US sellers with a look everywhere, and each copy is placed among the others of its kind.
 
 ## Jobs advanced
 
@@ -11,7 +11,7 @@ A price limit per book, and enough context to act on a listing without opening a
 
 ## Slices
 
-- [S18 · Record how many are for sale](https://github.com/loserpoints/book-watch/issues/66)
+- [S18, dropped · Record how many are for sale](https://github.com/loserpoints/book-watch/issues/66)
 - [S18 · Clicking a book checks what is listed now](https://github.com/loserpoints/book-watch/issues/73)
 - [S19 · Ships from the US, unless I ask otherwise](https://github.com/loserpoints/book-watch/issues/71)
 - [S20 · A ceiling per book](https://github.com/loserpoints/book-watch/issues/67)
