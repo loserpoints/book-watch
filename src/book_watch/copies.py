@@ -230,15 +230,21 @@ class Copy:
         return "under" if landed.amount <= ceiling.amount else "over"
 
     @property
-    def sort_key(self) -> Decimal:
-        """Cheapest first, with an unknown total ranking as its price alone.
+    def sort_key(self) -> tuple[bool, Decimal]:
+        """Cheapest first, with every unknown total after every known one (S44).
 
-        A copy whose shipping eBay declined to state is not free and not
-        infinite. Ranking it by its price is the least wrong of the available
-        lies, and the page says which it is.
+        A copy with no delivered price is not free and not infinite, so it
+        cannot be placed among the copies whose cost is known. It goes below
+        all of them, where the top of the list is always a price I could pay.
+        Among themselves, those copies rank by price alone, which is the least
+        each could cost. A copy whose price alone is over the ceiling stays in
+        that group: it is known to be over, but its delivered price is still
+        unknown, and one rule is easier to read than a rule and an exception.
         """
         landed = self.landed_cost
-        return landed.amount if landed else self.price.amount
+        if landed is None:
+            return (True, self.price.amount)
+        return (False, landed.amount)
 
 
 #: How long before I looked a copy can have been listed and still be new.
