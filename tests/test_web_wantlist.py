@@ -17,7 +17,7 @@ from book_watch.web.app import create_app
 
 DELETION_CONFIG = DeletionEndpointConfig(
     verification_token="a" * 32,
-    endpoint_url="https://book-watch.fly.dev/ebay/deletion",
+    endpoint_url="https://book-watch-alan.fly.dev/ebay/deletion",
 )
 
 
