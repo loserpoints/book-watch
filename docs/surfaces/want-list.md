@@ -31,4 +31,4 @@ The want list shows every book I'm watching and whether any copy is worth my att
 
 - [Reorder the want-list by recency, lowest price, or by hand](https://github.com/loserpoints/book-watch/issues/131)
 - [Filter the want-list to books with a copy under their limit](https://github.com/loserpoints/book-watch/issues/132)
-- [Tap anywhere on a want-list row to open its listings](https://github.com/loserpoints/book-watch/issues/159)
+- [S46 · Tapping anywhere on a want-list row opens its book](https://github.com/loserpoints/book-watch/issues/159)
