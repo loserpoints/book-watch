@@ -25,7 +25,8 @@ The want list shows every book I'm watching and whether any copy is worth my att
 - Tap Update to check the books not checked in the last hour.
 - Tap Check all to check every book. It asks first when some were checked in the last hour, unless this device was told not to ask again.
 - Tap the trash icon to remove a book. It asks first.
-- Tap + to add a book (see [adding a book](add-a-book.md)).
+- Tap + to add a book (see [adding a book](add-a-book.md)). Adding leaves nothing to go back through.
+- Press back to leave the app.
 
 ## Open issues
 

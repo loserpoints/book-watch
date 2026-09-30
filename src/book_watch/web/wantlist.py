@@ -98,6 +98,12 @@ def open_configured_database() -> sqlite3.Connection:
     return connection
 
 
+def from_htmx(request: Request) -> bool:
+    """Whether htmx sent this, so the answer can be a piece of the page that
+    leaves the history alone rather than a whole new page (S45)."""
+    return request.headers.get("HX-Request") == "true"
+
+
 def build_router(
     connect: ConnectFn | None = None,
     catalogue: LazyCatalogue | None = None,
@@ -146,7 +152,12 @@ def build_router(
             if sweeps.due_for_sweep(connection, book.work_id, scope="us")
         )
 
-    def render_list(request: Request, *, checking: int | None = None) -> HTMLResponse:
+    def render_list(
+        request: Request,
+        *,
+        checking: int | None = None,
+        template: str = "_list.html",
+    ) -> HTMLResponse:
         with closing(open_database()) as connection:
             books = wantlist.all_books(connection)
             glances = at_a_glance(connection, books)
@@ -154,8 +165,12 @@ def build_router(
             morning = daily.status(connection, datetime.now(UTC))
         return templates.TemplateResponse(
             request,
-            "_list.html",
+            template,
             {
+                # An empty add sheet, for `_added.html`.
+                "isbn": "",
+                "title": "",
+                "author": "",
                 "books": books,
                 "glances": glances,
                 "checking": checking,
@@ -184,9 +199,13 @@ def build_router(
             stale = out_of_date(connection, books)
             morning = daily.status(connection, datetime.now(UTC))
             on_list = wantlist.listed_works(connection) if candidates else set()
+        # Through htmx, only the sheet comes back, and it comes back as a
+        # success: htmx does not swap an error status in, and the error is
+        # the answer the sheet exists to show (S45).
+        htmx = from_htmx(request)
         return templates.TemplateResponse(
             request,
-            "wantlist.html",
+            "_add_sheet.html" if htmx else "wantlist.html",
             {
                 "books": books,
                 "glances": glances,
@@ -209,7 +228,7 @@ def build_router(
                 "title": title,
                 "author": author,
             },
-            status_code=status_code,
+            status_code=200 if htmx else status_code,
         )
 
     def store(request: Request, put_on_list, duplicate_of: str) -> HTMLResponse:
@@ -225,7 +244,15 @@ def build_router(
         # The whole page comes back, so the form clears and the new row shows
         # — already checking itself, because the first thing you want to know
         # about a book you just added is whether anybody is selling it.
-        return render_page(request, checking=added.id)
+        if not from_htmx(request):
+            return render_page(request, checking=added.id)
+        # Through htmx the list is swapped in place and the sheet emptied and
+        # closed, so adding a book leaves nothing in the history (S45).
+        response = render_list(request, checking=added.id, template="_added.html")
+        response.headers["HX-Retarget"] = "#want-list"
+        response.headers["HX-Reswap"] = "outerHTML"
+        response.headers["HX-Trigger"] = "added"
+        return response
 
     @router.get("/", response_class=HTMLResponse)
     def want_list(request: Request) -> HTMLResponse:

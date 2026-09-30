@@ -46,11 +46,11 @@
 <div class="chips">
   {{ ui.chip("Limit", ceiling_text or "none", href="#limit", icon="✎", open="limit-sheet") }}
   {%- if scope == 'everywhere' %}
-    {{ ui.chip("Everywhere", href="/book/%d" % book.id, icon="⇄") }}
+    {{ ui.chip("Everywhere", href="/book/%d" % book.id, icon="⇄", replace=True) }}
   {%- else %}
-    {{ ui.chip("US", href="/book/%d?everywhere=1" % book.id, icon="⇄") }}
+    {{ ui.chip("US", href="/book/%d?everywhere=1" % book.id, icon="⇄", replace=True) }}
   {%- endif %}
-  {{ ui.chip("Checked", checked | since, href="/book/%d%s%srefresh=1" % (book.id, here, '&' if here else '?'), icon="↻") }}
+  {{ ui.chip("Checked", checked | since, href="/book/%d%s%srefresh=1" % (book.id, here, '&' if here else '?'), icon="↻", replace=True) }}
 </div>
 
 {% if not copies and not uncertain %}
@@ -61,7 +61,7 @@
       {#- The empty US list is the whole reason the scope chip exists, so it
           says what to do next rather than leaving a blank page. -#}
       Nothing listed in the US right now.
-      <a href="/book/{{ book.id }}?everywhere=1">Look everywhere</a> —
+      <a href="/book/{{ book.id }}?everywhere=1" data-replace>Look everywhere</a> —
       an overseas copy takes longer and may cost more to land.
     {% endif %}
   </p>
@@ -101,10 +101,14 @@
     ceiling you can set and not unset is a trap, and this is the only place to
     change your mind. -#}
 {% call ui.sheet("limit-sheet", "Most I'll pay, delivered") %}
-  <form class="sheet-form" id="limit" method="post" action="/book/{{ book.id }}/ceiling">
+  {#- Saved through htmx, so the page reloads in place and back still goes
+      to the want list (S45). An error comes back into the sheet. -#}
+  <form class="sheet-form" id="limit" method="post" action="/book/{{ book.id }}/ceiling"
+        hx-post="/book/{{ book.id }}/ceiling" hx-target="#limit-error">
     {{ ui.field("ceiling", "Limit", value=book.ceiling or "", inputmode="decimal",
                 placeholder="no limit", hint="Shipping included. Leave it empty for no limit.") }}
     <input type="hidden" name="currency" value="{{ book.ceiling_currency or 'USD' }}">
+    <div id="limit-error"></div>
     <div class="sheet-actions">
       {{ ui.button("Cancel", close=True) }}
       {{ ui.button("Save", kind="primary", type="submit") }}

@@ -1322,3 +1322,68 @@ def test_copies_new_since_i_last_looked_are_marked_on_the_list_and_the_book(
     assert client.get("/book/2?everywhere=0").text.count("tag-accent") == 1
     # Seen now, so the list stops counting it.
     assert " new " not in visible(client.get("/").text)
+
+
+# --- back from a book goes to the want list (S45) -----------------------------
+
+HTMX = {"HX-Request": "true"}
+
+
+def test_a_limit_saved_through_htmx_reloads_the_page_in_place(book_client):
+    client = book_client(returning(a_listing()))
+    add_book(client, "9780099448396", "Crash")
+
+    response = client.post(
+        "/book/1/ceiling", data={"ceiling": "8.00", "currency": "USD"}, headers=HTMX
+    )
+
+    assert response.status_code == 204
+    assert response.headers["HX-Refresh"] == "true"
+    assert "$8" in visible(client.get("/book/1").text)
+
+
+def test_a_limit_that_cannot_be_read_is_answered_inside_the_sheet(book_client):
+    client = book_client(returning(a_listing()))
+    add_book(client, "9780099448396", "Crash")
+
+    response = client.post(
+        "/book/1/ceiling", data={"ceiling": "cheap", "currency": "USD"}, headers=HTMX
+    )
+
+    assert response.status_code == 200
+    assert 'class="sheet-error"' in response.text
+    assert "HX-Refresh" not in response.headers
+    assert "Limit none" in visible(client.get("/book/1").text)
+
+
+@pytest.mark.parametrize(
+    ("asked", "shown"),
+    [
+        ("/book/1?refresh=1", "/book/1"),
+        ("/book/1?everywhere=1&refresh=1", "/book/1?everywhere=1"),
+    ],
+)
+def test_after_searching_again_the_page_drops_refresh(book_client, asked, shown):
+    """So a reload, or a return to the page, does not search eBay again."""
+    search, asked_for = counting_search([a_listing()])
+    client = book_client(search)
+    add_book(client, "9780099448396", "Crash")
+    client.get("/book/1")
+    before = len(asked_for)
+
+    response = client.get(asked, follow_redirects=False)
+
+    assert len(asked_for) == before + 1
+    assert response.status_code == 303
+    assert response.headers["location"] == shown
+
+
+def test_the_chips_that_show_the_book_another_way_replace_the_page(book_client):
+    client = book_client(returning(a_listing()))
+    add_book(client, "9780099448396", "Crash")
+
+    page = client.get("/book/1").text
+
+    for chip in ('"/book/1?everywhere=1"', '"/book/1?refresh=1"'):
+        tag = re.search(r"<a[^>]*href=" + re.escape(chip) + r"[^>]*>", page)
+        assert tag and "data-replace" in tag.group(0)

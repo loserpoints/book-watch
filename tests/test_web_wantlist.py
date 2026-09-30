@@ -733,3 +733,55 @@ def test_the_list_says_nothing_when_the_morning_check_went_well(client):
         connection.commit()
 
     assert "Daily check" not in client.get("/").text
+
+
+# --- adding leaves nothing in the history (S45) --------------------------------
+
+HTMX = {"HX-Request": "true"}
+
+
+def test_a_title_search_through_htmx_answers_inside_the_sheet(tmp_path):
+    client = build_client(tmp_path, FakeCatalogue(candidates=CANDIDATES))
+
+    response = client.post("/books", data={"title": "stoner"}, headers=HTMX)
+
+    assert response.status_code == 200
+    assert "Which one?" in response.text
+    assert "Want list" not in response.text
+
+
+def test_an_isbn_error_through_htmx_is_shown_in_the_sheet_with_its_offer(client):
+    response = client.post("/books", data={"isbn": "9780099448397"}, headers=HTMX)
+
+    # htmx swaps only a success in, and the error is what the sheet shows.
+    assert response.status_code == 200
+    assert "is not a valid ISBN" in response.text
+    assert "anyway" in response.text
+
+
+def test_a_book_added_through_htmx_swaps_the_list_and_empties_the_sheet(tmp_path):
+    client = build_client(tmp_path, FakeCatalogue(candidates=CANDIDATES))
+
+    response = client.post(
+        "/books/chosen",
+        data={"title": "Stoner", "author": "John Williams", "work_id": "OL3511459W"},
+        headers=HTMX,
+    )
+
+    assert response.status_code == 200
+    assert response.headers["HX-Retarget"] == "#want-list"
+    assert response.headers["HX-Reswap"] == "outerHTML"
+    assert response.headers["HX-Trigger"] == "added"
+    assert 'id="want-list"' in response.text
+    assert "Stoner" in response.text
+    assert 'id="add-sheet-body" hx-swap-oob="innerHTML"' in response.text
+    assert "Which one?" not in response.text
+    assert "Stoner" in client.get("/").text
+
+
+def test_without_htmx_adding_still_answers_with_the_whole_page(client):
+    response = add(client, "9780099448396", "Crash", override="1")
+
+    assert response.status_code == 200
+    assert "<h1>Want list</h1>" in response.text
+    assert "HX-Retarget" not in response.headers

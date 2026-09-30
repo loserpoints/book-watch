@@ -1,0 +1,51 @@
+{% import "_ui.html" as ui %}
+{#- What is inside the add sheet: the two ways in, and the answer to the last
+    one tried. Through htmx a search, an error or an offer swaps in here and
+    the page never navigates, so the history holds one want list (S45). -#}
+{% set by_number = isbn != "" %}
+  {#- Two ways in, and they look like two: an ISBN is a hard match and a
+      title is a search. Each side is its own form, so neither can send the
+      other's leftovers. -#}
+  {{ ui.switch("way", [("title", "Title & author"), ("isbn", "ISBN")], "isbn" if by_number else "title") }}
+
+  <div class="sheet-side" data-when="title">
+    <form class="sheet-form" hx-post="/books" hx-target="#add-sheet-body" method="post" action="/books">
+      <p class="sheet-note">A title is enough. Add the author to narrow it down.</p>
+      {{ ui.field("book-title", "Title", title, name="title", placeholder="Stoner") }}
+      {{ ui.field("book-author", "Author", author, name="author", optional=True, placeholder="John Williams") }}
+      {% if error and not by_number %}<p class="sheet-error" role="alert">{{ error }}</p>{% endif %}
+      <div class="sheet-actions">{{ ui.button("Search", "primary", type="submit") }}</div>
+    </form>
+    {#- Outside the search form, never inside it: each result is its own form,
+        and a form inside a form is dropped by the browser, which turned a tap
+        on a result into a second search. Found in the browser, not the tests. -#}
+    {% if candidates %}
+      <p class="sheet-note">{{ note or "Which one?" }} Tap it to add.</p>
+      <ul class="ui-list candidate-list">{% for c in candidates %}{{ ui.candidate_row(c) }}{% endfor %}</ul>
+      {#- The counts are numbers Open Library reports in
+          the search response. The editions themselves are never fetched. -#}
+      <p class="sheet-note">Not here? Switch to ISBN.</p>
+    {% endif %}
+  </div>
+
+  <div class="sheet-side" data-when="isbn">
+    <form class="sheet-form" hx-post="/books" hx-target="#add-sheet-body" method="post" action="/books">
+      <p class="sheet-note">An exact edition, by its number.</p>
+      {{ ui.field("isbn", "ISBN", isbn, inputmode="numeric", placeholder="9781590171998") }}
+      {% if error and by_number %}<p class="sheet-error" role="alert">{{ error }}</p>{% endif %}
+      <div class="sheet-actions">{{ ui.button("Add", "primary", type="submit") }}</div>
+    </form>
+    {% if offer_override %}
+      {#- Some books never had an ISBN, and Open Library does not hold every
+          one that does. The app cannot tell either apart from a typo, so the
+          person holding the book decides. -#}
+      <form class="sheet-form" hx-post="/books" hx-target="#add-sheet-body" method="post" action="/books">
+        <input type="hidden" name="isbn" value="{{ isbn }}">
+        <input type="hidden" name="title" value="{{ title }}">
+        <input type="hidden" name="author" value="{{ author }}">
+        <input type="hidden" name="override" value="1">
+        <p class="sheet-note">Add it anyway and eBay is searched for exactly what you typed.</p>
+        <div class="sheet-actions">{{ ui.button("Add “%s” anyway" % isbn, type="submit") }}</div>
+      </form>
+    {% endif %}
+  </div>

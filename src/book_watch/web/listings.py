@@ -22,9 +22,10 @@ from contextlib import closing
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
+from urllib.parse import urlencode
 
 from fastapi import APIRouter, BackgroundTasks, Form, Query, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
 from book_watch import copies, covers, enrichment, standing, sweeps, wantlist
@@ -38,13 +39,21 @@ from book_watch.ebay.search import (
 from book_watch.isbn import normalise
 from book_watch.web import assets, book_view, filters
 from book_watch.web.searching import LazyBrowseSearch, SearchFn
-from book_watch.web.wantlist import ConnectFn, open_configured_database
+from book_watch.web.wantlist import ConnectFn, from_htmx, open_configured_database
 
 SEARCH_PATH = "/search"
 BOOK_PATH = "/book/{book_id}"
 CEILING_PATH = "/book/{book_id}/ceiling"
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
+
+
+def _book_url(book_id: int, *, everywhere: bool, limit: int) -> str:
+    """A book's page, in the scope it was viewed in, and without `refresh`."""
+    query = [("everywhere", "1")] if everywhere else []
+    if limit != DEFAULT_LIMIT:
+        query.append(("limit", str(limit)))
+    return f"/book/{book_id}" + ("?" + urlencode(query) if query else "")
 
 
 def build_router(
@@ -188,6 +197,18 @@ def build_router(
                     error = (f"eBay is not configured: {exc}", 500)
                 except EbayError as exc:
                     error = (f"eBay could not be searched: {exc}", 502)
+                else:
+                    if refresh:
+                        # Searched, so now show the page at an address without
+                        # `refresh`: a reload of it, or a return to it, must
+                        # not search eBay again (S45). The visit is recorded
+                        # by the page this redirects to.
+                        return RedirectResponse(
+                            _book_url(
+                                book_id, everywhere=bool(everywhere), limit=limit
+                            ),
+                            status_code=303,
+                        )
 
             # Recorded after the search, so a copy this visit's own search
             # found is never new on the want-list afterwards: I have seen it.
@@ -289,14 +310,26 @@ def build_router(
         A redirect rather than a rendered page, so a refresh does not re-post
         the form — and so the answer comes back through the one route that
         knows how to draw a book.
+
+        From the sheet, through htmx, the page reloads in place instead (S45).
+        A redirect would add a second entry for the same book to the history,
+        so back would show the book again rather than the want list. A limit
+        that cannot be read is answered inside the sheet, which stays open.
         """
+        htmx = from_htmx(request)
         with closing(open_database()) as connection:
             try:
                 wantlist.set_ceiling(connection, book_id, ceiling, currency)
             except LookupError:
                 return HTMLResponse("That book is not on the want-list.", 404)
             except ValueError as exc:
+                if htmx:
+                    return templates.TemplateResponse(
+                        request, "_sheet_error.html", {"error": str(exc)}
+                    )
                 return HTMLResponse(str(exc), 400)
+        if htmx:
+            return Response(status_code=204, headers={"HX-Refresh": "true"})
         return RedirectResponse(f"/book/{book_id}", status_code=303)
 
     return router

@@ -34,6 +34,17 @@
       return;
     }
 
+    // [data-replace] shows the same screen another way, so it takes this
+    // page's place in the history instead of adding one: back still leaves
+    // the screen (S45).
+    var replacing = event.target.closest("a[data-replace]");
+    if (replacing && !event.defaultPrevented && event.button === 0 &&
+        !event.metaKey && !event.ctrlKey && !event.shiftKey) {
+      event.preventDefault();
+      window.location.replace(replacing.href);
+      return;
+    }
+
     // [data-close] inside a dialog closes it.
     var closer = event.target.closest("[data-close]");
     if (closer) {
@@ -54,6 +65,13 @@
         event.clientY >= box.top && event.clientY <= box.bottom;
       if (!inside) event.target.close();
     }
+  });
+
+  // "added", sent by the server with a new book (S45): the sheet that asked
+  // is done, so it closes over the list that now holds the book.
+  document.addEventListener("added", function (event) {
+    var sheet = event.target instanceof Element && event.target.closest("dialog");
+    if (sheet && sheet.open) sheet.close();
   });
 
   // A sheet that went to the server and came back with results or an error
