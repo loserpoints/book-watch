@@ -249,13 +249,8 @@ def check_milestones(root: Path) -> list[str]:
         where = f"docs/milestones/{folder.name}"
         if not MILESTONE_DIR.match(folder.name):
             errors.append(f"{where}: folder must be named mNN-name")
-        if not (folder / "original-scope.md").exists():
-            errors.append(f"{where}: needs original-scope.md")
-        closed = [(folder / f).exists() for f in ("delivered-scope.md", "learnings.md")]
-        if any(closed) and not all(closed):
-            errors.append(
-                f"{where}: delivered-scope.md and learnings.md are added together"
-            )
+        if not (folder / "scope.md").exists():
+            errors.append(f"{where}: needs scope.md")
     return errors
 
 

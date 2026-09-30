@@ -9,6 +9,7 @@ These rules decide what a copy costs, whether it is under a book's limit, and wh
 ### Prices
 
 - Every price is a delivered price: the item price plus shipping.
+- Shipping is priced to one US ZIP, set as the `SHIP_TO_ZIP` Fly secret. Without it, eBay does not price calculated shipping, and those copies have no delivered price.
 - A copy has no delivered price when its shipping is not stated or is in a different currency from its price.
 - Every price is an asking price. Nothing claims a copy sold, or sold for a given amount.
 - Prices in different currencies are never compared or converted.
@@ -34,10 +35,11 @@ These rules decide what a copy costs, whether it is under a book's limit, and wh
 ### Order
 
 - The want-list shows each book's cheapest certain copy in its leading market. Used leads when it has copies listed; otherwise new.
-- Copies sort by delivered price within their tier. A copy without one sorts by its price alone.
+- Copies sort by delivered price within their tier.
+- Copies without a delivered price sort below every copy with one, by their price alone. That includes a copy whose price alone is over the limit.
 
 ## Open issues
 
-- [Copies with unstated shipping sort to the bottom](https://github.com/loserpoints/book-watch/issues/104)
+- [Set the ship-to ZIP in the app, not as a Fly secret](https://github.com/loserpoints/book-watch/issues/182)
 - [A default price limit per hunt, inherited by new books](https://github.com/loserpoints/book-watch/issues/107)
 - [Show whether a listing accepts offers](https://github.com/loserpoints/book-watch/issues/74)

@@ -2,7 +2,7 @@
 
 ## Goal
 
-Rebuild the want list, the book page and adding a book from M6's pieces so a bad copy can be ruled out from the list, then install the app on the phone's home screen.
+The want list, active listings and adding a book are rebuilt from M6's pieces, and the app installs on the phone's home screen as bookwatch.
 
 ## Jobs advanced
 
