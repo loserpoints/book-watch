@@ -718,6 +718,34 @@ def test_a_copy_with_no_stated_shipping_says_so_rather_than_guessing(book_client
     assert "(under your limit)" not in page
 
 
+def test_a_copy_with_unknown_shipping_is_listed_after_a_dearer_known_one(book_client):
+    """S44: the first copy on the page is always one I know the cost of."""
+    client = book_client(
+        returning(
+            a_listing(
+                item_id="v1|1|0",
+                title="Crash, shipping unknown",
+                price=Money(Decimal("4.00"), "USD"),
+                shipping_cost=None,
+            ),
+            a_listing(
+                item_id="v1|2|0",
+                title="Crash, shipping known",
+                price=Money(Decimal("9.00"), "USD"),
+                shipping_cost=Money(Decimal("1.00"), "USD"),
+            ),
+        )
+    )
+    add_book(client, "9780099448396", "Crash")
+    client.get("/book/1")
+    make_certain(client)
+
+    page = visible(client.get("/book/1").text)
+
+    assert page.index("Crash, shipping known") < page.index("Crash, shipping unknown")
+    assert "$4 + shipping?" in page
+
+
 # --- where this copy sits among the others -----------------------------------
 
 
