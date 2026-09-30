@@ -27,6 +27,6 @@ ALTER TABLE work ADD COLUMN cover_from TEXT
 ALTER TABLE work ADD COLUMN cover_asked_at TEXT;
 
 -- A collector hunts one printing, so it shows that printing's cover. Nothing
--- writes collector entries yet (*Two kinds of hunt* does); the column is here
+-- writes collector entries yet (#144 would); the column is here
 -- so the rule that reads it can be written and tested once.
 ALTER TABLE edition ADD COLUMN cover_id INTEGER;

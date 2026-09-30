@@ -188,8 +188,8 @@ class Market:
 
 
 #: Used before new, because the reading hunt is the dominant one and a new
-#: copy is usually bulk inventory. *Two kinds of hunt* is where a collectible
-#: entry may want this inverted, and when it does the order belongs here
+#: copy is usually bulk inventory. A collectible entry (#144) may want this
+#: inverted, and when it does the order belongs here
 #: rather than in a template.
 _MARKET_ORDER: dict[ConditionClass, int] = {"used": 0, "new": 1, "unknown": 2}
 
@@ -260,8 +260,8 @@ def headline(
     Brand New, and "nothing listed" would be false.
 
     `markets` already orders used before new, so this takes the first and the
-    fallback costs nothing. When *Two kinds of hunt* inverts the order for a
-    collectible entry, it inverts there and this follows.
+    fallback costs nothing. If collectible entries (#144) invert the order,
+    it inverts there and this follows.
 
     None when there is nothing to lead with: no copies listed, or none that
     can be placed. The row then says what it does know rather than inventing

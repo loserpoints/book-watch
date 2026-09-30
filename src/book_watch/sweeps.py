@@ -7,8 +7,7 @@ answer stays current.
 
 Kept apart from `copies` because the questions differ in tense. That module
 asks what is for sale now; this one asks what was true when we last looked,
-and a page that confuses the two shows copies that sold days ago (decision
-48).
+and a page that confuses the two shows copies that sold days ago.
 
 A sweep **adds**. It used to delete a book's copies and reinsert them, which
 answered the page's question by destroying the answer to a later one — what a
