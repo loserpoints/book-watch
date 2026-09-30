@@ -1,0 +1,5 @@
+{#- A book was added (S45): the list, with the new book checking itself, and
+    an empty sheet out of band. Nothing navigates, so back from the new book
+    goes to the one want list in the history. -#}
+{% include "_list.html" %}
+<div id="add-sheet-body" hx-swap-oob="innerHTML">{% include "_add_sheet.html" %}</div>

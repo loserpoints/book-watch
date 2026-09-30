@@ -70,8 +70,10 @@
 {#- A chip: a small control or fact that sits in a row of them. -#}
 {#- `open` makes the chip open a sheet instead of following its link; the
     link stays as the no-script fallback. -#}
-{% macro chip(label, value=None, href="#", icon=None, open=None) -%}
-<a class="chip" href="{{ href }}"{% if open %} data-open="{{ open }}"{% endif %}>{{ label }}{% if value %} <b>{{ value }}</b>{% endif %}{% if icon %} <span aria-hidden="true">{{ icon }}</span>{% endif %}</a>
+{#- `replace` for a chip that shows the same screen another way: it takes the
+    place of this page in the history, so back still leaves the screen (S45). -#}
+{% macro chip(label, value=None, href="#", icon=None, open=None, replace=False) -%}
+<a class="chip" href="{{ href }}"{% if open %} data-open="{{ open }}"{% endif %}{% if replace %} data-replace{% endif %}>{{ label }}{% if value %} <b>{{ value }}</b>{% endif %}{% if icon %} <span aria-hidden="true">{{ icon }}</span>{% endif %}</a>
 {%- endmacro %}
 
 
@@ -169,7 +171,7 @@
   {#- On the real sheet, a row not already on the list is a form whose one
       button covers the whole row (principle 5): tapping anywhere adds it. -#}
   {%- if c.post and not c.on_list %}
-  <form class="candidate-add" method="post" action="/books/chosen">
+  <form class="candidate-add" hx-post="/books/chosen" hx-target="#add-sheet-body" method="post" action="/books/chosen">
     {%- for name, value in c.post.items() %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endfor %}
     <button type="submit" class="candidate-hit" aria-label="Add {{ c.title }}{% if c.author %} by {{ c.author }}{% endif %}{% if c.year %}, {{ c.year }}{% endif %}"></button>
   </form>
