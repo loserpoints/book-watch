@@ -2,7 +2,7 @@
 
 ## Goal
 
-Every tap does what I expect, and no known defect is left on the screens I use every day.
+Copies with calculated shipping show a delivered price and sort above copies without one, back from a book always goes to the want list, and a tap anywhere on a want-list row opens its book.
 
 ## Jobs advanced
 
@@ -15,4 +15,4 @@ Every tap does what I expect, and no known defect is left on the screens I use e
 - [S44 · Copies with unknown shipping sort below every copy with a known delivered price](https://github.com/loserpoints/book-watch/issues/104)
 - [S45 · Back from a book always goes to the want list](https://github.com/loserpoints/book-watch/issues/160)
 - [S46 · Tapping anywhere on a want-list row opens its book](https://github.com/loserpoints/book-watch/issues/159)
-- [S47 · On Android, a listing opens in the eBay app](https://github.com/loserpoints/book-watch/issues/175)
+- [S47, dropped · On Android, a listing opens in the eBay app](https://github.com/loserpoints/book-watch/issues/175)
