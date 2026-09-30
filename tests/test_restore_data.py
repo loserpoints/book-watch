@@ -15,6 +15,9 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 import restore_data  # noqa: E402
 
+#: Fly gives a snapshot's volume size in bytes: 1073741824 for a 1GB volume.
+GIB = 1073741824
+
 APP = restore_data.App("book-watch-alan", "iad", "book_watch_data")
 
 
@@ -37,11 +40,13 @@ class FakeFly:
                     "id": "vs_mon",
                     "created_at": "2026-09-28T00:10:00Z",
                     "status": "created",
+                    "volume_size": GIB,
                 },
                 {
                     "id": "vs_tue",
                     "created_at": "2026-09-29T00:10:00Z",
                     "status": "created",
+                    "volume_size": GIB,
                 },
             ]
         }
@@ -66,6 +71,7 @@ class FakeFly:
                         "id": "vs_now",
                         "created_at": "2026-09-30T19:00:00Z",
                         "status": "created",
+                        "volume_size": GIB,
                     }
                 )
             case ["volumes", "create", name, "--snapshot-id", _, *_]:
@@ -145,6 +151,26 @@ def test_the_old_volume_goes_only_after_the_new_one_exists_and_the_machine_is_go
     )
     assert fly.live() == ["vol_new"]
     assert fly.machines == []
+
+
+def test_the_new_volume_is_sized_in_gigabytes_not_bytes():
+    # The first live restore passed --size 1073741824, and Fly refused it.
+    fly = FakeFly()
+
+    restore_data.restore(fly, APP, "fresh", no_wait)
+
+    [create] = [r for r in fly.ran if r.startswith("volumes create")]
+    assert " --size 1 " in create
+
+
+def test_a_volume_fly_refuses_to_create_says_the_data_is_unchanged():
+    fly = FakeFly(fail_on=["volumes", "create"])
+
+    with pytest.raises(restore_data.RestoreError, match="data was not changed"):
+        restore_data.restore(fly, APP, "fresh", no_wait)
+
+    assert fly.live() == ["vol_old"]
+    assert fly.machines == [{"id": "m_1"}]
 
 
 def test_an_unknown_snapshot_stops_before_anything_changes():
