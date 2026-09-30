@@ -274,3 +274,34 @@ def test_the_retiring_log_may_number_its_decisions(repo):
     write(repo, "docs/decisions.md", "## 1. Python\n\nSee decision 2.\n")
 
     assert check_docs.check(repo) == []
+
+
+# --- skills -------------------------------------------------------------------
+
+
+def skill(purpose="Choose the next milestone.", sections=("Steps", "Rules")):
+    body = "".join(f"## {s}\n\n- One.\n\n" for s in sections)
+    return (
+        "---\nname: set-milestone\ndescription: Choose the next milestone.\n---\n\n"
+        f"# Set milestone\n\n## Purpose\n\n{purpose}\n\n{body}"
+    )
+
+
+def test_a_skill_with_frontmatter_passes(repo):
+    write(repo, ".claude/skills/set-milestone/SKILL.md", skill())
+
+    assert check_docs.check(repo) == []
+
+
+def test_a_skill_is_checked_like_any_document(repo):
+    write(repo, ".claude/skills/set-milestone/SKILL.md", skill(sections=("Steps",)))
+
+    assert any("SKILL.md: sections must be" in e for e in check_docs.check(repo))
+
+
+def test_a_skills_purpose_is_one_sentence(repo):
+    write(
+        repo, ".claude/skills/plan-slice/SKILL.md", skill(purpose="Plan. Then build.")
+    )
+
+    assert any("one sentence" in e for e in check_docs.check(repo))

@@ -200,10 +200,15 @@ def check_routed(
     return errors
 
 
+#: A skill opens with YAML frontmatter, which Claude Code reads and the
+#: sections check does not.
+FRONTMATTER = re.compile(r"\A---\n.*?\n---\n", re.S)
+
+
 def check_file(
     root: Path, rel: str, artifact: Artifact, labels: Labels | None = None
 ) -> list[str]:
-    text = (root / rel).read_text()
+    text = FRONTMATTER.sub("", (root / rel).read_text(), count=1)
     errors = []
     titles = [line for line in text.splitlines() if line.startswith("# ")]
     if not text.lstrip().startswith("# ") or len(titles) != 1:
@@ -259,6 +264,10 @@ def documents(root: Path) -> list[str]:
         p.relative_to(root).as_posix()
         for p in (root / "docs").rglob("*")
         if p.is_file()
+    ]
+    found += [
+        p.relative_to(root).as_posix()
+        for p in (root / ".claude" / "skills").glob("*/SKILL.md")
     ]
     return sorted(
         found
