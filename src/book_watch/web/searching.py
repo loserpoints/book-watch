@@ -12,9 +12,10 @@ by forgetting to pass a stub.
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 
-from book_watch.config import load_ebay_credentials
+from book_watch.config import load_ebay_credentials, load_ship_to_zip
 from book_watch.ebay.auth import EbayTokenProvider
 from book_watch.ebay.search import BrowseClient, Listing, Scope
 
@@ -23,6 +24,8 @@ from book_watch.ebay.search import BrowseClient, Listing, Scope
 #: keyword-only and defaulted, so the ad-hoc search route — which has no scope
 #: of its own — can ignore it.
 SearchFn = Callable[..., list[Listing]]
+
+logger = logging.getLogger(__name__)
 
 
 class LazyBrowseSearch:
@@ -44,5 +47,11 @@ class LazyBrowseSearch:
     def __call__(self, query: str, limit: int, *, scope: Scope = "us") -> list[Listing]:
         if self._browse is None:
             tokens = EbayTokenProvider(load_ebay_credentials())
-            self._browse = BrowseClient(tokens)
+            ship_to_zip = load_ship_to_zip()
+            if ship_to_zip is None:
+                logger.warning(
+                    "Shipping for calculated listings is off: SHIP_TO_ZIP is "
+                    "not set, so those copies have no delivered price."
+                )
+            self._browse = BrowseClient(tokens, ship_to_zip=ship_to_zip)
         return self._browse.search(query, limit=limit, scope=scope)

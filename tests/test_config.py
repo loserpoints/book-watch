@@ -6,6 +6,7 @@ from book_watch.config import (
     MissingCredentialError,
     load_deletion_config,
     load_ebay_credentials,
+    load_ship_to_zip,
 )
 
 
@@ -77,3 +78,24 @@ def test_a_valid_deletion_config_loads(monkeypatch):
 
     assert config.endpoint_url == "https://example.com/x"
     assert "a" * 32 not in repr(config)
+
+
+def test_no_ship_to_zip_means_none(monkeypatch):
+    monkeypatch.delenv("SHIP_TO_ZIP", raising=False)
+
+    assert load_ship_to_zip(use_dotenv=False) is None
+
+
+@pytest.mark.parametrize("zip_code", ["10001", "10001-1234"])
+def test_a_ship_to_zip_loads(monkeypatch, zip_code):
+    monkeypatch.setenv("SHIP_TO_ZIP", f" {zip_code} ")
+
+    assert load_ship_to_zip(use_dotenv=False) == zip_code
+
+
+def test_a_malformed_ship_to_zip_is_rejected_without_echoing_it(monkeypatch):
+    monkeypatch.setenv("SHIP_TO_ZIP", "1000l")
+
+    with pytest.raises(InvalidConfigError, match="SHIP_TO_ZIP") as caught:
+        load_ship_to_zip(use_dotenv=False)
+    assert "1000l" not in str(caught.value)
