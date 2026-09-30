@@ -48,6 +48,10 @@ A Rules section may group its rules under `###` headings, chosen per document.
 | Tech debt | `tech debt` | An internal change I would never see: code, infrastructure or compliance. | What's wrong · What it costs if left |
 | Process gap | `process gap` | How we work is missing something: a doc, a workflow or an operating step. | What went wrong or is missing · Which doc or workflow should change |
 
+An issue may end with one more section, "Outside the template: kept so it isn't lost", for points already worked out that fit neither of its sections.
+
+A stale reference found anywhere, in a doc, in code or in an issue, is logged as a process gap or tech debt issue, not left.
+
 **Slices.** A slice is an issue a milestone has taken on. It keeps its type label, adds the `slice` label and the milestone, and is titled `S## · outcome`. Its body is rewritten in place into four sections:
 
 - **Outcome:** one sentence. What exists after this that didn't before.
