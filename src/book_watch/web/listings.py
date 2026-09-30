@@ -176,8 +176,7 @@ def build_router(
             # Opening a book is a request to see what is listed *now* — there
             # is no other reason to click a book's title. It used to search
             # only on a book's first-ever view, so the page showed copies that
-            # may have sold days earlier and hid copies listed since. Decision
-            # 40, amended.
+            # may have sold days earlier and hid copies listed since.
             # The gate is per scope. A recent US sweep must not block a
             # first look at everything: they are different questions, and an
             # everywhere sweep finds fewer US copies because imports displace
@@ -226,9 +225,9 @@ def build_router(
             for_sale, seen = copies.populations(connection, book, scope=scope)
             placed = standing.standings(for_sale, seen)
 
-        # Scheduled after the response is written, never before it. Decision
-        # 40: examining fifty copies is twenty-five seconds of eBay, and this
-        # page owes an answer in two.
+        # Scheduled after the response is written, never before it: examining
+        # fifty copies is twenty-five seconds of eBay, and this page owes an
+        # answer in two.
         #
         # The condition is "has a pass finished", not "is there a copy eBay
         # has never been asked about". The second was the original and it was

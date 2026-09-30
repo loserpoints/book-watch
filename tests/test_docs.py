@@ -263,6 +263,24 @@ def test_code_that_points_at_a_decision_number_fails(repo):
     ]
 
 
+def test_a_decision_number_wrapped_onto_the_next_line_fails(repo):
+    write(repo, "src/app.py", "x = 1\n# Stored as a string (decision\n48).\n")
+
+    assert check_docs.check(repo) == [
+        "src/app.py:2: refers to a decision; state the reason"
+    ]
+
+
+def test_a_decision_number_behind_a_comment_marker_fails(repo):
+    write(repo, "src/app.py", "    # Stored as a string. Decision\n    # 40.\n")
+    write(repo, "src/schema.sql", "-- Stored as a string, see decisions\n-- 47, 52.\n")
+
+    assert sorted(check_docs.check(repo)) == [
+        "src/app.py:1: refers to a decision; state the reason",
+        "src/schema.sql:1: refers to a decision; state the reason",
+    ]
+
+
 def test_code_that_states_the_reason_passes(repo):
     write(repo, "src/app.py", "# Stored as a string: a float changes the price.\n")
 

@@ -873,7 +873,7 @@ def markets_for(connection, entry):
 
 def test_used_comes_before_new(database):
     """The reading hunt is the dominant one and a new copy is usually bulk
-    inventory. *Two kinds of hunt* may invert this for collectible entries,
+    inventory. Collectible entries (#144) may invert this,
     which is why the order lives in one place rather than in a template."""
     book = a_book(database, "Stoner", "John Williams")
     a_certain_copy(

@@ -275,9 +275,10 @@ def for_entry(
     """Every stored copy for this book, graded and cheapest first within a tier.
 
     Sorting happens **inside** a tier and never across one. A reader sees one
-    group today, so this looks like an ordering with an extra step — decision
-    33 measured that on the other hunt the cheapest certain copy was wrong,
-    and a sort that crossed tiers would have to be unpicked to support it.
+    group today, so this looks like an ordering with an extra step. On a
+    collector's hunt, copies that only might be the edition measured right
+    8–14% of the time, so a cheapest copy taken across tiers would usually be
+    the wrong edition, and a sort that crossed tiers would have to be unpicked.
     """
     return _listed(connection, entry, _target(connection, entry), scope)
 
