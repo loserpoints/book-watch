@@ -38,6 +38,7 @@ These rules decide what a copy costs, whether it is under a book's limit, and wh
 
 ## Open issues
 
-- [Copies with unstated shipping sort to the bottom](https://github.com/loserpoints/book-watch/issues/104)
+- [S43 · Copies with calculated shipping show their delivered price](https://github.com/loserpoints/book-watch/issues/177)
+- [S44 · Copies with unknown shipping sort below every copy with a known delivered price](https://github.com/loserpoints/book-watch/issues/104)
 - [A default price limit per hunt, inherited by new books](https://github.com/loserpoints/book-watch/issues/107)
 - [Show whether a listing accepts offers](https://github.com/loserpoints/book-watch/issues/74)

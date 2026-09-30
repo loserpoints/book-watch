@@ -11,7 +11,8 @@ Every tap does what I expect, and no known defect is left on the screens I use e
 
 ## Slices
 
-- [S43 · Copies with unknown shipping sort below every copy with a known delivered price](https://github.com/loserpoints/book-watch/issues/104)
-- [S44 · After saving a price limit, back goes to the want list](https://github.com/loserpoints/book-watch/issues/160)
-- [S45 · Tapping anywhere on a want-list row opens its book](https://github.com/loserpoints/book-watch/issues/159)
-- [S46 · On Android, a listing opens in the eBay app](https://github.com/loserpoints/book-watch/issues/175)
+- [S43 · Copies with calculated shipping show their delivered price](https://github.com/loserpoints/book-watch/issues/177)
+- [S44 · Copies with unknown shipping sort below every copy with a known delivered price](https://github.com/loserpoints/book-watch/issues/104)
+- [S45 · After saving a price limit, back goes to the want list](https://github.com/loserpoints/book-watch/issues/160)
+- [S46 · Tapping anywhere on a want-list row opens its book](https://github.com/loserpoints/book-watch/issues/159)
+- [S47 · On Android, a listing opens in the eBay app](https://github.com/loserpoints/book-watch/issues/175)

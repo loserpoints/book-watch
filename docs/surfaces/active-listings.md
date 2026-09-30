@@ -34,8 +34,10 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 
 ## Open issues
 
-- [Copies with unstated shipping sort to the bottom](https://github.com/loserpoints/book-watch/issues/104)
+- [S43 · Copies with calculated shipping show their delivered price](https://github.com/loserpoints/book-watch/issues/177)
+- [S44 · Copies with unknown shipping sort below every copy with a known delivered price](https://github.com/loserpoints/book-watch/issues/104)
 - [Dismiss a copy I've ruled out](https://github.com/loserpoints/book-watch/issues/105)
 - [When it was listed, and sorting by newest](https://github.com/loserpoints/book-watch/issues/69)
 - [Remember which sellers I trust on condition](https://github.com/loserpoints/book-watch/issues/75)
-- [Back after saving a price limit returns to the want list](https://github.com/loserpoints/book-watch/issues/160)
+- [S45 · After saving a price limit, back goes to the want list](https://github.com/loserpoints/book-watch/issues/160)
+- [S47 · On Android, a listing opens in the eBay app](https://github.com/loserpoints/book-watch/issues/175)
