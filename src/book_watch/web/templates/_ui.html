@@ -88,6 +88,8 @@
     right. `state` is ok, checking, failed, unchecked, maybes or none. -#}
 {#- On the real list a row carries its id, so a check can swap it back in
     out of band (`oob`), and the trash asks before it removes (S26 B6). -#}
+{#- Tapping anywhere on the row opens the book: the title's link covers it
+    (S46). The trash, "digging" and "Throttled" keep their own taps. -#}
 {% macro book_row(b, oob=False) -%}
 {#- A row that is digging asks for itself again until it isn't, so it clears
     without a reload. A row not digging never asks. -#}
