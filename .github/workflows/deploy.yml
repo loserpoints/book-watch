@@ -29,6 +29,8 @@ on:
     types: [completed]
     branches: [main]
   workflow_dispatch:
+  # Restore data runs this after swapping the volume (S52).
+  workflow_call:
 
 # One deploy at a time. Two overlapping ones can leave the machine running an
 # image neither run intended.

@@ -77,7 +77,7 @@ src/book_watch/            the app
   web/                     pages, templates, design tokens
   migrations/              database schema, applied in order
 tests/                     offline by default; `-m network` makes real requests
-scripts/                   check.sh, the docs check, icon rendering
+scripts/                   check.sh, the docs check, icon rendering, restoring data
 docs/
   governance.md            what each doc holds and how work flows
   jobs.md                  what the app must get done
