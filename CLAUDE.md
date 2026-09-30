@@ -15,5 +15,5 @@
 - This is a hobby project on a Pro account. Prefer one well-aimed search over three broad ones, and don't re-derive what the docs state.
 - Ask before running anything that makes real requests in bulk.
 - Work on one branch at a time. Some work calls for a second, such as a milestone close waiting on validation. Ask before opening one.
-- Name an issue or pull request whenever you cite its number, such as "#148 (Restore the database without a local machine)". A bare number means nothing to a reader without GitHub open.
+- Name an issue or pull request whenever you cite its number, such as "#148 (Restore the database without a local machine)", in chat as much as in documents and pull requests. A bare number means nothing to a reader without GitHub open.
 - If this file contradicts another doc, the other doc wins. Say so.

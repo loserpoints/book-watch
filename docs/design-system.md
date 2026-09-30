@@ -3,7 +3,7 @@
 ## Principles
 
 1. **Clarity over clutter.** If it does not help decide, it is one tap away.
-2. **The next tap is obvious** and does what it looks like it does.
+2. **The next tap is obvious** and does what it looks like it does. Back leaves the screen, whatever was done on it.
 3. **Say when something is unknown, stale or waiting on a partner.** Unknown is shown at the same weight as known.
 4. **Fewest taps to the answer.** Two states are a toggle, not a menu.
 5. **A symbol and a short phrase, explained on tap.** The whole row or chip is the target. Nothing lives only on hover.

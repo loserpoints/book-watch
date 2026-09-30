@@ -7,6 +7,7 @@
 - Before inventing a proxy for a signal, check whether the code already has the signal and throws it away.
 - Decide a design by looking at it on real screens at phone width, and agree beforehand how many rounds a layout gets.
 - Migrations run forward only, and a rollback does not undo them. Keep a migration additive, so the previous code still works if its change is reverted.
+- Reproduce a phone or platform behavior on the phone again before building around it. S47's fallback to the browser went away once the eBay app had been opened.
 - Every step runs from a browser. Deploys and other privileged actions run in CI, with credentials in GitHub or Fly secrets. Say so before building on anything that needs a local install or a local credential.
 - Never commit a key, token or password. Credentials come from environment variables. `.env` is gitignored and `.env.example` lists the names with no values. A committed secret stays in git history, so the only remedy is rotating it.
 - Running cost is about $2–3 a month, all hosting. Say so before adding anything with a recurring cost.
