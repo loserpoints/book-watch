@@ -2,7 +2,7 @@
 
 ## Goal
 
-Every book has a cover, and the app has a design of its own: a chosen direction, tokens and the pieces every later screen is built from.
+Every book has a cover, the design direction is chosen, and every token and piece is drawn on the design page.
 
 ## Jobs advanced
 

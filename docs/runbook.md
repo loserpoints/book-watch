@@ -7,7 +7,9 @@
 - One deploy runs at a time.
 - To redeploy without a commit, for example after changing a secret: Actions → Deploy → Run workflow, on `main`.
 - A deploy after 7am New York time, on a day whose daily check has not finished, starts that check as the app boots.
-- Each daily check logs one line, `Daily check: ok, 6 books, 0 failed, 0 Open Library requests`, readable in Fly's log viewer.
+- Each daily check logs one line, `Daily check: ok, 6 books, 0 failed, 0 Open Library requests, 1 emailed`, readable in Fly's log viewer. "Email is off" before it means `RESEND_API_KEY` or `ALERT_EMAIL_TO` is not set on Fly.
+- "Shipping for calculated listings is off" in Fly's logs means `SHIP_TO_ZIP` is not set, so copies with calculated shipping show "+ shipping?".
+- After setting or changing the Resend key, run Actions → Send a test email. It sends one email from the live app with its real settings, or fails with the reason.
 
 ## Roll back
 

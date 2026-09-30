@@ -14,8 +14,7 @@ Every document in this repository is one of the artifacts below. `scripts/check_
 | Design system | active | `docs/design-system.md` | Principles · Tokens · Components |
 | Rules | active | `docs/rules/*.md` | Purpose (sentence) · Rules · Open issues (links) |
 | Surface | active | `docs/surfaces/{add-a-book,want-list,active-listings}.md` | Purpose (sentence) · What it shows · What you can do · Open issues (links) |
-| Original scope | active | `docs/milestones/*/original-scope.md` | Goal (sentence) · Jobs advanced (job links) · Slices (slice links) |
-| Delivered scope | active | `docs/milestones/*/delivered-scope.md` | Goal (sentence) · Jobs advanced (job links) · Slices (links) |
+| Scope | active | `docs/milestones/*/scope.md` | Goal (sentence) · Jobs advanced (job links) · Slices (slice links) |
 | Learnings | active | `docs/milestones/*/learnings.md` | Learnings (routed) · Carried forward (links, may be empty) |
 | Runbook | active | `docs/runbook.md` | Deploy · Roll back · Restore data · Post-deploy checks · Known gaps (links, may be empty) |
 
@@ -33,7 +32,7 @@ Every document in this repository is one of the artifacts below. `scripts/check_
 
 A Rules section may group its rules under `###` headings, chosen per document.
 
-**Milestones.** Each milestone is a folder, `docs/milestones/mNN-name/`, created when the milestone starts. There are no planned milestones: what comes next is chosen from the open issues at each close. `delivered-scope.md` and `learnings.md` are added together when it closes. The two scope files share their sections so they can be compared.
+**Milestones.** Each milestone is a folder, `docs/milestones/mNN-name/`, created when the milestone starts. There are no planned milestones: what comes next is chosen from the open issues at each close. `scope.md` is written when it starts and kept current: the change that adds, rescopes or drops a slice updates it. A dropped slice stays listed, with "dropped" in its link text. `learnings.md` is added when it closes, and a scope change that taught something is recorded there like any other learning.
 
 **Current state and history.** Surfaces, rules, the design system and the runbook describe the product as it is now and carry no history. History lives in milestone learnings, and beyond that in git, pull requests and closed issues. Decisions made before these documents existed are in the [decision log](https://github.com/loserpoints/book-watch/blob/537d5ea30621c8756ddfc8c74969d584b2694c62/docs/decisions.md), frozen as it stood when it was retired.
 
@@ -62,16 +61,21 @@ Related issues can become one slice: one is refined, and the others are closed a
 **Starting a milestone:**
 
 1. Choose its issues from the open issues.
-2. Turn them into slices.
-3. Create its folder and write `original-scope.md`.
-4. Create its GitHub milestone, titled `M8 - Always current`, with the goal sentence as its description, followed by a link to its folder on `main`.
+2. Draft its name, its goal and its slices, and have them approved before any issue is rewritten or any code is written.
+3. Turn them into slices.
+4. Create its folder and write `scope.md`.
+5. Create its GitHub milestone, titled `M8 - Always current`, with the goal sentence as its description, followed by a link to its folder on `main`.
+
+A milestone can start while the one before it waits to close.
 
 **Closing a milestone:**
 
-1. Write `delivered-scope.md`.
+A milestone closes only once its outcome has been checked on the live app. Its close pull request is drafted on its own branch and stays open until then.
+
+1. Bring `scope.md` up to date, with a goal that says what was delivered.
 2. Route each learning into the document that should change because of it: `CONTRIBUTING.md`, `CLAUDE.md`, the runbook, a rules or surface doc, the design system, or this file. Make the change, then record the learning in `learnings.md` with a link to where it went. A learning with nowhere to go is dropped.
 3. List the issues carried forward.
-4. Choose the next milestone from the open issues.
+4. Choose the next milestone from the open issues, if one has not already started.
 
 ## Writing style
 

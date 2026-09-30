@@ -2,7 +2,7 @@
 
 ## Goal
 
-The list checks itself every day, and opening the app shows what's new since I last looked.
+The list checks itself at 7am New York time every day, and opening the app shows which copies are new since I last opened each book.
 
 ## Jobs advanced
 
@@ -13,5 +13,5 @@ The list checks itself every day, and opening the app shows what's new since I l
 
 - [S36 · A book finishes "digging" on its own, without reopening the app](https://github.com/loserpoints/book-watch/issues/129)
 - [S37 · Every book is checked once a day without the app being opened](https://github.com/loserpoints/book-watch/issues/141)
-- [S38 · A relisted copy is recognized as the copy already seen](https://github.com/loserpoints/book-watch/issues/126)
+- [S38, dropped · A relisted copy is recognized as the copy already seen](https://github.com/loserpoints/book-watch/issues/126)
 - [S39 · Copies new since I last opened a book are marked new](https://github.com/loserpoints/book-watch/issues/142)

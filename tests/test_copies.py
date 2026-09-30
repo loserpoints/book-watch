@@ -485,6 +485,52 @@ def test_a_ceiling_never_hides_or_reorders_anything(database):
     }
 
 
+def test_copies_with_no_delivered_price_sort_below_every_known_one(database):
+    """S44: the top of the list is always a price I could pay. The unknown
+    group is ordered by price alone, including a copy whose price alone is
+    already over the limit."""
+    book = a_book(database, "Stoner", "John Williams")
+    swept(
+        database,
+        book.work_id,
+        [
+            a_listing("v1|1|0", price="12.00", shipping="3.00"),
+            a_listing("v1|2|0", price="4.00"),
+            a_listing("v1|3|0", price="9.00", shipping="1.00"),
+            a_listing("v1|4|0", price="20.00"),
+            a_listing("v1|5|0", price="6.00"),
+        ],
+    )
+    database.commit()
+    book = wantlist.set_ceiling(database, book.id, "8.00", "USD")
+
+    listed = copies.for_entry(database, book)
+
+    assert [copy.item_id for copy in listed] == [
+        "v1|3|0",
+        "v1|1|0",
+        "v1|2|0",
+        "v1|5|0",
+        "v1|4|0",
+    ]
+    assert listed[-1].against(EIGHT) == "over"
+
+
+def test_shipping_in_another_currency_sorts_with_the_unknown():
+    """No delivered price is no delivered price, whatever the reason."""
+    known = priced("30.00", "5.00")
+    foreign = Copy(
+        item_id="v1|2|0",
+        title="Stoner",
+        url="https://ebay/x",
+        price=Money(Decimal("4.00"), "USD"),
+        shipping=Money(Decimal("2.00"), "GBP"),
+        tier="certain",
+    )
+
+    assert known.sort_key < foreign.sort_key
+
+
 # --- what the seller wrote and photographed (S33) -----------------------------
 
 

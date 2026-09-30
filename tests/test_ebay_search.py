@@ -4,8 +4,10 @@ Everything here but the final test runs against `httpx.MockTransport`, so CI
 needs no key and does not depend on eBay being up.
 """
 
+import json
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import httpx
 import pytest
@@ -15,6 +17,7 @@ from book_watch.ebay.auth import PUBLIC_DATA_SCOPE, USER_AGENT, EbayTokenProvide
 from book_watch.ebay.errors import EbaySearchError
 from book_watch.ebay.search import (
     DEFAULT_MARKETPLACE_ID,
+    END_USER_CONTEXT_HEADER,
     MAX_LIMIT,
     SEARCH_URL,
     BrowseClient,
@@ -43,9 +46,9 @@ def token_provider() -> EbayTokenProvider:
     )
 
 
-def build_browse(handler) -> BrowseClient:
+def build_browse(handler, *, ship_to_zip: str | None = None) -> BrowseClient:
     client = httpx.Client(transport=httpx.MockTransport(handler))
-    return BrowseClient(token_provider(), client=client)
+    return BrowseClient(token_provider(), client=client, ship_to_zip=ship_to_zip)
 
 
 def search_response(*summaries) -> httpx.Response:
@@ -100,6 +103,70 @@ def test_searches_by_keyword_and_sends_the_headers_ebay_requires():
     assert request.headers["Authorization"] == "Bearer fake-token"
     assert request.headers["X-EBAY-C-MARKETPLACE-ID"] == DEFAULT_MARKETPLACE_ID
     assert request.headers["User-Agent"] == USER_AGENT
+
+
+def test_a_ship_to_zip_is_sent_url_encoded():
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return search_response(a_summary())
+
+    build_browse(handler, ship_to_zip="10001").search("Hey Jack", limit=10)
+
+    (request,) = seen
+    assert request.headers[END_USER_CONTEXT_HEADER] == (
+        "contextualLocation=country%3DUS%2Czip%3D10001"
+    )
+
+
+def test_without_a_ship_to_zip_no_location_is_sent():
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return search_response(a_summary())
+
+    build_browse(handler).search("Hey Jack", limit=10)
+
+    (request,) = seen
+    assert END_USER_CONTEXT_HEADER not in request.headers
+
+
+RECORDED = json.loads(
+    (Path(__file__).parent / "data" / "calculated_shipping.json").read_text()
+)
+
+#: The two Hey Jack! copies from #177, with calculated shipping.
+HEY_JACK = {"v1|407056103912|0": "14.34", "v1|175371270006|0": "13.12"}
+
+
+def parse_recorded(name: str) -> dict[str, Money | None]:
+    listings = build_browse(responds_with(httpx.Response(200, json=RECORDED[name])))
+    return {
+        listing.item_id: listing.landed_cost
+        for listing in listings.search("Hey Jack Barry Hannah")
+    }
+
+
+@pytest.mark.parametrize("name", ["without_location", "with_location_unencoded"])
+def test_a_real_search_without_a_working_location_leaves_calculated_shipping_unpriced(
+    name,
+):
+    landed = parse_recorded(name)
+
+    assert len(landed) == 27
+    assert all(landed[item_id] is None for item_id in HEY_JACK)
+    assert sum(cost is None for cost in landed.values()) == 3
+
+
+def test_a_real_search_with_a_location_prices_every_copy():
+    landed = parse_recorded("with_location")
+
+    assert len(landed) == 27
+    assert all(cost is not None for cost in landed.values())
+    for item_id, delivered in HEY_JACK.items():
+        assert landed[item_id] == Money(Decimal(delivered), "USD")
 
 
 def test_searching_by_gtin_uses_the_gtin_parameter_instead_of_q():
@@ -365,3 +432,48 @@ def test_a_real_search_returns_listings():
     assert first.seller, "eBay should name a seller on every real listing"
     assert first.price.amount >= 0
     assert first.item_web_url.startswith("https://")
+
+
+class RecordingBrowse:
+    """Stands in for BrowseClient, keeping what it was built with."""
+
+    built: list[str | None] = []
+
+    def __init__(self, tokens, *, ship_to_zip=None):
+        RecordingBrowse.built.append(ship_to_zip)
+
+    def search(self, query, *, limit, scope):
+        return []
+
+
+@pytest.fixture
+def lazy_search(monkeypatch):
+    from book_watch.web import searching
+
+    monkeypatch.setenv("EBAY_CLIENT_ID", "an-app-id")
+    monkeypatch.setenv("EBAY_CLIENT_SECRET", "a-cert-id")
+    monkeypatch.setattr("book_watch.config.load_dotenv", lambda: None)
+    monkeypatch.setattr(searching, "BrowseClient", RecordingBrowse)
+    RecordingBrowse.built = []
+    return searching.LazyBrowseSearch()
+
+
+def test_the_app_searches_with_the_ship_to_zip(monkeypatch, lazy_search, caplog):
+    monkeypatch.setenv("SHIP_TO_ZIP", "10001")
+
+    lazy_search("Hey Jack", 50)
+
+    assert RecordingBrowse.built == ["10001"]
+    assert "10001" not in caplog.text
+    assert "Shipping for calculated listings is off" not in caplog.text
+
+
+def test_without_a_ship_to_zip_the_app_searches_and_says_shipping_is_off(
+    monkeypatch, lazy_search, caplog
+):
+    monkeypatch.delenv("SHIP_TO_ZIP", raising=False)
+
+    assert lazy_search("Hey Jack", 50) == []
+
+    assert RecordingBrowse.built == [None]
+    assert "Shipping for calculated listings is off" in caplog.text

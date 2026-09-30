@@ -25,10 +25,12 @@ It works if, over a month, I stop searching marketplaces by hand and it finds at
 - Searches eBay for every copy of each book, and prices each one delivered, against the book's limit ([pricing](docs/rules/pricing.md)).
 - Shows the whole list at a glance, with the cheapest copy of each book and whether it is under the limit ([want list](docs/surfaces/want-list.md)).
 - Shows every copy of one book with its condition, the seller's note and its photos, so I can judge it without opening the listing ([active listings](docs/surfaces/active-listings.md)).
+- Checks every book at 7am New York time, and marks the copies that are new since I last opened each book.
+- Emails me the next morning when a new copy is under its book's limit, and sends nothing on mornings with none ([alerts](docs/rules/alerts.md)).
 - Installs on a phone as an app.
 - Stays well inside what eBay and Open Library allow ([rate limits](docs/rules/rate-limits.md)).
 
-It doesn't yet check on its own or tell me when a copy appears ([J1](docs/jobs.md#j1), [J4](docs/jobs.md#j4)). Collectible editions, where condition matters more than price, are not built.
+Collectible editions, where condition matters more than price, are not built.
 
 ## Tech stack
 
@@ -38,6 +40,7 @@ It doesn't yet check on its own or tell me when a copy appears ([J1](docs/jobs.m
 | Data | SQLite on a Fly volume | One user and one file. Snapshotted daily by Fly. |
 | Hosting | Fly.io | About $2–3 a month, the project's whole running cost. |
 | Listings | eBay Browse API | Free, 5,000 calls a day, and prices shipping per copy. |
+| Email | Resend | Free, and its shared sending address needs no domain. It delivers only to the Resend account's own address, which is the one reader. |
 | Editions | Open Library | Free, with a works and editions model. Every answer is cached. |
 | CI and deploy | GitHub Actions | Every step runs from a browser, with credentials held as secrets. |
 
@@ -61,8 +64,9 @@ Setting up a new deployment, once:
 1. **Fly:** create an organisation-scoped deploy token under Account → Access Tokens. An app-scoped token cannot create its own app.
 2. **GitHub:** add two repository secrets: `FLY_API_TOKEN`, the Fly token, and `EBAY_VERIFICATION_TOKEN`, a string you invent of 32–80 letters, digits, `_` or `-`.
 3. **Fly:** set `app` in `fly.toml` and run Actions → Deploy. It creates the app, deploys, and checks the eBay endpoint answers correctly.
-4. **Fly:** add `EBAY_CLIENT_ID` (the production App ID) and `EBAY_CLIENT_SECRET` (its Cert ID) under the app's Secrets. Nothing in GitHub reads them, so they live only on Fly.
+4. **Fly:** add `EBAY_CLIENT_ID` (the production App ID) and `EBAY_CLIENT_SECRET` (its Cert ID) under the app's Secrets. Nothing in GitHub reads them, so they live only on Fly. Add `SHIP_TO_ZIP`, the ZIP the books ship to, so eBay prices calculated shipping. Without it, those copies show "+ shipping?".
 5. **eBay:** under Alerts & Notifications → Marketplace Account Deletion, enter the endpoint URL and the token, and save. eBay disables a production keyset until this works.
+6. **Resend:** sign up with the address the email should go to, and create an API key with "Sending access" only. On Fly, add it as `RESEND_API_KEY`, and that address as `ALERT_EMAIL_TO`. Without either, the app runs and sends no email. Then run Actions → Send a test email to check both.
 
 ## Repository structure
 

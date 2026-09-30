@@ -128,3 +128,53 @@ def load_database_path(*, use_dotenv: bool = True) -> Path:
     if use_dotenv:
         load_dotenv()
     return Path(_require("BOOK_WATCH_DB_PATH"))
+
+
+@dataclass(frozen=True, slots=True, repr=False)
+class AlertConfig:
+    """Where the morning email goes, and the key that sends it (S40).
+
+    The recipient is read from the environment, never written in the
+    repository: the repository is public and the address is a person's.
+    """
+
+    api_key: str
+    to: str
+
+    def __repr__(self) -> str:
+        return "AlertConfig(api_key=<hidden>, to=<hidden>)"
+
+
+def load_alert_config(*, use_dotenv: bool = True) -> AlertConfig:
+    """Read the Resend key and the recipient. Missing either means email is
+    off, which the caller treats as a setting rather than a failure."""
+    if use_dotenv:
+        load_dotenv()
+    return AlertConfig(
+        api_key=_require("RESEND_API_KEY"), to=_require("ALERT_EMAIL_TO")
+    )
+
+
+#: A US ZIP code: five digits, optionally with the four-digit extension.
+_ZIP_PATTERN = re.compile(r"^\d{5}(-\d{4})?$")
+
+
+def load_ship_to_zip(*, use_dotenv: bool = True) -> str | None:
+    """The ZIP that eBay prices calculated shipping to (S43), or None.
+
+    Optional: without it, searches run as before and a copy with calculated
+    shipping has no delivered price. It is a Fly secret rather than a setting
+    in the repository, because it is close to where somebody lives, and it is
+    never echoed back, not even in the error for a malformed one.
+    """
+    if use_dotenv:
+        load_dotenv()
+    value = os.environ.get("SHIP_TO_ZIP", "").strip()
+    if not value:
+        return None
+    if not _ZIP_PATTERN.match(value):
+        raise InvalidConfigError(
+            "SHIP_TO_ZIP must be a US ZIP code, five digits; "
+            f"got {len(value)} characters."
+        )
+    return value
