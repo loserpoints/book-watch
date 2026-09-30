@@ -66,8 +66,6 @@ Related issues can become one slice: one is refined, and the others are closed a
 4. Create its folder and write `scope.md`.
 5. Create its GitHub milestone, titled `M8 - Always current`, with the goal sentence as its description, followed by a link to its folder on `main`.
 
-Until work on its first slice starts, a milestone's slices can still be refined, and `original-scope.md` is updated to match. A slice added after that is left out of `original-scope.md`, appears in `delivered-scope.md`, and its issue says why it was added.
-
 A milestone can start while the one before it waits to close.
 
 **Closing a milestone:**
