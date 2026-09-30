@@ -18,5 +18,5 @@
 - [Stale references left in code comments, two of them missed by the docs check](https://github.com/loserpoints/book-watch/issues/155)
 - [Open issues written before the docs migration point at retired docs and decision numbers](https://github.com/loserpoints/book-watch/issues/156)
 - [A defect has no way to ship outside a milestone](https://github.com/loserpoints/book-watch/issues/157)
-- [Tap anywhere on a want-list row to open its listings](https://github.com/loserpoints/book-watch/issues/159)
-- [Back after saving a price limit returns to the want list](https://github.com/loserpoints/book-watch/issues/160)
+- [S46 · Tapping anywhere on a want-list row opens its book](https://github.com/loserpoints/book-watch/issues/159)
+- [S45 · Back from a book always goes to the want list](https://github.com/loserpoints/book-watch/issues/160)
