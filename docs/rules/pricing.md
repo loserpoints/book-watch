@@ -41,5 +41,5 @@ These rules decide what a copy costs, whether it is under a book's limit, and wh
 ## Open issues
 
 - [Set the ship-to ZIP in the app, not as a Fly secret](https://github.com/loserpoints/book-watch/issues/182)
-- [A default price limit per hunt, inherited by new books](https://github.com/loserpoints/book-watch/issues/107)
+- [Settings, starting with a default price limit and the US-only default](https://github.com/loserpoints/book-watch/issues/72)
 - [Show whether a listing accepts offers](https://github.com/loserpoints/book-watch/issues/74)
