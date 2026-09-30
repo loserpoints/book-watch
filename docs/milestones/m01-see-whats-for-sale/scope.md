@@ -2,7 +2,7 @@
 
 ## Goal
 
-Add a book by ISBN and see the eBay listings for it right now.
+A book can be added by ISBN and opened to see every eBay listing with its condition, seller and delivered cost, one tap from buying.
 
 ## Jobs advanced
 

@@ -2,7 +2,7 @@
 
 ## Goal
 
-A want-list entry means a book rather than one ISBN, can be added by title, and knows which editions count.
+A book can be added by title or by ISBN, and its page shows every copy for sale graded by how sure the app is that it is the book.
 
 ## Jobs advanced
 

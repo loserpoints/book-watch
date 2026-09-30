@@ -2,7 +2,7 @@
 
 ## Goal
 
-The want list answers whether anything is worth buying right now without opening a single book.
+The want list shows each book's cheapest copy and its market's range, and one action checks every book.
 
 ## Jobs advanced
 
