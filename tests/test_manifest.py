@@ -49,7 +49,7 @@ def test_the_app_serves_it():
 
     config = DeletionEndpointConfig(
         verification_token="a" * 32,
-        endpoint_url="https://book-watch.fly.dev/ebay/deletion",
+        endpoint_url="https://book-watch-alan.fly.dev/ebay/deletion",
     )
     client = TestClient(create_app(config))
 

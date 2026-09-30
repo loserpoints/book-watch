@@ -14,7 +14,7 @@
 
 ## Tokens
 
-Every color, font, text size, space and radius is a token in `src/book_watch/web/tokens.toml`. The [design page](https://book-watch.fly.dev/design) draws each one with its value, in the theme your device uses.
+Every color, font, text size, space and radius is a token in `src/book_watch/web/tokens.toml`. The [design page](https://book-watch-alan.fly.dev/design) draws each one with its value, in the theme your device uses.
 
 Tests enforce the rules:
 
@@ -26,4 +26,4 @@ Tests enforce the rules:
 
 ## Components
 
-Jinja macros in `src/book_watch/web/templates/_ui.html`. Each takes plain values, so a screen maps its data onto them. The [design page](https://book-watch.fly.dev/design) draws every component in every state, and a new component is added there when it is added here. A screen uses these pieces and never builds its own version of one.
+Jinja macros in `src/book_watch/web/templates/_ui.html`. Each takes plain values, so a screen maps its data onto them. The [design page](https://book-watch-alan.fly.dev/design) draws every component in every state, and a new component is added there when it is added here. A screen uses these pieces and never builds its own version of one.

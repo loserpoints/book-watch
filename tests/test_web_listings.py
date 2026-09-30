@@ -13,6 +13,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from book_watch import config as config_module
 from book_watch import db
 from book_watch import enrichment as enrichment_module
 from book_watch import sweeps as sweeps_module
@@ -26,7 +27,7 @@ from book_watch.web.app import create_app
 
 DELETION_CONFIG = DeletionEndpointConfig(
     verification_token="a" * 32,
-    endpoint_url="https://book-watch.fly.dev/ebay/deletion",
+    endpoint_url="https://book-watch-alan.fly.dev/ebay/deletion",
 )
 
 
@@ -205,6 +206,23 @@ def test_searching_without_ebay_keys_fails_loudly_and_breaks_nothing_else(
     assert client.get("/search?isbn=x").status_code == 500
     # The endpoint eBay actually depends on is untouched by that failure.
     assert client.get("/health").status_code == 200
+
+
+def test_the_page_says_where_a_missing_ebay_key_goes(monkeypatch):
+    monkeypatch.delenv("EBAY_CLIENT_ID", raising=False)
+    monkeypatch.setenv("EBAY_CLIENT_SECRET", "a-cert-id")
+    monkeypatch.setattr(
+        searching_module,
+        "load_ebay_credentials",
+        lambda: config_module.load_ebay_credentials(use_dotenv=False),
+    )
+    client = TestClient(create_app(DELETION_CONFIG))
+
+    page = client.get("/search?isbn=x").text
+
+    assert "EBAY_CLIENT_ID is not set." in page
+    assert "Add it under the app&#39;s Secrets on Fly." in page
+    assert ".env" not in page
 
 
 def test_the_results_page_and_the_deletion_endpoint_share_one_app():

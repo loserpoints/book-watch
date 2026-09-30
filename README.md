@@ -48,7 +48,7 @@ AbeBooks closed its API to new developers, so eBay is the only marketplace for n
 
 ## Running it
 
-It runs at [book-watch.fly.dev](https://book-watch.fly.dev). Merging to `main` deploys it ([runbook](docs/runbook.md)).
+It runs at [book-watch-alan.fly.dev](https://book-watch-alan.fly.dev). Merging to `main` deploys it ([runbook](docs/runbook.md)).
 
 To work on it, with [uv](https://docs.astral.sh/uv/) installed:
 
