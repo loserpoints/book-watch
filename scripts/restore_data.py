@@ -36,6 +36,7 @@ Fly = Callable[[list[str]], Any]
 
 GONE = {"destroyed", "destroying", "pending_destroy"}
 SNAPSHOT_WAIT_SECONDS = 600
+GIB = 1024**3
 
 
 class RestoreError(RuntimeError):
@@ -147,12 +148,18 @@ def restore(
     safety = take_snapshot(fly, app, old["id"], sleep)
     chosen = safety if target == "fresh" else known[target]
 
-    size = max(old.get("size_gb") or 1, chosen.get("volume_size") or 1)
-    new = fly(
-        ["volumes", "create", app.volume, "--snapshot-id", chosen["id"]]
-        + ["--region", app.region, "--size", str(size), "--app", app.name]
-        + ["--yes", "--json"]
-    )
+    # A volume's size is in GB, a snapshot's in bytes. The restored volume
+    # must be at least as big as the one the snapshot was taken from.
+    snapshot_gb = -(-(chosen.get("volume_size") or 0) // GIB)
+    size = max(old.get("size_gb") or 1, snapshot_gb, 1)
+    try:
+        new = fly(
+            ["volumes", "create", app.volume, "--snapshot-id", chosen["id"]]
+            + ["--region", app.region, "--size", str(size), "--app", app.name]
+            + ["--yes", "--json"]
+        )
+    except RestoreError as exc:
+        raise RestoreError(f"{exc}. The data was not changed.") from exc
     try:
         machines = fly(["machine", "list", "--app", app.name, "--json"]) or []
         for machine in machines:
