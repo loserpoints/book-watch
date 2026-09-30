@@ -2,7 +2,7 @@
 
 ## Goal
 
-No issue, code comment, check or error message points at something that no longer exists or claims something it doesn't verify, and the database can be restored from a browser.
+No open issue, code comment, check or error message points at something that no longer exists, and the database can be restored from a snapshot by running a workflow in GitHub Actions.
 
 ## Jobs advanced
 
