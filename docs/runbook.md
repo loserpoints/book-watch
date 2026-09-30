@@ -35,5 +35,5 @@ Four checks run after every deploy, most specific first:
 
 ## Known gaps
 
-- [`/health` says ok without checking anything](https://github.com/loserpoints/book-watch/issues/49)
+- [Track daily checks, emails and API calls somewhere I can see them](https://github.com/loserpoints/book-watch/issues/168)
 - [Restore the database from a snapshot without a local machine](https://github.com/loserpoints/book-watch/issues/148)
