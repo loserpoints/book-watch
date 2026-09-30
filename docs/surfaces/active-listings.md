@@ -31,11 +31,11 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 - Tap a listing title to open it on eBay.
 - Tap the fold to see the copies that might be this book.
 - Tap "digging" to see what it means.
+- Press back to return to the want list, whatever was done on the page. With a sheet or photo open, back closes it first.
 
 ## Open issues
 
 - [Dismiss a copy I've ruled out](https://github.com/loserpoints/book-watch/issues/105)
 - [When it was listed, and sorting by newest](https://github.com/loserpoints/book-watch/issues/69)
 - [Remember which sellers I trust on condition](https://github.com/loserpoints/book-watch/issues/75)
-- [S45 · After saving a price limit, back goes to the want list](https://github.com/loserpoints/book-watch/issues/160)
 - [S47 · On Android, a listing opens in the eBay app](https://github.com/loserpoints/book-watch/issues/175)
