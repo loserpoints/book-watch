@@ -406,8 +406,12 @@ details.fold > summary {
 .market-line { display: grid; gap: var(--space-1); padding: var(--space-1) 0; }
 .market-line .strip { width: 100%; }
 
-/* A book on the want-list: title full width above the cover. */
+/* A book on the want-list: title full width above the cover. The title's
+   link stretches over the whole row, so a tap anywhere opens the book
+   (principle 5, S46). The trash, "digging" and "Throttled" sit above it and
+   keep their own taps. */
 .book-row {
+  position: relative;
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: var(--space-1) var(--space-3);
@@ -424,6 +428,10 @@ details.fold > summary {
   color: var(--fg);
   text-decoration: none;
 }
+.book-row-title::after { content: ""; position: absolute; inset: 0; z-index: 1; }
+.book-row-title:focus-visible { outline: none; }
+.book-row:has(.book-row-title:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.book-row-remove, .book-row details.explain { position: relative; z-index: 2; }
 .book-row-remove { grid-column: 3; justify-self: end; }
 .book-row .cover { grid-column: 1; }
 .book-row-body {
