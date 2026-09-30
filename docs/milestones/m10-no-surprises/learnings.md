@@ -13,3 +13,4 @@
 - [A missing Fly secret says to copy .env.example](https://github.com/loserpoints/book-watch/issues/180)
 - [Set the ship-to ZIP in the app, not as a Fly secret](https://github.com/loserpoints/book-watch/issues/182)
 - [On iPhone, a listing opens in the eBay app, where I'm logged in and can buy](https://github.com/loserpoints/book-watch/issues/176)
+- [Unknown shipping may not exist once eBay knows where a book ships to](https://github.com/loserpoints/book-watch/issues/189)
