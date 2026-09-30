@@ -22,10 +22,15 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any, Literal
+from urllib.parse import quote
 
 import httpx
 
-from book_watch.config import MissingCredentialError, load_ebay_credentials
+from book_watch.config import (
+    MissingCredentialError,
+    load_ebay_credentials,
+    load_ship_to_zip,
+)
 from book_watch.ebay.auth import (
     DEFAULT_TIMEOUT_SECONDS,
     USER_AGENT,
@@ -54,6 +59,12 @@ Scope = Literal["us", "everywhere"]
 _LOCATION_FILTER = {"us": "itemLocationCountry:US", "everywhere": None}
 
 DEFAULT_LIMIT = 50
+
+#: Where the buyer is, so eBay can price calculated shipping (S43). Without
+#: it, search results leave `shippingCost` out of every listing whose shipping
+#: depends on the destination, and those copies have no delivered price. The
+#: item-detail call prices them either way; only search omits it.
+END_USER_CONTEXT_HEADER = "X-EBAY-C-ENDUSERCTX"
 
 #: eBay rejects anything larger on `item_summary/search`.
 MAX_LIMIT = 200
@@ -147,9 +158,11 @@ class BrowseClient:
         *,
         client: httpx.Client | None = None,
         marketplace_id: str = DEFAULT_MARKETPLACE_ID,
+        ship_to_zip: str | None = None,
     ) -> None:
         self._tokens = tokens
         self._marketplace_id = marketplace_id
+        self._ship_to_zip = ship_to_zip
         if client is None:
             client = httpx.Client(timeout=DEFAULT_TIMEOUT_SECONDS)
             self._owns_client = True
@@ -200,12 +213,15 @@ class BrowseClient:
         return _parse_listings(response)
 
     def _headers(self) -> dict[str, str]:
-        return {
+        headers = {
             "Authorization": f"Bearer {self._tokens.token().value}",
             "X-EBAY-C-MARKETPLACE-ID": self._marketplace_id,
             "Accept": "application/json",
             "User-Agent": USER_AGENT,
         }
+        if self._ship_to_zip is not None:
+            headers[END_USER_CONTEXT_HEADER] = _end_user_context(self._ship_to_zip)
+        return headers
 
     def close(self) -> None:
         """Close the HTTP client, but only if this object created it."""
@@ -217,6 +233,16 @@ class BrowseClient:
 
     def __exit__(self, *exc_info: object) -> None:
         self.close()
+
+
+def _end_user_context(zip_code: str) -> str:
+    """The location header's value, URL-encoded.
+
+    Measured against eBay: `contextualLocation=country=US,zip=10001` sent
+    as-is is ignored without an error, and the same value encoded prices every
+    calculated-shipping copy. eBay's docs write it encoded.
+    """
+    return "contextualLocation=" + quote(f"country=US,zip={zip_code}", safe="")
 
 
 def search_listings(
@@ -232,7 +258,11 @@ def search_listings(
     every call and so spends the daily budget on authentication.
     """
     credentials = load_ebay_credentials()
-    with EbayTokenProvider(credentials) as tokens, BrowseClient(tokens) as browse:
+    ship_to_zip = load_ship_to_zip()
+    with (
+        EbayTokenProvider(credentials) as tokens,
+        BrowseClient(tokens, ship_to_zip=ship_to_zip) as browse,
+    ):
         return browse.search(query, limit=limit, search_by=search_by)
 
 

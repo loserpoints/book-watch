@@ -1,0 +1,3087 @@
+{
+ "_": "Three real eBay searches for \"Hey Jack Barry Hannah\", US sellers, recorded 2026-09-30 for S43 (#177). One with no ship-to location, one with the location header unencoded, which eBay ignores, and one with it URL-encoded as eBay's docs write it. The ZIP is 10001, a stand-in. Without a working location, eBay leaves shippingCost out of calculated-shipping listings. Each listing keeps only the fields the search parser reads.",
+ "without_location": {
+  "total": 27,
+  "itemSummaries": [
+   {
+    "itemId": "v1|188985963222|0",
+    "title": "Barry Hannah / Hey Jack Signed 1st Edition 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/-4MAAeSwRHlqt07F/s-l225.jpg"
+    },
+    "price": {
+     "value": "28.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "kenmallorybooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 6685
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/-4MAAeSwRHlqt07F/s-l1200.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "6.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-05T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/188985963222?_skw=Hey+Jack+Barry+Hannah&hash=item2c0070f2d6:g:-4MAAeSwRHlqt07F",
+    "itemLocation": {
+     "postalCode": "300**",
+     "country": "US"
+    },
+    "itemCreationDate": "2026-09-26T04:48:01.000Z"
+   },
+   {
+    "itemId": "v1|276523227318|0",
+    "title": "HEY JACK! Barry Hannah SIGNED 1st Edition First Printing NOVEL Fiction INSCRIBED",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/fkcAAOSwy99hT6Xm/s-l225.jpg"
+    },
+    "price": {
+     "value": "45.47",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "rarevisionbooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 12045
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/fkcAAOSwy99hT6Xm/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.50",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-03T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-07T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/276523227318?_skw=Hey+Jack+Barry+Hannah&hash=item40621198b6:g:fkcAAOSwy99hT6Xm&amdata=enc%3AAQALAAAA8ACCtXRWQnOEpyOqnQQ8KGaVI%2FYrNV80xbiU2xlDkIM0hR8l4zEKEgmfUQ%2FJc0FzNETTigAAojaYmRQo%2FBqu3dBKDckUTi--pnYHeK0319BmWHkzCQUJbotX9lKsgEzh9P9xWqbVlX21r2aB51oLwV1zItNbnhTR6PTIneOppIzt%2FUJtVGTdilFbpLFqP1%2F5sW5xi4RO6k7p5RUewiCmZt4d3EviwtbBinwgqp5XJ5qH8Mm4MtMH7skk4mZw2zknk5Wo2iR0HeLAL%2BzoeUudjf7UeUiFT1AY%2BSKOlgTNw4hZLjISV7IQ4tZapWcxOEGHig%3D%3D",
+    "itemLocation": {
+     "postalCode": "532**",
+     "country": "US"
+    },
+    "itemCreationDate": "2024-06-24T19:55:45.000Z"
+   },
+   {
+    "itemId": "v1|195994330003|0",
+    "title": "BARRY HANNAH\u20141st Ed HC\u2014HEY JACK!\u2014\"The Maddest Writer in the USA\"\u2014Truman Capote",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/2FoAAOSwlVtlDMr5/s-l225.jpg"
+    },
+    "price": {
+     "value": "29.99",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "flappincat",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 1765
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/2FoAAOSwlVtlDMr5/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.99",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/195994330003?_skw=Hey+Jack+Barry+Hannah&hash=item2da22c2393:g:2FoAAOSwlVtlDMr5&amdata=enc%3AAQALAAAA8ACCtXRWQnOEpyOqnQQ8KGY6e6b6r6OFfQAujsqyDEGJJq%2BLRZc0YA2L9ePJ97yyeTfVG%2FC1akJvVLgM9CRbvhn%2BH%2BCHiR5rsrso1OpbLVb1KptWXryODVNubBtfAndxGzwJHi6tays%2FVJvgoUNXHtf7YsRU0fX18y1ZpdbIxtYJYeCd7rhB6C233M7l9RJHJkiJAptqJlVkZuwicG9GISTu1IQZSV8dI0fhueYlDLO181hZX7TEeIBUWyVYRv%2FnjelN8QdNAATTB%2BIkz%2FIqJ1S9vP9pxzPQRVesDIoYnM3PbnFF3DB1mGOCsa8wBSfX%2BA%3D%3D",
+    "itemLocation": {
+     "postalCode": "275**",
+     "country": "US"
+    },
+    "itemCreationDate": "2023-09-22T12:39:06.000Z"
+   },
+   {
+    "itemId": "v1|800316708565|0",
+    "title": "Barry HANNAH / Hey Jack 1st Edition 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/I9AAAeSwAUpqSFWW/s-l225.jpg"
+    },
+    "price": {
+     "value": "20.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "pizzle",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 3232
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/I9AAAeSwAUpqSFWW/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-05T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-10T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/800316708565?_skw=Hey+Jack+Barry+Hannah&hash=itemba5697d6d5:g:I9AAAeSwAUpqSFWW",
+    "itemLocation": {
+     "postalCode": "596**",
+     "country": "US"
+    },
+    "itemCreationDate": "2026-07-09T22:17:50.000Z"
+   },
+   {
+    "itemId": "v1|278410572595|0",
+    "title": "Hey Jack! Hardcover Barry Hannah",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/YToAAeSwkP9qt3ZE/s-l225.jpg"
+    },
+    "price": {
+     "value": "9.80",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "betterworldbookswest",
+     "feedbackPercentage": "99.7",
+     "feedbackScore": 554953
+    },
+    "condition": "Very Good",
+    "conditionId": "4000",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/YToAAeSwkP9qt3ZE/s-l500.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-05T07:00:00.000Z"
+     }
+    ],
+    "epid": "2127047",
+    "itemWebUrl": "https://www.ebay.com/itm/278410572595?_skw=Hey+Jack+Barry+Hannah&hash=item40d2903333:g:YToAAeSwkP9qt3ZE",
+    "itemLocation": {
+     "postalCode": "895**",
+     "country": "US"
+    },
+    "itemCreationDate": "2026-09-26T07:36:38.000Z"
+   },
+   {
+    "itemId": "v1|175695447644|0",
+    "title": "HEY JACK by BARRY HANNAH 1987 uncorrected proofs softcover",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/3YoAAOSwdElkQHQe/s-l225.jpg"
+    },
+    "price": {
+     "value": "30.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "michaelecoy",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 452
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/3YoAAOSwdElkQHQe/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "4.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/175695447644?_skw=Hey+Jack+Barry+Hannah&hash=item28e843c65c:g:3YoAAOSwdElkQHQe",
+    "itemLocation": {
+     "postalCode": "981**",
+     "country": "US"
+    },
+    "itemCreationDate": "2023-04-19T23:09:21.000Z"
+   },
+   {
+    "itemId": "v1|377491164847|0",
+    "title": "Hey Jack! (Contemporary American Fiction) by Barry Hannah",
+    "price": {
+     "value": "11.77",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "thrift.books",
+     "feedbackPercentage": "99.7",
+     "feedbackScore": 4883481
+    },
+    "condition": "Acceptable",
+    "conditionId": "6000",
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-03T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-07T07:00:00.000Z"
+     }
+    ],
+    "epid": "1323055",
+    "itemWebUrl": "https://www.ebay.com/itm/377491164847?_skw=Hey+Jack+Barry+Hannah&hash=item57e43a0eaf:i:377491164847",
+    "itemLocation": {
+     "postalCode": "605**",
+     "country": "US"
+    },
+    "itemCreationDate": "2026-09-12T19:01:02.000Z"
+   },
+   {
+    "itemId": "v1|167942077988|0",
+    "title": "Barry HANNAH / Hey Jack Signed 1st Edition 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/HQEAAeSw7slpZztT/s-l225.jpg"
+    },
+    "price": {
+     "value": "35.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "betweenthecoversrarebooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 8665
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/HQEAAeSw7slpZztT/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.50",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/167942077988?_skw=Hey+Jack+Barry+Hannah&hash=item271a20be24:g:HQEAAeSw7slpZztT",
+    "itemLocation": {
+     "postalCode": "080**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-11-19T17:07:46.000Z"
+   },
+   {
+    "itemId": "v1|167827351913|0",
+    "title": "Barry HANNAH / Hey Jack Uncorrected Proof 1st 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/lbgAAeSw1DhpOjST/s-l225.jpg"
+    },
+    "price": {
+     "value": "30.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "betweenthecoversrarebooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 8665
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/lbgAAeSw1DhpOjST/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.50",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/167827351913?_skw=Hey+Jack+Barry+Hannah&hash=item27134a2969:g:lbgAAeSw1DhpOjST",
+    "itemLocation": {
+     "postalCode": "080**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-09-30T19:16:18.000Z"
+   },
+   {
+    "itemId": "v1|117307117186|0",
+    "title": "Barry HANNAH / HEY JACK 1st Edition 1987 #198517",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/lZgAAeSwr3RqWhbb/s-l225.jpg"
+    },
+    "price": {
+     "value": "23.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "jahbooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 11467
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/lZgAAeSwr3RqWhbb/s-l960.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "CALCULATED"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/117307117186?_skw=Hey+Jack+Barry+Hannah&hash=item1b500c8e82:g:lZgAAeSwr3RqWhbb",
+    "itemLocation": {
+     "postalCode": "600**",
+     "country": "US"
+    },
+    "itemCreationDate": "2026-07-17T11:48:40.000Z"
+   },
+   {
+    "itemId": "v1|376750027360|0",
+    "title": "Hey Jack! (Contemporary American Fiction) by Barry Hannah",
+    "price": {
+     "value": "12.59",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "thrift.books",
+     "feedbackPercentage": "99.7",
+     "feedbackScore": 4883481
+    },
+    "condition": "Good",
+    "conditionId": "5000",
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-03T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-07T07:00:00.000Z"
+     }
+    ],
+    "epid": "1323055",
+    "itemWebUrl": "https://www.ebay.com/itm/376750027360?_skw=Hey+Jack+Barry+Hannah&hash=item57b80d3260:i:376750027360",
+    "itemLocation": {
+     "postalCode": "605**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-12-03T11:54:32.000Z"
+   },
+   {
+    "itemId": "v1|167942498076|0",
+    "title": "Barry HANNAH / Hey Jack Uncorrected Proof 1st 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/OVUAAeSw93xpHjBJ/s-l225.jpg"
+    },
+    "price": {
+     "value": "35.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "betweenthecoversrarebooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 8665
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/OVUAAeSw93xpHjBJ/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.50",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/167942498076?_skw=Hey+Jack+Barry+Hannah&hash=item271a27271c:g:OVUAAeSw93xpHjBJ",
+    "itemLocation": {
+     "postalCode": "080**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-11-19T20:57:54.000Z"
+   },
+   {
+    "itemId": "v1|167745558262|0",
+    "title": "Barry Hannah / Hey Jack 1st Edition 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/vEYAAeSwagNpA9Ru/s-l225.jpg"
+    },
+    "price": {
+     "value": "31.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "eveningstarbooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 5105
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/vEYAAeSwagNpA9Ru/s-l960.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/167745558262?_skw=Hey+Jack+Barry+Hannah&hash=item270e6a16f6:g:vEYAAeSwagNpA9Ru",
+    "itemLocation": {
+     "postalCode": "537**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-08-26T19:33:52.000Z"
+   },
+   {
+    "itemId": "v1|336616869966|0",
+    "title": "HEY JACK! (CONTEMPORARY AMERICAN FICTION) By Barry Hannah *Excellent Condition*",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/WVQAAeSwALNqH4vI/s-l225.jpg"
+    },
+    "price": {
+     "value": "25.49",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "zuber",
+     "feedbackPercentage": "99.0",
+     "feedbackScore": 350562
+    },
+    "condition": "Very Good",
+    "conditionId": "4000",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/WVQAAeSwALNqH4vI/s-l500.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "epid": "1323055",
+    "itemWebUrl": "https://www.ebay.com/itm/336616869966?_skw=Hey+Jack+Barry+Hannah&hash=item4e5fedd04e:g:WVQAAeSwALNqH4vI&amdata=enc%3AAQALAAAA8ACCtXRWQnOEpyOqnQQ8KGYG%2FDoXydLaeTwtnINFGFCVpKjDptgdQ0ZHrEF12JiV7RzxruGkKUl%2FW9G2pSC9K9bRw0FcWzAy%2FkDGYBdrBRg1RDaSJTYR7iH5vfXXjDWwwFhpN9q3xlzPwTkC1NKoVCS4A3IH8ZeklWsT182oDQdPOMRxhZI8RpanMtzg7mCpB33dzyLWYcQwVjLJ%2BlXwqSWbVsDKzac7WO2GpUDEr5SZrbYaQl6mYcxlgUZYv%2BsmLooY%2B6Adw4%2FH%2BVm9zjNZyqi1vfXDd1T%2Frz6m%2BfYSDlGHIqkAP%2Fa6wwcxydigm0AUOA%3D%3D",
+    "itemLocation": {
+     "country": "US"
+    },
+    "itemCreationDate": "2026-06-03T02:03:50.000Z"
+   },
+   {
+    "itemId": "v1|376499162074|0",
+    "title": "Hey Jack! by Barry Hannah",
+    "price": {
+     "value": "9.12",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "thrift.books",
+     "feedbackPercentage": "99.7",
+     "feedbackScore": 4883481
+    },
+    "condition": "Good",
+    "conditionId": "5000",
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-03T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-07T07:00:00.000Z"
+     }
+    ],
+    "epid": "2127047",
+    "itemWebUrl": "https://www.ebay.com/itm/376499162074?_skw=Hey+Jack+Barry+Hannah&hash=item57a9194bda:i:376499162074&amdata=enc%3AAQALAAAA8ACCtXRWQnOEpyOqnQQ8KGaMo8rfUYxzMOiQTh5u7ADuNY8sfxdzT5hJfyz6DUYiDMCw%2FcEy1bDIbsyc9kqdcWSZg53WktlfevNrA4itTcUOBCD%2BTet3W%2FWXmSFFbgPRc5%2FVNzBThtCnKeXWPD6DzzbONMQm2shFVO5n1OWn10J308Dkd0FHJKlODIT5yTsCmFThGgtsEb8%2BIpKzAhYvWJfrjA7U7Izml6cgrIfgKflxDTY7yXLzm3nUqc2Uu1upDsm%2BRXy4OPklLN0%2FF7y6u%2Feu7rMlO4Je4s2xQ4iJ7q1RDNuVFa8JLH8Rmj%2BmoSnUTg%3D%3D",
+    "itemLocation": {
+     "postalCode": "605**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-08-22T06:10:30.000Z"
+   },
+   {
+    "itemId": "v1|157459085167|0",
+    "title": "Hey Jack! by Barry Hannah (1987) SIGNED Advance Uncorrected Proofs  Rare",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/NXUAAOSwaTRn1yo8/s-l225.jpg"
+    },
+    "price": {
+     "value": "49.95",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "miklosfolly",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 1755
+    },
+    "condition": "Very Good",
+    "conditionId": "4000",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/NXUAAOSwaTRn1yo8/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.99",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/157459085167?_skw=Hey+Jack+Barry+Hannah&hash=item24a94af76f:g:NXUAAOSwaTRn1yo8&amdata=enc%3AAQALAAAA8ACCtXRWQnOEpyOqnQQ8KGbMgPbb0kOTTTkH5vuENZa8bK2xa6D%2FGZq74zcu5aPzXU3rXoaHi36MlKfqy7BXKLJqSmtDuxvxmJkXbMS%2Fbf2xnTuJm45dRMGKt9C%2FeDkCaQ7TvMiI59iOUQul5ujk3fWh2nrK9GkH4%2B%2FO8k471hLXLVf1CDyl9ggG2t4PmQIclholBGovVBg5riRmJU8L65V1N7CBQPfv914VEbU4i61xkRuagYMoUEwyHbuSqyGFyokR4ekYiBRwB%2FT1V80o6FvW16lMUhKrszCb0s8uyIvwc1WF0UPFEsjP2NInIaGAjQ%3D%3D",
+    "itemLocation": {
+     "postalCode": "522**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-11-12T12:24:48.000Z"
+   },
+   {
+    "itemId": "v1|355954928365|0",
+    "title": "Hey Jack! by Barry Hannah (E. P. Dutton/Seymour Lawrence, 1987, Hardcover)",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/ftAAAOSwN99mvOod/s-l225.jpg"
+    },
+    "price": {
+     "value": "30.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "bksofcho",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 214
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/ftAAAOSwN99mvOod/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-03T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-07T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/355954928365?_skw=Hey+Jack+Barry+Hannah&hash=item52e0912aed:g:ftAAAOSwN99mvOod",
+    "itemLocation": {
+     "postalCode": "554**",
+     "country": "US"
+    },
+    "itemCreationDate": "2024-08-14T17:35:48.000Z"
+   },
+   {
+    "itemId": "v1|277675683851|0",
+    "title": "Hey Jack! Paperback Barry Hannah",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/MpQAAeSwLdRpdvy4/s-l225.jpg"
+    },
+    "price": {
+     "value": "13.27",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "betterworldbooks",
+     "feedbackPercentage": "99.7",
+     "feedbackScore": 3311138
+    },
+    "condition": "Good",
+    "conditionId": "5000",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/MpQAAeSwLdRpdvy4/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-03T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-08T07:00:00.000Z"
+     }
+    ],
+    "epid": "1323055",
+    "itemWebUrl": "https://www.ebay.com/itm/277675683851?_skw=Hey+Jack+Barry+Hannah&hash=item40a6c2b00b:g:MpQAAeSwLdRpdvy4",
+    "itemLocation": {
+     "postalCode": "465**",
+     "country": "US"
+    },
+    "itemCreationDate": "2026-01-26T05:31:40.000Z"
+   },
+   {
+    "itemId": "v1|155478080346|0",
+    "title": "Barry Hannah / Hey Jack 1st Edition 1987 #295525",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/UzEAAeSwhXFqJ4eo/s-l225.jpg"
+    },
+    "price": {
+     "value": "18.75",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "eurekabookshop",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 6298
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/UzEAAeSwhXFqJ4eo/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "9.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/155478080346?_skw=Hey+Jack+Barry+Hannah&hash=item2433373b5a:g:UzEAAeSwhXFqJ4eo",
+    "itemLocation": {
+     "postalCode": "955**",
+     "country": "US"
+    },
+    "itemCreationDate": "2023-03-29T22:04:49.000Z"
+   },
+   {
+    "itemId": "v1|167800068050|0",
+    "title": "Barry HANNAH / Hey Jack 1st Edition 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/0HYAAeSwgAhpZn5P/s-l225.jpg"
+    },
+    "price": {
+     "value": "30.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "betweenthecoversrarebooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 8665
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/0HYAAeSwgAhpZn5P/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.50",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/167800068050?_skw=Hey+Jack+Barry+Hannah&hash=item2711a9d7d2:g:0HYAAeSwgAhpZn5P",
+    "itemLocation": {
+     "postalCode": "080**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-09-18T14:47:30.000Z"
+   },
+   {
+    "itemId": "v1|167766014224|0",
+    "title": "Barry HANNAH / Hey Jack 1st Edition 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/Hb0AAeSwardpZmV7/s-l225.jpg"
+    },
+    "price": {
+     "value": "30.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "betweenthecoversrarebooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 8665
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/Hb0AAeSwardpZmV7/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.50",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/167766014224?_skw=Hey+Jack+Barry+Hannah&hash=item270fa23910:g:Hb0AAeSwardpZmV7",
+    "itemLocation": {
+     "postalCode": "080**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-09-03T19:12:39.000Z"
+   },
+   {
+    "itemId": "v1|407056103912|0",
+    "title": "Hey Jack! by Barry Hannah",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/jjYAAeSwtK5qTToI/s-l225.jpg"
+    },
+    "price": {
+     "value": "9.95",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "samue-cottr",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 1090
+    },
+    "condition": "Good",
+    "conditionId": "5000",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/jjYAAeSwtK5qTToI/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "CALCULATED"
+     }
+    ],
+    "epid": "2127047",
+    "itemWebUrl": "https://www.ebay.com/itm/407056103912?_skw=Hey+Jack+Barry+Hannah&hash=item5ec66f39e8:g:jjYAAeSwtK5qTToI",
+    "itemLocation": {
+     "postalCode": "173**",
+     "country": "US"
+    },
+    "itemCreationDate": "2026-07-07T17:42:00.000Z"
+   },
+   {
+    "itemId": "v1|175400822840|0",
+    "title": "HEY JACK ! (HC) BARRY HANNAH- SIGNED  (1ST. EDITION ) MYS/ MAGIC (1987)",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/trQAAOSwjwph~-xm/s-l225.jpg"
+    },
+    "price": {
+     "value": "39.99",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "bookbandit3443",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 12486
+    },
+    "condition": "Good",
+    "conditionId": "5000",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/trQAAOSwjwph~-xm/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.22",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-03T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-07T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/175400822840?_skw=Hey+Jack+Barry+Hannah&hash=item28d6b42838:g:trQAAOSwjwph~-xm",
+    "itemLocation": {
+     "postalCode": "486**",
+     "country": "US"
+    },
+    "itemCreationDate": "2022-08-31T12:47:30.000Z"
+   },
+   {
+    "itemId": "v1|254725946132|0",
+    "title": "HEY JACK! - 1ST. ED. REVIEW COPY BY BARRY HANNAH",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/lvgAAOSwJntfaSbr/s-l225.jpg"
+    },
+    "price": {
+     "value": "50.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "waverlybooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 1841
+    },
+    "condition": "Like New",
+    "conditionId": "2750",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/lvgAAOSwJntfaSbr/s-l640.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "6.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/254725946132?_skw=Hey+Jack+Barry+Hannah&hash=item3b4ed97b14:g:lvgAAOSwJntfaSbr",
+    "itemLocation": {
+     "postalCode": "904**",
+     "country": "US"
+    },
+    "itemCreationDate": "2020-09-21T22:24:03.000Z"
+   },
+   {
+    "itemId": "v1|254726764340|0",
+    "title": "HEY JACK! - 1ST. ED. SIGNED BY BARRY HANNAH",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/mrsAAOSwUvFfakX8/s-l225.jpg"
+    },
+    "price": {
+     "value": "50.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "waverlybooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 1841
+    },
+    "condition": "Like New",
+    "conditionId": "2750",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/mrsAAOSwUvFfakX8/s-l640.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "6.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/254726764340?_skw=Hey+Jack+Barry+Hannah&hash=item3b4ee5f734:g:mrsAAOSwUvFfakX8",
+    "itemLocation": {
+     "postalCode": "904**",
+     "country": "US"
+    },
+    "itemCreationDate": "2020-09-22T18:45:37.000Z"
+   },
+   {
+    "itemId": "v1|227366881060|0",
+    "title": "HEY JACK! By Barry Hannah - Hardcover **Mint Condition**",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/HfEAAeSwJElqHPDb/s-l225.jpg"
+    },
+    "price": {
+     "value": "21.95",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "zuber",
+     "feedbackPercentage": "99.0",
+     "feedbackScore": 350562
+    },
+    "condition": "Like New",
+    "conditionId": "2750",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/HfEAAeSwJElqHPDb/s-l500.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "epid": "2127047",
+    "itemWebUrl": "https://www.ebay.com/itm/227366881060?_skw=Hey+Jack+Barry+Hannah&hash=item34f01f4724:g:HfEAAeSwJElqHPDb",
+    "itemLocation": {
+     "country": "US"
+    },
+    "itemCreationDate": "2026-06-01T02:34:24.000Z"
+   },
+   {
+    "itemId": "v1|175371270006|0",
+    "title": "Hey Jack! by Barry Hannah  first edition  (1987, Hardcover)",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/juAAAOSwAPBgrDuh/s-l225.jpg"
+    },
+    "price": {
+     "value": "7.99",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "mardigraszone",
+     "feedbackPercentage": "99.5",
+     "feedbackScore": 10109
+    },
+    "condition": "Good",
+    "conditionId": "5000",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/juAAAOSwAPBgrDuh/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "CALCULATED"
+     }
+    ],
+    "epid": "2127047",
+    "itemWebUrl": "https://www.ebay.com/itm/175371270006?_skw=Hey+Jack+Barry+Hannah&hash=item28d4f13776:g:juAAAOSwAPBgrDuh",
+    "itemLocation": {
+     "postalCode": "701**",
+     "country": "US"
+    },
+    "itemCreationDate": "2022-08-02T19:05:02.000Z"
+   }
+  ]
+ },
+ "with_location_unencoded": {
+  "total": 27,
+  "itemSummaries": [
+   {
+    "itemId": "v1|188985963222|0",
+    "title": "Barry Hannah / Hey Jack Signed 1st Edition 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/-4MAAeSwRHlqt07F/s-l225.jpg"
+    },
+    "price": {
+     "value": "28.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "kenmallorybooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 6685
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/-4MAAeSwRHlqt07F/s-l1200.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "6.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-05T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/188985963222?_skw=Hey+Jack+Barry+Hannah&hash=item2c0070f2d6:g:-4MAAeSwRHlqt07F",
+    "itemLocation": {
+     "postalCode": "300**",
+     "country": "US"
+    },
+    "itemCreationDate": "2026-09-26T04:48:01.000Z"
+   },
+   {
+    "itemId": "v1|276523227318|0",
+    "title": "HEY JACK! Barry Hannah SIGNED 1st Edition First Printing NOVEL Fiction INSCRIBED",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/fkcAAOSwy99hT6Xm/s-l225.jpg"
+    },
+    "price": {
+     "value": "45.47",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "rarevisionbooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 12045
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/fkcAAOSwy99hT6Xm/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.50",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-03T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-07T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/276523227318?_skw=Hey+Jack+Barry+Hannah&hash=item40621198b6:g:fkcAAOSwy99hT6Xm&amdata=enc%3AAQALAAAA8ACCtXRWQnOEpyOqnQQ8KGaVI%2FYrNV80xbiU2xlDkIM0hR8l4zEKEgmfUQ%2FJc0FzNETTigAAojaYmRQo%2FBqu3dBKDckUTi--pnYHeK0319BmWHkzCQUJbotX9lKsgEzh9P9xWqbVlX21r2aB51oLwV2bQv2en1vWex9NXMu4jResKhiSkkWjthQTSPbiaB%2Fn16jCjmGk%2Bao3cuZBpgC8X4gZndWp4Moeawx10hp89a%2FffDe2LC1Am814a9YJlOmtQjulToY9hlItk%2FtozEIZOGbrJj3fS4NTjBWM7zjQkcv%2F0ZMhDQ702qltsJ5kcmoPyQ%3D%3D",
+    "itemLocation": {
+     "postalCode": "532**",
+     "country": "US"
+    },
+    "itemCreationDate": "2024-06-24T19:55:45.000Z"
+   },
+   {
+    "itemId": "v1|195994330003|0",
+    "title": "BARRY HANNAH\u20141st Ed HC\u2014HEY JACK!\u2014\"The Maddest Writer in the USA\"\u2014Truman Capote",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/2FoAAOSwlVtlDMr5/s-l225.jpg"
+    },
+    "price": {
+     "value": "29.99",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "flappincat",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 1765
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/2FoAAOSwlVtlDMr5/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.99",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/195994330003?_skw=Hey+Jack+Barry+Hannah&hash=item2da22c2393:g:2FoAAOSwlVtlDMr5&amdata=enc%3AAQALAAAA8ACCtXRWQnOEpyOqnQQ8KGY6e6b6r6OFfQAujsqyDEGJJq%2BLRZc0YA2L9ePJ97yyeTfVG%2FC1akJvVLgM9CRbvhn%2BH%2BCHiR5rsrso1OpbLVb1KptWXryODVNubBtfAndxGzwJHi6tays%2FVJvgoUNXHtdfgJEW3FNVvCLDVuG%2FiYUhGtVbe%2F2tCqisVCW3IX0Sgin48avaSZ%2FoZ6lWpQM6M4MlgljC4onSXdf2HF7Ojq%2FUC%2Fs3BmIQl1tRHWOPcEK4%2Bdvxv31laLZEXOUDN01Hwkujz7PkydMViL%2FtZikdApKwJR5cae2XJO8UGO2frR%2B40g%3D%3D",
+    "itemLocation": {
+     "postalCode": "275**",
+     "country": "US"
+    },
+    "itemCreationDate": "2023-09-22T12:39:06.000Z"
+   },
+   {
+    "itemId": "v1|800316708565|0",
+    "title": "Barry HANNAH / Hey Jack 1st Edition 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/I9AAAeSwAUpqSFWW/s-l225.jpg"
+    },
+    "price": {
+     "value": "20.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "pizzle",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 3232
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/I9AAAeSwAUpqSFWW/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-05T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-10T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/800316708565?_skw=Hey+Jack+Barry+Hannah&hash=itemba5697d6d5:g:I9AAAeSwAUpqSFWW",
+    "itemLocation": {
+     "postalCode": "596**",
+     "country": "US"
+    },
+    "itemCreationDate": "2026-07-09T22:17:50.000Z"
+   },
+   {
+    "itemId": "v1|278410572595|0",
+    "title": "Hey Jack! Hardcover Barry Hannah",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/YToAAeSwkP9qt3ZE/s-l225.jpg"
+    },
+    "price": {
+     "value": "9.80",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "betterworldbookswest",
+     "feedbackPercentage": "99.7",
+     "feedbackScore": 554953
+    },
+    "condition": "Very Good",
+    "conditionId": "4000",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/YToAAeSwkP9qt3ZE/s-l500.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-05T07:00:00.000Z"
+     }
+    ],
+    "epid": "2127047",
+    "itemWebUrl": "https://www.ebay.com/itm/278410572595?_skw=Hey+Jack+Barry+Hannah&hash=item40d2903333:g:YToAAeSwkP9qt3ZE",
+    "itemLocation": {
+     "postalCode": "895**",
+     "country": "US"
+    },
+    "itemCreationDate": "2026-09-26T07:36:38.000Z"
+   },
+   {
+    "itemId": "v1|175695447644|0",
+    "title": "HEY JACK by BARRY HANNAH 1987 uncorrected proofs softcover",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/3YoAAOSwdElkQHQe/s-l225.jpg"
+    },
+    "price": {
+     "value": "30.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "michaelecoy",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 452
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/3YoAAOSwdElkQHQe/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "4.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/175695447644?_skw=Hey+Jack+Barry+Hannah&hash=item28e843c65c:g:3YoAAOSwdElkQHQe",
+    "itemLocation": {
+     "postalCode": "981**",
+     "country": "US"
+    },
+    "itemCreationDate": "2023-04-19T23:09:21.000Z"
+   },
+   {
+    "itemId": "v1|377491164847|0",
+    "title": "Hey Jack! (Contemporary American Fiction) by Barry Hannah",
+    "price": {
+     "value": "11.77",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "thrift.books",
+     "feedbackPercentage": "99.7",
+     "feedbackScore": 4883483
+    },
+    "condition": "Acceptable",
+    "conditionId": "6000",
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-03T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-07T07:00:00.000Z"
+     }
+    ],
+    "epid": "1323055",
+    "itemWebUrl": "https://www.ebay.com/itm/377491164847?_skw=Hey+Jack+Barry+Hannah&hash=item57e43a0eaf:i:377491164847",
+    "itemLocation": {
+     "postalCode": "605**",
+     "country": "US"
+    },
+    "itemCreationDate": "2026-09-12T19:01:02.000Z"
+   },
+   {
+    "itemId": "v1|167942077988|0",
+    "title": "Barry HANNAH / Hey Jack Signed 1st Edition 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/HQEAAeSw7slpZztT/s-l225.jpg"
+    },
+    "price": {
+     "value": "35.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "betweenthecoversrarebooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 8665
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/HQEAAeSw7slpZztT/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.50",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/167942077988?_skw=Hey+Jack+Barry+Hannah&hash=item271a20be24:g:HQEAAeSw7slpZztT",
+    "itemLocation": {
+     "postalCode": "080**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-11-19T17:07:46.000Z"
+   },
+   {
+    "itemId": "v1|167827351913|0",
+    "title": "Barry HANNAH / Hey Jack Uncorrected Proof 1st 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/lbgAAeSw1DhpOjST/s-l225.jpg"
+    },
+    "price": {
+     "value": "30.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "betweenthecoversrarebooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 8665
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/lbgAAeSw1DhpOjST/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.50",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/167827351913?_skw=Hey+Jack+Barry+Hannah&hash=item27134a2969:g:lbgAAeSw1DhpOjST",
+    "itemLocation": {
+     "postalCode": "080**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-09-30T19:16:18.000Z"
+   },
+   {
+    "itemId": "v1|117307117186|0",
+    "title": "Barry HANNAH / HEY JACK 1st Edition 1987 #198517",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/lZgAAeSwr3RqWhbb/s-l225.jpg"
+    },
+    "price": {
+     "value": "23.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "jahbooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 11467
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/lZgAAeSwr3RqWhbb/s-l960.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "CALCULATED"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/117307117186?_skw=Hey+Jack+Barry+Hannah&hash=item1b500c8e82:g:lZgAAeSwr3RqWhbb",
+    "itemLocation": {
+     "postalCode": "600**",
+     "country": "US"
+    },
+    "itemCreationDate": "2026-07-17T11:48:40.000Z"
+   },
+   {
+    "itemId": "v1|376750027360|0",
+    "title": "Hey Jack! (Contemporary American Fiction) by Barry Hannah",
+    "price": {
+     "value": "12.59",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "thrift.books",
+     "feedbackPercentage": "99.7",
+     "feedbackScore": 4883483
+    },
+    "condition": "Good",
+    "conditionId": "5000",
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-03T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-07T07:00:00.000Z"
+     }
+    ],
+    "epid": "1323055",
+    "itemWebUrl": "https://www.ebay.com/itm/376750027360?_skw=Hey+Jack+Barry+Hannah&hash=item57b80d3260:i:376750027360",
+    "itemLocation": {
+     "postalCode": "605**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-12-03T11:54:32.000Z"
+   },
+   {
+    "itemId": "v1|167942498076|0",
+    "title": "Barry HANNAH / Hey Jack Uncorrected Proof 1st 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/OVUAAeSw93xpHjBJ/s-l225.jpg"
+    },
+    "price": {
+     "value": "35.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "betweenthecoversrarebooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 8665
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/OVUAAeSw93xpHjBJ/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.50",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/167942498076?_skw=Hey+Jack+Barry+Hannah&hash=item271a27271c:g:OVUAAeSw93xpHjBJ",
+    "itemLocation": {
+     "postalCode": "080**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-11-19T20:57:54.000Z"
+   },
+   {
+    "itemId": "v1|167745558262|0",
+    "title": "Barry Hannah / Hey Jack 1st Edition 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/vEYAAeSwagNpA9Ru/s-l225.jpg"
+    },
+    "price": {
+     "value": "31.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "eveningstarbooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 5105
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/vEYAAeSwagNpA9Ru/s-l960.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/167745558262?_skw=Hey+Jack+Barry+Hannah&hash=item270e6a16f6:g:vEYAAeSwagNpA9Ru",
+    "itemLocation": {
+     "postalCode": "537**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-08-26T19:33:52.000Z"
+   },
+   {
+    "itemId": "v1|336616869966|0",
+    "title": "HEY JACK! (CONTEMPORARY AMERICAN FICTION) By Barry Hannah *Excellent Condition*",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/WVQAAeSwALNqH4vI/s-l225.jpg"
+    },
+    "price": {
+     "value": "25.49",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "zuber",
+     "feedbackPercentage": "99.0",
+     "feedbackScore": 350562
+    },
+    "condition": "Very Good",
+    "conditionId": "4000",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/WVQAAeSwALNqH4vI/s-l500.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "epid": "1323055",
+    "itemWebUrl": "https://www.ebay.com/itm/336616869966?_skw=Hey+Jack+Barry+Hannah&hash=item4e5fedd04e:g:WVQAAeSwALNqH4vI&amdata=enc%3AAQALAAAA8ACCtXRWQnOEpyOqnQQ8KGYG%2FDoXydLaeTwtnINFGFCVpKjDptgdQ0ZHrEF12JiV7RzxruGkKUl%2FW9G2pSC9K9bRw0FcWzAy%2FkDGYBdrBRg1RDaSJTYR7iH5vfXXjDWwwFhpN9q3xlzPwTkC1NKoVCTcVRY3ur76XRjKwz4PaakvRzM5rCw%2BiO9S7FM23y9ykSFOl6Zdd%2Flb10C7rfssEfdRCD1Jah1RN%2FlktBV4mWeBITPMktRCE31eFvclSw%2BgYJ2HTFLI2QDDm5WgHeny%2Bg4nZLegRtMU2edJFzNPVBSjbxiaFThD4Ff%2B6vY8Ljafcw%3D%3D",
+    "itemLocation": {
+     "country": "US"
+    },
+    "itemCreationDate": "2026-06-03T02:03:50.000Z"
+   },
+   {
+    "itemId": "v1|376499162074|0",
+    "title": "Hey Jack! by Barry Hannah",
+    "price": {
+     "value": "9.12",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "thrift.books",
+     "feedbackPercentage": "99.7",
+     "feedbackScore": 4883483
+    },
+    "condition": "Good",
+    "conditionId": "5000",
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-03T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-07T07:00:00.000Z"
+     }
+    ],
+    "epid": "2127047",
+    "itemWebUrl": "https://www.ebay.com/itm/376499162074?_skw=Hey+Jack+Barry+Hannah&hash=item57a9194bda:i:376499162074&amdata=enc%3AAQALAAAA8ACCtXRWQnOEpyOqnQQ8KGaMo8rfUYxzMOiQTh5u7ADuNY8sfxdzT5hJfyz6DUYiDMCw%2FcEy1bDIbsyc9kqdcWSZg53WktlfevNrA4itTcUOBCD%2BTet3W%2FWXmSFFbgPRc5%2FVNzBThtCnKeXWPD6Dzza%2BEfmM8p5AcrfQfhd9fO99OtEzidjVD4Xr%2FB5r64d5zumRRbscL2%2BI%2Bn4k4rzz5ZJCEIoeW0J1HsKB3jNieKeVM6mn%2FcL7Ys%2BxRwAfS4J7ki3uv6grmETVm64mgvcko%2FzHyBiOrhI9ZD%2BTV7s%2BR%2FSwnhajSnlzjJ6VKEl5tdsx%2FQ%3D%3D",
+    "itemLocation": {
+     "postalCode": "605**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-08-22T06:10:30.000Z"
+   },
+   {
+    "itemId": "v1|157459085167|0",
+    "title": "Hey Jack! by Barry Hannah (1987) SIGNED Advance Uncorrected Proofs  Rare",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/NXUAAOSwaTRn1yo8/s-l225.jpg"
+    },
+    "price": {
+     "value": "49.95",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "miklosfolly",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 1755
+    },
+    "condition": "Very Good",
+    "conditionId": "4000",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/NXUAAOSwaTRn1yo8/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.99",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/157459085167?_skw=Hey+Jack+Barry+Hannah&hash=item24a94af76f:g:NXUAAOSwaTRn1yo8&amdata=enc%3AAQALAAAA8ACCtXRWQnOEpyOqnQQ8KGbMgPbb0kOTTTkH5vuENZa8bK2xa6D%2FGZq74zcu5aPzXU3rXoaHi36MlKfqy7BXKLJqSmtDuxvxmJkXbMS%2Fbf2xnTuJm45dRMGKt9C%2FeDkCaQ7TvMiI59iOUQul5ujk3fXMCRKtuUSKP61LWcUNXQx1RZavtrod3xW9fd0gbEJCHtv8x3fS0i6nzQbPsViWgDF1Ztd8IT1psJFT64F%2FHsyAMAa6wrOJiJMKwjwRmxTvhHyQLrc3%2BFlQEhodEcktEVrGctLdvlR3ODowrHLHuZnY9TccInPj6Jn%2FOGS9F1GBaQ%3D%3D",
+    "itemLocation": {
+     "postalCode": "522**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-11-12T12:24:48.000Z"
+   },
+   {
+    "itemId": "v1|355954928365|0",
+    "title": "Hey Jack! by Barry Hannah (E. P. Dutton/Seymour Lawrence, 1987, Hardcover)",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/ftAAAOSwN99mvOod/s-l225.jpg"
+    },
+    "price": {
+     "value": "30.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "bksofcho",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 214
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/ftAAAOSwN99mvOod/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-03T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-07T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/355954928365?_skw=Hey+Jack+Barry+Hannah&hash=item52e0912aed:g:ftAAAOSwN99mvOod",
+    "itemLocation": {
+     "postalCode": "554**",
+     "country": "US"
+    },
+    "itemCreationDate": "2024-08-14T17:35:48.000Z"
+   },
+   {
+    "itemId": "v1|277675683851|0",
+    "title": "Hey Jack! Paperback Barry Hannah",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/MpQAAeSwLdRpdvy4/s-l225.jpg"
+    },
+    "price": {
+     "value": "13.27",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "betterworldbooks",
+     "feedbackPercentage": "99.7",
+     "feedbackScore": 3311138
+    },
+    "condition": "Good",
+    "conditionId": "5000",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/MpQAAeSwLdRpdvy4/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-03T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-08T07:00:00.000Z"
+     }
+    ],
+    "epid": "1323055",
+    "itemWebUrl": "https://www.ebay.com/itm/277675683851?_skw=Hey+Jack+Barry+Hannah&hash=item40a6c2b00b:g:MpQAAeSwLdRpdvy4",
+    "itemLocation": {
+     "postalCode": "465**",
+     "country": "US"
+    },
+    "itemCreationDate": "2026-01-26T05:31:40.000Z"
+   },
+   {
+    "itemId": "v1|155478080346|0",
+    "title": "Barry Hannah / Hey Jack 1st Edition 1987 #295525",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/UzEAAeSwhXFqJ4eo/s-l225.jpg"
+    },
+    "price": {
+     "value": "18.75",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "eurekabookshop",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 6298
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/UzEAAeSwhXFqJ4eo/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "9.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/155478080346?_skw=Hey+Jack+Barry+Hannah&hash=item2433373b5a:g:UzEAAeSwhXFqJ4eo",
+    "itemLocation": {
+     "postalCode": "955**",
+     "country": "US"
+    },
+    "itemCreationDate": "2023-03-29T22:04:49.000Z"
+   },
+   {
+    "itemId": "v1|167800068050|0",
+    "title": "Barry HANNAH / Hey Jack 1st Edition 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/0HYAAeSwgAhpZn5P/s-l225.jpg"
+    },
+    "price": {
+     "value": "30.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "betweenthecoversrarebooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 8665
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/0HYAAeSwgAhpZn5P/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.50",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/167800068050?_skw=Hey+Jack+Barry+Hannah&hash=item2711a9d7d2:g:0HYAAeSwgAhpZn5P",
+    "itemLocation": {
+     "postalCode": "080**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-09-18T14:47:30.000Z"
+   },
+   {
+    "itemId": "v1|167766014224|0",
+    "title": "Barry HANNAH / Hey Jack 1st Edition 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/Hb0AAeSwardpZmV7/s-l225.jpg"
+    },
+    "price": {
+     "value": "30.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "betweenthecoversrarebooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 8665
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/Hb0AAeSwardpZmV7/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.50",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/167766014224?_skw=Hey+Jack+Barry+Hannah&hash=item270fa23910:g:Hb0AAeSwardpZmV7",
+    "itemLocation": {
+     "postalCode": "080**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-09-03T19:12:39.000Z"
+   },
+   {
+    "itemId": "v1|407056103912|0",
+    "title": "Hey Jack! by Barry Hannah",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/jjYAAeSwtK5qTToI/s-l225.jpg"
+    },
+    "price": {
+     "value": "9.95",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "samue-cottr",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 1090
+    },
+    "condition": "Good",
+    "conditionId": "5000",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/jjYAAeSwtK5qTToI/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "CALCULATED"
+     }
+    ],
+    "epid": "2127047",
+    "itemWebUrl": "https://www.ebay.com/itm/407056103912?_skw=Hey+Jack+Barry+Hannah&hash=item5ec66f39e8:g:jjYAAeSwtK5qTToI",
+    "itemLocation": {
+     "postalCode": "173**",
+     "country": "US"
+    },
+    "itemCreationDate": "2026-07-07T17:42:00.000Z"
+   },
+   {
+    "itemId": "v1|175400822840|0",
+    "title": "HEY JACK ! (HC) BARRY HANNAH- SIGNED  (1ST. EDITION ) MYS/ MAGIC (1987)",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/trQAAOSwjwph~-xm/s-l225.jpg"
+    },
+    "price": {
+     "value": "39.99",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "bookbandit3443",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 12486
+    },
+    "condition": "Good",
+    "conditionId": "5000",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/trQAAOSwjwph~-xm/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.22",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-03T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-07T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/175400822840?_skw=Hey+Jack+Barry+Hannah&hash=item28d6b42838:g:trQAAOSwjwph~-xm",
+    "itemLocation": {
+     "postalCode": "486**",
+     "country": "US"
+    },
+    "itemCreationDate": "2022-08-31T12:47:30.000Z"
+   },
+   {
+    "itemId": "v1|254725946132|0",
+    "title": "HEY JACK! - 1ST. ED. REVIEW COPY BY BARRY HANNAH",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/lvgAAOSwJntfaSbr/s-l225.jpg"
+    },
+    "price": {
+     "value": "50.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "waverlybooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 1841
+    },
+    "condition": "Like New",
+    "conditionId": "2750",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/lvgAAOSwJntfaSbr/s-l640.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "6.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/254725946132?_skw=Hey+Jack+Barry+Hannah&hash=item3b4ed97b14:g:lvgAAOSwJntfaSbr",
+    "itemLocation": {
+     "postalCode": "904**",
+     "country": "US"
+    },
+    "itemCreationDate": "2020-09-21T22:24:03.000Z"
+   },
+   {
+    "itemId": "v1|254726764340|0",
+    "title": "HEY JACK! - 1ST. ED. SIGNED BY BARRY HANNAH",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/mrsAAOSwUvFfakX8/s-l225.jpg"
+    },
+    "price": {
+     "value": "50.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "waverlybooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 1841
+    },
+    "condition": "Like New",
+    "conditionId": "2750",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/mrsAAOSwUvFfakX8/s-l640.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "6.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/254726764340?_skw=Hey+Jack+Barry+Hannah&hash=item3b4ee5f734:g:mrsAAOSwUvFfakX8",
+    "itemLocation": {
+     "postalCode": "904**",
+     "country": "US"
+    },
+    "itemCreationDate": "2020-09-22T18:45:37.000Z"
+   },
+   {
+    "itemId": "v1|227366881060|0",
+    "title": "HEY JACK! By Barry Hannah - Hardcover **Mint Condition**",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/HfEAAeSwJElqHPDb/s-l225.jpg"
+    },
+    "price": {
+     "value": "21.95",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "zuber",
+     "feedbackPercentage": "99.0",
+     "feedbackScore": 350562
+    },
+    "condition": "Like New",
+    "conditionId": "2750",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/HfEAAeSwJElqHPDb/s-l500.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "epid": "2127047",
+    "itemWebUrl": "https://www.ebay.com/itm/227366881060?_skw=Hey+Jack+Barry+Hannah&hash=item34f01f4724:g:HfEAAeSwJElqHPDb",
+    "itemLocation": {
+     "country": "US"
+    },
+    "itemCreationDate": "2026-06-01T02:34:24.000Z"
+   },
+   {
+    "itemId": "v1|175371270006|0",
+    "title": "Hey Jack! by Barry Hannah  first edition  (1987, Hardcover)",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/juAAAOSwAPBgrDuh/s-l225.jpg"
+    },
+    "price": {
+     "value": "7.99",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "mardigraszone",
+     "feedbackPercentage": "99.5",
+     "feedbackScore": 10109
+    },
+    "condition": "Good",
+    "conditionId": "5000",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/juAAAOSwAPBgrDuh/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "CALCULATED"
+     }
+    ],
+    "epid": "2127047",
+    "itemWebUrl": "https://www.ebay.com/itm/175371270006?_skw=Hey+Jack+Barry+Hannah&hash=item28d4f13776:g:juAAAOSwAPBgrDuh",
+    "itemLocation": {
+     "postalCode": "701**",
+     "country": "US"
+    },
+    "itemCreationDate": "2022-08-02T19:05:02.000Z"
+   }
+  ]
+ },
+ "with_location": {
+  "total": 27,
+  "itemSummaries": [
+   {
+    "itemId": "v1|188985963222|0",
+    "title": "Barry Hannah / Hey Jack Signed 1st Edition 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/-4MAAeSwRHlqt07F/s-l225.jpg"
+    },
+    "price": {
+     "value": "28.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "kenmallorybooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 6685
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/-4MAAeSwRHlqt07F/s-l1200.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "6.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-05T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/188985963222?_skw=Hey+Jack+Barry+Hannah&hash=item2c0070f2d6:g:-4MAAeSwRHlqt07F",
+    "itemLocation": {
+     "postalCode": "300**",
+     "country": "US"
+    },
+    "itemCreationDate": "2026-09-26T04:48:01.000Z"
+   },
+   {
+    "itemId": "v1|276523227318|0",
+    "title": "HEY JACK! Barry Hannah SIGNED 1st Edition First Printing NOVEL Fiction INSCRIBED",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/fkcAAOSwy99hT6Xm/s-l225.jpg"
+    },
+    "price": {
+     "value": "45.47",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "rarevisionbooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 12045
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/fkcAAOSwy99hT6Xm/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.50",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-05T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/276523227318?_skw=Hey+Jack+Barry+Hannah&hash=item40621198b6:g:fkcAAOSwy99hT6Xm&amdata=enc%3AAQALAAAA8ACCtXRWQnOEpyOqnQQ8KGaVI%2FYrNV80xbiU2xlDkIM0hR8l4zEKEgmfUQ%2FJc0FzNETTigAAojaYmRQo%2FBqu3dBKDckUTi--pnYHeK0319BmWHkzCQUJbotX9lKsgEzh9P9xWqbVlX21r2aB51oLwV0oCJoRQlOAghamOtNk7S2MmV%2BXcxQ7zo9jmFlGGwdygBpNSGebRyMgh7sqvkIRsjjyJHdq61Dg7jdpuasws3HARw%2BXUXzbWO6bgvbcnjPDjCnrYMQNbqfhm65fxZsDzXtDfuGDFPTP9gzYLeBnQBzKTRluZ%2BmJKB08UCnR6QyS9g%3D%3D",
+    "itemLocation": {
+     "postalCode": "532**",
+     "country": "US"
+    },
+    "itemCreationDate": "2024-06-24T19:55:45.000Z"
+   },
+   {
+    "itemId": "v1|195994330003|0",
+    "title": "BARRY HANNAH\u20141st Ed HC\u2014HEY JACK!\u2014\"The Maddest Writer in the USA\"\u2014Truman Capote",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/2FoAAOSwlVtlDMr5/s-l225.jpg"
+    },
+    "price": {
+     "value": "29.99",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "flappincat",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 1765
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/2FoAAOSwlVtlDMr5/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.99",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-05T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/195994330003?_skw=Hey+Jack+Barry+Hannah&hash=item2da22c2393:g:2FoAAOSwlVtlDMr5&amdata=enc%3AAQALAAAA8ACCtXRWQnOEpyOqnQQ8KGY6e6b6r6OFfQAujsqyDEGJJq%2BLRZc0YA2L9ePJ97yyeTfVG%2FC1akJvVLgM9CRbvhn%2BH%2BCHiR5rsrso1OpbLVb1KptWXryODVNubBtfAndxGzwJHi6tays%2FVJvgoUNXHtf4s6JoC0yutMN%2FQgsRHw4MklTPIrBEVf2OO47kisNmRqdHBAg2%2FFYC7i79WkTmPf%2FzOu%2FAXb%2B4eFhELuURqoONtWKSCb4gKNMXUGkAkSDzu2OOKhbjfvIO874bl1KPRZwszV9rH7c38ZXRdBgKQ0zOfA4PQFdOodhcLWNQ3HlgUg%3D%3D",
+    "itemLocation": {
+     "postalCode": "275**",
+     "country": "US"
+    },
+    "itemCreationDate": "2023-09-22T12:39:06.000Z"
+   },
+   {
+    "itemId": "v1|800316708565|0",
+    "title": "Barry HANNAH / Hey Jack 1st Edition 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/I9AAAeSwAUpqSFWW/s-l225.jpg"
+    },
+    "price": {
+     "value": "20.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "pizzle",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 3232
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/I9AAAeSwAUpqSFWW/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-05T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-13T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/800316708565?_skw=Hey+Jack+Barry+Hannah&hash=itemba5697d6d5:g:I9AAAeSwAUpqSFWW",
+    "itemLocation": {
+     "postalCode": "596**",
+     "country": "US"
+    },
+    "itemCreationDate": "2026-07-09T22:17:50.000Z"
+   },
+   {
+    "itemId": "v1|278410572595|0",
+    "title": "Hey Jack! Hardcover Barry Hannah",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/YToAAeSwkP9qt3ZE/s-l225.jpg"
+    },
+    "price": {
+     "value": "9.80",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "betterworldbookswest",
+     "feedbackPercentage": "99.7",
+     "feedbackScore": 554953
+    },
+    "condition": "Very Good",
+    "conditionId": "4000",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/YToAAeSwkP9qt3ZE/s-l500.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-03T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-08T07:00:00.000Z"
+     }
+    ],
+    "epid": "2127047",
+    "itemWebUrl": "https://www.ebay.com/itm/278410572595?_skw=Hey+Jack+Barry+Hannah&hash=item40d2903333:g:YToAAeSwkP9qt3ZE",
+    "itemLocation": {
+     "postalCode": "895**",
+     "country": "US"
+    },
+    "itemCreationDate": "2026-09-26T07:36:38.000Z"
+   },
+   {
+    "itemId": "v1|175695447644|0",
+    "title": "HEY JACK by BARRY HANNAH 1987 uncorrected proofs softcover",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/3YoAAOSwdElkQHQe/s-l225.jpg"
+    },
+    "price": {
+     "value": "30.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "michaelecoy",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 452
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/3YoAAOSwdElkQHQe/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "4.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-03T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-08T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/175695447644?_skw=Hey+Jack+Barry+Hannah&hash=item28e843c65c:g:3YoAAOSwdElkQHQe",
+    "itemLocation": {
+     "postalCode": "981**",
+     "country": "US"
+    },
+    "itemCreationDate": "2023-04-19T23:09:21.000Z"
+   },
+   {
+    "itemId": "v1|377491164847|0",
+    "title": "Hey Jack! (Contemporary American Fiction) by Barry Hannah",
+    "price": {
+     "value": "11.77",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "thrift.books",
+     "feedbackPercentage": "99.7",
+     "feedbackScore": 4883481
+    },
+    "condition": "Acceptable",
+    "conditionId": "6000",
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-03T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-07T07:00:00.000Z"
+     }
+    ],
+    "epid": "1323055",
+    "itemWebUrl": "https://www.ebay.com/itm/377491164847?_skw=Hey+Jack+Barry+Hannah&hash=item57e43a0eaf:i:377491164847",
+    "itemLocation": {
+     "postalCode": "605**",
+     "country": "US"
+    },
+    "itemCreationDate": "2026-09-12T19:01:02.000Z"
+   },
+   {
+    "itemId": "v1|167827351913|0",
+    "title": "Barry HANNAH / Hey Jack Uncorrected Proof 1st 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/lbgAAeSw1DhpOjST/s-l225.jpg"
+    },
+    "price": {
+     "value": "30.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "betweenthecoversrarebooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 8665
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/lbgAAeSw1DhpOjST/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.50",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-05T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/167827351913?_skw=Hey+Jack+Barry+Hannah&hash=item27134a2969:g:lbgAAeSw1DhpOjST",
+    "itemLocation": {
+     "postalCode": "080**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-09-30T19:16:18.000Z"
+   },
+   {
+    "itemId": "v1|167942077988|0",
+    "title": "Barry HANNAH / Hey Jack Signed 1st Edition 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/HQEAAeSw7slpZztT/s-l225.jpg"
+    },
+    "price": {
+     "value": "35.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "betweenthecoversrarebooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 8665
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/HQEAAeSw7slpZztT/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.50",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-05T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/167942077988?_skw=Hey+Jack+Barry+Hannah&hash=item271a20be24:g:HQEAAeSw7slpZztT",
+    "itemLocation": {
+     "postalCode": "080**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-11-19T17:07:46.000Z"
+   },
+   {
+    "itemId": "v1|117307117186|0",
+    "title": "Barry HANNAH / HEY JACK 1st Edition 1987 #198517",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/lZgAAeSwr3RqWhbb/s-l225.jpg"
+    },
+    "price": {
+     "value": "23.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "jahbooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 11467
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/lZgAAeSwr3RqWhbb/s-l960.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "CALCULATED",
+      "shippingCost": {
+       "value": "7.23",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/117307117186?_skw=Hey+Jack+Barry+Hannah&hash=item1b500c8e82:g:lZgAAeSwr3RqWhbb",
+    "itemLocation": {
+     "postalCode": "600**",
+     "country": "US"
+    },
+    "itemCreationDate": "2026-07-17T11:48:40.000Z"
+   },
+   {
+    "itemId": "v1|167942498076|0",
+    "title": "Barry HANNAH / Hey Jack Uncorrected Proof 1st 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/OVUAAeSw93xpHjBJ/s-l225.jpg"
+    },
+    "price": {
+     "value": "35.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "betweenthecoversrarebooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 8665
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/OVUAAeSw93xpHjBJ/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.50",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-05T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/167942498076?_skw=Hey+Jack+Barry+Hannah&hash=item271a27271c:g:OVUAAeSw93xpHjBJ",
+    "itemLocation": {
+     "postalCode": "080**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-11-19T20:57:54.000Z"
+   },
+   {
+    "itemId": "v1|376750027360|0",
+    "title": "Hey Jack! (Contemporary American Fiction) by Barry Hannah",
+    "price": {
+     "value": "12.59",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "thrift.books",
+     "feedbackPercentage": "99.7",
+     "feedbackScore": 4883481
+    },
+    "condition": "Good",
+    "conditionId": "5000",
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-03T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-07T07:00:00.000Z"
+     }
+    ],
+    "epid": "1323055",
+    "itemWebUrl": "https://www.ebay.com/itm/376750027360?_skw=Hey+Jack+Barry+Hannah&hash=item57b80d3260:i:376750027360",
+    "itemLocation": {
+     "postalCode": "605**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-12-03T11:54:32.000Z"
+   },
+   {
+    "itemId": "v1|167745558262|0",
+    "title": "Barry Hannah / Hey Jack 1st Edition 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/vEYAAeSwagNpA9Ru/s-l225.jpg"
+    },
+    "price": {
+     "value": "31.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "eveningstarbooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 5105
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/vEYAAeSwagNpA9Ru/s-l960.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-05T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/167745558262?_skw=Hey+Jack+Barry+Hannah&hash=item270e6a16f6:g:vEYAAeSwagNpA9Ru",
+    "itemLocation": {
+     "postalCode": "537**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-08-26T19:33:52.000Z"
+   },
+   {
+    "itemId": "v1|336616869966|0",
+    "title": "HEY JACK! (CONTEMPORARY AMERICAN FICTION) By Barry Hannah *Excellent Condition*",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/WVQAAeSwALNqH4vI/s-l225.jpg"
+    },
+    "price": {
+     "value": "25.49",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "zuber",
+     "feedbackPercentage": "99.0",
+     "feedbackScore": 350562
+    },
+    "condition": "Very Good",
+    "conditionId": "4000",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/WVQAAeSwALNqH4vI/s-l500.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "epid": "1323055",
+    "itemWebUrl": "https://www.ebay.com/itm/336616869966?_skw=Hey+Jack+Barry+Hannah&hash=item4e5fedd04e:g:WVQAAeSwALNqH4vI&amdata=enc%3AAQALAAAA8ACCtXRWQnOEpyOqnQQ8KGYG%2FDoXydLaeTwtnINFGFCVpKjDptgdQ0ZHrEF12JiV7RzxruGkKUl%2FW9G2pSC9K9bRw0FcWzAy%2FkDGYBdrBRg1RDaSJTYR7iH5vfXXjDWwwFhpN9q3xlzPwTkC1NKoVCR1AvB7NzgVlGcsnZD%2BLVLL7CDRdW41nPcM6GaSPskRhvH1Pb%2B4mYcHMl7HGEGCX%2FiyPV0KsPk0bL1NS9sPIGNsT4SaC%2FHuAkwckR132EvfKbpTszofonZ%2BjjHh%2FAxmLjqh6De%2BAWxKvCZmv6BBc7X1sHOaKUTlvxjVXs0Ryby4uQ%3D%3D",
+    "itemLocation": {
+     "country": "US"
+    },
+    "itemCreationDate": "2026-06-03T02:03:50.000Z"
+   },
+   {
+    "itemId": "v1|376499162074|0",
+    "title": "Hey Jack! by Barry Hannah",
+    "price": {
+     "value": "9.12",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "thrift.books",
+     "feedbackPercentage": "99.7",
+     "feedbackScore": 4883481
+    },
+    "condition": "Good",
+    "conditionId": "5000",
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-03T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-07T07:00:00.000Z"
+     }
+    ],
+    "epid": "2127047",
+    "itemWebUrl": "https://www.ebay.com/itm/376499162074?_skw=Hey+Jack+Barry+Hannah&hash=item57a9194bda:i:376499162074&amdata=enc%3AAQALAAAA8ACCtXRWQnOEpyOqnQQ8KGaMo8rfUYxzMOiQTh5u7ADuNY8sfxdzT5hJfyz6DUYiDMCw%2FcEy1bDIbsyc9kqdcWSZg53WktlfevNrA4itTcUOBCD%2BTet3W%2FWXmSFFbgPRc5%2FVNzBThtCnKeXWPD6DzzZGJrRn5d8FRcaks83OXiBxxpMwKwyGE93P2UOcoHYOAz6WNnNY4Kgrn%2FVR1Y9Ehwz2b3qd7pdMRSi7nSauH%2F1GMK2MD73FrKDiCNmp1HUGATt1Vd0njehVsIv7Nzs%2B6JFlC2P4HBSyb2IoSA6%2BEFIRH8pCv75MPP7B8eqJBH4npQ%3D%3D",
+    "itemLocation": {
+     "postalCode": "605**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-08-22T06:10:30.000Z"
+   },
+   {
+    "itemId": "v1|157459085167|0",
+    "title": "Hey Jack! by Barry Hannah (1987) SIGNED Advance Uncorrected Proofs  Rare",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/NXUAAOSwaTRn1yo8/s-l225.jpg"
+    },
+    "price": {
+     "value": "49.95",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "miklosfolly",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 1755
+    },
+    "condition": "Very Good",
+    "conditionId": "4000",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/NXUAAOSwaTRn1yo8/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.99",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/157459085167?_skw=Hey+Jack+Barry+Hannah&hash=item24a94af76f:g:NXUAAOSwaTRn1yo8&amdata=enc%3AAQALAAAA8ACCtXRWQnOEpyOqnQQ8KGbMgPbb0kOTTTkH5vuENZa8bK2xa6D%2FGZq74zcu5aPzXU3rXoaHi36MlKfqy7BXKLJqSmtDuxvxmJkXbMS%2Fbf2xnTuJm45dRMGKt9C%2FeDkCaQ7TvMiI59iOUQul5ujk3fVIp9%2F3sAfC2PBH8p%2BGkChcbeGSP0Vbty3eN%2FAbk9DfhWnEF73YVdGYsgUuaWxzXdQSAE7Dz3ZkMvTZMt6LqHp7tpL8ZQh9gpq3qQozqDsz3NiJzlQaYGrvBHlqrdLfBATFe1Lrzdjr1PAEUmWMBqR376kMqD63KeA1fSayYJNxEA%3D%3D",
+    "itemLocation": {
+     "postalCode": "522**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-11-12T12:24:48.000Z"
+   },
+   {
+    "itemId": "v1|355954928365|0",
+    "title": "Hey Jack! by Barry Hannah (E. P. Dutton/Seymour Lawrence, 1987, Hardcover)",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/ftAAAOSwN99mvOod/s-l225.jpg"
+    },
+    "price": {
+     "value": "30.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "bksofcho",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 214
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/ftAAAOSwN99mvOod/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-03T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-07T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/355954928365?_skw=Hey+Jack+Barry+Hannah&hash=item52e0912aed:g:ftAAAOSwN99mvOod",
+    "itemLocation": {
+     "postalCode": "554**",
+     "country": "US"
+    },
+    "itemCreationDate": "2024-08-14T17:35:48.000Z"
+   },
+   {
+    "itemId": "v1|167800068050|0",
+    "title": "Barry HANNAH / Hey Jack 1st Edition 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/0HYAAeSwgAhpZn5P/s-l225.jpg"
+    },
+    "price": {
+     "value": "30.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "betweenthecoversrarebooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 8665
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/0HYAAeSwgAhpZn5P/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.50",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-05T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/167800068050?_skw=Hey+Jack+Barry+Hannah&hash=item2711a9d7d2:g:0HYAAeSwgAhpZn5P",
+    "itemLocation": {
+     "postalCode": "080**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-09-18T14:47:30.000Z"
+   },
+   {
+    "itemId": "v1|167766014224|0",
+    "title": "Barry HANNAH / Hey Jack 1st Edition 1987",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/Hb0AAeSwardpZmV7/s-l225.jpg"
+    },
+    "price": {
+     "value": "30.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "betweenthecoversrarebooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 8665
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/Hb0AAeSwardpZmV7/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.50",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-05T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/167766014224?_skw=Hey+Jack+Barry+Hannah&hash=item270fa23910:g:Hb0AAeSwardpZmV7",
+    "itemLocation": {
+     "postalCode": "080**",
+     "country": "US"
+    },
+    "itemCreationDate": "2025-09-03T19:12:39.000Z"
+   },
+   {
+    "itemId": "v1|277675683851|0",
+    "title": "Hey Jack! Paperback Barry Hannah",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/MpQAAeSwLdRpdvy4/s-l225.jpg"
+    },
+    "price": {
+     "value": "13.27",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "betterworldbooks",
+     "feedbackPercentage": "99.7",
+     "feedbackScore": 3311138
+    },
+    "condition": "Good",
+    "conditionId": "5000",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/MpQAAeSwLdRpdvy4/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-03T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-08T07:00:00.000Z"
+     }
+    ],
+    "epid": "1323055",
+    "itemWebUrl": "https://www.ebay.com/itm/277675683851?_skw=Hey+Jack+Barry+Hannah&hash=item40a6c2b00b:g:MpQAAeSwLdRpdvy4",
+    "itemLocation": {
+     "postalCode": "465**",
+     "country": "US"
+    },
+    "itemCreationDate": "2026-01-26T05:31:40.000Z"
+   },
+   {
+    "itemId": "v1|155478080346|0",
+    "title": "Barry Hannah / Hey Jack 1st Edition 1987 #295525",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/UzEAAeSwhXFqJ4eo/s-l225.jpg"
+    },
+    "price": {
+     "value": "18.75",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "eurekabookshop",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 6298
+    },
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/UzEAAeSwhXFqJ4eo/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "9.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-03T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-09T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/155478080346?_skw=Hey+Jack+Barry+Hannah&hash=item2433373b5a:g:UzEAAeSwhXFqJ4eo",
+    "itemLocation": {
+     "postalCode": "955**",
+     "country": "US"
+    },
+    "itemCreationDate": "2023-03-29T22:04:49.000Z"
+   },
+   {
+    "itemId": "v1|175400822840|0",
+    "title": "HEY JACK ! (HC) BARRY HANNAH- SIGNED  (1ST. EDITION ) MYS/ MAGIC (1987)",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/trQAAOSwjwph~-xm/s-l225.jpg"
+    },
+    "price": {
+     "value": "39.99",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "bookbandit3443",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 12486
+    },
+    "condition": "Good",
+    "conditionId": "5000",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/trQAAOSwjwph~-xm/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "5.22",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/175400822840?_skw=Hey+Jack+Barry+Hannah&hash=item28d6b42838:g:trQAAOSwjwph~-xm",
+    "itemLocation": {
+     "postalCode": "486**",
+     "country": "US"
+    },
+    "itemCreationDate": "2022-08-31T12:47:30.000Z"
+   },
+   {
+    "itemId": "v1|254725946132|0",
+    "title": "HEY JACK! - 1ST. ED. REVIEW COPY BY BARRY HANNAH",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/lvgAAOSwJntfaSbr/s-l225.jpg"
+    },
+    "price": {
+     "value": "50.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "waverlybooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 1841
+    },
+    "condition": "Like New",
+    "conditionId": "2750",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/lvgAAOSwJntfaSbr/s-l640.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "6.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/254725946132?_skw=Hey+Jack+Barry+Hannah&hash=item3b4ed97b14:g:lvgAAOSwJntfaSbr",
+    "itemLocation": {
+     "postalCode": "904**",
+     "country": "US"
+    },
+    "itemCreationDate": "2020-09-21T22:24:03.000Z"
+   },
+   {
+    "itemId": "v1|407056103912|0",
+    "title": "Hey Jack! by Barry Hannah",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/jjYAAeSwtK5qTToI/s-l225.jpg"
+    },
+    "price": {
+     "value": "9.95",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "samue-cottr",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 1090
+    },
+    "condition": "Good",
+    "conditionId": "5000",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/jjYAAeSwtK5qTToI/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "CALCULATED",
+      "shippingCost": {
+       "value": "4.39",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-05T07:00:00.000Z"
+     }
+    ],
+    "epid": "2127047",
+    "itemWebUrl": "https://www.ebay.com/itm/407056103912?_skw=Hey+Jack+Barry+Hannah&hash=item5ec66f39e8:g:jjYAAeSwtK5qTToI",
+    "itemLocation": {
+     "postalCode": "173**",
+     "country": "US"
+    },
+    "itemCreationDate": "2026-07-07T17:42:00.000Z"
+   },
+   {
+    "itemId": "v1|254726764340|0",
+    "title": "HEY JACK! - 1ST. ED. SIGNED BY BARRY HANNAH",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/mrsAAOSwUvFfakX8/s-l225.jpg"
+    },
+    "price": {
+     "value": "50.00",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "waverlybooks",
+     "feedbackPercentage": "100.0",
+     "feedbackScore": 1841
+    },
+    "condition": "Like New",
+    "conditionId": "2750",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/mrsAAOSwUvFfakX8/s-l640.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "6.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "itemWebUrl": "https://www.ebay.com/itm/254726764340?_skw=Hey+Jack+Barry+Hannah&hash=item3b4ee5f734:g:mrsAAOSwUvFfakX8",
+    "itemLocation": {
+     "postalCode": "904**",
+     "country": "US"
+    },
+    "itemCreationDate": "2020-09-22T18:45:37.000Z"
+   },
+   {
+    "itemId": "v1|227366881060|0",
+    "title": "HEY JACK! By Barry Hannah - Hardcover **Mint Condition**",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/HfEAAeSwJElqHPDb/s-l225.jpg"
+    },
+    "price": {
+     "value": "21.95",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "zuber",
+     "feedbackPercentage": "99.0",
+     "feedbackScore": 350562
+    },
+    "condition": "Like New",
+    "conditionId": "2750",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/HfEAAeSwJElqHPDb/s-l500.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "FIXED",
+      "shippingCost": {
+       "value": "0.00",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-02T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-06T07:00:00.000Z"
+     }
+    ],
+    "epid": "2127047",
+    "itemWebUrl": "https://www.ebay.com/itm/227366881060?_skw=Hey+Jack+Barry+Hannah&hash=item34f01f4724:g:HfEAAeSwJElqHPDb",
+    "itemLocation": {
+     "country": "US"
+    },
+    "itemCreationDate": "2026-06-01T02:34:24.000Z"
+   },
+   {
+    "itemId": "v1|175371270006|0",
+    "title": "Hey Jack! by Barry Hannah  first edition  (1987, Hardcover)",
+    "image": {
+     "imageUrl": "https://i.ebayimg.com/images/g/juAAAOSwAPBgrDuh/s-l225.jpg"
+    },
+    "price": {
+     "value": "7.99",
+     "currency": "USD"
+    },
+    "seller": {
+     "username": "mardigraszone",
+     "feedbackPercentage": "99.5",
+     "feedbackScore": 10109
+    },
+    "condition": "Good",
+    "conditionId": "5000",
+    "thumbnailImages": [
+     {
+      "imageUrl": "https://i.ebayimg.com/images/g/juAAAOSwAPBgrDuh/s-l1600.jpg"
+     }
+    ],
+    "shippingOptions": [
+     {
+      "shippingCostType": "CALCULATED",
+      "shippingCost": {
+       "value": "5.13",
+       "currency": "USD"
+      },
+      "minEstimatedDeliveryDate": "2026-10-03T07:00:00.000Z",
+      "maxEstimatedDeliveryDate": "2026-10-09T07:00:00.000Z"
+     }
+    ],
+    "epid": "2127047",
+    "itemWebUrl": "https://www.ebay.com/itm/175371270006?_skw=Hey+Jack+Barry+Hannah&hash=item28d4f13776:g:juAAAOSwAPBgrDuh",
+    "itemLocation": {
+     "postalCode": "701**",
+     "country": "US"
+    },
+    "itemCreationDate": "2022-08-02T19:05:02.000Z"
+   }
+  ]
+ }
+}

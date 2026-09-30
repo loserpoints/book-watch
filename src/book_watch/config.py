@@ -153,3 +153,28 @@ def load_alert_config(*, use_dotenv: bool = True) -> AlertConfig:
     return AlertConfig(
         api_key=_require("RESEND_API_KEY"), to=_require("ALERT_EMAIL_TO")
     )
+
+
+#: A US ZIP code: five digits, optionally with the four-digit extension.
+_ZIP_PATTERN = re.compile(r"^\d{5}(-\d{4})?$")
+
+
+def load_ship_to_zip(*, use_dotenv: bool = True) -> str | None:
+    """The ZIP that eBay prices calculated shipping to (S43), or None.
+
+    Optional: without it, searches run as before and a copy with calculated
+    shipping has no delivered price. It is a Fly secret rather than a setting
+    in the repository, because it is close to where somebody lives, and it is
+    never echoed back, not even in the error for a malformed one.
+    """
+    if use_dotenv:
+        load_dotenv()
+    value = os.environ.get("SHIP_TO_ZIP", "").strip()
+    if not value:
+        return None
+    if not _ZIP_PATTERN.match(value):
+        raise InvalidConfigError(
+            "SHIP_TO_ZIP must be a US ZIP code, five digits; "
+            f"got {len(value)} characters."
+        )
+    return value
