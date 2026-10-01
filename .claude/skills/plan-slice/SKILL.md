@@ -26,6 +26,7 @@ Before any code, check that a slice covers what its outcome means to the person 
 - Has the current behavior been reproduced, and is its cause confirmed or only guessed?
 - What does the original issue say already works? Is the slice still needed without that part?
 - What would a literal reading of the outcome miss?
+- Does the case it handles happen at all? Check the outside service's own rules before planning to measure it.
 - Which docs, design page entries and tests change with it?
 - Which requests to eBay, Open Library or Resend does it add, remove or repeat?
 - How will Alan check it on the phone after deploy?

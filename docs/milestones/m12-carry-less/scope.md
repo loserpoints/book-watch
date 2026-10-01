@@ -2,7 +2,7 @@
 
 ## Goal
 
-Pricing keeps only the rules live copies need, a number Open Library can't answer stops blocking the rest of a book's copies, code and docs use one spelling, and governance says when a defect can ship outside a milestone.
+A copy without a delivered price follows one rule, a number Open Library can't answer no longer blocks the rest of a book's copies, code and docs use American spelling with a test to keep it, and the + button works over any row.
 
 ## Jobs advanced
 

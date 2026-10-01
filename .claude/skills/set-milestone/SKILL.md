@@ -14,7 +14,7 @@ Choose the next milestone from the open issues by one order of priority, and set
 1. List every open issue from GitHub with its type label: defect, enhancement, tech debt or process gap. Count them from that list, never from memory.
 2. Choose the milestone's frame by the first rule under Priority that applies, and say which rule chose it and the counts behind it.
 3. Choose 3–5 issues for it, judging each by impact and effort.
-4. Draft each one as a slice in the four sections `docs/governance.md` gives, asking the questions in the `plan-slice` skill as each is written.
+4. Draft each one as a slice in the four sections `docs/governance.md` gives, asking the questions in the `plan-slice` skill as each is written. Check first whether a doc or skill written since the issue was logged already answers it.
 5. Present the draft to Alan: the frame and why, the name, the goal sentence, each slice with its impact and effort, what was left out and why, and how the outcome will be checked on the phone. Stop until Alan approves. Nothing on GitHub changes before then.
 6. Turn each approved issue into a slice: keep its type label, add the `slice` label and the milestone, title it `S## · outcome` numbered on from the last slice, and rewrite its body. Close issues folded into a slice as duplicates of it.
 7. Create `docs/milestones/mNN-name/` and write `scope.md`.
@@ -34,6 +34,7 @@ Choose the next milestone from the open issues by one order of priority, and set
 - A milestone holds 3–5 slices. Outside that range, the draft says why.
 - Small bugs ride along in any milestone when they fit its theme or round it out.
 - An issue that isn't ready to be a slice is still a candidate. Its first slice is the design or measurement that makes the rest writable.
+- Take part of an issue only when that part doesn't decide how the rest will work. Otherwise the issue stays whole, and its first slice is the design.
 
 ### Impact and effort
 
