@@ -52,11 +52,6 @@ def copy_row(
     """One copy, as `ui.copy_row` takes it."""
     delivered = copy.landed_cost
     place = _place(copy, placed, listed)
-    if verdict == "another currency":
-        # A price we cannot compare with the limit says so, and
-        # says which reason, rather than going uncoloured in silence. It takes
-        # the rank's place: the limit is what the reader came to judge by.
-        place = {"place": None, "place_text": "can't compare: another currency"}
     return {
         "url": copy.url,
         "new": new,
@@ -89,26 +84,16 @@ def copy_row(
 
 
 def _against(copy: Copy, verdict: Verdict, ceiling: Money | None) -> dict:
-    """Colour, and how far over.
-
-    Over is written the same way whether or not shipping is known. When it is
-    not, the copy is over on its price alone,
-    so the amount is a floor and carries a +: "$2+ over".
-    """
+    """Colour, and how far over. A copy that can't be told, or has no limit
+    to be told against, is left uncoloured."""
+    delivered = copy.landed_cost
     if verdict == "under":
         return {"verdict": "under", "over_by": None}
-    if verdict == "over" and ceiling is not None:
-        delivered = copy.landed_cost
-        if delivered is not None:
-            return {
-                "verdict": "over",
-                "over_by": money(delivered.amount - ceiling.amount, ceiling.currency),
-            }
-        floor = money(copy.price.amount - ceiling.amount, ceiling.currency)
-        return {"verdict": "over", "over_by": f"{floor}+"}
-    if verdict == "shipping unstated":
-        return {"verdict": "unknown", "over_by": None}
-    # No ceiling, or another currency: nothing to colour.
+    if verdict == "over" and ceiling is not None and delivered is not None:
+        return {
+            "verdict": "over",
+            "over_by": money(delivered.amount - ceiling.amount, ceiling.currency),
+        }
     return {"verdict": None, "over_by": None}
 
 
@@ -116,9 +101,6 @@ def _place(copy: Copy, placed: Standing | None, listed: Prices) -> dict:
     """Where this copy sits among the others of its kind listed now."""
     if placed is None:
         return {"place": None, "place_text": None}
-    if placed.unplaced == "no delivered price":
-        reason = "shipping unknown" if copy.shipping is None else "another currency"
-        return {"place": None, "place_text": f"can't place: {reason}"}
     if placed.unplaced is not None:
         return {"place": None, "place_text": f"can't place: {placed.unplaced}"}
     if placed.listed == 1:

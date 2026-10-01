@@ -656,9 +656,9 @@ def test_setting_a_ceiling_marks_what_is_under_it(book_client):
     assert seen.count("$25.99 over") == 1
 
 
-def test_a_copy_whose_price_alone_is_over_is_marked_over(book_client):
-    """Postage cannot be negative, so unknown shipping does not make this one
-    unjudgeable."""
+def test_a_copy_without_a_delivered_price_is_not_judged(book_client):
+    """S54: even a price alone over the limit says only that shipping is
+    unknown. eBay allows that only for local pickup and freight."""
     client = book_client(
         returning(a_listing(price=Money(Decimal("30.00"), "USD"), shipping_cost=None))
     )
@@ -668,8 +668,9 @@ def test_a_copy_whose_price_alone_is_over_is_marked_over(book_client):
 
     page = visible(client.get("/book/1").text)
 
-    # Over on its price alone, so the amount is a floor (S31, S34).
-    assert "$22+ over" in page
+    assert "$30 + shipping?" in page
+    assert not re.search(r"\$[\d.]+\+? over", page)
+    assert "(under your limit)" not in page
 
 
 def test_the_book_page_is_built_from_the_system(book_client):

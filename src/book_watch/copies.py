@@ -99,12 +99,9 @@ _CURRENT_IN_SCOPE = """
 
 
 #: What a ceiling says about one copy. Three answers rather than two, because
-#: a delivered price is not always knowable — and the page distinguishes the
-#: two reasons it might not be, since one is the seller's silence about
-#: postage and the other is a currency we cannot compare.
-Verdict = Literal[
-    "under", "over", "shipping unstated", "another currency", "no ceiling"
-]
+#: a delivered price is not always knowable. eBay requires shipping on every
+#: listing except local pickup and freight, so "can't tell" is rare.
+Verdict = Literal["under", "over", "can't tell", "no ceiling"]
 
 
 #: Which market a copy belongs to. Not three grades on one scale — new and
@@ -192,41 +189,15 @@ class Copy:
     def against(self, ceiling: Money | None) -> Verdict:
         """Is this copy within what somebody said they would pay?
 
-        Three answers, not two. "Under" and "over" are not exhaustive, because
-        a copy whose shipping eBay never stated has no delivered price at all —
-        and the two honest-looking shortcuts are both wrong:
-
-        - treating unstated shipping as free flatters the copy and invents a
-          bargain, which is the wasted-trust failure the brief is about;
-        - treating it as over is right most of the time and wrong sometimes,
-          with no way to tell which times.
-
-        So there is a third answer and the page says which of the two reasons
-        produced it.
-
-        **One unstated-shipping case is not a guess.** Postage cannot be
-        negative, so a copy whose price *alone* is above the ceiling is over
-        whatever the postage turns out to be. That is a bound, not a guess,
-        and it is never wrong. A price exactly at the ceiling stays "can't
-        tell": free postage would make it under.
-
-        This differs on purpose from `sort_key`, which ranks an unknown total
-        by its price alone. **A sort has to put the row somewhere; a claim does
-        not.** Guessing to order a list is a lesser sin than guessing in an
-        assertion the reader will act on.
+        Judged on the delivered price alone. A copy without one in the
+        ceiling's currency can't be told: calling unknown postage free would
+        invent a bargain, and calling it over would be a guess (S54).
         """
         if ceiling is None:
             return "no ceiling"
-        if self.shipping is None:
-            if (
-                self.price.currency == ceiling.currency
-                and self.price.amount > ceiling.amount
-            ):
-                return "over"
-            return "shipping unstated"
         landed = self.landed_cost
         if landed is None or landed.currency != ceiling.currency:
-            return "another currency"
+            return "can't tell"
         return "under" if landed.amount <= ceiling.amount else "over"
 
     @property
@@ -237,9 +208,7 @@ class Copy:
         cannot be placed among the copies whose cost is known. It goes below
         all of them, where the top of the list is always a price I could pay.
         Among themselves, those copies rank by price alone, which is the least
-        each could cost. A copy whose price alone is over the ceiling stays in
-        that group: it is known to be over, but its delivered price is still
-        unknown, and one rule is easier to read than a rule and an exception.
+        each could cost.
         """
         landed = self.landed_cost
         if landed is None:

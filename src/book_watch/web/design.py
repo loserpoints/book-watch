@@ -183,8 +183,8 @@ def sample_copies() -> list[dict]:
         {
             **common,
             "price_text": "$7.50",
-            "verdict": "unknown",
-            "place_text": "can't place: shipping unknown",
+            "shipping_unknown": True,
+            "place_text": "can't place: no delivered price",
             "condition": "Acceptable",
             "seller": "goodwill_books",
             "listing_title": "Crash Ballard paperback",
