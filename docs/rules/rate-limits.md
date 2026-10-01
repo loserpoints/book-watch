@@ -12,7 +12,7 @@ These rules keep the app's requests to eBay and Open Library small, spaced out a
 - No more than 500 requests are made in any 24 hours. The count is kept in the database, so it holds across restarts.
 - When the ceiling is reached, the request is not made and the work stops. Nothing retries it on a timer.
 - Every answer Open Library gives is stored, including "no record of this number". It is asked again only when the app starts reading a new field from it.
-- A request that fails to reach Open Library stores nothing, so the question is asked again on the next pass.
+- A lookup that fails stores nothing. The number is skipped and the pass carries on, and it is asked again the next time the book has new copies. Two failures in a row stop the pass, since Open Library is most likely down.
 - Adding a book costs one request. Examining one book's copies costs roughly ten to fifteen.
 - A book's new copies are examined after any check that finds them, one pass per book at a time.
 - A book's cover is looked up at most once, in no more than two requests. Cover images load from Open Library's image server, not its API.
@@ -39,5 +39,5 @@ These rules keep the app's requests to eBay and Open Library small, spaced out a
 
 ## Open issues
 
-- [S57 · A number Open Library can't answer is set aside, and the rest of the book's copies are still examined](https://github.com/loserpoints/book-watch/issues/61)
+- [S57 · A number Open Library can't answer is skipped, and the rest of the book's copies are still examined](https://github.com/loserpoints/book-watch/issues/61)
 - [Create a contact address for the app, and put it in the User-Agent](https://github.com/loserpoints/book-watch/issues/40)

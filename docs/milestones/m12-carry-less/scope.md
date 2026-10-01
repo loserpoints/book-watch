@@ -14,4 +14,5 @@ Pricing keeps only the rules live copies need, a number Open Library can't answe
 - [S54 · A copy without a delivered price follows one rule](https://github.com/loserpoints/book-watch/issues/189)
 - [S55 · Code and docs use American spelling](https://github.com/loserpoints/book-watch/issues/37)
 - [S56 · Governance says when a defect can ship outside a milestone](https://github.com/loserpoints/book-watch/issues/157)
-- [S57 · A number Open Library can't answer is set aside, and the rest of the book's copies are still examined](https://github.com/loserpoints/book-watch/issues/61)
+- [S57 · A number Open Library can't answer is skipped, and the rest of the book's copies are still examined](https://github.com/loserpoints/book-watch/issues/61)
+- [S58 · The + button opens the add sheet wherever it sits over the list](https://github.com/loserpoints/book-watch/issues/206)
