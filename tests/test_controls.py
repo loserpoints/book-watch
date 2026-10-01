@@ -6,6 +6,7 @@ is tested here is that the markup asks for it correctly.
 """
 
 import re
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -189,3 +190,21 @@ def test_a_switched_side_is_never_laid_out_inline():
     assert not re.search(
         r'data-when="\w+"[^>]*style=|style=[^>]*data-when=', design_page()
     )
+
+
+def test_the_add_button_sits_above_every_other_layer():
+    """S58: a want-list row's link and trash are stacked layers, and the +
+    button floats over them. Any layer at or above it takes its taps."""
+    css = (
+        Path(__file__).parent.parent / "src/book_watch/web/static/app.css"
+    ).read_text()
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.DOTALL)
+    rules = re.findall(r"([^{}]+)\{([^}]*)\}", css)
+    layers = {
+        selector.strip(): int(z)
+        for selector, body in rules
+        for z in re.findall(r"z-index:\s*(-?\d+)", body)
+    }
+    fab = layers.pop(".fab", 0)
+
+    assert all(z < fab for z in layers.values()), layers
