@@ -40,5 +40,4 @@ Four checks run after every deploy, most specific first:
 
 ## Known gaps
 
-- [Nothing notices a broken or full database, or a missed daily check, until I open the app](https://github.com/loserpoints/book-watch/issues/201)
-- [See daily checks, emails and API calls over time](https://github.com/loserpoints/book-watch/issues/168)
+- [See what the app does unattended, and hear when something is wrong](https://github.com/loserpoints/book-watch/issues/168)
