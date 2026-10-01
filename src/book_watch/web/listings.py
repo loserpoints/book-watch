@@ -36,7 +36,7 @@ from book_watch.ebay.search import (
     MAX_LIMIT,
     Scope,
 )
-from book_watch.isbn import normalise
+from book_watch.isbn import normalize
 from book_watch.web import assets, book_view, filters
 from book_watch.web.searching import LazyBrowseSearch, SearchFn
 from book_watch.web.wantlist import ConnectFn, from_htmx, open_configured_database
@@ -95,7 +95,7 @@ def build_router(
             # An overridden entry is not an ISBN, so eBay gets a keyword
             # search for whatever was typed. Say so; "nothing listed" would
             # otherwise look like a fact about the market.
-            "is_isbn": normalise(query) is not None,
+            "is_isbn": normalize(query) is not None,
         }
 
         # These two status codes are a contract, not decoration: the deploy

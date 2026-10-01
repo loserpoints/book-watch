@@ -34,7 +34,7 @@ class EditionIdentity:
     here is what lets one lookup serve both a reader's hunt and a collector's.
 
     No author. The matching rule does not use one — removing the author check
-    changed zero answers out of 227 hand-labelled listings — and Open Library
+    changed zero answers out of 227 hand-labeled listings — and Open Library
     holds authors only as internal references, so turning them into names
     would cost a request per author for something nothing reads.
 

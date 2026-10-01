@@ -45,5 +45,5 @@ def register(env: Environment) -> None:
     # into &#34;, which inside <style> is not decoded, so every font silently
     # fell back to the browser default. A test asserts the quotes survive.
     env.globals["tokens_css"] = Markup(tokens.css())
-    # The browser's own chrome (the address bar on Android) in the page colour.
-    env.globals["theme_colour"] = tokens.colour("bg")
+    # The browser's own chrome (the address bar on Android) in the page color.
+    env.globals["theme_color"] = tokens.color("bg")

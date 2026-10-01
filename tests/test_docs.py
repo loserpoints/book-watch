@@ -245,11 +245,11 @@ def test_slices_are_issues_not_pull_requests(repo):
 def test_slices_carry_the_slice_label(repo):
     write(repo, "docs/milestones/m08-always-current/scope.md", scope(ISSUE))
 
-    unlabelled = check_docs.check(repo, labels=lambda number: {"bug"})
-    labelled = check_docs.check(repo, labels=lambda number: {"slice"})
+    unlabeled = check_docs.check(repo, labels=lambda number: {"bug"})
+    labeled = check_docs.check(repo, labels=lambda number: {"slice"})
 
-    assert any("#105 is not labelled 'slice'" in e for e in unlabelled)
-    assert labelled == []
+    assert any("#105 is not labeled 'slice'" in e for e in unlabeled)
+    assert labeled == []
 
 
 # --- the retired decision log -------------------------------------------------

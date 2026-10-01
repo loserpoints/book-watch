@@ -1,6 +1,6 @@
 """The controls (S30, #110): what the markup promises the browser.
 
-Behaviour that only a browser shows — focus returning to the opener, the back
+Behavior that only a browser shows — focus returning to the opener, the back
 gesture closing a sheet — is checked on a phone and recorded in the PR. What
 is tested here is that the markup asks for it correctly.
 """
@@ -138,7 +138,7 @@ def test_every_opener_points_at_a_dialog_on_the_page():
     assert targets <= dialogs
 
 
-def test_a_sheet_is_a_labelled_dialog():
+def test_a_sheet_is_a_labeled_dialog():
     page = design_page()
 
     opening = '<dialog class="sheet" id="add-sheet"'

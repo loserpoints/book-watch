@@ -26,7 +26,7 @@ CRASH = Target(
 )
 
 CORPUS = json.loads(
-    (Path(__file__).parent / "data" / "labelled_listings.json").read_text()
+    (Path(__file__).parent / "data" / "labeled_listings.json").read_text()
 )
 
 
@@ -45,7 +45,7 @@ def test_a_matching_product_id_settles_it_too():
     assert grade(listing, CRASH) == "certain"
 
 
-def test_a_number_the_catalogue_says_is_this_book_settles_it_for_a_reader():
+def test_a_number_the_catalog_says_is_this_book_settles_it_for_a_reader():
     """A different printing, which is exactly what a reader will take."""
     listing = Evidence(
         "Crash by J.G. Ballard", declared_isbn="9780099448396", identity="Crash"
@@ -87,7 +87,7 @@ def test_a_number_naming_a_different_book_excludes_the_listing():
     assert grade(listing, stoner) == "excluded"
 
 
-def test_a_title_the_catalogue_extends_is_still_the_book():
+def test_a_title_the_catalog_extends_is_still_the_book():
     """*Crash: A Novel* is the book. *Stoner (Korean Edition)* is too."""
     listing = Evidence(
         "Crash", declared_isbn="9781250171511", identity="Crash: A Novel"
@@ -133,7 +133,7 @@ def test_punctuation_and_spacing_do_not_decide_anything():
 
 
 def scored(book: str, hunt: str, truth: str):
-    """Grade every labelled listing for one book, and count how it went."""
+    """Grade every labeled listing for one book, and count how it went."""
     meta = CORPUS["books"][book]
     target = Target(
         title=meta["title"],
@@ -187,7 +187,7 @@ def test_nothing_true_is_ever_hidden(book, hunt):
     """The property the whole design exists for.
 
     Matching chose grading over filtering precisely so that recall stays
-    complete — an uncertain listing is labelled uncertain and shown lower
+    complete — an uncertain listing is labeled uncertain and shown lower
     down, never discarded. This is the assertion that keeps that true.
     """
     _, wanted, hidden = scored(

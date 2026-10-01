@@ -24,7 +24,7 @@ from decimal import Decimal, InvalidOperation
 from typing import Literal
 
 from book_watch.ebay.search import Money, Scope
-from book_watch.isbn import normalise
+from book_watch.isbn import normalize
 from book_watch.matching import Evidence, Target, Tier, grade, is_this_book
 from book_watch.wantlist import Entry, moment
 
@@ -112,7 +112,7 @@ Verdict = Literal["under", "over", "can't tell", "no ceiling"]
 ConditionClass = Literal["new", "used", "unknown"]
 
 
-#: eBay's id for a brand-new item. Every other id is some flavour of
+#: eBay's id for a brand-new item. Every other id is some flavor of
 #: secondhand, Like New included: it has had an owner, which is the thing that
 #: separates the two markets.
 _BRAND_NEW = "1000"
@@ -270,7 +270,7 @@ def ever_seen(connection: sqlite3.Connection, entry: Entry) -> list[Copy]:
 def populations(
     connection: sqlite3.Connection, entry: Entry, *, scope: Scope = "us"
 ) -> tuple[list[Copy], list[Copy]]:
-    """Both populations a judgement needs, from **one** derivation of the target.
+    """Both populations a judgment needs, from **one** derivation of the target.
 
     A rank reads what is listed and a range reads everything seen, so anything
     that judges a book needs both — and calling `for_entry` and `ever_seen`
@@ -322,13 +322,13 @@ def unasked(copies: list[Copy]) -> list[str]:
     return [copy.item_id for copy in copies if not copy.looked_at]
 
 
-#: Every number declared on this book's copies, with what the catalogue calls
+#: Every number declared on this book's copies, with what the catalog calls
 #: it and who a seller said wrote it. All three are observations already paid
 #: for, which is why deriving costs no requests.
 _DECLARED_NUMBERS = """
 SELECT DISTINCT declaration.isbn,
                 declaration.author AS declared_author,
-                identity.title     AS catalogue_title
+                identity.title     AS catalog_title
   FROM copy
   JOIN listing_declaration AS declaration ON declaration.item_id = copy.item_id
   JOIN openlibrary_edition AS identity
@@ -358,11 +358,11 @@ def _target(connection: sqlite3.Connection, entry: Entry) -> Target:
     reject it.
 
     Now it is a query over things we observed: what sellers declared, what the
-    catalogue says those numbers are, who sellers say wrote them. Change the
+    catalog says those numbers are, who sellers say wrote them. Change the
     rule and every book on the list is re-judged on the next page view, for
     nothing.
     """
-    typed = normalise(entry.typed) if entry.typed else None
+    typed = normalize(entry.typed) if entry.typed else None
     wanted = Target(
         title=entry.title or entry.search_query,
         # Only ever used to reject. An entry added before authors were asked
@@ -373,7 +373,7 @@ def _target(connection: sqlite3.Connection, entry: Entry) -> Target:
     isbns = {
         row["isbn"]
         for row in connection.execute(_DECLARED_NUMBERS, (entry.work_id,))
-        if is_this_book(row["catalogue_title"], row["declared_author"], wanted)
+        if is_this_book(row["catalog_title"], row["declared_author"], wanted)
     }
     # What somebody typed is not a conclusion and is never re-judged.
     if typed:

@@ -17,7 +17,7 @@
 {#- Still digging: the app is working out which copies are really this book.
     The word shimmers; tapping it says why it takes a while. -#}
 {% macro digging(label="digging") -%}
-{{ explain(label, "Checking which of these copies are really this book. We ask the public catalogues slowly on purpose: they're free, and we'd like them to stay that way.", "digging") }}
+{{ explain(label, "Checking which of these copies are really this book. We ask the public catalogs slowly on purpose: they're free, and we'd like them to stay that way.", "digging") }}
 {%- endmacro %}
 
 
@@ -36,21 +36,21 @@
 
 
 {#- A cover, over its placeholder. The placeholder is always there, so a slow
-    or missing image leaves the book recognisable rather than an empty frame.
+    or missing image leaves the book recognizable rather than an empty frame.
     `url` is the image, or the route that learns it, or none
     when Open Library holds no cover. -#}
 {% macro cover(title, author=None, url=None, size="md") -%}
 <div class="cover cover-{{ size }}" aria-hidden="true">
   {#- The author only on the large size: at 40-52px wide there is room for a
-      title or a name, not both, and the title is what is recognised. -#}
+      title or a name, not both, and the title is what is recognized. -#}
   <span class="cover-ph" lang="en"><span class="cover-ph-title">{{ title }}</span>{% if author and size == 'lg' %}<span class="cover-ph-author">{{ author }}</span>{% endif %}</span>
   {%- if url %}<img src="{{ url }}" alt="" loading="lazy" onerror="this.remove()">{% endif %}
 </div>
 {%- endmacro %}
 
 
-{#- The headline price, delivered. Colour and a mark together,
-    never colour alone: ✓ for at or under the limit, the amount over for over.
+{#- The headline price, delivered. Color and a mark together,
+    never color alone: ✓ for at or under the limit, the amount over for over.
     `verdict` is under, over, or none (no limit, or cannot tell). -#}
 {% macro price(text, verdict=None, over_by=None, prefix="") -%}
 <span class="price price-{{ verdict or 'plain' }}">
@@ -221,7 +221,7 @@
 {%- endmacro %}
 
 
-{#- A labelled text field. The label is always visible; a hint says what the
+{#- A labeled text field. The label is always visible; a hint says what the
     field is for, and an optional field says so rather than leaving it to a
     guess. -#}
 {% macro field(id, label, value="", name=None, hint=None, optional=False, inputmode=None, placeholder=None) -%}

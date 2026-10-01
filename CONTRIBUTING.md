@@ -22,7 +22,7 @@
 - Run every change to a screen in a real browser at 360px wide, in both themes, and look at it. Tests miss layout, fonts and taps.
 - Tests check what a reader sees, not the markup that carries it, so they survive a redesign.
 - A check proves nothing until it has been seen to fail. Break the code on purpose, on a committed tree, and confirm the break applied.
-- Keep labelled real data in the repository as test fixtures, so a study becomes a regression test.
+- Keep labeled real data in the repository as test fixtures, so a study becomes a regression test.
 - A fake of an outside service answers with what the real one sends, field names and units included, taken from a real response or the service's own source. A fake built from memory passes the tests and fails the first real run.
 - Tests start empty and miss what production holds. After a change deploys, Alan checks it on his phone against the live data, and its pull request says what to check.
 

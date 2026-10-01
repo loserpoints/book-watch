@@ -2,7 +2,7 @@
 
 Two readers, deliberately. The web pages get CSS custom properties from
 `css()`. The email, when *Tell me* builds it, gets plain values from
-`colour()` and friends, because email clients ignore custom properties and
+`color()` and friends, because email clients ignore custom properties and
 want every style inlined. One file feeds both, so
 the email is built inside the system rather than restyled to look like it.
 """
@@ -30,20 +30,20 @@ def load() -> dict[str, Any]:
         return tomllib.load(handle)
 
 
-def colour(name: str, theme: Theme = DEFAULT_THEME) -> str:
-    """One colour's value in one theme, as a hex string."""
-    return load()["colour"][name][theme]
+def color(name: str, theme: Theme = DEFAULT_THEME) -> str:
+    """One color's value in one theme, as a hex string."""
+    return load()["color"][name][theme]
 
 
-def colours(theme: Theme = DEFAULT_THEME) -> dict[str, str]:
-    return {name: entry[theme] for name, entry in load()["colour"].items()}
+def colors(theme: Theme = DEFAULT_THEME) -> dict[str, str]:
+    return {name: entry[theme] for name, entry in load()["color"].items()}
 
 
 @cache
 def css() -> str:
     """The tokens as CSS custom properties, dark first.
 
-    Everything but colour is theme-free, so it is declared once. Colours are
+    Everything but color is theme-free, so it is declared once. Colors are
     declared for dark on `:root`, and redeclared for light only when the phone
     asks for light. `color-scheme` follows, so native controls and scrollbars
     match the page.
@@ -55,8 +55,8 @@ def css() -> str:
         *(f"--space-{name}: {value};" for name, value in tokens["space"].items()),
         *(f"--radius-{name}: {value};" for name, value in tokens["radius"].items()),
     ]
-    dark = [f"--{name}: {value};" for name, value in colours("dark").items()]
-    light = [f"--{name}: {value};" for name, value in colours("light").items()]
+    dark = [f"--{name}: {value};" for name, value in colors("dark").items()]
+    light = [f"--{name}: {value};" for name, value in colors("light").items()]
     return (
         ":root {\n  color-scheme: dark;\n  "
         + "\n  ".join(dark + shared)
@@ -68,14 +68,14 @@ def css() -> str:
 
 
 def contrast(foreground: str, background: str) -> float:
-    """WCAG contrast ratio between two hex colours, from 1 to 21.
+    """WCAG contrast ratio between two hex colors, from 1 to 21.
 
     AA asks for 4.5 for body text and 3 for large text and non-text marks.
-    Used by the tests, and shown on `/design` beside each colour.
+    Used by the tests, and shown on `/design` beside each color.
     """
 
-    def luminance(hex_colour: str) -> float:
-        channels = [int(hex_colour.lstrip("#")[i : i + 2], 16) / 255 for i in (0, 2, 4)]
+    def luminance(hex_color: str) -> float:
+        channels = [int(hex_color.lstrip("#")[i : i + 2], 16) / 255 for i in (0, 2, 4)]
         linear = [
             c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
             for c in channels

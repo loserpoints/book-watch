@@ -11,7 +11,7 @@
 -- Library confirmed each number was something called "Breaking and Entering",
 -- which it was.
 --
--- Claimed, not verified: eBay prefills this where its catalogue matched the
+-- Claimed, not verified: eBay prefills this where its catalog matched the
 -- listing and lets the seller type it otherwise. Good enough to *contradict*
 -- a match, which is all it is used for.
 

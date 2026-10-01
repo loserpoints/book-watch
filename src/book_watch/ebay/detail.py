@@ -25,7 +25,7 @@ import httpx
 from book_watch.ebay.auth import DEFAULT_TIMEOUT_SECONDS, USER_AGENT, EbayTokenProvider
 from book_watch.ebay.errors import EbayAuthError, EbaySearchError
 from book_watch.ebay.search import DEFAULT_MARKETPLACE_ID
-from book_watch.isbn import normalise
+from book_watch.isbn import normalize
 
 ITEM_URL = "https://api.ebay.com/buy/browse/v1/item"
 
@@ -42,7 +42,7 @@ _SEPARATORS = re.compile(r"[,;/|]|\bor\b")
 class Declared:
     """What the seller said, as opposed to what is true.
 
-    eBay prefills these from its own catalogue when a listing matched one, and
+    eBay prefills these from its own catalog when a listing matched one, and
     lets the seller type them when it did not. That is why `format` holds
     "Trade Paperback" on one listing and "books" or "198x130x17 mm" on
     another, and why none of it is treated as fact.
@@ -212,7 +212,7 @@ def declared_isbn(aspects: dict[str, str]) -> str | None:
         if not value:
             continue
         for chunk in _SEPARATORS.split(value):
-            found = normalise(chunk.strip())
+            found = normalize(chunk.strip())
             if found:
                 return found
     return None

@@ -2,7 +2,7 @@
 
 Pure logic. Nothing here opens a socket, reads a database or knows what a
 marketplace is — it is handed what is known about one listing and answers with
-a tier. That makes it testable against the 227 hand-labelled listings in
+a tier. That makes it testable against the 227 hand-labeled listings in
 `tests/data/`, which is the only reason the S6 study's numbers are
 verifiable rather than remembered.
 
@@ -54,7 +54,7 @@ class Target:
 
     `author` is used only to rule a listing **out**. It was left out entirely
     at first, on a measurement saying it changed no answers — taken across
-    three books whose titles are effectively unique in the catalogue, so the
+    three books whose titles are effectively unique in the catalog, so the
     sample could not show the failure. Three different books called *Breaking
     and Entering* then graded certain against each other in production. A
     title is not a book.
@@ -87,7 +87,7 @@ class Evidence:
     declared_isbn: str | None = None
     identity: str | None = None
     #: The author the seller declared. Present on about nine listings in ten,
-    #: prefilled by eBay where its catalogue matched the listing and typed
+    #: prefilled by eBay where its catalog matched the listing and typed
     #: otherwise — a claim about the copy, not a fact about the edition.
     declared_author: str | None = None
 
@@ -110,7 +110,7 @@ def grade(evidence: Evidence, target: Target, *, hunt: Hunt = "reader") -> Tier:
         return "excluded"
 
     if declared and evidence.identity is not None:
-        # We asked, and the catalogue answered. If it named a different book,
+        # We asked, and the catalog answered. If it named a different book,
         # that is the strongest negative signal available — it is the only
         # thing that catches an omnibus, whose title contains the book's and
         # whose author is the right one.
@@ -140,22 +140,22 @@ def grade(evidence: Evidence, target: Target, *, hunt: Hunt = "reader") -> Tier:
 
 
 def is_this_book(
-    catalogue_title: str, declared_author: str | None, target: Target
+    catalog_title: str, declared_author: str | None, target: Target
 ) -> bool:
-    """Does the catalogue say this *number* is the book being hunted?
+    """Does the catalog say this *number* is the book being hunted?
 
     Judging a number, not a listing, and the difference decides how strict to
     be. A number accepted here becomes one the grader trusts ahead of every
     other signal, for every listing that declares it, for as long as it is
     accepted — so a wrong one contaminates everything downstream, while a
-    right one rejected merely has to be recognised the ordinary way.
+    right one rejected merely has to be recognized the ordinary way.
 
     So there is no "the listing's own name vouches for the author" escape
     here, which `_author_contradicts` allows and should. One seller typing a
     translator into the author field is a reason not to conclude anything from
     that number; it is not a reason to hide their copy.
     """
-    if not names_the_same_book(catalogue_title, target.title):
+    if not names_the_same_book(catalog_title, target.title):
         return False
     return not attributed_elsewhere(declared_author, target.author)
 
@@ -203,7 +203,7 @@ def surnames(names: str) -> set[str]:
     """Every word of a name field, which may hold several names.
 
     Sellers write "Williams, John Edward; McGahern, John (INT)" where eBay's
-    catalogue writes "Joy Williams", so positions cannot be relied on. Keeping
+    catalog writes "Joy Williams", so positions cannot be relied on. Keeping
     every word is deliberately generous, because this decides whether to
     *reject*: a false agreement costs one wrong listing shown, a false
     disagreement costs a right one hidden.
@@ -230,7 +230,7 @@ def _epid_matches(evidence: Evidence, target: Target) -> bool:
 
 
 def names_the_same_book(identity: str, wanted: str) -> bool:
-    """Is what the catalogue called this number the book we are after?
+    """Is what the catalog called this number the book we are after?
 
     Equal, or the wanted title followed by more words: *Crash: A Novel* and
     *Stoner (Korean Edition)* are the book, *John Williams : Collected Novels*

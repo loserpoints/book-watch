@@ -1,8 +1,8 @@
 /* Every screen's styles. No build step and no framework.
 
-   Colours, typefaces, type sizes, spacing and corner radii come only from the
+   Colors, typefaces, type sizes, spacing and corner radii come only from the
    tokens (`web/tokens.toml`), which arrive as custom properties
-   in each page's head. `tests/test_tokens.py` fails on a colour, font size,
+   in each page's head. `tests/test_tokens.py` fails on a color, font size,
    margin, padding, gap or radius written here as a raw value. Widths and
    heights are layout, not tokens, and are written where they are used.
 
@@ -328,7 +328,7 @@ details.digging > summary {
 .cover-ph-author { font-size: var(--text-xxs); opacity: 0.8; }
 .cover-lg .cover-ph-title { font-size: var(--text-xs); }
 
-/* The headline price. Colour and a mark together, never colour alone. */
+/* The headline price. Color and a mark together, never color alone. */
 .price {
   font-family: var(--font-figure);
   font-weight: 700;
@@ -521,7 +521,7 @@ details.copy-note[open] > summary { display: block; }
 .cover-shelf { display: flex; align-items: flex-end; gap: var(--space-3); }
 
 /* ---------------------------------------------------------------------------
-   S30: the controls (#110). Macros in templates/_ui.html, behaviour in
+   S30: the controls (#110). Macros in templates/_ui.html, behavior in
    static/ui.js. Every one is at least a 44px target.
    --------------------------------------------------------------------------- */
 
@@ -736,7 +736,7 @@ dialog.photo-view[open] { display: grid; gap: var(--space-2); justify-items: cen
 .sheet-form .candidate-list { margin: 0; padding: 0; }
 
 /* Something wrong with the morning check, under the list's buttons. The
-   chip's shape in the error colour; absent when nothing is wrong. */
+   chip's shape in the error color; absent when nothing is wrong. */
 .list-alert { margin: var(--space-2) 0; }
 details.alert-pill > summary {
   display: inline-flex;

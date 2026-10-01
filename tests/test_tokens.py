@@ -1,7 +1,7 @@
 """The design tokens: defined once, used everywhere, readable in both themes.
 
 With no build step there is no utility framework holding the
-line on colours and sizes, so these tests do it instead.
+line on colors and sizes, so these tests do it instead.
 """
 
 import re
@@ -18,7 +18,7 @@ STYLESHEET = WEB / "static" / "app.css"
 TEMPLATES = sorted((WEB / "templates").glob("*.html"))
 
 HEX = re.compile(r"#[0-9a-fA-F]{3,8}\b")
-FUNCTION_COLOUR = re.compile(r"\b(?:rgba?|hsla?|hwb|lab|lch|oklch|oklab)\(")
+FUNCTION_COLOR = re.compile(r"\b(?:rgba?|hsla?|hwb|lab|lch|oklch|oklab)\(")
 #: A length written as a number. Zero is not one: it is zero in any unit, and
 #: `env(safe-area-inset-bottom, 0px)` needs it as a fallback.
 RAW_LENGTH = re.compile(
@@ -27,7 +27,7 @@ RAW_LENGTH = re.compile(
 
 #: Properties whose values must come from a token. Widths, heights and
 #: borders are layout, and stay where they are used.
-TOKENISED = re.compile(
+TOKENIZED = re.compile(
     r"^(?:color|background(?:-color)?|border(?:-\w+)?-color|font-size|font-family"
     r"|margin(?:-\w+)?|padding(?:-\w+)?|gap|row-gap|column-gap|border(?:-\w+)*-radius)$"
 )
@@ -46,9 +46,9 @@ def violations(css: str):
     for prop, value in declarations(css):
         if prop.startswith("--"):
             continue
-        colour = HEX.search(value) or FUNCTION_COLOUR.search(value)
-        length = TOKENISED.match(prop) and RAW_LENGTH.search(value)
-        if colour or length:
+        color = HEX.search(value) or FUNCTION_COLOR.search(value)
+        length = TOKENIZED.match(prop) and RAW_LENGTH.search(value)
+        if color or length:
             found.append(f"{prop}: {value}")
     return found
 
@@ -56,8 +56,8 @@ def violations(css: str):
 # --- the tokens themselves --------------------------------------------------
 
 
-def test_every_colour_has_a_dark_and_a_light_value():
-    for name, entry in tokens.load()["colour"].items():
+def test_every_color_has_a_dark_and_a_light_value():
+    for name, entry in tokens.load()["color"].items():
         assert HEX.fullmatch(entry["dark"]), name
         assert HEX.fullmatch(entry["light"]), name
 
@@ -65,7 +65,7 @@ def test_every_colour_has_a_dark_and_a_light_value():
 def test_every_token_reaches_the_css():
     css = tokens.css()
     data = tokens.load()
-    for name in data["colour"]:
+    for name in data["color"]:
         assert css.count(f"--{name}:") == 2, name  # once per theme
     for group, prefix in (
         ("font", "font"),
@@ -79,10 +79,10 @@ def test_every_token_reaches_the_css():
 
 def test_dark_is_the_default_and_light_is_what_the_phone_asks_for():
     css = tokens.css()
-    assert css.index(tokens.colour("bg", "dark")) < css.index(
+    assert css.index(tokens.color("bg", "dark")) < css.index(
         "prefers-color-scheme: light"
     )
-    assert css.index(tokens.colour("bg", "light")) > css.index(
+    assert css.index(tokens.color("bg", "light")) > css.index(
         "prefers-color-scheme: light"
     )
 
@@ -104,7 +104,7 @@ def test_text_meets_aa_contrast(theme):
     for surface, texts in TEXT_ON.items():
         for text in texts:
             ratio = tokens.contrast(
-                tokens.colour(text, theme), tokens.colour(surface, theme)
+                tokens.color(text, theme), tokens.color(surface, theme)
             )
             if ratio < 4.5:
                 failures.append(f"{text} on {surface}: {ratio:.2f}")
@@ -137,7 +137,7 @@ def test_the_check_catches_what_it_is_for():
 
 
 @pytest.mark.parametrize("template", TEMPLATES, ids=lambda p: p.name)
-def test_templates_write_no_raw_colours_or_sizes(template):
+def test_templates_write_no_raw_colors_or_sizes(template):
     html = template.read_text()
     inline = " ".join(re.findall(r'style="([^"]*)"', html))
     blocks = " ".join(re.findall(r"<style>(.*?)</style>", html, flags=re.S))
@@ -158,12 +158,12 @@ def test_the_design_page_shows_every_token():
     page = TestClient(app).get("/design")
 
     assert page.status_code == 200
-    for name in tokens.load()["colour"]:
+    for name in tokens.load()["color"]:
         assert f"--{name}" in page.text
     for name in tokens.load()["space"]:
         assert f"--space-{name}" in page.text
     assert assets.static_url("app.css") in page.text
-    assert tokens.colour("bg", "dark") in page.text
+    assert tokens.color("bg", "dark") in page.text
 
 
 def test_the_tokens_reach_the_page_unescaped():

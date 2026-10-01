@@ -32,7 +32,7 @@ from book_watch import covers, daily, db, enrichment, standing, sweeps, wantlist
 from book_watch.config import MissingCredentialError, load_database_path
 from book_watch.ebay.errors import EbayError
 from book_watch.ebay.search import DEFAULT_LIMIT
-from book_watch.isbn import normalise
+from book_watch.isbn import normalize
 from book_watch.openlibrary import (
     CallBudget,
     OpenLibraryClient,
@@ -49,7 +49,7 @@ ROW_PATH = "/books/{book_id}/row"
 ConnectFn = Callable[[], sqlite3.Connection]
 
 
-class LazyCatalogue:
+class LazyCatalog:
     """Holds one Open Library client for the life of the application.
 
     One, rather than one per request, and this is load-bearing. The pause
@@ -106,7 +106,7 @@ def from_htmx(request: Request) -> bool:
 
 def build_router(
     connect: ConnectFn | None = None,
-    catalogue: LazyCatalogue | None = None,
+    catalog: LazyCatalog | None = None,
     search: SearchFn | None = None,
     enrich: enrichment.EnrichFn | None = None,
 ) -> APIRouter:
@@ -119,7 +119,7 @@ def build_router(
     open_database: ConnectFn = (
         connect if connect is not None else open_configured_database
     )
-    open_library = catalogue if catalogue is not None else LazyCatalogue(open_database)
+    open_library = catalog if catalog is not None else LazyCatalog(open_database)
     run_search: SearchFn = search if search is not None else LazyBrowseSearch()
     start_enrichment: enrichment.EnrichFn = (
         enrich if enrich is not None else enrichment.configured(open_database)
@@ -286,9 +286,9 @@ def build_router(
     def _add_by_number(
         request: Request, typed: str, title: str, author: str, override: bool
     ) -> HTMLResponse:
-        normalised = normalise(typed)
+        normalized = normalize(typed)
 
-        if normalised is None:
+        if normalized is None:
             if not override:
                 # Not an error yet — an offer. The check digit says this is not
                 # an ISBN, which is usually a typo and occasionally a book that
@@ -306,7 +306,7 @@ def build_router(
                     status_code=400,
                 )
             # Stored as typed, spaces and all: it is not an ISBN, so
-            # normalising it would be pretending otherwise.
+            # normalizing it would be pretending otherwise.
             return store(
                 request,
                 lambda c: wantlist.add(c, typed, title or None),
@@ -314,16 +314,16 @@ def build_router(
             )
 
         if override:
-            # A valid number Open Library did not recognise, added anyway
+            # A valid number Open Library did not recognize, added anyway
             # because the person holding the book says it is real.
             return store(
                 request,
-                lambda c: wantlist.add(c, normalised, title or None),
-                duplicate_of=normalised,
+                lambda c: wantlist.add(c, normalized, title or None),
+                duplicate_of=normalized,
             )
 
         try:
-            identity = open_library.identify_isbn(normalised)
+            identity = open_library.identify_isbn(normalized)
         except OpenLibraryUnavailable:
             return render_page(
                 request,
@@ -332,7 +332,7 @@ def build_router(
                     "check this number against right now."
                 ),
                 offer_override=True,
-                isbn=normalised,
+                isbn=normalized,
                 title=title,
                 author=author,
                 status_code=503,
@@ -342,12 +342,12 @@ def build_router(
             return render_page(
                 request,
                 error=(
-                    f"Open Library has no record of {normalised}. That is "
+                    f"Open Library has no record of {normalized}. That is "
                     "usually a mistyped digit — and occasionally a real book "
                     "it simply does not hold."
                 ),
                 offer_override=True,
-                isbn=normalised,
+                isbn=normalized,
                 title=title,
                 author=author,
                 status_code=404,
@@ -362,10 +362,10 @@ def build_router(
                 title=identity.title,
                 author=author or None,
                 openlibrary_work_id=identity.work_id,
-                isbn=normalised,
+                isbn=normalized,
                 edition_cover=identity.cover_id,
             ),
-            duplicate_of=normalised,
+            duplicate_of=normalized,
         )
 
     def _search_by_title(request: Request, title: str, author: str) -> HTMLResponse:

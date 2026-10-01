@@ -41,7 +41,7 @@ def test_a_book_nobody_has_looked_up_yet_says_so(connection):
 
 
 def test_a_number_we_looked_up_and_did_not_find_says_that_instead(connection):
-    """Different news: we asked, just now, and it is not in the catalogue.
+    """Different news: we asked, just now, and it is not in the catalog.
 
     Usually a mistyped digit, which is the reader's to fix rather than ours.
     """
@@ -57,7 +57,7 @@ def test_an_override_claims_nothing_about_a_lookup(connection):
     assert book.resolved_at is None
 
 
-def test_a_book_open_library_recognised_keeps_what_it_said(connection):
+def test_a_book_open_library_recognized_keeps_what_it_said(connection):
     book = wantlist.add_identified(
         connection,
         title="Stoner",

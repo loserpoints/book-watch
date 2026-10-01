@@ -61,7 +61,7 @@ uv run python -m book_watch.ebay     # check the eBay keys work (one request)
 
 Setting up a new deployment, once:
 
-1. **Fly:** create an organisation-scoped deploy token under Account → Access Tokens. An app-scoped token cannot create its own app.
+1. **Fly:** create an organization-scoped deploy token under Account → Access Tokens. An app-scoped token cannot create its own app.
 2. **GitHub:** add two repository secrets: `FLY_API_TOKEN`, the Fly token, and `EBAY_VERIFICATION_TOKEN`, a string you invent of 32–80 letters, digits, `_` or `-`.
 3. **Fly:** set `app` in `fly.toml` and run Actions → Deploy. It creates the app, deploys, and checks the eBay endpoint answers correctly.
 4. **Fly:** add `EBAY_CLIENT_ID` (the production App ID) and `EBAY_CLIENT_SECRET` (its Cert ID) under the app's Secrets. Nothing in GitHub reads them, so they live only on Fly. Add `SHIP_TO_ZIP`, the ZIP the books ship to, so eBay prices calculated shipping. Without it, those copies show "+ shipping?".

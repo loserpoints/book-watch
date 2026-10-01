@@ -172,7 +172,7 @@ def check_body(
 def check_slices(
     where: str, section: Section, lines: list[str], labels: Labels | None
 ) -> list[str]:
-    """Issue links only, and each issue labelled `slice` when labels are known."""
+    """Issue links only, and each issue labeled `slice` when labels are known."""
     errors = []
     for line in lines:
         match = ISSUE_LINK.match(line)
@@ -183,7 +183,7 @@ def check_slices(
             continue
         number = int(line.rstrip(")").rsplit("/", 1)[1])
         if labels is not None and "slice" not in labels(number):
-            errors.append(f"{where}: #{number} is not labelled 'slice'")
+            errors.append(f"{where}: #{number} is not labeled 'slice'")
     return errors
 
 

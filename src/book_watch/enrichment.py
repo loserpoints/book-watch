@@ -29,7 +29,7 @@ from dataclasses import dataclass
 from book_watch.config import load_ebay_credentials
 from book_watch.ebay.declarations import Declarations
 from book_watch.ebay.errors import EbayError
-from book_watch.isbn import normalise
+from book_watch.isbn import normalize
 from book_watch.openlibrary import BudgetExhausted, OpenLibraryUnavailable, Resolver
 
 logger = logging.getLogger(__name__)
@@ -101,12 +101,12 @@ def configured(connect: ConnectFn) -> EnrichFn:
         from book_watch.openlibrary import CallBudget, OpenLibraryClient
 
         detail = ItemDetailClient(EbayTokenProvider(load_ebay_credentials()))
-        catalogue = OpenLibraryClient(CallBudget(connect))
+        catalog = OpenLibraryClient(CallBudget(connect))
         return enrich(
             connect,
             work_id,
             lambda connection: Declarations(connection, detail),
-            lambda connection: Resolver(connection, catalogue),
+            lambda connection: Resolver(connection, catalog),
         )
 
     return start
@@ -252,7 +252,7 @@ def _run(
             resolved += 1
     connection.commit()
 
-    # The same queue on the other side. A catalogue record has no ended state,
+    # The same queue on the other side. A catalog record has no ended state,
     # so every outdated number is worth re-asking about, and the pace and
     # ceiling apply here exactly as they do to a first ask —
     # this goes through the same resolver and spends the same budget.
@@ -354,7 +354,7 @@ def _identify_the_book(
         "ORDER BY id",
         (work_id,),
     ):
-        if normalise(row["isbn"]) is None:
+        if normalize(row["isbn"]) is None:
             continue  # an override: text that was never a number to look up
         identity = resolver.identify(row["isbn"])
         if identity is None:
@@ -364,7 +364,7 @@ def _identify_the_book(
             (identity.title, work_id),
         )
         return identity.title, True
-    # Asked, and the catalogue has nothing. Recording that stops the want-list
+    # Asked, and the catalog has nothing. Recording that stops the want-list
     # claiming somebody is still looking, which would no longer be true.
     connection.execute(
         "UPDATE work SET resolved_at = datetime('now') WHERE id = ?", (work_id,)
