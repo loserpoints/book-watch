@@ -546,8 +546,13 @@ details.copy-note[open] > summary { display: block; }
   outline-offset: 2px;
 }
 
+/* The + button floats over the want list, so it sits above every layer a
+   row uses: the row's stretched link (1), and the trash and "digging" (2).
+   Without this, a tap on it opened the book behind it (S58). Sheets open as
+   modal dialogs, which the browser draws above everything. */
 .fab {
   position: fixed;
+  z-index: 3;
   right: var(--space-4);
   bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
   width: 56px;
