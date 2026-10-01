@@ -39,5 +39,5 @@ These rules keep the app's requests to eBay and Open Library small, spaced out a
 
 ## Open issues
 
-- [Stop re-asking Open Library about numbers that never resolve](https://github.com/loserpoints/book-watch/issues/61)
+- [S57 · A number Open Library can't answer is set aside, and the rest of the book's copies are still examined](https://github.com/loserpoints/book-watch/issues/61)
 - [Create a contact address for the app, and put it in the User-Agent](https://github.com/loserpoints/book-watch/issues/40)
