@@ -8,7 +8,7 @@ on:
   pull_request:
 
 # The docs check reads issue labels, to confirm a milestone's slices are
-# labelled `slice`. Read-only, and nothing else.
+# labeled `slice`. Read-only, and nothing else.
 permissions:
   contents: read
   issues: read

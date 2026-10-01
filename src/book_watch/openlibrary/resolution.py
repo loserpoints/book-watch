@@ -17,7 +17,7 @@ import sqlite3
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 
-from book_watch.isbn import normalise
+from book_watch.isbn import normalize
 from book_watch.openlibrary.client import OpenLibraryClient
 from book_watch.openlibrary.models import EditionIdentity
 
@@ -76,23 +76,23 @@ class Resolver:
         Asks Open Library only when the notebook has nothing usable. Raises
         `OpenLibraryUnavailable` if the question has to be asked and cannot be.
         """
-        normalised = normalise(isbn)
-        if normalised is None:
+        normalized = normalize(isbn)
+        if normalized is None:
             raise ValueError(
-                f"{isbn!r} is not a valid ISBN. Normalise before asking, and "
+                f"{isbn!r} is not a valid ISBN. Normalize before asking, and "
                 "skip the ones that come back None rather than asking anyway."
             )
 
         row = self._connection.execute(
             f"SELECT {_COLUMNS}, asked_at FROM openlibrary_edition WHERE isbn = ?",
-            (normalised,),
+            (normalized,),
         ).fetchone()
 
         if row is not None and not self._stale(row):
             return _row_to_identity(row)
 
-        identity = self._client.identify_isbn(normalised)
-        self._remember(normalised, identity)
+        identity = self._client.identify_isbn(normalized)
+        self._remember(normalized, identity)
         return identity
 
     def known(self, isbn: str) -> bool:
@@ -101,12 +101,12 @@ class Resolver:
         For the enrichment worker, which wants to count what a new book will
         cost before spending it.
         """
-        normalised = normalise(isbn)
-        if normalised is None:
+        normalized = normalize(isbn)
+        if normalized is None:
             return False
         row = self._connection.execute(
             "SELECT found, asked_at FROM openlibrary_edition WHERE isbn = ?",
-            (normalised,),
+            (normalized,),
         ).fetchone()
         return row is not None and not self._stale(row)
 
@@ -153,7 +153,7 @@ class Resolver:
         having learned to read more. A miss expires on a timer; a capture
         never expires on its own, only when we change what we ask for.
         """
-        wanted = [n for n in (normalise(i) for i in isbns) if n is not None]
+        wanted = [n for n in (normalize(i) for i in isbns) if n is not None]
         if not wanted:
             return []
         placeholders = ",".join("?" * len(wanted))
@@ -168,17 +168,17 @@ class Resolver:
     def recapture(self, isbn: str) -> EditionIdentity | None:
         """Ask again about a number we already have an older answer for.
 
-        Unlike a listing, a catalogue record has no "ended" state — Open
+        Unlike a listing, a catalog record has no "ended" state — Open
         Library either holds this number or does not, and that answer is about
         the book rather than about somebody's willingness to sell it. So the
         new answer replaces the old one outright, and `_remember` already
         stamps it.
         """
-        normalised = normalise(isbn)
-        if normalised is None:
+        normalized = normalize(isbn)
+        if normalized is None:
             raise ValueError(f"{isbn!r} is not a valid ISBN.")
-        identity = self._client.identify_isbn(normalised)
-        self._remember(normalised, identity)
+        identity = self._client.identify_isbn(normalized)
+        self._remember(normalized, identity)
         return identity
 
 

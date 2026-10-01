@@ -114,7 +114,7 @@ class Listing:
     #: eBay did not say. Absent is not "overseas" — it is unknown, and a copy
     #: is never called an import on the strength of a missing field.
     located_in: str | None = None
-    #: eBay's own product id, where its catalogue matched this listing to one.
+    #: eBay's own product id, where its catalog matched this listing to one.
     #: It is one of three identifier signals and the least
     #: trustworthy — it over-merges, so distinct Crash editions share one —
     #: but it finds 80% of the copies of a given edition, which nothing else
@@ -370,7 +370,7 @@ def _parse_shipping(options: Any, index: int) -> Money | None:
     """Take the cheapest stated shipping cost, or `None` if none is stated.
 
     eBay returns several options — economy, expedited, sometimes local pickup
-    — and the brief optimises for landed cost, so the cheapest is the one that
+    — and the brief optimizes for landed cost, so the cheapest is the one that
     decides whether a copy is worth buying. An option with no `shippingCost`
     usually means "calculated at checkout", which is not a number we can rank
     on and must not be read as free.

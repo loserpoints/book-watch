@@ -3,9 +3,9 @@
 Both put prices on one horizontal scale, the way a dot plot does:
 
 - **The range strip** shows every asking price seen for a book,
-  with the lowest and highest labelled under the ends in
+  with the lowest and highest labeled under the ends in
   whole dollars and the limit as a dashed guide. Every dot is the same
-  colour: the cheapest is always the left end, so emphasising it would say
+  color: the cheapest is always the left end, so emphasizing it would say
   nothing (S27).
 - **The rank strip** shows the copies of one kind listed now,
   with this copy as the large dot. It replaces "2nd of 3",
@@ -64,10 +64,10 @@ def range_strip(
     *,
     width: int = 104,
     height: int = 16,
-    labelled: bool = True,
+    labeled: bool = True,
     symbol: str = "$",
 ) -> Markup:
-    """Every asking price seen, the limit as a guide, and the range labelled."""
+    """Every asking price seen, the limit as a guide, and the range labeled."""
     if not seen:
         return Markup("")
     scale = scale_for([*seen, limit] if limit is not None else seen, width)
@@ -87,7 +87,7 @@ def range_strip(
     ]
     total = height
     low, high = min(seen, key=float), max(seen, key=float)
-    if labelled:
+    if labeled:
         total = height + 12
         parts.append(
             f'<text class="strip-label" x="{scale.x(low)}" y="{height + 10}" '

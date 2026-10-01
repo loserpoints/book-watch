@@ -1,4 +1,4 @@
-"""The price strips: dots on one scale, and a range labelled in whole dollars."""
+"""The price strips: dots on one scale, and a range labeled in whole dollars."""
 
 import re
 from decimal import Decimal
@@ -11,20 +11,20 @@ def positions(svg, cls):
 
 
 def test_prices_sit_on_one_scale_between_the_padded_ends():
-    svg = strips.range_strip([10, 20, 30], width=110, labelled=False)
+    svg = strips.range_strip([10, 20, 30], width=110, labeled=False)
 
     # 5px pad each side leaves 100px for a $20 span: $10 per 50px.
     assert positions(svg, "strip-dot") == [5.0, 55.0, 105.0]
 
 
 def test_the_limit_widens_the_scale_when_it_lies_outside_the_prices():
-    svg = strips.range_strip([10, 20], limit=30, width=110, labelled=False)
+    svg = strips.range_strip([10, 20], limit=30, width=110, labeled=False)
 
     assert positions(svg, "strip-dot") == [5.0, 55.0]
     assert 'class="strip-limit" x1="105.0"' in svg
 
 
-def test_the_ends_are_labelled_in_whole_dollars():
+def test_the_ends_are_labeled_in_whole_dollars():
     svg = strips.range_strip([Decimal("10.49"), Decimal("26.5")])
 
     assert ">$10</text>" in svg
@@ -32,7 +32,7 @@ def test_the_ends_are_labelled_in_whole_dollars():
 
 
 def test_every_dot_on_the_range_strip_is_the_same():
-    """The cheapest is always the left end, so emphasising it says nothing."""
+    """The cheapest is always the left end, so emphasizing it says nothing."""
     svg = strips.range_strip([10, 12, 27])
 
     assert set(re.findall(r'<circle class="([\w-]+)"', svg)) == {"strip-dot"}
@@ -52,7 +52,7 @@ def test_a_single_copy_has_no_rank_strip():
 
 
 def test_one_price_sits_in_the_middle_rather_than_dividing_by_zero():
-    svg = strips.range_strip([12], width=110, labelled=False)
+    svg = strips.range_strip([12], width=110, labeled=False)
 
     assert positions(svg, "strip-dot") == [55.0]
 

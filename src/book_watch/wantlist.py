@@ -21,12 +21,12 @@ from typing import Literal
 
 from book_watch import covers
 from book_watch.ebay.search import Money
-from book_watch.isbn import normalise
+from book_watch.isbn import normalize
 
 #: Which hunt an entry is on. A reader will take any edition of the book; a
 #: collector wants one particular printing. Every entry is one or the other,
 #: and only "reader" is written today, which leaves the collector
-#: surface waiting on its own labelling exercise.
+#: surface waiting on its own labeling exercise.
 Hunt = Literal["reader", "collector"]
 
 
@@ -124,7 +124,7 @@ class Entry:
         which is the normal search for it. Asking whether `search_query` is an
         ISBN got that wrong for every such book (#102).
         """
-        return self.typed is not None and normalise(self.typed) is None
+        return self.typed is not None and normalize(self.typed) is None
 
     @property
     def name(self) -> str:
@@ -282,7 +282,7 @@ def add_identified(
 
 
 def add(connection: sqlite3.Connection, isbn: str, title: str | None = None) -> Entry:
-    """Put a book on the list without anything having recognised it.
+    """Put a book on the list without anything having recognized it.
 
     Two callers, both deliberate. A number Open Library has no record of,
     added anyway because the person holding the book says it is real. And

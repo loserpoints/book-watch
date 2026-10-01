@@ -26,7 +26,7 @@ Every document in this repository is one of the artifacts below. `scripts/check_
 - *(sentence)*: one sentence.
 - *(links)*: a list of GitHub issue or pull request links and nothing else. Problems live as issues, not as prose in a document.
 - *(job links)*: a list of links to jobs in `docs/jobs.md`.
-- *(slice links)*: a list of links to issues labelled `slice`. CI reads the labels from GitHub.
+- *(slice links)*: a list of links to issues labeled `slice`. CI reads the labels from GitHub.
 - *(routed)*: a list in which every item links the document it changed.
 - *may be empty*: the section heading stays, with no list under it.
 - *[…]*: `###` headings required under each `##`, in order. `<n>` and `<name>` stand for any value.

@@ -438,7 +438,7 @@ def test_copies_nobody_has_examined_yet_are_said_to_be_unexamined(book_client):
     # The visible sentence is the whole fact; tapping it gives the reason in
     # place. It used to be a hover `title`, which a touchscreen never shows.
     assert "Still digging through the shelves." in page
-    assert "We ask the public catalogues slowly on purpose" in page
+    assert "We ask the public catalogs slowly on purpose" in page
     assert 'title="We ask' not in page
 
 
@@ -646,7 +646,7 @@ def test_setting_a_ceiling_marks_what_is_under_it(book_client):
     page = client.get("/book/1").text
 
     seen = visible(page)
-    # Colour and a mark, never colour alone: ✓ and the words for a reader who
+    # Color and a mark, never color alone: ✓ and the words for a reader who
     # cannot see the green; the amount for over. $4 + $3.99, and $30 + $3.99.
     assert seen.count("(under your limit)") == 1
     # Both copies still shown: the ceiling marks, it never filters.
@@ -769,7 +769,7 @@ def test_a_copy_with_unknown_shipping_is_listed_after_a_dearer_known_one(book_cl
 
 
 def make_certain(client, isbn="9780099448396", title="Crash"):
-    """Give every stored copy a declaration the catalogue recognises.
+    """Give every stored copy a declaration the catalog recognizes.
 
     Copies reach `certain` on identifiers, never on text, and
     only a certain copy carries a standing — a rank against a set of copies it

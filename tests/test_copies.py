@@ -2,7 +2,7 @@
 
 The edition set used to be a table a pass wrote conclusions into. It is now
 derived on read from things we observed — what sellers declared, what the
-catalogue says those numbers are, who sellers say wrote them.
+catalog says those numbers are, who sellers say wrote them.
 
 That is the difference between a rule change reaching every book on the list
 and reaching only the next one added, so most of this file is about what a
@@ -37,11 +37,11 @@ def a_book(connection, title, author):
 
 def a_copy_declaring(connection, work_id, item_id, declared, *, epid=None, title=None):
     """One copy for sale, and everything observed about it."""
-    isbn, catalogue_title, declared_author = declared
+    isbn, catalog_title, declared_author = declared
     connection.execute(
         "INSERT INTO copy (item_id, work_id, title, url, price, currency, epid) "
         "VALUES (?, ?, ?, 'https://ebay/x', '9.99', 'USD', ?)",
-        (item_id, work_id, title or catalogue_title, epid),
+        (item_id, work_id, title or catalog_title, epid),
     )
     connection.execute(
         "INSERT OR IGNORE INTO listing_declaration (item_id, isbn, author) "
@@ -51,7 +51,7 @@ def a_copy_declaring(connection, work_id, item_id, declared, *, epid=None, title
     connection.execute(
         "INSERT OR IGNORE INTO openlibrary_edition (isbn, found, title) "
         "VALUES (?, 1, ?)",
-        (isbn, catalogue_title),
+        (isbn, catalog_title),
     )
     # A real copy only exists because a sweep found it, and the page shows the
     # newest sweep of a scope. Registering that here keeps these fixtures
@@ -85,7 +85,7 @@ def tiers(connection, entry):
 # --- which numbers count as this book ---------------------------------------
 
 
-def test_a_number_the_catalogue_calls_this_book_counts(database):
+def test_a_number_the_catalog_calls_this_book_counts(database):
     book = a_book(database, "Stoner", "John Williams")
     a_copy_declaring(database, book.work_id, "v1|1|0", STONER)
 
@@ -814,7 +814,7 @@ def test_only_copies_that_are_certainly_this_book_are_compared(database):
     book = a_book(database, "Stoner", "John Williams")
     a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
     a_certain_copy(database, book.work_id, "v1|2|0", price="24.00")
-    # Declares a number the catalogue calls a different book entirely.
+    # Declares a number the catalog calls a different book entirely.
     a_certain_copy(database, book.work_id, "v1|3|0", price="1.00", declared=GILLMOR)
 
     stands = standing_for(database, book)
@@ -1027,7 +1027,7 @@ def test_uncertain_copies_are_counted_rather_than_called_nothing(database):
     """ "Nothing listed" over five copies carrying the title would be false."""
     book = a_book(database, "Stoner", "John Williams")
     # Carries the title and nothing that proves the book — no number from the
-    # seller, no product the catalogue recognises. Text alone never reaches
+    # seller, no product the catalog recognizes. Text alone never reaches
     # certain, so this is the "might be this book" pile.
     a_copy_declaring(database, book.work_id, "v1|1|0", STONER, title="Stoner")
     database.execute("DELETE FROM listing_declaration WHERE item_id = 'v1|1|0'")

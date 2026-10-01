@@ -4,7 +4,7 @@
 -- different facts about a work:
 --
 --   resolved_at  one lookup, inline, when the book is added. Did Open Library
---                recognise the title or the number?
+--                recognize the title or the number?
 --   enriched_at  ten to fifteen lookups, in the background, for the numbers
 --                sellers declared in its listings. What the want-list's
 --                "still digging" tag reads.

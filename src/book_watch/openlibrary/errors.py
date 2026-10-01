@@ -11,8 +11,8 @@ class OpenLibraryUnavailable(OpenLibraryError):
     """Open Library could not be reached, or answered with something unusable.
 
     Deliberately *not* raised when Open Library answers clearly that it has no
-    record of something. That is a fact about the catalogue and comes back as
-    `None`; this is an absence of information about the catalogue.
+    record of something. That is a fact about the catalog and comes back as
+    `None`; this is an absence of information about the catalog.
 
     The difference is load-bearing. A number Open Library does
     not hold must not exclude a listing — all five such numbers in the

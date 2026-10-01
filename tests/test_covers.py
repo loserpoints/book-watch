@@ -43,7 +43,7 @@ def test_a_missing_image_is_a_404_rather_than_a_blank_one():
 # --- learning it later ------------------------------------------------------
 
 
-class Catalogue:
+class Catalog:
     def __init__(self, answer, editions=None):
         self.answer = answer
         self.editions = editions or {}
@@ -98,30 +98,30 @@ def test_a_book_nobody_has_asked_about_is_not_claimed_to_have_no_cover(connectio
 def test_a_cover_is_learned_and_kept(connection):
     work_id = unasked(connection)
 
-    covers.look_up(connection, Catalogue(6980524), work_id)
+    covers.look_up(connection, Catalog(6980524), work_id)
 
     assert entry_for(connection, work_id).cover == 6980524
 
 
 def test_a_cover_is_asked_about_once(connection):
     work_id = unasked(connection)
-    catalogue = Catalogue(6980524)
+    catalog = Catalog(6980524)
 
-    covers.look_up(connection, catalogue, work_id)
-    covers.look_up(connection, catalogue, work_id)
+    covers.look_up(connection, catalog, work_id)
+    covers.look_up(connection, catalog, work_id)
 
-    assert catalogue.asked == ["OL3511459W"]
+    assert catalog.asked == ["OL3511459W"]
 
 
 def test_no_cover_is_an_answer_and_is_not_asked_again(connection):
     work_id = unasked(connection)
-    catalogue = Catalogue(None)
+    catalog = Catalog(None)
 
-    covers.look_up(connection, catalogue, work_id)
-    covers.look_up(connection, catalogue, work_id)
+    covers.look_up(connection, catalog, work_id)
+    covers.look_up(connection, catalog, work_id)
 
     assert entry_for(connection, work_id).has_no_cover
-    assert catalogue.asked == ["OL3511459W"]
+    assert catalog.asked == ["OL3511459W"]
 
 
 @pytest.mark.parametrize(
@@ -132,7 +132,7 @@ def test_no_cover_is_an_answer_and_is_not_asked_again(connection):
 def test_failing_to_ask_is_not_written_down_as_no_cover(connection, failure):
     work_id = unasked(connection)
 
-    covers.look_up(connection, Catalogue(failure), work_id)
+    covers.look_up(connection, Catalog(failure), work_id)
 
     book = entry_for(connection, work_id)
     assert book.cover is None
@@ -142,11 +142,11 @@ def test_failing_to_ask_is_not_written_down_as_no_cover(connection, failure):
 def test_a_book_with_no_open_library_work_is_not_asked_about(connection):
     """Added by text alone, so there is nothing to ask and no answer to wait for."""
     work_id = unasked(connection, openlibrary_work_id=None)
-    catalogue = Catalogue(6980524)
+    catalog = Catalog(6980524)
 
-    covers.look_up(connection, catalogue, work_id)
+    covers.look_up(connection, catalog, work_id)
 
-    assert catalogue.asked == []
+    assert catalog.asked == []
     assert entry_for(connection, work_id).has_no_cover
 
 
@@ -205,42 +205,42 @@ def added_by_number(connection, typed=STATE_OF_GRACE):
 
 def test_a_book_with_no_work_is_asked_about_by_its_isbn(connection):
     work_id = added_by_number(connection)
-    catalogue = Catalogue(None, {STATE_OF_GRACE: edition(cover_id=419932)})
+    catalog = Catalog(None, {STATE_OF_GRACE: edition(cover_id=419932)})
 
-    covers.look_up(connection, catalogue, work_id)
+    covers.look_up(connection, catalog, work_id)
 
     assert entry_for(connection, work_id).cover == 419932
-    assert catalogue.asked == [STATE_OF_GRACE]
+    assert catalog.asked == [STATE_OF_GRACE]
 
 
 def test_an_edition_with_no_cover_asks_the_work_it_names(connection):
     work_id = added_by_number(connection)
-    catalogue = Catalogue(6928523, {STATE_OF_GRACE: edition(cover_id=None)})
+    catalog = Catalog(6928523, {STATE_OF_GRACE: edition(cover_id=None)})
 
-    covers.look_up(connection, catalogue, work_id)
+    covers.look_up(connection, catalog, work_id)
 
     assert entry_for(connection, work_id).cover == 6928523
-    assert catalogue.asked == [STATE_OF_GRACE, "OL1998538W"]
+    assert catalog.asked == [STATE_OF_GRACE, "OL1998538W"]
 
 
 def test_a_number_open_library_does_not_hold_has_no_cover(connection):
     work_id = added_by_number(connection)
-    catalogue = Catalogue(None, {})
+    catalog = Catalog(None, {})
 
-    covers.look_up(connection, catalogue, work_id)
+    covers.look_up(connection, catalog, work_id)
 
     assert entry_for(connection, work_id).has_no_cover
-    assert catalogue.asked == [STATE_OF_GRACE]
+    assert catalog.asked == [STATE_OF_GRACE]
 
 
 def test_text_typed_for_a_book_with_no_isbn_is_not_asked_about(connection):
     """The override for text. It is not a number, so there is no question."""
     work_id = added_by_number(connection, typed="Stoner, 1965 Viking first")
-    catalogue = Catalogue(6928523)
+    catalog = Catalog(6928523)
 
-    covers.look_up(connection, catalogue, work_id)
+    covers.look_up(connection, catalog, work_id)
 
-    assert catalogue.asked == []
+    assert catalog.asked == []
     assert entry_for(connection, work_id).has_no_cover
 
 

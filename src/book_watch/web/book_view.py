@@ -84,8 +84,8 @@ def copy_row(
 
 
 def _against(copy: Copy, verdict: Verdict, ceiling: Money | None) -> dict:
-    """Colour, and how far over. A copy that can't be told, or has no limit
-    to be told against, is left uncoloured."""
+    """Color, and how far over. A copy that can't be told, or has no limit
+    to be told against, is left uncolored."""
     delivered = copy.landed_cost
     if verdict == "under":
         return {"verdict": "under", "over_by": None}

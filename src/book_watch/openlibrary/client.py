@@ -37,7 +37,7 @@ from typing import Any
 
 import httpx
 
-from book_watch.isbn import normalise
+from book_watch.isbn import normalize
 from book_watch.openlibrary.budget import CallBudget
 from book_watch.openlibrary.errors import OpenLibraryUnavailable
 from book_watch.openlibrary.models import Candidate, EditionIdentity
@@ -89,7 +89,7 @@ class OpenLibraryClient:
 
     Safe to make several of. The pacing they share lives in this module rather
     than in any one of them, so two clients in two threads cannot between them
-    go twice as fast — which is the only behaviour that matters, since the
+    go twice as fast — which is the only behavior that matters, since the
     limit is per address.
     """
 
@@ -130,7 +130,7 @@ class OpenLibraryClient:
         """Candidate books for a title, in the order Open Library ranks them.
 
         Asks for named fields rather than whole records. A bare search returns
-        tens of kilobytes of catalogue metadata per result; the five fields a
+        tens of kilobytes of catalog metadata per result; the five fields a
         person needs to pick the right book fit in under a kilobyte for the
         whole list.
 
@@ -166,16 +166,16 @@ class OpenLibraryClient:
         unheld number must not exclude a listing — so they must not be
         catchable by the same `except`.
         """
-        normalised = normalise(isbn)
-        if normalised is None:
+        normalized = normalize(isbn)
+        if normalized is None:
             raise ValueError(
-                f"{isbn!r} is not a valid ISBN. Normalise before asking, and "
+                f"{isbn!r} is not a valid ISBN. Normalize before asking, and "
                 "skip the ones that come back None rather than asking anyway."
             )
-        payload = self._get(f"/isbn/{normalised}.json", allow_missing=True)
+        payload = self._get(f"/isbn/{normalized}.json", allow_missing=True)
         if payload is None:
             return None
-        return _identity(normalised, payload)
+        return _identity(normalized, payload)
 
     def work_cover(self, work_id: str) -> int | None:
         """The cover Open Library holds for a work, or `None` if it holds none.

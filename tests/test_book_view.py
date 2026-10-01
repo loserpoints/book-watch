@@ -50,7 +50,7 @@ def test_over_says_by_how_much():
 
 
 def test_unknown_shipping_shows_the_price_and_no_verdict():
-    """S54: even a price alone over the limit is left uncoloured, with no
+    """S54: even a price alone over the limit is left uncolored, with no
     amount over."""
     c = row(a_copy("14.00", None))
 
@@ -63,7 +63,7 @@ def test_under_carries_no_amount():
     assert row(a_copy("5.00", "2.00"))["over_by"] is None
 
 
-def test_another_currency_is_left_uncoloured():
+def test_another_currency_is_left_uncolored():
     c = row(a_copy("5.00", "2.00", currency="GBP"))
 
     assert (c["verdict"], c["over_by"]) == (None, None)

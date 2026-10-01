@@ -339,7 +339,7 @@ def test_a_pass_gives_an_untitled_book_its_title(database):
     assert row["resolved_at"] is not None
 
 
-def test_a_book_the_catalogue_cannot_identify_stops_saying_it_is_being_looked_up(
+def test_a_book_the_catalog_cannot_identify_stops_saying_it_is_being_looked_up(
     database,
 ):
     """Asked, and there is no answer. Claiming somebody is still looking
