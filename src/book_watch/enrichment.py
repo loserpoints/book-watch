@@ -130,6 +130,33 @@ class Pass:
     stopped_because: str | None = None
 
 
+class _Failures:
+    """When Open Library fails to answer one number (S57).
+
+    One failure is that number's: it is skipped, and the pass carries on, so a
+    number that always fails no longer stops the book at the same place every
+    day. Nothing is stored, so it is asked again the next time the book has
+    new copies. Two failures in a row are Open Library's, most likely down,
+    and stop the pass so it isn't spent on every remaining number.
+    """
+
+    def __init__(self, work_id: int, doing: str) -> None:
+        self._work_id = work_id
+        self._doing = doing
+        self._in_a_row = 0
+
+    def stop(self, isbn: str, exc: Exception) -> bool:
+        self._in_a_row += 1
+        if self._in_a_row >= 2:
+            logger.warning("%s %s stopped: %s", self._doing, self._work_id, exc)
+            return True
+        logger.warning("%s %s skipped %s: %s", self._doing, self._work_id, isbn, exc)
+        return False
+
+    def answered(self) -> None:
+        self._in_a_row = 0
+
+
 def enrich(
     connect: ConnectFn,
     work_id: int,
@@ -231,6 +258,7 @@ def _run(
     # a one-off backfill means the next such gap heals itself too.
     if wanted is None:
         wanted, identified = _identify_the_book(connection, work_id, resolver)
+    failures = _Failures(work_id, "Enriching")
     for isbn in sorted(numbers):
         already = resolver.known(isbn)
         try:
@@ -246,8 +274,10 @@ def _run(
             return Pass(examined, resolved, stopped_because="over budget")
         except OpenLibraryUnavailable as exc:
             connection.commit()
-            logger.warning("Enriching %s stopped: %s", work_id, exc)
-            return Pass(examined, resolved, stopped_because="open library")
+            if failures.stop(isbn, exc):
+                return Pass(examined, resolved, stopped_because="open library")
+            continue
+        failures.answered()
         if not already:
             resolved += 1
     connection.commit()
@@ -256,6 +286,7 @@ def _run(
     # so every outdated number is worth re-asking about, and the pace and
     # ceiling apply here exactly as they do to a first ask —
     # this goes through the same resolver and spends the same budget.
+    failures = _Failures(work_id, "Recapturing")
     for isbn in resolver.outdated(sorted(numbers)):
         try:
             resolver.recapture(isbn)
@@ -273,7 +304,8 @@ def _run(
             )
         except OpenLibraryUnavailable as exc:
             connection.commit()
-            logger.warning("Recapturing %s stopped: %s", work_id, exc)
+            if not failures.stop(isbn, exc):
+                continue
             return Pass(
                 examined,
                 resolved,
@@ -283,6 +315,7 @@ def _run(
                 ),
                 stopped_because="open library",
             )
+        failures.answered()
         recaptured += 1
     connection.commit()
 
