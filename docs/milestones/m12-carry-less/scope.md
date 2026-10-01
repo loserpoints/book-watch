@@ -11,7 +11,7 @@ Pricing keeps only the rules live copies need, a number Open Library can't answe
 ## Slices
 
 - [S53, dropped · A broken or full database, or a missed daily check, emails me within a day](https://github.com/loserpoints/book-watch/issues/201)
-- [S54 · Pricing keeps only the unknown-shipping rules that live copies need](https://github.com/loserpoints/book-watch/issues/189)
+- [S54 · A copy without a delivered price follows one rule](https://github.com/loserpoints/book-watch/issues/189)
 - [S55 · Code and docs use American spelling](https://github.com/loserpoints/book-watch/issues/37)
 - [S56 · Governance says when a defect can ship outside a milestone](https://github.com/loserpoints/book-watch/issues/157)
 - [S57 · A number Open Library can't answer is set aside, and the rest of the book's copies are still examined](https://github.com/loserpoints/book-watch/issues/61)

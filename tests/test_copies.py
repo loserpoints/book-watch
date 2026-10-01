@@ -427,30 +427,20 @@ def test_exactly_at_the_ceiling_is_under():
 
 
 def test_unstated_shipping_cannot_be_judged():
-    """Not under, and not over. Calling it free would invent a bargain, which
-    is the wasted-trust failure the brief exists to avoid; calling it over
-    would be right most of the time with no way to know which times."""
-    assert priced("5.00", None).against(EIGHT) == "shipping unstated"
+    """Not under, and not over. Calling it free would invent a bargain, and
+    calling it over would be a guess."""
+    assert priced("5.00", None).against(EIGHT) == "can't tell"
 
 
-def test_a_price_alone_over_the_ceiling_is_over_whatever_the_postage():
-    """Postage cannot be negative, so this is a bound rather than a guess —
-    the one unstated-shipping case that is never wrong."""
-    assert priced("9.00", None).against(EIGHT) == "over"
-
-
-def test_a_price_exactly_at_the_ceiling_with_unstated_postage_cannot_be_judged():
-    """The boundary: free postage would make it under, so it is not over."""
-    assert priced("8.00", None).against(EIGHT) == "shipping unstated"
-
-
-def test_a_price_alone_over_in_another_currency_is_still_not_compared():
-    """£9 against an $8 ceiling says nothing, postage or not."""
-    assert priced("9.00", None, currency="GBP").against(EIGHT) == "shipping unstated"
+def test_a_price_alone_over_the_ceiling_is_still_not_judged():
+    """S54: one rule for every copy without a delivered price. eBay allows
+    one only for local pickup and freight, so the bound this used to carry
+    had no copies behind it."""
+    assert priced("9.00", None).against(EIGHT) == "can't tell"
 
 
 def test_another_currency_cannot_be_judged():
-    assert priced("5.00", "2.00", currency="GBP").against(EIGHT) == "another currency"
+    assert priced("5.00", "2.00", currency="GBP").against(EIGHT) == "can't tell"
 
 
 def test_without_a_ceiling_nothing_is_judged():
@@ -487,8 +477,7 @@ def test_a_ceiling_never_hides_or_reorders_anything(database):
 
 def test_copies_with_no_delivered_price_sort_below_every_known_one(database):
     """S44: the top of the list is always a price I could pay. The unknown
-    group is ordered by price alone, including a copy whose price alone is
-    already over the limit."""
+    group is ordered by price alone."""
     book = a_book(database, "Stoner", "John Williams")
     swept(
         database,
@@ -513,7 +502,7 @@ def test_copies_with_no_delivered_price_sort_below_every_known_one(database):
         "v1|5|0",
         "v1|4|0",
     ]
-    assert listed[-1].against(EIGHT) == "over"
+    assert listed[-1].against(EIGHT) == "can't tell"
 
 
 def test_shipping_in_another_currency_sorts_with_the_unknown():
