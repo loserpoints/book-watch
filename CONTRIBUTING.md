@@ -4,6 +4,7 @@
 
 - Check a fact against the thing itself before building on it: the service's documentation, a real response, or the browser's own tools. Memory and old notes go stale.
 - When a session can't reach a service's documentation, ask Alan to allow its domain and its subdomains, such as `fly.io` and `*.fly.io`, rather than building on memory.
+- eBay's developer and help pages refuse a session's requests whatever the network allows. Ask Alan to read the page.
 - Measure before deciding when a choice turns on a number, and measure again when the data grows.
 - Before inventing a proxy for a signal, check whether the code already has the signal and throws it away.
 - Decide a design by looking at it on real screens at phone width, and agree beforehand how many rounds a layout gets.
