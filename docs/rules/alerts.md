@@ -29,4 +29,4 @@ These rules decide when the app emails me about a copy, so that an email is alwa
 
 ## Open issues
 
-- [Track daily checks, emails and API calls somewhere I can see them](https://github.com/loserpoints/book-watch/issues/168)
+- [See daily checks, emails and API calls over time](https://github.com/loserpoints/book-watch/issues/168)
