@@ -32,3 +32,4 @@ The want list shows every book I'm watching and whether any copy is worth my att
 
 - [Reorder the want-list by recency, lowest price, or by hand](https://github.com/loserpoints/book-watch/issues/131)
 - [Filter the want-list to books with a copy under their limit](https://github.com/loserpoints/book-watch/issues/132)
+- [Drop the "$X over" amount, and make the limit easy to see on the price strip](https://github.com/loserpoints/book-watch/issues/200)

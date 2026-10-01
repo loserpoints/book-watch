@@ -38,4 +38,4 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 - [Dismiss a copy I've ruled out](https://github.com/loserpoints/book-watch/issues/105)
 - [When it was listed, and sorting by newest](https://github.com/loserpoints/book-watch/issues/69)
 - [Remember which sellers I trust on condition](https://github.com/loserpoints/book-watch/issues/75)
-- [S47 · On Android, a listing opens in the eBay app](https://github.com/loserpoints/book-watch/issues/175)
+- [Drop the "$X over" amount, and make the limit easy to see on the price strip](https://github.com/loserpoints/book-watch/issues/200)
