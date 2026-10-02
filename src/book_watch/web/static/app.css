@@ -471,7 +471,11 @@ details.fold > summary {
 .copy-price { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
 .copy-tags { display: flex; gap: var(--space-1); flex-wrap: wrap; }
 .copy-listed { align-self: center; font-size: var(--text-xs); }
-.copy-sort { margin-bottom: var(--space-2); }
+.match-count { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); }
+.match-count p { margin: 0; }
+/* Cheapest · Newest (S62): two words, each a 44px target. */
+.copy-sort a, .copy-sort b { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--space-1); }
+.copy-sort b { color: var(--fg); }
 .copy-listing {
   color: var(--fg);
   font-size: var(--text-sm);

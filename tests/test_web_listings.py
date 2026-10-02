@@ -1457,7 +1457,17 @@ def test_the_order_rides_along_on_every_link_the_page_makes(book_client):
 
     page = client.get("/book/1?sort=newest").text
 
-    assert re.search(r'value="newest" checked', page)
+    assert re.search(r'<b aria-current="true">Newest</b>', page)
     assert 'href="/book/1?everywhere=1&amp;sort=newest"' in page
     assert 'href="/book/1?sort=newest&amp;refresh=1"' in page
-    assert 'hx-replace-url="/book/1"' in page
+    # Back to cheapest replaces the page rather than adding to the history.
+    assert '<a href="/book/1" data-replace>Cheapest</a>' in page
+
+
+def test_one_copy_offers_no_order_to_choose(book_client):
+    client = book_client(returning(THREE[0]))
+    add_book(client, "9780099448396", "Crash")
+
+    page = visible(client.get("/book/1").text)
+
+    assert "Newest" not in page

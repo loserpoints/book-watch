@@ -16,7 +16,7 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 - Each copy's condition, where it ships from when outside the US, "takes offers" when the seller accepts Best Offer, and its eBay listing title.
 - "new" on a copy that appeared since the book was last opened (see [matching](../rules/matching.md)).
 - When eBay first listed each copy, "listed 3w". A copy with no listing date shows no age.
-- A switch between cheapest first and newest first, when there is more than one copy.
+- "Cheapest · Newest" beside the match count, when there is more than one copy, with the chosen order in bold.
 - What the seller says the copy is: "goodwill_books says: Paperback · Vintage · 1995".
 - The seller's condition note, clamped to two lines.
 - A photo of each copy, with a count when there is more than one.

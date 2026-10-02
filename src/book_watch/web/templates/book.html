@@ -75,20 +75,23 @@
   </div>
   {% endif %}
 
-  {#- P4 -#}
-  <p class="meta match-count">{{ copies | length }} match{{ '' if copies | length == 1 else 'es' }}</p>
-
-  {#- Cheapest or newest first (S62). The order lives in the page address,
-      replaced rather than pushed, so back still leaves the book. -#}
-  {% if copy_rows | length > 1 or maybe_rows | length > 1 %}
-  {% set fetch = {"hx-target": "main", "hx-select": "main", "hx-swap": "outerHTML", "hx-trigger": "change"} %}
-  <div class="copy-sort">
-    {{ ui.switch("sort", [
-         ("cheapest", "Cheapest", dict(fetch, **{"hx-get": urls.cheapest, "hx-replace-url": urls.cheapest})),
-         ("newest", "Newest", dict(fetch, **{"hx-get": urls.newest, "hx-replace-url": urls.newest})),
-       ], "newest" if newest else "cheapest") }}
+  {#- P4, with the order beside it (S62): cheapest or newest first, as two
+      words rather than a switch, by Alan's choice; #217 reconciles the two.
+      Each is a 44px target, and the chosen one is plain text. The order
+      lives in the page address, replaced rather than pushed, so back still
+      leaves the book. -#}
+  <div class="match-count">
+    <p class="meta">{{ copies | length }} match{{ '' if copies | length == 1 else 'es' }}</p>
+    {% if copy_rows | length > 1 or maybe_rows | length > 1 %}
+    <p class="meta copy-sort">
+      {%- if newest -%}
+        <a href="{{ urls.cheapest }}" data-replace>Cheapest</a> · <b aria-current="true">Newest</b>
+      {%- else -%}
+        <b aria-current="true">Cheapest</b> · <a href="{{ urls.newest }}" data-replace>Newest</a>
+      {%- endif -%}
+    </p>
+    {% endif %}
   </div>
-  {% endif %}
 
   <ul class="ui-list copies">
     {% for c in copy_rows %}{{ ui.copy_row(c, dismiss=False) }}{% endfor %}
