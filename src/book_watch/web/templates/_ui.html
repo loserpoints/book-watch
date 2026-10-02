@@ -116,7 +116,8 @@
     {% if b.state == 'ok' and b.price_text %}
       <div class="book-row-price">
         {{ price(b.price_text, b.verdict, b.over_by, prefix="from ") }}
-        {{ b.strip }}
+        {#- One price is a point, not a shape, and draws no strip. -#}
+        {% if b.strip %}{{ b.strip }}{% endif %}
       </div>
     {% endif %}
   </div>
@@ -238,11 +239,16 @@
 
 {#- One tap between two ways in (principle 4). Radios under the hood, so the
     choice needs no JavaScript and submits with the form; the sheet shows the
-    matching fields with CSS :has(). -#}
+    matching fields with CSS :has().
+
+    An option may carry a third item, a dict of attributes for its radio: the
+    want list's switch fetches the list with htmx, and greys out an empty
+    side with `disabled`. -#}
 {% macro switch(name, options, selected) -%}
 <div class="switch" role="radiogroup">
-  {%- for value, label in options %}
-  <label class="switch-option"><input type="radio" name="{{ name }}" value="{{ value }}"{% if value == selected %} checked{% endif %}><span>{{ label }}</span></label>
+  {%- for option in options %}
+  {%- set value, label = option[0], option[1] %}
+  <label class="switch-option"><input type="radio" name="{{ name }}" value="{{ value }}"{% if value == selected %} checked{% endif %}{% if option | length > 2 %}{{ option[2] | xmlattr }}{% endif %}><span>{{ label }}</span></label>
   {%- endfor %}
 </div>
 {%- endmacro %}

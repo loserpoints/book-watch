@@ -15,13 +15,15 @@ The want list shows every book I'm watching and whether any copy is worth my att
 - "digging" while the app is working out which copies are this book. The row updates itself when that finishes. Tapping it explains.
 - "Throttled" when that work is waiting because the day's Open Library requests are used up. Tapping it explains.
 - A row's state when there is no price: Checking…, Couldn't check just now, Not checked yet, 2 maybes, or 0 listed.
-- How many books are on the list, and whether any need checking: "Update 2", or "All current".
+- A switch between all the books and those with a copy under their limit, with how many each holds: "All 12 · Under limit 3". "Under limit 0" is greyed out.
+- Whether any books need checking: "Update 2", or "All current".
 - Under those buttons, only when something is wrong with the daily check: "Daily check failed", "Daily check throttled" or "Daily check didn't run". Tapping it says when and why.
 - "Nothing on the list yet" when the list is empty.
 
 ## What you can do
 
 - Tap anywhere on a book's row to open its active listings. The trash, "digging" and "Throttled" keep their own taps.
+- Tap "Under limit" to see only the books whose price is green, and "All" to see every book. The choice stays through opening a book and going back, and opening the app shows all. Adding a book shows all.
 - Tap Update to check the books not checked in the last hour.
 - Tap Check all to check every book. It asks first when some were checked in the last hour, unless this device was told not to ask again.
 - Tap the trash icon to remove a book. It asks first.
@@ -31,5 +33,4 @@ The want list shows every book I'm watching and whether any copy is worth my att
 ## Open issues
 
 - [Reorder the want-list by recency, lowest price, or by hand](https://github.com/loserpoints/book-watch/issues/131)
-- [Filter the want-list to books with a copy under their limit](https://github.com/loserpoints/book-watch/issues/132)
 - [Drop the "$X over" amount, and make the limit easy to see on the price strip](https://github.com/loserpoints/book-watch/issues/200)

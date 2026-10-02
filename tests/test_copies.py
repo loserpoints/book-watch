@@ -1013,6 +1013,47 @@ def test_the_headline_carries_the_ceiling_verdict(database):
     assert lead.verdict == "under"
 
 
+def a_book_with_both_markets(connection, *, used, new, limit):
+    book = a_book(connection, "Stoner", "John Williams")
+    a_certain_copy(connection, book.work_id, "v1|1|0", price=used)
+    a_certain_copy(
+        connection, book.work_id, "v1|2|0", price=new, condition_id=BRAND_NEW
+    )
+    wantlist.set_ceiling(connection, book.id, limit, "USD")
+    connection.commit()
+    return wantlist.get(connection, book.id)
+
+
+def test_a_new_copy_under_the_limit_leads_over_used_copies_above_it(database):
+    """S60 (#132). A red used price must not hide a new copy you could buy,
+    and the morning email already reports it."""
+    book = a_book_with_both_markets(database, used="18.00", new="9.00", limit="10.00")
+
+    lead = glance_at(database, book).headline
+
+    assert lead.market.condition_class == "new"
+    assert lead.cheapest.amount == Decimal("9.00")
+    assert lead.verdict == "under"
+
+
+def test_used_still_leads_when_both_markets_have_a_copy_under_the_limit(database):
+    book = a_book_with_both_markets(database, used="9.50", new="4.00", limit="10.00")
+
+    lead = glance_at(database, book).headline
+
+    assert lead.market.condition_class == "used"
+    assert lead.verdict == "under"
+
+
+def test_used_still_leads_when_neither_market_is_under_the_limit(database):
+    book = a_book_with_both_markets(database, used="18.00", new="12.00", limit="10.00")
+
+    lead = glance_at(database, book).headline
+
+    assert lead.market.condition_class == "used"
+    assert lead.verdict == "over"
+
+
 def test_a_book_nobody_has_checked_is_told_apart_from_an_empty_one(database):
     """Two different facts. Saying the second about the first is a confident
     claim about a market we never asked about."""

@@ -44,6 +44,7 @@
   {{ ui.button("Add a book…", "primary", open="add-sheet") }} {{ ui.button("Check all…", open="check-sheet") }} {{ ui.fab("Add a book", "add-sheet") }}
 </div>
 <div class="controls-demo">{{ ui.switch("way-demo", [("title", "Title & author"), ("isbn", "ISBN")], "title") }}</div>
+<div class="controls-demo">{{ ui.switch("show-demo", [("all", "All 12"), ("under", "Under limit 3")], "under") }} {{ ui.switch("show-none-demo", [("all", "All 12"), ("under", "Under limit 0", {"disabled": ""})], "all") }}</div>
 <div class="controls-demo" style="display: grid">{{ ui.field("demo-title", "Title", "stoner") }}{{ ui.field("demo-author", "Author", optional=True, hint="Narrows a title search.") }}</div>
 
 {% call ui.sheet("add-sheet", "Add a book") %}

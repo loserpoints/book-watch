@@ -23,6 +23,7 @@ from collections.abc import Callable
 from contextlib import closing
 from datetime import UTC, datetime
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from fastapi import APIRouter, BackgroundTasks, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
@@ -104,6 +105,26 @@ def from_htmx(request: Request) -> bool:
     return request.headers.get("HX-Request") == "true"
 
 
+#: The page address for the want list narrowed to books with a copy under
+#: their limit (S60, #132). It lives in the address, not in the database or
+#: the device, so it survives opening a book and going back, and opening the
+#: app fresh shows everything.
+UNDER_LIMIT_URL = "/?show=under"
+
+
+def wants_under(request: Request) -> bool:
+    """Whether this request is for the list narrowed to books under a limit.
+
+    Asked by the address itself, or, for a piece htmx fetches from another
+    path, by the address of the page it came from. That is how deleting a
+    book keeps the filter on without the delete knowing about it.
+    """
+    if request.query_params.get("show") == "under":
+        return True
+    current = request.headers.get("HX-Current-URL", "")
+    return "show=under" in urlsplit(current).query.split("&")
+
+
 def build_router(
     connect: ConnectFn | None = None,
     catalog: LazyCatalog | None = None,
@@ -143,6 +164,18 @@ def build_router(
         """
         return {book.id: standing.glance(connection, book) for book in books}
 
+    def under_limit(glances: dict[int, object]) -> set[int]:
+        """The books whose row price is green: a copy at or under the limit.
+
+        The row's own verdict, so the filter can never disagree with what the
+        row shows. No limit, or a price without shipping, is never under.
+        """
+        return {
+            book_id
+            for book_id, glance in glances.items()
+            if glance.headline is not None and glance.headline.verdict == "under"
+        }
+
     def out_of_date(connection: sqlite3.Connection, books: list) -> int:
         """How many books Update would check: the same gate `check_all` uses,
         so the count on the button is what pressing it costs."""
@@ -157,12 +190,16 @@ def build_router(
         *,
         checking: int | None = None,
         template: str = "_list.html",
+        under: bool | None = None,
     ) -> HTMLResponse:
         with closing(open_database()) as connection:
             books = wantlist.all_books(connection)
             glances = at_a_glance(connection, books)
             stale = out_of_date(connection, books)
             morning = daily.status(connection, datetime.now(UTC))
+        under_ids = under_limit(glances)
+        if under is None:
+            under = wants_under(request)
         return templates.TemplateResponse(
             request,
             template,
@@ -177,6 +214,9 @@ def build_router(
                 "stale": stale,
                 "throttled": throttled(books),
                 "daily": morning,
+                "under_ids": under_ids,
+                # Nothing under a limit shows everything, never an empty list.
+                "filtering": under and bool(under_ids),
             },
         )
 
@@ -199,6 +239,7 @@ def build_router(
             stale = out_of_date(connection, books)
             morning = daily.status(connection, datetime.now(UTC))
             on_list = wantlist.listed_works(connection) if candidates else set()
+        under_ids = under_limit(glances)
         # Through htmx, only the sheet comes back, and it comes back as a
         # success: htmx does not swap an error status in, and the error is
         # the answer the sheet exists to show (S45).
@@ -212,6 +253,8 @@ def build_router(
                 "stale": stale,
                 "throttled": throttled(books),
                 "daily": morning,
+                "under_ids": under_ids,
+                "filtering": wants_under(request) and bool(under_ids),
                 # The book just added, which starts checking itself on load.
                 # Adding a book is an explicit act, so this is not an
                 # exception to "nothing sweeps on page load" — and it means a
@@ -248,7 +291,12 @@ def build_router(
             return render_page(request, checking=added.id)
         # Through htmx the list is swapped in place and the sheet emptied and
         # closed, so adding a book leaves nothing in the history (S45).
-        response = render_list(request, checking=added.id, template="_added.html")
+        # The whole list shows, filter off, so the new book is there to see:
+        # it has no price yet, and would otherwise vanish as it was added.
+        response = render_list(
+            request, checking=added.id, template="_added.html", under=False
+        )
+        response.headers["HX-Replace-Url"] = "/"
         response.headers["HX-Retarget"] = "#want-list"
         response.headers["HX-Reswap"] = "outerHTML"
         response.headers["HX-Trigger"] = "added"
@@ -257,6 +305,12 @@ def build_router(
     @router.get("/", response_class=HTMLResponse)
     def want_list(request: Request) -> HTMLResponse:
         return render_page(request)
+
+    @router.get("/books/list", response_class=HTMLResponse)
+    def the_list(request: Request) -> HTMLResponse:
+        """The list alone, for the switch between all books and those under a
+        limit. The switch replaces the page address, so it adds no history."""
+        return render_list(request)
 
     @router.post("/books", response_class=HTMLResponse)
     def add_book(
