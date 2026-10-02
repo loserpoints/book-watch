@@ -848,11 +848,13 @@ def test_a_price_with_no_strip_draws_nothing_in_its_place(client, three_books):
     assert "None" not in page
 
 
-def test_the_switch_counts_both_sides(client, three_books):
+def test_the_switch_names_both_sides_without_counts(client, three_books):
+    """Counts widened the switch onto a second line on a 412px phone, and the
+    width changed with the list, so the labels carry none."""
     page = client.get("/").text
 
-    assert "All 3" in page
-    assert "Under limit 1" in page
+    labels = re.findall(r'value="(?:all|under)"[^>]*><span[^>]*>([^<]*)</span>', page)
+    assert labels == ["All", "Under limit"]
     assert shown(page) == {"Stoner", "Crash", "Kindred"}
 
 
