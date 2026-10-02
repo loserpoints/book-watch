@@ -127,17 +127,20 @@ def test_green_dots_are_drawn_over_red_ones():
     assert order.count("strip-dot-under") == 2
 
 
-def test_the_limit_line_reaches_past_the_strip_but_not_the_labels():
-    svg = strips.range_strip([10, 20, 30], limit=15, height=16)
+def test_the_limit_line_is_centered_on_the_dots_and_clears_the_labels():
+    """Even above and below the dots, and 1px short of the labels' digits,
+    whose tops sit 3px under the strip's height at 10px type."""
+    for height in (16, 20):
+        svg = strips.range_strip([10, 20, 30], limit=15, height=height)
 
-    y1, y2 = (
-        float(v)
-        for v in re.search(
-            r'class="strip-limit"[^>]*y1="([-\d.]+)" y2="([-\d.]+)"', svg
-        ).groups()
-    )
-    label_y = min(
-        float(y) for y in re.findall(r'class="strip-label"[^>]*y="([\d.]+)"', svg)
-    )
-    assert y1 < 0
-    assert 16 < y2 < label_y - 7
+        y1, y2 = (
+            float(v)
+            for v in re.search(
+                r'class="strip-limit"[^>]*y1="([-\d.]+)" y2="([-\d.]+)"', svg
+            ).groups()
+        )
+        dot_y = float(
+            re.search(r'class="strip-dot[^"]*" cx="[\d.]+" cy="([\d.]+)"', svg).group(1)
+        )
+        assert dot_y - y1 == y2 - dot_y
+        assert y2 == height + 2

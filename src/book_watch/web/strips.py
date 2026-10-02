@@ -29,8 +29,10 @@ Number = Decimal | float | int
 #: Room at each end so a dot on the extreme is not cut in half.
 PAD = 5.0
 
-#: How far the limit's line reaches above a range strip.
-LIMIT_OVERHANG = 3
+#: How far the limit's line reaches past the strip's own height, above and
+#: below alike. Measured at 360px: the tops of the range labels' digits sit
+#: this far past the strip plus 1px, so the line stops 1px short of them.
+LIMIT_REACH = 2
 
 
 @dataclass(frozen=True, slots=True)
@@ -89,11 +91,12 @@ def range_strip(
         f'y1="{mid}" y2="{mid}"/>'
     ]
     if limit is not None and float(low) <= float(limit) <= float(high):
-        # Past the strip's own height at both ends, short of the labels below.
+        # Centered on the dots, as tall as the labels below allow.
         x = scale.x(limit)
+        reach = mid + LIMIT_REACH
         parts.append(
             f'<line class="strip-limit" x1="{x}" x2="{x}" '
-            f'y1="{-LIMIT_OVERHANG}" y2="{height + 1}"/>'
+            f'y1="{mid - reach}" y2="{mid + reach}"/>'
         )
     # Green last, so a copy you could buy is never hidden under one you
     # couldn't where dots crowd together.
