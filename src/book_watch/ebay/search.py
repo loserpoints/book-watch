@@ -59,6 +59,13 @@ Scope = Literal["us", "everywhere"]
 #: other scope is simply no filter, which returns both.
 _LOCATION_FILTER = {"us": "itemLocationCountry:US", "everywhere": None}
 
+#: Every search asks for fixed-price listings only (S59). An auction's `price`
+#: is its current bid, which is not a price anyone can pay, so it has no place
+#: beside a limit, a rank or an email. A listing that takes Best Offer is still
+#: fixed price, and comes back with `BEST_OFFER` in its `buyingOptions`.
+#: Collectibles will want auctions back (#144).
+_BUYING_FILTER = "buyingOptions:{FIXED_PRICE}"
+
 DEFAULT_LIMIT = 50
 
 #: Where the buyer is, so eBay can price calculated shipping (S43). Without
@@ -127,6 +134,14 @@ class Listing:
     shipping_cost: Money | None = None
     thumbnail_url: str | None = None
     listing_date: datetime | None = None
+    #: eBay's buying formats for this listing, such as `FIXED_PRICE` and
+    #: `BEST_OFFER`. Empty when eBay sent none, which is unknown, not "no".
+    buying_options: tuple[str, ...] = ()
+
+    @property
+    def takes_offers(self) -> bool:
+        """Whether the seller will consider an offer below the asking price."""
+        return "BEST_OFFER" in self.buying_options
 
     @property
     def landed_cost(self) -> Money | None:
@@ -220,8 +235,10 @@ class BrowseClient:
         params: dict[str, str | int] = {"limit": limit}
         params["gtin" if search_by == "gtin" else "q"] = term
         location = _LOCATION_FILTER[scope]
-        if location is not None:
-            params["filter"] = location
+        # eBay takes several filters as one comma-separated parameter.
+        params["filter"] = ",".join(
+            part for part in (_BUYING_FILTER, location) if part is not None
+        )
 
         try:
             response = self._client.get(
@@ -374,7 +391,21 @@ def _parse_listing(item: Any, index: int) -> Listing:
         thumbnail_url=_parse_thumbnail(item),
         listing_date=_parse_date(item.get("itemCreationDate")),
         located_in=_parse_country(item.get("itemLocation")),
+        buying_options=_parse_buying_options(item.get("buyingOptions")),
     )
+
+
+def _parse_buying_options(options: Any) -> tuple[str, ...]:
+    """eBay's buying formats, as a list of strings.
+
+    Confirmed against a real response (#211): `["FIXED_PRICE", "BEST_OFFER"]`
+    on a copy that takes offers, `["FIXED_PRICE"]` on one that doesn't.
+    Anything else is treated as not stated rather than refused, since it says
+    nothing about whether the copy can be bought.
+    """
+    if not isinstance(options, list):
+        return ()
+    return tuple(option for option in options if isinstance(option, str))
 
 
 def _parse_country(location: Any) -> str | None:

@@ -163,6 +163,7 @@ def sample_copies() -> list[dict]:
             "price_text": "$27",
             "verdict": "over",
             "over_by": "$15",
+            "takes_offers": True,
             "place": strips.rank_strip(used, 27.0),
             "condition": "Good",
             "seller": "oldpaperbacks",

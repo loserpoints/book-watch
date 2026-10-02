@@ -74,6 +74,7 @@ def copy_row(
         "abroad": copy.located_in
         if copy.located_in and copy.located_in != "US"
         else None,
+        "takes_offers": copy.takes_offers,
         # Delivered when it can be known; otherwise the asking
         # price, and the row says shipping is unknown rather than implying it.
         "price_text": money(delivered) if delivered else money(copy.price),

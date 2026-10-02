@@ -208,3 +208,7 @@ def test_the_add_button_sits_above_every_other_layer():
     fab = layers.pop(".fab", 0)
 
     assert all(z < fab for z in layers.values()), layers
+
+
+def test_the_design_page_shows_a_copy_that_takes_offers():
+    assert "takes offers" in design_page()

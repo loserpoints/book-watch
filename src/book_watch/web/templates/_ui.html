@@ -148,7 +148,7 @@
       {{- price(c.price_text ~ (' + shipping?' if c.shipping_unknown else ''), c.verdict, c.over_by) }}
       {%- if c.place_text %} <span class="meta">{{ c.place_text }}</span>{% else %} {{ c.place }}{% endif %}
     </div>
-    <div class="copy-tags">{% if c.new %}{{ tag('new', accent=True) }}{% endif %}{{ tag(c.condition, strong=True) }}{% if c.abroad %}{{ tag('ships from ' ~ c.abroad) }}{% endif %}</div>
+    <div class="copy-tags">{% if c.new %}{{ tag('new', accent=True) }}{% endif %}{{ tag(c.condition, strong=True) }}{% if c.abroad %}{{ tag('ships from ' ~ c.abroad) }}{% endif %}{% if c.takes_offers %}{{ tag('takes offers') }}{% endif %}</div>
     <a class="copy-listing" href="{{ c.url }}" rel="noopener noreferrer" target="_blank">{{ c.listing_title }}</a>
   </div>
   {%- if dismiss %}

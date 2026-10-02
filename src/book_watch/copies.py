@@ -49,6 +49,7 @@ SELECT copy.item_id,
        copy.thumbnail,
        copy.epid,
        copy.located_in,
+       copy.buying_options,
        copy.seen_at,
        copy.first_seen_at,
        copy.listed_at,
@@ -160,6 +161,9 @@ class Copy:
     #: is what keeps it from being new (see `is_new`).
     first_seen: datetime | None = None
     listed: datetime | None = None
+    #: Whether the listing takes Best Offer. False also when eBay hasn't said,
+    #: which is every copy until its first search since S59.
+    takes_offers: bool = False
 
     @property
     def condition_class(self) -> ConditionClass:
@@ -422,25 +426,30 @@ def _to_copy(row: sqlite3.Row, target: Target, entry: Entry) -> Copy:
         declared_publisher=row["declared_publisher"],
         declared_year=row["declared_year"],
         condition_note=row["condition_note"],
-        photos=_photos(row["photos"]),
+        photos=_strings(row["photos"]),
         located_in=row["located_in"],
         looked_at=row["asked_ebay"] is not None,
         first_seen=moment(row["first_seen_at"]),
         listed=moment(row["listed_at"]),
+        takes_offers="BEST_OFFER" in _strings(row["buying_options"]),
     )
 
 
-def _photos(raw: str | None) -> tuple[str, ...]:
-    """The stored JSON list, or nothing. A bad value is not worth a failed page."""
+def _strings(raw: str | None) -> tuple[str, ...]:
+    """A stored JSON list of strings, or nothing.
+
+    Photos and buying options are both kept this way. A bad value is not
+    worth a failed page.
+    """
     if not raw:
         return ()
     try:
-        urls = json.loads(raw)
+        values = json.loads(raw)
     except ValueError:
         return ()
-    if not isinstance(urls, list):
+    if not isinstance(values, list):
         return ()
-    return tuple(url for url in urls if isinstance(url, str))
+    return tuple(value for value in values if isinstance(value, str))
 
 
 def _amount(raw: str) -> Decimal:
