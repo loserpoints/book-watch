@@ -4,9 +4,9 @@ Both put prices on one horizontal scale, the way a dot plot does:
 
 - **The range strip** shows every asking price seen for a book,
   with the lowest and highest labeled under the ends in
-  whole dollars and the limit as a dashed guide. Every dot is the same
-  color: the cheapest is always the left end, so emphasizing it would say
-  nothing (S27).
+  whole dollars. Each dot is green at or under the limit and red over it,
+  with green drawn on top, and a blue line marks the limit when it falls
+  among the prices (S61).
 - **The rank strip** shows the copies of one kind listed now,
   with this copy as the large dot. It replaces "2nd of 3",
   which did not say it was about price.
@@ -28,6 +28,9 @@ Number = Decimal | float | int
 
 #: Room at each end so a dot on the extreme is not cut in half.
 PAD = 5.0
+
+#: How far the limit's line reaches above a range strip.
+LIMIT_OVERHANG = 3
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,7 +75,7 @@ def range_strip(
     The scale spans the prices alone, so a limit far from them never squeezes
     the dots together (S61, #200). A dot is green at or under the limit and
     red over it, like a price; with no limit it keeps the accent color. A
-    dashed line marks the limit only when it falls among the prices: with no
+    blue line marks the limit only when it falls among the prices: with no
     line, a ✓ beside the price means every copy is under, and none means every
     copy is over. That reading needs no color.
     """
@@ -86,13 +89,20 @@ def range_strip(
         f'y1="{mid}" y2="{mid}"/>'
     ]
     if limit is not None and float(low) <= float(limit) <= float(high):
+        # Past the strip's own height at both ends, short of the labels below.
         x = scale.x(limit)
         parts.append(
-            f'<line class="strip-limit" x1="{x}" x2="{x}" y1="2" y2="{height - 2}"/>'
+            f'<line class="strip-limit" x1="{x}" x2="{x}" '
+            f'y1="{-LIMIT_OVERHANG}" y2="{height + 1}"/>'
         )
+    # Green last, so a copy you could buy is never hidden under one you
+    # couldn't where dots crowd together.
+    in_order = sorted(
+        seen, key=lambda v: limit is not None and float(v) <= float(limit)
+    )
     parts += [
         f'<circle class="{_dot_class(v, limit)}" cx="{scale.x(v)}" cy="{mid}" r="2.6"/>'
-        for v in seen
+        for v in in_order
     ]
     total = height
     if labeled:

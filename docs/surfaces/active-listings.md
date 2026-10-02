@@ -9,7 +9,7 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 - The book's cover, title, author and the ISBN it was added by, with "digging" while the app is still working out which copies are this book.
 - A warning when the book was added as text rather than an ISBN, since that search finds worse matches.
 - Three chips: the book's limit, the scope (US or Everywhere) and how long ago it was checked.
-- One line per market, "3 used listed now, 12 seen", with a strip of every asking price seen. Each dot is green at or under the limit and red over it, and a dashed line marks the limit when it falls among the prices (see [pricing](../rules/pricing.md)).
+- One line per market, "3 used listed now, 12 seen", with a strip of every asking price seen. Each dot is green at or under the limit and red over it, and a blue line marks the limit when it falls among the prices (see [pricing](../rules/pricing.md)).
 - How many copies match, then one row per certain copy (see [matching](../rules/matching.md)).
 - Each copy's delivered price, green with ✓ when under the limit, or red when over. A copy with unknown shipping shows its price and "+ shipping?".
 - Where each copy sits among the others of its kind, as a strip, or why it can't be placed.

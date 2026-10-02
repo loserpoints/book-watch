@@ -339,11 +339,11 @@ details.digging > summary {
 .price-over { color: var(--over); }
 .price-plain { color: var(--fg); }
 
-/* Strips: dots on one scale, the limit as a dashed guide. */
+/* Strips: dots on one scale, the limit as a line among them. */
 .strip { display: block; overflow: visible; }
 .strip-axis { stroke: var(--line); }
-/* The limit (S61), dashed, drawn only when it falls among the prices. */
-.strip-limit { stroke: var(--fg); stroke-dasharray: 2 2; opacity: 0.7; }
+/* The limit (S61), drawn only when it falls among the prices. */
+.strip-limit { stroke: var(--accent); stroke-width: 2; }
 .strip-dot { fill: var(--accent); }
 .strip-dot-under { fill: var(--under); }
 .strip-dot-over { fill: var(--over); }
