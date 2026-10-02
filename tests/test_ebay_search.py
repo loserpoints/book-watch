@@ -477,3 +477,27 @@ def test_without_a_ship_to_zip_the_app_searches_and_says_shipping_is_off(
 
     assert RecordingBrowse.built == [None]
     assert "Shipping for calculated listings is off" in caplog.text
+
+
+def test_a_raw_search_keeps_fields_the_app_does_not_read():
+    """`search_raw` is the same request as `search`, with nothing dropped."""
+    seen = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return search_response(a_summary(somethingNew=["kept"]))
+
+    with build_browse(handler) as browse:
+        payload = browse.search_raw("Crash Ballard")
+        browse.search("Crash Ballard")
+
+    assert payload["itemSummaries"][0]["somethingNew"] == ["kept"]
+    assert seen[0].url == seen[1].url
+
+
+def test_a_raw_search_refuses_what_a_search_refuses():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(500, text="down")
+
+    with build_browse(handler) as browse, pytest.raises(EbaySearchError):
+        browse.search_raw("Crash Ballard")

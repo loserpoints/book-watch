@@ -17,6 +17,7 @@ Run it directly to see what comes back:
 
 from __future__ import annotations
 
+import json
 import sys
 from dataclasses import dataclass
 from datetime import datetime
@@ -184,6 +185,30 @@ class BrowseClient:
         doing it in the client would bake one use case's preference into the
         layer both modes share.
         """
+        return _parse_listings(
+            self._get(query, limit=limit, search_by=search_by, scope=scope)
+        )
+
+    def search_raw(
+        self,
+        query: str,
+        *,
+        limit: int = DEFAULT_LIMIT,
+        search_by: SearchBy = "keyword",
+        scope: Scope = "us",
+    ) -> dict[str, Any]:
+        """The same request as `search`, with eBay's answer left as it came.
+
+        For seeing a field the app does not read yet, and for capturing a real
+        response as a test fixture.
+        """
+        return _decode_json(
+            self._get(query, limit=limit, search_by=search_by, scope=scope)
+        )
+
+    def _get(
+        self, query: str, *, limit: int, search_by: SearchBy, scope: Scope
+    ) -> httpx.Response:
         term = query.strip()
         if not term:
             raise EbaySearchError("A search needs a non-empty query.")
@@ -210,7 +235,7 @@ class BrowseClient:
         if response.status_code != httpx.codes.OK:
             raise EbaySearchError(_describe_failure(response))
 
-        return _parse_listings(response)
+        return response
 
     def _headers(self) -> dict[str, str]:
         headers = {
@@ -264,6 +289,23 @@ def search_listings(
         BrowseClient(tokens, ship_to_zip=ship_to_zip) as browse,
     ):
         return browse.search(query, limit=limit, search_by=search_by)
+
+
+def search_listings_raw(
+    query: str, *, search_by: SearchBy = "keyword"
+) -> dict[str, Any]:
+    """Search eBay for `query` once, the way the app does, and return the JSON.
+
+    The app's own search drops every field it does not read. This keeps them,
+    so a field can be checked against a real answer before it is built on.
+    """
+    credentials = load_ebay_credentials()
+    ship_to_zip = load_ship_to_zip()
+    with (
+        EbayTokenProvider(credentials) as tokens,
+        BrowseClient(tokens, ship_to_zip=ship_to_zip) as browse,
+    ):
+        return browse.search_raw(query, search_by=search_by)
 
 
 class Results(list[Listing]):
@@ -501,16 +543,31 @@ def _excerpt(response: httpx.Response, limit: int = 200) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Print what eBay returns for a search term. One request."""
+    """Print what eBay returns for a search term. One request.
+
+    `--raw` prints eBay's JSON as it came, every field included.
+    """
     args = list(sys.argv[1:] if argv is None else argv)
     search_by: SearchBy = "gtin" if "--gtin" in args else "keyword"
     terms = [arg for arg in args if not arg.startswith("--")]
     if not terms:
         print(
-            "usage: python -m book_watch.ebay.search <search term> [--gtin]",
+            "usage: python -m book_watch.ebay.search <search term> [--gtin] [--raw]",
             file=sys.stderr,
         )
         return 2
+
+    if "--raw" in args:
+        try:
+            payload = search_listings_raw(" ".join(terms), search_by=search_by)
+        except MissingCredentialError as exc:
+            print(f"Not configured: {exc}", file=sys.stderr)
+            return 2
+        except (EbayAuthError, EbaySearchError) as exc:
+            print(f"Search failed: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
+        return 0
 
     try:
         listings = search_listings(" ".join(terms), search_by=search_by)

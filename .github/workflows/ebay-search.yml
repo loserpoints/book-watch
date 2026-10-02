@@ -1,0 +1,47 @@
+name: Search eBay once
+
+# Runs one eBay search on the Fly machine, the way the app searches (US
+# sellers, 50 results, shipping priced to SHIP_TO_ZIP), and prints what came
+# back. The eBay keys live only on Fly, so this is how a field can be checked
+# against a real answer from a browser. One eBay request per run.
+#
+# Raw prints eBay's JSON with every field, including ones the app drops.
+#
+# Requires the FLY_API_TOKEN repository secret that Deploy uses.
+on:
+  workflow_dispatch:
+    inputs:
+      term:
+        description: "What to search for, as the app would: a title and author, or an ISBN."
+        required: true
+      raw:
+        description: "Print eBay's JSON as it came, every field included."
+        type: boolean
+        default: true
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Search
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          TERM_IN: ${{ inputs.term }}
+          RAW: ${{ inputs.raw }}
+        run: |
+          # The term becomes part of a command on the machine, so only plain
+          # characters get through. It goes unquoted: the search joins its
+          # words back together, however the machine splits them.
+          if ! [[ "${TERM_IN}" =~ ^[A-Za-z0-9\ .,:-]+$ ]]; then
+            echo "Use letters, digits, spaces and . , : - only." >&2
+            exit 2
+          fi
+          app=$(sed -n 's/^app = "\(.*\)"$/\1/p' fly.toml)
+          flag=""
+          if [ "${RAW}" = "true" ]; then flag="--raw"; fi
+          flyctl ssh console --app "${app}" \
+            -C "/app/.venv/bin/python -m book_watch.ebay.search ${flag} ${TERM_IN}"
