@@ -13,16 +13,18 @@
       hour and asks first, offering the cheaper Update as the alternative. -#}
   {% set total = books | length %}
   {% set fresh = total - stale %}
-  {#- All, or only the books whose price is green (S60). The counts say what
-      each side holds, so the hidden count needs no sentence of its own. The
-      choice lives in the page address, replaced rather than pushed, so it
-      survives going back from a book and adds nothing to the history. -#}
+  {#- All, or only the books whose price is green (S60). No counts: they
+      widened the switch until it pushed Update and Check all onto a second
+      line, and the width then changed with the list. "Under limit" greys out
+      when nothing qualifies. The choice lives in the page address, replaced
+      rather than pushed, so it survives going back from a book and adds
+      nothing to the history. -#}
   {% set under = under_ids | length %}
   {% set fetch = {"hx-target": "#want-list", "hx-swap": "outerHTML", "hx-trigger": "change"} %}
   <div class="list-bar">
     {{ ui.switch("show", [
-         ("all", "All " ~ total, dict(fetch, **{"hx-get": "/books/list", "hx-replace-url": "/"})),
-         ("under", "Under limit " ~ under, dict(fetch, **{"hx-get": "/books/list?show=under", "hx-replace-url": "/?show=under", "disabled": None if under else ""})),
+         ("all", "All", dict(fetch, **{"hx-get": "/books/list", "hx-replace-url": "/"})),
+         ("under", "Under limit", dict(fetch, **{"hx-get": "/books/list?show=under", "hx-replace-url": "/?show=under", "disabled": None if under else ""})),
        ], "under" if filtering else "all") }}
     <span class="list-bar-actions">
       <button type="button" class="btn btn-plain"
