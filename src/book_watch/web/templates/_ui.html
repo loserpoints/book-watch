@@ -248,7 +248,7 @@
 <div class="switch" role="radiogroup">
   {%- for option in options %}
   {%- set value, label = option[0], option[1] %}
-  <label class="switch-option"><input type="radio" name="{{ name }}" value="{{ value }}"{% if value == selected %} checked{% endif %}{% if option | length > 2 %}{{ option[2] | xmlattr }}{% endif %}><span>{{ label }}</span></label>
+  <label class="switch-option"><input type="radio" name="{{ name }}" value="{{ value }}"{% if value == selected %} checked{% endif %}{% if option | length > 2 %}{{ option[2] | xmlattr }}{% endif %}><span data-label="{{ label }}">{{ label }}</span></label>
   {%- endfor %}
 </div>
 {%- endmacro %}

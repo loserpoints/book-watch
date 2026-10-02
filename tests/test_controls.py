@@ -212,3 +212,18 @@ def test_the_add_button_sits_above_every_other_layer():
 
 def test_the_design_page_shows_a_copy_that_takes_offers():
     assert "takes offers" in design_page()
+
+
+def test_every_switch_option_keeps_room_for_its_label_in_bold():
+    """Choosing a side must not change the switch's width: on the want list
+    that reflowed Update and Check all onto another line (S60). Each label is
+    carried in `data-label`, which the stylesheet sets in bold, unseen."""
+    options = re.findall(
+        r'<label class="switch-option">.*?<span([^>]*)>([^<]*)</span>', design_page()
+    )
+
+    assert options
+    for attributes, label in options:
+        assert f'data-label="{label}"' in attributes
+    css = (Path(assets.STATIC_DIR) / "app.css").read_text()
+    assert re.search(r"\.switch-option span::after\s*\{[^}]*attr\(data-label\)", css)
