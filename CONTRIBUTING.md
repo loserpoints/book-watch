@@ -3,8 +3,9 @@
 ## Building
 
 - Check a fact against the thing itself before building on it: the service's documentation, a real response, or the browser's own tools. Memory and old notes go stale.
+- When a service's documentation confirms a behavior, name the field that carries it, and check the code reads that field. S39 relied on eBay keeping a relisted copy's date and read the field that doesn't keep it.
 - When a session can't reach a service's documentation, ask Alan to allow its domain and its subdomains, such as `fly.io` and `*.fly.io`, rather than building on memory.
-- eBay's developer and help pages refuse a session's requests whatever the network allows. Ask Alan to read the page.
+- eBay's developer and help pages refuse a session's requests whatever the network allows. Ask Alan to read the page, and give him the endpoint and field names from the code, never a page title from memory.
 - Measure before deciding when a choice turns on a number, and measure again when the data grows.
 - Before inventing a proxy for a signal, check whether the code already has the signal and throws it away.
 - Decide a design by looking at it on real screens at phone width, and agree beforehand how many rounds a layout gets.
@@ -21,6 +22,8 @@
 - `scripts/check.sh` is the one definition of passing: lint, formatting, the docs check and the tests. CI runs it on every pull request.
 - Read a check's exit status. Piping it through another command hides a failure.
 - Run every change to a screen in a real browser at 360px wide, in both themes, and look at it. Tests miss layout, fonts and taps.
+- Test a layout fix in the case that broke: the phone width and the data where it happened. A fix that only measures what changed can miss that the layout no longer fits.
+- This environment holds real eBay keys. Run the app locally with outbound requests cut off, or a book page that opens can search eBay and examine every copy it finds.
 - Tests check what a reader sees, not the markup that carries it, so they survive a redesign.
 - A check proves nothing until it has been seen to fail. Break the code on purpose, on a committed tree, and confirm the break applied.
 - Reset process-wide state between tests. A test that passes only because another ran first proves nothing.

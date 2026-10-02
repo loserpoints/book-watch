@@ -10,6 +10,7 @@
 - Each daily check logs one line, `Daily check: ok, 6 books, 0 failed, 0 Open Library requests, 1 emailed`, readable in Fly's log viewer. "Email is off" before it means `RESEND_API_KEY` or `ALERT_EMAIL_TO` is not set on Fly.
 - "Shipping for calculated listings is off" in Fly's logs means `SHIP_TO_ZIP` is not set, so copies with calculated shipping show "+ shipping?".
 - After setting or changing the Resend key, run Actions → Send a test email. It sends one email from the live app with its real settings, or fails with the reason.
+- To see exactly what eBay sends for a search, field by field, run Actions → Search eBay once with a title and author or an ISBN. It makes one search on the Fly machine, the way the app does, and prints eBay's JSON in the run's log.
 
 ## Roll back
 

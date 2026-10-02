@@ -42,6 +42,10 @@ Choose the next milestone from the open issues by one order of priority, and set
 - Effort is small, medium or large, standing in for tokens spent. It grows with unknowns to measure, screens touched, rounds of review in a browser and new external calls.
 - A recurring cost is said separately, whatever the effort.
 
+### Issues
+
+- Before closing an issue as done or stale, check whether an open pull request is set to close it, such as a milestone's close waiting on validation.
+
 ### Outcome
 
 - The goal can be checked on the live app within a few days. When it waits on an outside event, a slice adds a way to trigger it on demand.
