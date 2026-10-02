@@ -785,3 +785,138 @@ def test_without_htmx_adding_still_answers_with_the_whole_page(client):
     assert response.status_code == 200
     assert "<h1>Want list</h1>" in response.text
     assert "HX-Retarget" not in response.headers
+
+
+# --- under the limit (S60) ---------------------------------------------------
+
+
+def priced(verdict):
+    """What `standing.glance` says of a book whose cheapest copy is `verdict`,
+    or of a book never checked when `verdict` is None."""
+    from datetime import UTC, datetime
+    from decimal import Decimal
+
+    from book_watch.ebay.search import Money
+    from book_watch.standing import Glance, Headline, Market
+
+    if verdict is None:
+        return Glance(checked=None, listed=0, uncertain=0, headline=None)
+    price = Money(Decimal("9.00"), "USD")
+    return Glance(
+        checked=datetime.now(UTC),
+        listed=1,
+        uncertain=0,
+        headline=Headline(
+            market=Market("used", listed=1, seen=1, low=price, high=price),
+            cheapest=price,
+            verdict=verdict,
+        ),
+    )
+
+
+@pytest.fixture
+def three_books(client, monkeypatch):
+    """Stoner under its limit, Crash over it, and Kindred with no limit."""
+    from book_watch import standing, wantlist
+
+    verdicts = {}
+    with closing(client.app.state.connect()) as connection:
+        for title, verdict in (
+            ("Stoner", "under"),
+            ("Crash", "over"),
+            ("Kindred", "no limit"),
+        ):
+            book = wantlist.add_identified(connection, title=title)
+            verdicts[book.id] = verdict
+        connection.commit()
+    monkeypatch.setattr(
+        standing, "glance", lambda connection, book, **_: priced(verdicts.get(book.id))
+    )
+    return verdicts
+
+
+def shown(page):
+    return {title for title in ("Stoner", "Crash", "Kindred") if title in page}
+
+
+def test_a_price_with_no_strip_draws_nothing_in_its_place(client, three_books):
+    """A market with one price ever seen has no strip. The row printed the
+    word "None" there, which S60 made likelier by letting new copies lead."""
+    page = client.get("/").text
+
+    assert "from $9" in page
+    assert "None" not in page
+
+
+def test_the_switch_counts_both_sides(client, three_books):
+    page = client.get("/").text
+
+    assert "All 3" in page
+    assert "Under limit 1" in page
+    assert shown(page) == {"Stoner", "Crash", "Kindred"}
+
+
+def test_under_limit_shows_only_the_books_with_a_copy_under_their_limit(
+    client, three_books
+):
+    page = client.get("/?show=under").text
+
+    assert shown(page) == {"Stoner"}
+    assert re.search(r'value="under" checked', page)
+
+
+def test_the_switch_fetches_the_list_without_adding_history(client, three_books):
+    page = client.get("/books/list?show=under").text
+
+    assert shown(page) == {"Stoner"}
+    assert 'hx-replace-url="/?show=under"' in page
+    assert "hx-push-url" not in page
+
+
+def test_with_nothing_under_a_limit_the_switch_is_greyed_and_all_shows(
+    client, monkeypatch, three_books
+):
+    from book_watch import standing
+
+    monkeypatch.setattr(
+        standing, "glance", lambda connection, book, **_: priced("over")
+    )
+
+    page = client.get("/?show=under").text
+
+    assert shown(page) == {"Stoner", "Crash", "Kindred"}
+    under = re.search(r'<input[^>]*value="under"[^>]*>', page).group(0)
+    assert "disabled" in under
+    assert "checked" not in under
+
+
+def test_with_a_book_under_its_limit_the_switch_is_not_greyed(client, three_books):
+    page = client.get("/").text
+
+    under = re.search(r'<input[^>]*value="under"[^>]*>', page).group(0)
+    assert "disabled" not in under
+
+
+def test_deleting_a_book_keeps_the_filter_on(client, three_books):
+    crash = next(i for i, v in three_books.items() if v == "over")
+
+    page = client.delete(
+        f"/books/{crash}",
+        headers={"HX-Request": "true", "HX-Current-URL": "http://x/?show=under"},
+    ).text
+
+    assert shown(page) == {"Stoner"}
+
+
+def test_adding_a_book_shows_the_whole_list_with_the_new_book(
+    client, catalog, three_books
+):
+    response = client.post(
+        "/books",
+        data={"isbn": "9780099448396", "title": "", "override": ""},
+        headers={"HX-Request": "true", "HX-Current-URL": "http://x/?show=under"},
+    )
+
+    assert response.headers["HX-Replace-Url"] == "/"
+    assert {"Stoner", "Crash", "Kindred"} <= shown(response.text)
+    assert 'href="/book/4"' in response.text
