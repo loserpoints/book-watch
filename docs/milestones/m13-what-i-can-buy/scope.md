@@ -2,11 +2,12 @@
 
 ## Goal
 
-The want list can show only the books with a copy under their limit, the limit stands out on every price strip, and each copy says when it was listed and whether it takes offers.
+Searches find fixed-price copies only, and a copy that takes offers says so; the want list can show only the books with a copy under their limit, and a new copy under the limit leads its row; every price strip colors each copy against the limit; and each copy says when it was first listed, newest first on request, with a relisted copy never counted as new.
 
 ## Jobs advanced
 
 - [J2 · Narrow the pile to the few worth my attention](../../jobs.md#j2--narrow-the-pile-to-the-few-worth-my-attention)
+- [J4 · Tell me when a copy appears](../../jobs.md#j4--tell-me-when-a-copy-appears)
 
 ## Slices
 
