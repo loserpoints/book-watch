@@ -37,7 +37,7 @@ These rules decide what a copy costs, whether it is under a book's limit, and wh
 ### Order
 
 - The want-list shows each book's cheapest certain copy in its leading market. A market with a copy under the limit leads; otherwise used leads when it has copies listed; otherwise new.
-- Copies sort by delivered price within their tier.
+- Copies sort by delivered price within their tier, or newest first when asked, by the date eBay first listed them (see [matching](matching.md#what-is-new)). Newest first puts copies with no listing date last.
 - Copies without a delivered price sort below every copy with one, by their price alone.
 
 ## Open issues

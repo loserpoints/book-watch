@@ -42,6 +42,7 @@ These rules decide which eBay listings are copies of the book being watched, and
 - Opening a book records a visit. Opening it again within 30 minutes is the same visit.
 - On a book's page, a copy is new when it was first seen after the previous visit began and eBay listed it no more than a day before that.
 - On the want list, the count is of copies certainly this book that are new since the latest visit.
+- A copy's listing date is the date eBay first listed it, which eBay keeps when an item is relisted (`itemOriginDate`).
 - A relisted copy gets a new item id and keeps its original listing date, so it is not new.
 - The day's margin covers eBay's search showing a listing after it was listed. A copy relisted within a day of first being listed shows as new.
 - A copy with no listing date is new when it was first seen after the visit.

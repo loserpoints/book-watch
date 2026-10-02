@@ -42,15 +42,14 @@
     its two states (principle 4); checked re-runs the search, ignoring the
     hour on purpose — a button that did nothing for fifty-nine minutes would
     be worse than no button. -#}
-{% set here = '?everywhere=1' if scope == 'everywhere' else '' %}
 <div class="chips">
   {{ ui.chip("Limit", ceiling_text or "none", href="#limit", icon="✎", open="limit-sheet") }}
   {%- if scope == 'everywhere' %}
-    {{ ui.chip("Everywhere", href="/book/%d" % book.id, icon="⇄", replace=True) }}
+    {{ ui.chip("Everywhere", href=urls.us, icon="⇄", replace=True) }}
   {%- else %}
-    {{ ui.chip("US", href="/book/%d?everywhere=1" % book.id, icon="⇄", replace=True) }}
+    {{ ui.chip("US", href=urls.everywhere, icon="⇄", replace=True) }}
   {%- endif %}
-  {{ ui.chip("Checked", checked | since, href="/book/%d%s%srefresh=1" % (book.id, here, '&' if here else '?'), icon="↻", replace=True) }}
+  {{ ui.chip("Checked", checked | since, href=urls.refresh, icon="↻", replace=True) }}
 </div>
 
 {% if not copies and not uncertain %}
@@ -61,7 +60,7 @@
       {#- The empty US list is the whole reason the scope chip exists, so it
           says what to do next rather than leaving a blank page. -#}
       Nothing listed in the US right now.
-      <a href="/book/{{ book.id }}?everywhere=1" data-replace>Look everywhere</a> —
+      <a href="{{ urls.everywhere }}" data-replace>Look everywhere</a> —
       an overseas copy takes longer and may cost more to land.
     {% endif %}
   </p>
@@ -76,8 +75,23 @@
   </div>
   {% endif %}
 
-  {#- P4 -#}
-  <p class="meta match-count">{{ copies | length }} match{{ '' if copies | length == 1 else 'es' }}</p>
+  {#- P4, with the order beside it (S62): cheapest or newest first, as two
+      words rather than a switch, by Alan's choice; #217 reconciles the two.
+      Each is a 44px target, and the chosen one is plain text. The order
+      lives in the page address, replaced rather than pushed, so back still
+      leaves the book. -#}
+  <div class="match-count">
+    <p class="meta">{{ copies | length }} match{{ '' if copies | length == 1 else 'es' }}</p>
+    {% if copy_rows | length > 1 or maybe_rows | length > 1 %}
+    <p class="meta copy-sort">
+      {%- if newest -%}
+        <a href="{{ urls.cheapest }}" data-replace>Cheapest</a> · <b aria-current="true">Newest</b>
+      {%- else -%}
+        <b aria-current="true">Cheapest</b> · <a href="{{ urls.newest }}" data-replace>Newest</a>
+      {%- endif -%}
+    </p>
+    {% endif %}
+  </div>
 
   <ul class="ui-list copies">
     {% for c in copy_rows %}{{ ui.copy_row(c, dismiss=False) }}{% endfor %}
