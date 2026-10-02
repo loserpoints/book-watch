@@ -15,6 +15,8 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 - Where each copy sits among the others of its kind, as a strip, or why it can't be placed.
 - Each copy's condition, where it ships from when outside the US, "takes offers" when the seller accepts Best Offer, and its eBay listing title.
 - "new" on a copy that appeared since the book was last opened (see [matching](../rules/matching.md)).
+- When eBay first listed each copy, "listed 3w". A copy with no listing date shows no age.
+- A switch between cheapest first and newest first, when there is more than one copy.
 - What the seller says the copy is: "goodwill_books says: Paperback · Vintage · 1995".
 - The seller's condition note, clamped to two lines.
 - A photo of each copy, with a count when there is more than one.
@@ -26,6 +28,7 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 - Tap the limit chip to set or clear the book's limit.
 - Tap the scope chip to switch between US sellers and everywhere.
 - Tap the checked chip to search eBay again.
+- Tap Newest to see the latest listings first, and Cheapest to go back. The order stays through checking again, changing scope, going back and reloading. Opening a book shows cheapest first.
 - Tap a copy's photo to see every photo, swiping between them.
 - Tap a condition note to read all of it, and tap again to collapse it.
 - Tap a listing title to open it on eBay.
@@ -36,5 +39,4 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 ## Open issues
 
 - [Dismiss a copy I've ruled out](https://github.com/loserpoints/book-watch/issues/105)
-- [When it was listed, and sorting by newest](https://github.com/loserpoints/book-watch/issues/69)
 - [Remember which sellers I trust on condition](https://github.com/loserpoints/book-watch/issues/75)

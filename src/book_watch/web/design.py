@@ -146,6 +146,7 @@ def sample_copies() -> list[dict]:
             "place": strips.rank_strip(used, 10.49),
             "condition": "Good",
             "new": True,
+            "listed": "2d",
             "listing_title": (
                 "Crash by J. G. Ballard (1995, Vintage paperback) good reading copy"
             ),
@@ -158,6 +159,7 @@ def sample_copies() -> list[dict]:
             "place": strips.rank_strip(used, 12.0),
             "condition": "Very Good",
             "abroad": "GB",
+            "listed": "3w",
             "seller": "thriftbooks",
             "listing_title": "CRASH J.G. Ballard Vintage International PB very good",
         },
@@ -166,6 +168,7 @@ def sample_copies() -> list[dict]:
             "price_text": "$27",
             "verdict": "over",
             "takes_offers": True,
+            "listed": "5mo",
             "place": strips.rank_strip(used, 27.0),
             "condition": "Good",
             "seller": "oldpaperbacks",
@@ -178,6 +181,7 @@ def sample_copies() -> list[dict]:
             "price_text": "$19",
             "verdict": "over",
             "place_text": "only new listing",
+            "listed": "1y",
             "condition": "Brand New",
             "seller": "bookdepot",
             "listing_title": "Crash: A Novel by J. G. Ballard, New Paperback",

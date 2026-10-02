@@ -19,6 +19,7 @@ from book_watch.copies import Copy, Verdict
 from book_watch.ebay.search import Money
 from book_watch.standing import Market, Standing
 from book_watch.web import strips
+from book_watch.web.filters import since
 
 SYMBOLS = {"USD": "$", "GBP": "£", "EUR": "€"}
 
@@ -75,6 +76,9 @@ def copy_row(
         if copy.located_in and copy.located_in != "US"
         else None,
         "takes_offers": copy.takes_offers,
+        # When eBay first listed it (S62), kept through a relist. No date
+        # means no age, never an age of zero.
+        "listed": since(copy.listed) if copy.listed else None,
         # Delivered when it can be known; otherwise the asking
         # price, and the row says shipping is unknown rather than implying it.
         "price_text": money(delivered) if delivered else money(copy.price),

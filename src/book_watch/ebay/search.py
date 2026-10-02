@@ -389,7 +389,7 @@ def _parse_listing(item: Any, index: int) -> Listing:
         seller=_parse_seller(item.get("seller")),
         shipping_cost=_parse_shipping(item.get("shippingOptions"), index),
         thumbnail_url=_parse_thumbnail(item),
-        listing_date=_parse_date(item.get("itemCreationDate")),
+        listing_date=_listing_date(item),
         located_in=_parse_country(item.get("itemLocation")),
         buying_options=_parse_buying_options(item.get("buyingOptions")),
     )
@@ -481,6 +481,20 @@ def _parse_thumbnail(item: dict[str, Any]) -> str | None:
                 if url:
                     return url
     return None
+
+
+def _listing_date(item: dict[str, Any]) -> datetime | None:
+    """When the copy was first listed, kept through a relist (S62, #69).
+
+    eBay's descriptions: `itemOriginDate` is "when the listing was first made
+    available. This date will be retained if an item is relisted";
+    `itemCreationDate` is when this listing was created, so a relist's own
+    date. The app read the second until S62, which let a relist count as new.
+    The second stands in only when the first is missing or unreadable.
+    """
+    return _parse_date(item.get("itemOriginDate")) or _parse_date(
+        item.get("itemCreationDate")
+    )
 
 
 def _parse_date(raw: Any) -> datetime | None:

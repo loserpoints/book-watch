@@ -48,11 +48,26 @@ CEILING_PATH = "/book/{book_id}/ceiling"
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
 
-def _book_url(book_id: int, *, everywhere: bool, limit: int) -> str:
-    """A book's page, in the scope it was viewed in, and without `refresh`."""
+def _book_url(
+    book_id: int,
+    *,
+    everywhere: bool,
+    limit: int = DEFAULT_LIMIT,
+    newest: bool = False,
+    refresh: bool = False,
+) -> str:
+    """A book's page, in the scope and order it was viewed in.
+
+    The order rides along on every link the page makes, so changing scope or
+    checking again keeps it (S62). Opening a book fresh shows cheapest first.
+    """
     query = [("everywhere", "1")] if everywhere else []
     if limit != DEFAULT_LIMIT:
         query.append(("limit", str(limit)))
+    if newest:
+        query.append(("sort", "newest"))
+    if refresh:
+        query.append(("refresh", "1"))
     return f"/book/{book_id}" + ("?" + urlencode(query) if query else "")
 
 
@@ -144,6 +159,7 @@ def build_router(
         limit: int = Query(DEFAULT_LIMIT, ge=1, le=MAX_LIMIT),
         refresh: int = 0,
         everywhere: int = 0,
+        sort: str = "",
     ) -> HTMLResponse:
         """What is for sale for one book, graded by how sure we are.
 
@@ -156,6 +172,7 @@ def build_router(
         # visit searched for would be a setting wearing a link's clothes, and
         # settings are #72.
         scope: Scope = "everywhere" if everywhere else "us"
+        newest = sort == "newest"
         with closing(open_database()) as connection:
             try:
                 book = wantlist.get(connection, book_id)
@@ -204,7 +221,10 @@ def build_router(
                         # by the page this redirects to.
                         return RedirectResponse(
                             _book_url(
-                                book_id, everywhere=bool(everywhere), limit=limit
+                                book_id,
+                                everywhere=bool(everywhere),
+                                limit=limit,
+                                newest=newest,
                             ),
                             status_code=303,
                         )
@@ -240,6 +260,15 @@ def build_router(
             background.add_task(enrichment.queued(start_enrichment, book.work_id))
 
         shown = [copy for copy in for_sale if copy.tier != "excluded"]
+        if newest:
+            # Within each group, since the groups are split below. A copy
+            # with no listing date says nothing about newness, so it goes last.
+            shown.sort(
+                key=lambda copy: (
+                    copy.listed is None,
+                    -copy.listed.timestamp() if copy.listed else 0,
+                )
+            )
         verdicts = {copy.item_id: copy.against(ceiling) for copy in for_sale}
         listed_prices = standing.prices(for_sale)
         seen_prices = standing.prices(seen)
@@ -286,6 +315,21 @@ def build_router(
             "is_isbn": not book.searched_as_text,
             # The same facts, as the system's pieces take them (S34).
             "copy_rows": rows(True),
+            "newest": newest,
+            "urls": {
+                name: _book_url(book.id, limit=limit, **choice)
+                for name, choice in {
+                    "us": {"everywhere": False, "newest": newest},
+                    "everywhere": {"everywhere": True, "newest": newest},
+                    "refresh": {
+                        "everywhere": bool(everywhere),
+                        "newest": newest,
+                        "refresh": True,
+                    },
+                    "cheapest": {"everywhere": bool(everywhere)},
+                    "newest": {"everywhere": bool(everywhere), "newest": True},
+                }.items()
+            },
             "maybe_rows": rows(False),
             "market_lines": [
                 book_view.market_line(market, seen_prices, ceiling)

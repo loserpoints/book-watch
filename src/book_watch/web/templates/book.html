@@ -42,15 +42,14 @@
     its two states (principle 4); checked re-runs the search, ignoring the
     hour on purpose — a button that did nothing for fifty-nine minutes would
     be worse than no button. -#}
-{% set here = '?everywhere=1' if scope == 'everywhere' else '' %}
 <div class="chips">
   {{ ui.chip("Limit", ceiling_text or "none", href="#limit", icon="✎", open="limit-sheet") }}
   {%- if scope == 'everywhere' %}
-    {{ ui.chip("Everywhere", href="/book/%d" % book.id, icon="⇄", replace=True) }}
+    {{ ui.chip("Everywhere", href=urls.us, icon="⇄", replace=True) }}
   {%- else %}
-    {{ ui.chip("US", href="/book/%d?everywhere=1" % book.id, icon="⇄", replace=True) }}
+    {{ ui.chip("US", href=urls.everywhere, icon="⇄", replace=True) }}
   {%- endif %}
-  {{ ui.chip("Checked", checked | since, href="/book/%d%s%srefresh=1" % (book.id, here, '&' if here else '?'), icon="↻", replace=True) }}
+  {{ ui.chip("Checked", checked | since, href=urls.refresh, icon="↻", replace=True) }}
 </div>
 
 {% if not copies and not uncertain %}
@@ -61,7 +60,7 @@
       {#- The empty US list is the whole reason the scope chip exists, so it
           says what to do next rather than leaving a blank page. -#}
       Nothing listed in the US right now.
-      <a href="/book/{{ book.id }}?everywhere=1" data-replace>Look everywhere</a> —
+      <a href="{{ urls.everywhere }}" data-replace>Look everywhere</a> —
       an overseas copy takes longer and may cost more to land.
     {% endif %}
   </p>
@@ -78,6 +77,18 @@
 
   {#- P4 -#}
   <p class="meta match-count">{{ copies | length }} match{{ '' if copies | length == 1 else 'es' }}</p>
+
+  {#- Cheapest or newest first (S62). The order lives in the page address,
+      replaced rather than pushed, so back still leaves the book. -#}
+  {% if copy_rows | length > 1 or maybe_rows | length > 1 %}
+  {% set fetch = {"hx-target": "main", "hx-select": "main", "hx-swap": "outerHTML", "hx-trigger": "change"} %}
+  <div class="copy-sort">
+    {{ ui.switch("sort", [
+         ("cheapest", "Cheapest", dict(fetch, **{"hx-get": urls.cheapest, "hx-replace-url": urls.cheapest})),
+         ("newest", "Newest", dict(fetch, **{"hx-get": urls.newest, "hx-replace-url": urls.newest})),
+       ], "newest" if newest else "cheapest") }}
+  </div>
+  {% endif %}
 
   <ul class="ui-list copies">
     {% for c in copy_rows %}{{ ui.copy_row(c, dismiss=False) }}{% endfor %}

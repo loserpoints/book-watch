@@ -1406,3 +1406,58 @@ def test_the_chips_that_show_the_book_another_way_replace_the_page(book_client):
     for chip in ('"/book/1?everywhere=1"', '"/book/1?refresh=1"'):
         tag = re.search(r"<a[^>]*href=" + re.escape(chip) + r"[^>]*>", page)
         assert tag and "data-replace" in tag.group(0)
+
+
+# --- when a copy was listed, and newest first (S62) ---------------------------
+
+
+def dated(item, price, days_ago):
+    return a_listing(
+        item_id=f"v1|{item}|0",
+        item_web_url=f"https://www.ebay.com/itm/{item}",
+        price=Money(Decimal(price), "USD"),
+        listing_date=None
+        if days_ago is None
+        else datetime.now(UTC) - timedelta(days=days_ago),
+    )
+
+
+THREE = (dated(111, "5.00", 60), dated(222, "9.00", 2), dated(333, "7.00", None))
+
+
+def order(page):
+    return [int(n) for n in re.findall(r"ebay\.com/itm/(\d{3})", page)]
+
+
+def test_each_copy_says_when_it_was_listed_and_an_undated_one_says_nothing(
+    book_client,
+):
+    client = book_client(returning(*THREE))
+    add_book(client, "9780099448396", "Crash")
+
+    page = visible(client.get("/book/1").text)
+
+    assert "listed 8w" in page
+    assert "listed 2d" in page
+    assert page.count("listed ") == 2
+
+
+def test_copies_are_cheapest_first_unless_newest_is_asked_for(book_client):
+    client = book_client(returning(*THREE))
+    add_book(client, "9780099448396", "Crash")
+
+    assert order(client.get("/book/1").text) == [111, 333, 222]
+    # Newest first, and a copy with no date last.
+    assert order(client.get("/book/1?sort=newest").text) == [222, 111, 333]
+
+
+def test_the_order_rides_along_on_every_link_the_page_makes(book_client):
+    client = book_client(returning(*THREE))
+    add_book(client, "9780099448396", "Crash")
+
+    page = client.get("/book/1?sort=newest").text
+
+    assert re.search(r'value="newest" checked', page)
+    assert 'href="/book/1?everywhere=1&amp;sort=newest"' in page
+    assert 'href="/book/1?sort=newest&amp;refresh=1"' in page
+    assert 'hx-replace-url="/book/1"' in page
