@@ -44,6 +44,7 @@ def sample_books() -> list[dict]:
             "price_text": "$10.49",
             "verdict": "under",
             "strip": strips.range_strip(SEEN, 12),
+            "limit_text": "your limit: $12",
         },
         {
             **base,
@@ -56,8 +57,8 @@ def sample_books() -> list[dict]:
             "examining": "digging",
             "price_text": "$18",
             "verdict": "over",
-            "over_by": "$3",
             "strip": strips.range_strip([18, 19.5, 21, 22, 24, 26, 29, 31, 36], 15),
+            "limit_text": "your limit: $15",
         },
         {
             **base,
@@ -71,6 +72,7 @@ def sample_books() -> list[dict]:
             "price_text": "$21",
             "verdict": None,
             "strip": strips.range_strip([21, 23, 25, 30, 36]),
+            "limit_text": "no limit set",
         },
         {
             **base,
@@ -83,6 +85,7 @@ def sample_books() -> list[dict]:
             "price_text": "$7.99",
             "verdict": "under",
             "strip": strips.range_strip(LONG_SEEN, 10),
+            "limit_text": "your limit: $10",
         },
         {
             **base,
@@ -162,7 +165,6 @@ def sample_copies() -> list[dict]:
             **common,
             "price_text": "$27",
             "verdict": "over",
-            "over_by": "$15",
             "takes_offers": True,
             "place": strips.rank_strip(used, 27.0),
             "condition": "Good",
@@ -175,7 +177,6 @@ def sample_copies() -> list[dict]:
             **common,
             "price_text": "$19",
             "verdict": "over",
-            "over_by": "$7",
             "place_text": "only new listing",
             "condition": "Brand New",
             "seller": "bookdepot",

@@ -212,6 +212,6 @@ def test_the_design_page_draws_every_row_state():
         "can&#39;t place",
         "only new listing",
         "On your list",
-        "$15 over",
+        "(over your limit)",
     ):
         assert words in page, words

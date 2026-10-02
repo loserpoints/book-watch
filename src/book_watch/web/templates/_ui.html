@@ -49,16 +49,17 @@
 {%- endmacro %}
 
 
-{#- The headline price, delivered. Color and a mark together,
-    never color alone: ✓ for at or under the limit, the amount over for over.
+{#- The headline price, delivered. ✓ and green for at or under the limit;
+    red for over, with no mark, since what matters is whether you can buy it
+    and the missing ✓ says you can't (S61). A screen reader hears either way.
     `verdict` is under, over, or none (no limit, or cannot tell). -#}
-{% macro price(text, verdict=None, over_by=None, prefix="") -%}
+{% macro price(text, verdict=None, prefix="") -%}
 <span class="price price-{{ verdict or 'plain' }}">
   {%- if verdict == 'under' %}<span class="price-mark" aria-hidden="true">✓ </span>{% endif -%}
   {{ prefix }}{{ text }}
   {%- if verdict == 'under' %}<span class="sr-only"> (under your limit)</span>{% endif -%}
+  {%- if verdict == 'over' %}<span class="sr-only"> (over your limit)</span>{% endif -%}
 </span>
-{%- if verdict == 'over' and over_by %} <span class="price-over-by">{{ over_by }} over</span>{% endif %}
 {%- endmacro %}
 
 
@@ -115,7 +116,8 @@
     </div>
     {% if b.state == 'ok' and b.price_text %}
       <div class="book-row-price">
-        {{ price(b.price_text, b.verdict, b.over_by, prefix="from ") }}
+        {{ price(b.price_text, b.verdict, prefix="from ") }}
+        {%- if b.limit_text %}<span class="row-limit">{{ b.limit_text }}</span>{% endif %}
         {#- One price is a point, not a shape, and draws no strip. -#}
         {% if b.strip %}{{ b.strip }}{% endif %}
       </div>
@@ -146,7 +148,7 @@
   {%- endif %}
   <div class="copy-main">
     <div class="copy-price">
-      {{- price(c.price_text ~ (' + shipping?' if c.shipping_unknown else ''), c.verdict, c.over_by) }}
+      {{- price(c.price_text ~ (' + shipping?' if c.shipping_unknown else ''), c.verdict) }}
       {%- if c.place_text %} <span class="meta">{{ c.place_text }}</span>{% else %} {{ c.place }}{% endif %}
     </div>
     <div class="copy-tags">{% if c.new %}{{ tag('new', accent=True) }}{% endif %}{{ tag(c.condition, strong=True) }}{% if c.abroad %}{{ tag('ships from ' ~ c.abroad) }}{% endif %}{% if c.takes_offers %}{{ tag('takes offers') }}{% endif %}</div>

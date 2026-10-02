@@ -85,17 +85,14 @@ def copy_row(
 
 
 def _against(copy: Copy, verdict: Verdict, ceiling: Money | None) -> dict:
-    """Color, and how far over. A copy that can't be told, or has no limit
-    to be told against, is left uncolored."""
-    delivered = copy.landed_cost
+    """Under or over the limit. A copy that can't be told, or has no limit
+    to be told against, is left uncolored. How far over is not said (S61):
+    the strip shows where the limit sits."""
     if verdict == "under":
-        return {"verdict": "under", "over_by": None}
-    if verdict == "over" and ceiling is not None and delivered is not None:
-        return {
-            "verdict": "over",
-            "over_by": money(delivered.amount - ceiling.amount, ceiling.currency),
-        }
-    return {"verdict": None, "over_by": None}
+        return {"verdict": "under"}
+    if verdict == "over" and ceiling is not None and copy.landed_cost is not None:
+        return {"verdict": "over"}
+    return {"verdict": None}
 
 
 def _place(copy: Copy, placed: Standing | None, listed: Prices) -> dict:
