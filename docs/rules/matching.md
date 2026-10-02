@@ -10,6 +10,7 @@ These rules decide which eBay listings are copies of the book being watched, and
 
 - A book added by ISBN, or by text added anyway, is searched by exactly what was typed, as a keyword. A book picked from a title search is searched by its title and author.
 - Searches return copies from US sellers. Searching everywhere is a choice made per view, and is not saved.
+- Searches return fixed-price listings only, never auctions (see [pricing](pricing.md#prices)).
 
 ### Which numbers are this book
 

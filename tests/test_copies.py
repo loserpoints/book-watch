@@ -9,6 +9,7 @@ and reaching only the next one added, so most of this file is about what a
 change to the rules would do to books that already exist.
 """
 
+from dataclasses import replace
 from decimal import Decimal
 
 import pytest
@@ -1078,3 +1079,33 @@ def test_the_glance_derives_it_once_too(database, monkeypatch):
     standing.glance(database, book)
 
     assert len(derived) == 1
+
+
+# --- how a copy is sold ------------------------------------------------------
+
+
+def test_a_copy_that_takes_offers_says_so_once_searched(database):
+    """Stored at the next search, so a copy seen before S59 catches up."""
+    book = a_book(database, "Stoner", "John Williams")
+    swept(database, book.work_id, [a_listing()])
+    database.commit()
+    (before,) = copies.for_entry(database, book)
+
+    offers = replace(a_listing(), buying_options=("FIXED_PRICE", "BEST_OFFER"))
+    swept(database, book.work_id, [offers])
+    database.commit()
+    (after,) = copies.for_entry(database, book)
+
+    assert not before.takes_offers
+    assert after.takes_offers
+
+
+def test_a_copy_at_a_firm_price_does_not_take_offers(database):
+    book = a_book(database, "Stoner", "John Williams")
+    swept(
+        database, book.work_id, [replace(a_listing(), buying_options=("FIXED_PRICE",))]
+    )
+    database.commit()
+
+    (copy,) = copies.for_entry(database, book)
+    assert not copy.takes_offers

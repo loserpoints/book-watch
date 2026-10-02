@@ -12,6 +12,8 @@ These rules decide what a copy costs, whether it is under a book's limit, and wh
 - Shipping is priced to one US ZIP, set as the `SHIP_TO_ZIP` Fly secret. Without it, eBay does not price calculated shipping, and those copies have no delivered price.
 - A copy has no delivered price when its shipping is not stated or is in a different currency from its price. eBay requires shipping on every listing except local pickup and freight, so this is rare for a book.
 - Every price is an asking price. Nothing claims a copy sold, or sold for a given amount.
+- Searches find fixed-price listings only. An auction's price is its current bid, which nobody can pay, so auctions are never found.
+- A copy that takes Best Offer says so. It is still under or over its limit by its asking price.
 - Prices in different currencies are never compared or converted.
 
 ### Limits
@@ -42,4 +44,3 @@ These rules decide what a copy costs, whether it is under a book's limit, and wh
 
 - [Set the ship-to ZIP in the app, not as a Fly secret](https://github.com/loserpoints/book-watch/issues/182)
 - [Settings, starting with a default price limit and the US-only default](https://github.com/loserpoints/book-watch/issues/72)
-- [Show whether a listing accepts offers](https://github.com/loserpoints/book-watch/issues/74)

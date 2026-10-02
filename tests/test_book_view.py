@@ -131,3 +131,12 @@ def test_since_is_short_enough_for_a_chip():
     assert since(now - timedelta(weeks=3)) == "3w"
     assert since(now - timedelta(days=300)) == "9mo"
     assert since(None) == "never"
+
+
+def test_a_copy_that_takes_offers_is_marked_and_keeps_its_verdict():
+    """Best Offer is shown, never counted: the asking price is still over."""
+    marked = row(a_copy(takes_offers=True))
+
+    assert marked["takes_offers"]
+    assert marked["verdict"] == "over"
+    assert not row(a_copy())["takes_offers"]
