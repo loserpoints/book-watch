@@ -72,9 +72,18 @@ def dots(svg):
 
 
 def test_each_dot_is_judged_like_a_price():
-    svg = strips.range_strip([8, 10, 14], limit=10)
+    svg = strips.range_strip([8, 10, 14], limit=10, width=110)
 
-    assert dots(svg) == ["strip-dot-under", "strip-dot-under", "strip-dot-over"]
+    by_place = {
+        cx: cls
+        for cls, cx in re.findall(r'class="strip-dot ([a-z-]+)" cx="([\d.]+)"', svg)
+    }
+    # $8 and $10 at or under, $14 over: 5px pad, $6 over 100px.
+    assert by_place == {
+        "5.0": "strip-dot-under",
+        "38.3": "strip-dot-under",
+        "105.0": "strip-dot-over",
+    }
 
 
 def test_without_a_limit_the_dots_are_left_unjudged():
@@ -106,3 +115,29 @@ def test_the_strip_says_how_many_prices_are_under_the_limit():
     svg = strips.range_strip([8, 10, 14], limit=Decimal("10.49"))
 
     assert "2 at or under the limit of $10" in svg
+
+
+def test_green_dots_are_drawn_over_red_ones():
+    """Later in an SVG is on top. Where dots crowd, a copy you could buy must
+    not hide under one you couldn't."""
+    svg = strips.range_strip([8, 15, 9, 16, 9.5], limit=9)
+
+    order = dots(svg)
+    assert order == sorted(order, key=lambda cls: cls == "strip-dot-under")
+    assert order.count("strip-dot-under") == 2
+
+
+def test_the_limit_line_reaches_past_the_strip_but_not_the_labels():
+    svg = strips.range_strip([10, 20, 30], limit=15, height=16)
+
+    y1, y2 = (
+        float(v)
+        for v in re.search(
+            r'class="strip-limit"[^>]*y1="([-\d.]+)" y2="([-\d.]+)"', svg
+        ).groups()
+    )
+    label_y = min(
+        float(y) for y in re.findall(r'class="strip-label"[^>]*y="([\d.]+)"', svg)
+    )
+    assert y1 < 0
+    assert 16 < y2 < label_y - 7
