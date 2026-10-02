@@ -11,6 +11,8 @@
 7. **Phone first.** 44px targets, main actions in thumb reach, safe areas respected.
 8. **Dark first, light kept working.**
 9. **One accent color**, for what is current or can be acted on.
+10. **Quiet when all is well.** A status that is normally fine appears only when something is wrong.
+11. **One word, one meaning.** A word the app already uses, such as "limit" for the price limit, is not reused for something else.
 
 ## Tokens
 

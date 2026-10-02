@@ -13,7 +13,8 @@ These rules keep the app's requests to eBay and Open Library small, spaced out a
 - When the ceiling is reached, the request is not made and the work stops. Nothing retries it on a timer.
 - Every answer Open Library gives is stored, including "no record of this number". It is asked again only when the app starts reading a new field from it.
 - A lookup that fails stores nothing. The number is skipped and the pass carries on, and it is asked again the next time the book has new copies. Two failures in a row stop the pass, since Open Library is most likely down.
-- Adding a book costs one request. Examining one book's copies costs roughly ten to fifteen.
+- Adding a book costs one request. Examining one book's copies costs roughly ten to fifteen the first time, and afterwards only a request per number never seen before.
+- A daily check over six books, measured in production, spent no requests.
 - A book's new copies are examined after any check that finds them, one pass per book at a time.
 - A book's cover is looked up at most once, in no more than two requests. Cover images load from Open Library's image server, not its API.
 
