@@ -646,14 +646,14 @@ def test_setting_a_ceiling_marks_what_is_under_it(book_client):
     page = client.get("/book/1").text
 
     seen = visible(page)
-    # Color and a mark, never color alone: ✓ and the words for a reader who
-    # cannot see the green; the amount for over. $4 + $3.99, and $30 + $3.99.
+    # ✓ and the words for a reader who cannot see the green. $4 + $3.99, and
+    # $30 + $3.99.
     assert seen.count("(under your limit)") == 1
     # Both copies still shown: the ceiling marks, it never filters.
     assert "v1|1|0" in page or "itm/123" in page
-    # Over is said, not left silent: a copy over the limit must not look like
-    # a copy with no limit set.
-    assert seen.count("$25.99 over") == 1
+    # Over is red with no amount (S61), and said to a screen reader.
+    assert seen.count("(over your limit)") == 1
+    assert not re.search(r"\$[\d.]+\+? over", seen)
 
 
 def test_a_copy_without_a_delivered_price_is_not_judged(book_client):

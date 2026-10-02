@@ -95,12 +95,11 @@ def _price(entry: Entry, glance: Glance) -> dict:
     assert lead is not None
     ceiling = entry.will_pay
     cheapest = lead.cheapest
-    verdict, over_by = None, None
+    verdict = None
     if lead.verdict == "under":
         verdict = "under"
     elif lead.verdict == "over" and ceiling is not None:
         verdict = "over"
-        over_by = book_view.money(cheapest.amount - ceiling.amount, ceiling.currency)
     seen = glance.seen_prices.get((lead.market.condition_class, cheapest.currency), [])
     strip = None
     if lead.market.has_range:
@@ -118,8 +117,11 @@ def _price(entry: Entry, glance: Glance) -> dict:
     return {
         "price_text": book_view.money(cheapest),
         "verdict": verdict,
-        "over_by": over_by,
         "strip": strip,
+        # Where "$X over" was (S61): the limit itself, or that there is none.
+        "limit_text": f"your limit: {book_view.money(ceiling)}"
+        if ceiling is not None
+        else "no limit set",
     }
 
 

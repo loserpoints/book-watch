@@ -922,3 +922,19 @@ def test_adding_a_book_shows_the_whole_list_with_the_new_book(
     assert response.headers["HX-Replace-Url"] == "/"
     assert {"Stoner", "Crash", "Kindred"} <= shown(response.text)
     assert 'href="/book/4"' in response.text
+
+
+def test_a_row_says_its_limit_or_that_there_is_none(client, three_books):
+    """S61: where "$X over" was. An over price says nothing about how far."""
+    from book_watch import wantlist
+
+    stoner = next(i for i, v in three_books.items() if v == "under")
+    with closing(client.app.state.connect()) as connection:
+        wantlist.set_ceiling(connection, stoner, "10.00", "USD")
+        connection.commit()
+
+    page = client.get("/").text
+
+    assert page.count("your limit: $10") == 1
+    assert page.count("no limit set") == 2
+    assert not re.search(r"\$[\d.]+ over", page)

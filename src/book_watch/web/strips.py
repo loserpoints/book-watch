@@ -67,26 +67,34 @@ def range_strip(
     labeled: bool = True,
     symbol: str = "$",
 ) -> Markup:
-    """Every asking price seen, the limit as a guide, and the range labeled."""
+    """Every asking price seen, each judged against the limit, and the range.
+
+    The scale spans the prices alone, so a limit far from them never squeezes
+    the dots together (S61, #200). A dot is green at or under the limit and
+    red over it, like a price; with no limit it keeps the accent color. A
+    dashed line marks the limit only when it falls among the prices: with no
+    line, a ✓ beside the price means every copy is under, and none means every
+    copy is over. That reading needs no color.
+    """
     if not seen:
         return Markup("")
-    scale = scale_for([*seen, limit] if limit is not None else seen, width)
+    scale = scale_for(seen, width)
     mid = height / 2
+    low, high = min(seen, key=float), max(seen, key=float)
     parts = [
         f'<line class="strip-axis" x1="{PAD}" x2="{width - PAD}" '
         f'y1="{mid}" y2="{mid}"/>'
     ]
-    if limit is not None:
+    if limit is not None and float(low) <= float(limit) <= float(high):
         x = scale.x(limit)
         parts.append(
             f'<line class="strip-limit" x1="{x}" x2="{x}" y1="2" y2="{height - 2}"/>'
         )
     parts += [
-        f'<circle class="strip-dot" cx="{scale.x(v)}" cy="{mid}" r="2.6"/>'
+        f'<circle class="{_dot_class(v, limit)}" cx="{scale.x(v)}" cy="{mid}" r="2.6"/>'
         for v in seen
     ]
     total = height
-    low, high = min(seen, key=float), max(seen, key=float)
     if labeled:
         total = height + 12
         parts.append(
@@ -100,12 +108,24 @@ def range_strip(
     label = (
         f"{len(seen)} asking prices seen, {whole(low, symbol)} to {whole(high, symbol)}"
     )
+    if limit is not None:
+        under = sum(1 for v in seen if float(v) <= float(limit))
+        label += f", {under} at or under the limit of {whole(limit, symbol)}"
     return Markup(
         f'<svg class="strip" width="{width}" height="{total}" '
         f'viewBox="0 0 {width} {total}" role="img" aria-label="{escape(label)}">'
         + "".join(parts)
         + "</svg>"
     )
+
+
+def _dot_class(value: Number, limit: Number | None) -> str:
+    """A price's dot, judged as the price itself would be."""
+    if limit is None:
+        return "strip-dot"
+    if float(value) <= float(limit):
+        return "strip-dot strip-dot-under"
+    return "strip-dot strip-dot-over"
 
 
 def rank_strip(

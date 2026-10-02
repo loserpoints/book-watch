@@ -43,10 +43,12 @@ def test_money_drops_cents_only_when_there_are_none():
     assert book_view.money(Money(Decimal("5.50"), "AUD")) == "5.50 AUD"
 
 
-def test_over_says_by_how_much():
+def test_over_is_marked_without_saying_by_how_much():
+    """S61: the strip shows where the limit sits, so the row says only over."""
     c = row(a_copy("27.00", "0.00"))
 
-    assert (c["verdict"], c["over_by"]) == ("over", "$15")
+    assert c["verdict"] == "over"
+    assert "over_by" not in c
 
 
 def test_unknown_shipping_shows_the_price_and_no_verdict():
@@ -54,19 +56,19 @@ def test_unknown_shipping_shows_the_price_and_no_verdict():
     amount over."""
     c = row(a_copy("14.00", None))
 
-    assert (c["verdict"], c["over_by"]) == (None, None)
+    assert c["verdict"] is None
     assert c["shipping_unknown"]
     assert c["price_text"] == "$14"
 
 
 def test_under_carries_no_amount():
-    assert row(a_copy("5.00", "2.00"))["over_by"] is None
+    assert row(a_copy("5.00", "2.00"))["verdict"] == "under"
 
 
 def test_another_currency_is_left_uncolored():
     c = row(a_copy("5.00", "2.00", currency="GBP"))
 
-    assert (c["verdict"], c["over_by"]) == (None, None)
+    assert c["verdict"] is None
     assert c["price_text"] == "£7"
     assert not c["shipping_unknown"]
 

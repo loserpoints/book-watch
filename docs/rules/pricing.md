@@ -22,7 +22,7 @@ These rules decide what a copy costs, whether it is under a book's limit, and wh
 - A copy is under the limit when its delivered price is at or below it.
 - A copy is over the limit when its delivered price is above it.
 - A copy without a delivered price in the limit's currency is "can't tell". It is never under or over.
-- An over copy shows the amount over.
+- An over copy is shown in red, with no ✓ and no amount over.
 - A limit marks copies and never hides them.
 
 ### Markets and ranks
