@@ -25,8 +25,8 @@ These rules decide when the app emails me about a copy, so that an email is alwa
 - Email goes through Resend from its shared address, which needs no domain and delivers only to the Resend account's own address.
 - The key and the recipient are Fly secrets. Without either, no email is sent and the log says email is off.
 - A failed send is logged, not shown in the app. Nothing is recorded as sent, so the next morning tries the same copies.
-- A test email can be sent on demand. It is never recorded as an alert and does not change the morning email.
+- A test email can be sent on demand, with a link to the app. It is never recorded as an alert and does not change the morning email.
 
 ## Open issues
 
-- [Track daily checks, emails and API calls somewhere I can see them](https://github.com/loserpoints/book-watch/issues/168)
+- [See what the app does unattended, and hear when something is wrong](https://github.com/loserpoints/book-watch/issues/168)

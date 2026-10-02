@@ -163,6 +163,7 @@ def sample_copies() -> list[dict]:
             "price_text": "$27",
             "verdict": "over",
             "over_by": "$15",
+            "takes_offers": True,
             "place": strips.rank_strip(used, 27.0),
             "condition": "Good",
             "seller": "oldpaperbacks",
@@ -183,8 +184,8 @@ def sample_copies() -> list[dict]:
         {
             **common,
             "price_text": "$7.50",
-            "verdict": "unknown",
-            "place_text": "can't place: shipping unknown",
+            "shipping_unknown": True,
+            "place_text": "can't place: no delivered price",
             "condition": "Acceptable",
             "seller": "goodwill_books",
             "listing_title": "Crash Ballard paperback",
@@ -200,7 +201,7 @@ def sample_copies() -> list[dict]:
 
 
 #: A stand-in seller's photo: sample content, not interface, so it carries its
-#: own colours. A real one is an eBay image URL, which `photos.larger` enlarges.
+#: own colors. A real one is an eBay image URL, which `photos.larger` enlarges.
 def _sample_photo(label: str) -> str:
     return (
         "data:image/svg+xml;utf8,"
@@ -254,26 +255,26 @@ def build_router() -> APIRouter:
     @router.get("/design", response_class=HTMLResponse)
     def design(request: Request) -> HTMLResponse:
         data = tokens.load()
-        colours = [
+        colors = [
             {
                 "name": name,
                 "use": entry.get("use", ""),
                 "dark": entry["dark"],
                 "light": entry["light"],
                 "dark_contrast": tokens.contrast(
-                    entry["dark"], tokens.colour("bg", "dark")
+                    entry["dark"], tokens.color("bg", "dark")
                 ),
                 "light_contrast": tokens.contrast(
-                    entry["light"], tokens.colour("bg", "light")
+                    entry["light"], tokens.color("bg", "light")
                 ),
             }
-            for name, entry in data["colour"].items()
+            for name, entry in data["color"].items()
         ]
         return templates.TemplateResponse(
             request,
             "design.html",
             {
-                "colours": colours,
+                "colors": colors,
                 "text": data["text"],
                 "space": data["space"],
                 "radius": data["radius"],

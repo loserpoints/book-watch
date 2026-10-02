@@ -18,7 +18,7 @@ CREATE TABLE openlibrary_edition (
     -- A recorded 0 is an answer, not a failure, and it is why this column
     -- exists rather than the row simply being absent. A number
     -- Open Library does not hold must not exclude a listing, and re-asking on
-    -- every poll is the behaviour they ask people not to have.
+    -- every poll is the behavior they ask people not to have.
     --
     -- Failing to *reach* Open Library writes nothing at all. That case has to
     -- stay distinguishable from this one.

@@ -5,7 +5,7 @@
 -- have already changed once and will change again.
 --
 -- Which numbers count as a book is now worked out on read, from things we
--- observed — what sellers declared, what the catalogue says those numbers
+-- observed — what sellers declared, what the catalog says those numbers
 -- are, who sellers say wrote them. All of it already stored, so re-judging
 -- every book costs no requests at all.
 --

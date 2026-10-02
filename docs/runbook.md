@@ -22,7 +22,12 @@ A rollback reverts code, not the database. Migrations run forward only, so a mig
 ## Restore data
 
 - Fly snapshots the data volume daily and keeps five days, so data can be restored to roughly the previous midnight.
-- Restoring currently needs `flyctl` on a machine with Fly credentials: list the volume's snapshots, create a volume from the chosen one, and move the app onto it.
+- Run Actions → Restore data with the snapshot left empty to list the snapshots. Nothing changes.
+- Run it again with a snapshot's ID to restore that snapshot, or with `fresh` to snapshot the data now and restore that, which tests the restore and loses nothing.
+- A restore first snapshots the data as it stands, and the run's summary names that snapshot. Restoring it undoes the restore.
+- A restore replaces the data volume and destroys the old one, then runs Deploy, whose checks read the restored data. The app is down for a few minutes, the eBay deletion endpoint included.
+- Alerts emailed after the restored snapshot was taken may be emailed again, since the record of what was sent goes back with the data.
+- Avoid running it around 7am New York time, when the daily check runs.
 
 ## Post-deploy checks
 
@@ -35,5 +40,4 @@ Four checks run after every deploy, most specific first:
 
 ## Known gaps
 
-- [`/health` says ok without checking anything](https://github.com/loserpoints/book-watch/issues/49)
-- [Restore the database from a snapshot without a local machine](https://github.com/loserpoints/book-watch/issues/148)
+- [See what the app does unattended, and hear when something is wrong](https://github.com/loserpoints/book-watch/issues/168)

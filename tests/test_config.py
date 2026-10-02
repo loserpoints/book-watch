@@ -29,6 +29,20 @@ def test_an_unset_key_names_itself(monkeypatch, missing):
         load_ebay_credentials(use_dotenv=False)
 
 
+def test_a_missing_setting_says_to_add_it_as_a_fly_secret(monkeypatch):
+    # The app runs only on Fly, so the fix given is Fly's. Advice to copy
+    # .env.example, shown by the live app, sent people to the wrong place.
+    monkeypatch.delenv("EBAY_CLIENT_ID", raising=False)
+    monkeypatch.setenv("EBAY_CLIENT_SECRET", "a-cert-id")
+
+    with pytest.raises(MissingCredentialError) as raised:
+        load_ebay_credentials(use_dotenv=False)
+
+    assert str(raised.value) == (
+        "EBAY_CLIENT_ID is not set. Add it under the app's Secrets on Fly."
+    )
+
+
 def test_a_whitespace_only_key_counts_as_missing(monkeypatch):
     # The common way to get here is a `.env` line like `EBAY_CLIENT_ID= `,
     # which otherwise fails much later with a confusing 401.

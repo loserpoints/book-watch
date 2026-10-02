@@ -49,29 +49,35 @@ def test_over_says_by_how_much():
     assert (c["verdict"], c["over_by"]) == ("over", "$15")
 
 
-def test_over_on_price_alone_says_the_amount_is_a_floor():
-    """Alan's call: the same as any other over, with a + because postage can
-    only add to it."""
+def test_unknown_shipping_shows_the_price_and_no_verdict():
+    """S54: even a price alone over the limit is left uncolored, with no
+    amount over."""
     c = row(a_copy("14.00", None))
 
-    assert (c["verdict"], c["over_by"]) == ("over", "$2+")
+    assert (c["verdict"], c["over_by"]) == (None, None)
     assert c["shipping_unknown"]
     assert c["price_text"] == "$14"
 
 
-def test_under_and_cannot_tell_carry_no_amount():
-    assert row(a_copy("5.00", "2.00"))["verdict"] == "under"
-    unknown = row(a_copy("5.00", None))
-    assert (unknown["verdict"], unknown["over_by"]) == ("unknown", None)
+def test_under_carries_no_amount():
+    assert row(a_copy("5.00", "2.00"))["over_by"] is None
 
 
-def test_another_currency_says_it_cannot_be_compared():
-    """Which reason, said, rather than an uncoloured silence."""
+def test_another_currency_is_left_uncolored():
     c = row(a_copy("5.00", "2.00", currency="GBP"))
 
-    assert c["verdict"] is None
+    assert (c["verdict"], c["over_by"]) == (None, None)
     assert c["price_text"] == "£7"
-    assert c["place_text"] == "can't compare: another currency"
+    assert not c["shipping_unknown"]
+
+
+def test_a_copy_without_a_delivered_price_says_so_in_place_of_a_rank():
+    """One reason, whatever produced it (S54)."""
+    placed = Standing("used", unplaced="no delivered price")
+
+    assert row(a_copy("5.00", None), placed)["place_text"] == (
+        "can't place: no delivered price"
+    )
 
 
 def test_a_ranked_copy_is_drawn_among_its_peers():
@@ -125,3 +131,12 @@ def test_since_is_short_enough_for_a_chip():
     assert since(now - timedelta(weeks=3)) == "3w"
     assert since(now - timedelta(days=300)) == "9mo"
     assert since(None) == "never"
+
+
+def test_a_copy_that_takes_offers_is_marked_and_keeps_its_verdict():
+    """Best Offer is shown, never counted: the asking price is still over."""
+    marked = row(a_copy(takes_offers=True))
+
+    assert marked["takes_offers"]
+    assert marked["verdict"] == "over"
+    assert not row(a_copy())["takes_offers"]

@@ -48,7 +48,7 @@ AbeBooks closed its API to new developers, so eBay is the only marketplace for n
 
 ## Running it
 
-It runs at [book-watch.fly.dev](https://book-watch.fly.dev). Merging to `main` deploys it ([runbook](docs/runbook.md)).
+It runs at [book-watch-alan.fly.dev](https://book-watch-alan.fly.dev). Merging to `main` deploys it ([runbook](docs/runbook.md)).
 
 To work on it, with [uv](https://docs.astral.sh/uv/) installed:
 
@@ -61,7 +61,7 @@ uv run python -m book_watch.ebay     # check the eBay keys work (one request)
 
 Setting up a new deployment, once:
 
-1. **Fly:** create an organisation-scoped deploy token under Account → Access Tokens. An app-scoped token cannot create its own app.
+1. **Fly:** create an organization-scoped deploy token under Account → Access Tokens. An app-scoped token cannot create its own app.
 2. **GitHub:** add two repository secrets: `FLY_API_TOKEN`, the Fly token, and `EBAY_VERIFICATION_TOKEN`, a string you invent of 32–80 letters, digits, `_` or `-`.
 3. **Fly:** set `app` in `fly.toml` and run Actions → Deploy. It creates the app, deploys, and checks the eBay endpoint answers correctly.
 4. **Fly:** add `EBAY_CLIENT_ID` (the production App ID) and `EBAY_CLIENT_SECRET` (its Cert ID) under the app's Secrets. Nothing in GitHub reads them, so they live only on Fly. Add `SHIP_TO_ZIP`, the ZIP the books ship to, so eBay prices calculated shipping. Without it, those copies show "+ shipping?".
@@ -77,7 +77,7 @@ src/book_watch/            the app
   web/                     pages, templates, design tokens
   migrations/              database schema, applied in order
 tests/                     offline by default; `-m network` makes real requests
-scripts/                   check.sh, the docs check, icon rendering
+scripts/                   check.sh, the docs check, icon rendering, restoring data
 docs/
   governance.md            what each doc holds and how work flows
   jobs.md                  what the app must get done
@@ -87,5 +87,6 @@ docs/
   milestones/              what each milestone set out to do, did, and learned
   runbook.md               deploy, roll back, restore
 CONTRIBUTING.md            how to build, test and review
+.claude/skills/            set-milestone and plan-slice, used at the steps governance names
 LICENSE                    MIT
 ```

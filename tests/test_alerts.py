@@ -147,7 +147,7 @@ def test_the_email_names_the_book_the_price_and_both_links(morning):
     assert "Crash" in body["text"]
     assert "$9 delivered, limit $10" in body["text"]
     assert "https://www.ebay.com/itm/new-cheap" in body["text"]
-    assert "https://book-watch.fly.dev/book/1" in body["text"]
+    assert "https://book-watch-alan.fly.dev/book/1" in body["text"]
 
 
 def test_a_copy_is_never_in_two_emails(morning):
@@ -334,6 +334,17 @@ def test_the_test_email_sends_one_fixed_message():
     [sent] = resend.sent
     assert sent["json"]["subject"] == "book-watch test email"
     assert sent["json"]["to"] == ["reader@example.com"]
+
+
+def test_the_test_email_links_to_the_app():
+    # So the address the morning email links to can be checked on demand.
+    resend = Resend()
+
+    alerts.send_test(config=lambda: SETTINGS, post=resend)
+
+    [sent] = resend.sent
+    assert "https://book-watch-alan.fly.dev" in sent["json"]["text"]
+    assert 'href="https://book-watch-alan.fly.dev"' in sent["json"]["html"]
 
 
 def test_the_test_email_leaves_the_morning_email_alone(morning):

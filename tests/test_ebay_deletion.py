@@ -16,7 +16,7 @@ from book_watch.web.app import create_app
 from book_watch.web.ebay_deletion import DELETION_PATH, challenge_response
 
 TOKEN = "a" * 32
-ENDPOINT = "https://book-watch.fly.dev/ebay/deletion"
+ENDPOINT = "https://book-watch-alan.fly.dev/ebay/deletion"
 CONFIG = DeletionEndpointConfig(verification_token=TOKEN, endpoint_url=ENDPOINT)
 
 

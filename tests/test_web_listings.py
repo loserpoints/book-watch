@@ -13,6 +13,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from book_watch import config as config_module
 from book_watch import db
 from book_watch import enrichment as enrichment_module
 from book_watch import sweeps as sweeps_module
@@ -26,7 +27,7 @@ from book_watch.web.app import create_app
 
 DELETION_CONFIG = DeletionEndpointConfig(
     verification_token="a" * 32,
-    endpoint_url="https://book-watch.fly.dev/ebay/deletion",
+    endpoint_url="https://book-watch-alan.fly.dev/ebay/deletion",
 )
 
 
@@ -205,6 +206,23 @@ def test_searching_without_ebay_keys_fails_loudly_and_breaks_nothing_else(
     assert client.get("/search?isbn=x").status_code == 500
     # The endpoint eBay actually depends on is untouched by that failure.
     assert client.get("/health").status_code == 200
+
+
+def test_the_page_says_where_a_missing_ebay_key_goes(monkeypatch):
+    monkeypatch.delenv("EBAY_CLIENT_ID", raising=False)
+    monkeypatch.setenv("EBAY_CLIENT_SECRET", "a-cert-id")
+    monkeypatch.setattr(
+        searching_module,
+        "load_ebay_credentials",
+        lambda: config_module.load_ebay_credentials(use_dotenv=False),
+    )
+    client = TestClient(create_app(DELETION_CONFIG))
+
+    page = client.get("/search?isbn=x").text
+
+    assert "EBAY_CLIENT_ID is not set." in page
+    assert "Add it under the app&#39;s Secrets on Fly." in page
+    assert ".env" not in page
 
 
 def test_the_results_page_and_the_deletion_endpoint_share_one_app():
@@ -420,7 +438,7 @@ def test_copies_nobody_has_examined_yet_are_said_to_be_unexamined(book_client):
     # The visible sentence is the whole fact; tapping it gives the reason in
     # place. It used to be a hover `title`, which a touchscreen never shows.
     assert "Still digging through the shelves." in page
-    assert "We ask the public catalogues slowly on purpose" in page
+    assert "We ask the public catalogs slowly on purpose" in page
     assert 'title="We ask' not in page
 
 
@@ -628,7 +646,7 @@ def test_setting_a_ceiling_marks_what_is_under_it(book_client):
     page = client.get("/book/1").text
 
     seen = visible(page)
-    # Colour and a mark, never colour alone: ✓ and the words for a reader who
+    # Color and a mark, never color alone: ✓ and the words for a reader who
     # cannot see the green; the amount for over. $4 + $3.99, and $30 + $3.99.
     assert seen.count("(under your limit)") == 1
     # Both copies still shown: the ceiling marks, it never filters.
@@ -638,9 +656,9 @@ def test_setting_a_ceiling_marks_what_is_under_it(book_client):
     assert seen.count("$25.99 over") == 1
 
 
-def test_a_copy_whose_price_alone_is_over_is_marked_over(book_client):
-    """Postage cannot be negative, so unknown shipping does not make this one
-    unjudgeable."""
+def test_a_copy_without_a_delivered_price_is_not_judged(book_client):
+    """S54: even a price alone over the limit says only that shipping is
+    unknown. eBay allows that only for local pickup and freight."""
     client = book_client(
         returning(a_listing(price=Money(Decimal("30.00"), "USD"), shipping_cost=None))
     )
@@ -650,8 +668,9 @@ def test_a_copy_whose_price_alone_is_over_is_marked_over(book_client):
 
     page = visible(client.get("/book/1").text)
 
-    # Over on its price alone, so the amount is a floor (S31, S34).
-    assert "$22+ over" in page
+    assert "$30 + shipping?" in page
+    assert not re.search(r"\$[\d.]+\+? over", page)
+    assert "(under your limit)" not in page
 
 
 def test_the_book_page_is_built_from_the_system(book_client):
@@ -750,7 +769,7 @@ def test_a_copy_with_unknown_shipping_is_listed_after_a_dearer_known_one(book_cl
 
 
 def make_certain(client, isbn="9780099448396", title="Crash"):
-    """Give every stored copy a declaration the catalogue recognises.
+    """Give every stored copy a declaration the catalog recognizes.
 
     Copies reach `certain` on identifiers, never on text, and
     only a certain copy carries a standing — a rank against a set of copies it
@@ -1322,3 +1341,68 @@ def test_copies_new_since_i_last_looked_are_marked_on_the_list_and_the_book(
     assert client.get("/book/2?everywhere=0").text.count("tag-accent") == 1
     # Seen now, so the list stops counting it.
     assert " new " not in visible(client.get("/").text)
+
+
+# --- back from a book goes to the want list (S45) -----------------------------
+
+HTMX = {"HX-Request": "true"}
+
+
+def test_a_limit_saved_through_htmx_reloads_the_page_in_place(book_client):
+    client = book_client(returning(a_listing()))
+    add_book(client, "9780099448396", "Crash")
+
+    response = client.post(
+        "/book/1/ceiling", data={"ceiling": "8.00", "currency": "USD"}, headers=HTMX
+    )
+
+    assert response.status_code == 204
+    assert response.headers["HX-Refresh"] == "true"
+    assert "$8" in visible(client.get("/book/1").text)
+
+
+def test_a_limit_that_cannot_be_read_is_answered_inside_the_sheet(book_client):
+    client = book_client(returning(a_listing()))
+    add_book(client, "9780099448396", "Crash")
+
+    response = client.post(
+        "/book/1/ceiling", data={"ceiling": "cheap", "currency": "USD"}, headers=HTMX
+    )
+
+    assert response.status_code == 200
+    assert 'class="sheet-error"' in response.text
+    assert "HX-Refresh" not in response.headers
+    assert "Limit none" in visible(client.get("/book/1").text)
+
+
+@pytest.mark.parametrize(
+    ("asked", "shown"),
+    [
+        ("/book/1?refresh=1", "/book/1"),
+        ("/book/1?everywhere=1&refresh=1", "/book/1?everywhere=1"),
+    ],
+)
+def test_after_searching_again_the_page_drops_refresh(book_client, asked, shown):
+    """So a reload, or a return to the page, does not search eBay again."""
+    search, asked_for = counting_search([a_listing()])
+    client = book_client(search)
+    add_book(client, "9780099448396", "Crash")
+    client.get("/book/1")
+    before = len(asked_for)
+
+    response = client.get(asked, follow_redirects=False)
+
+    assert len(asked_for) == before + 1
+    assert response.status_code == 303
+    assert response.headers["location"] == shown
+
+
+def test_the_chips_that_show_the_book_another_way_replace_the_page(book_client):
+    client = book_client(returning(a_listing()))
+    add_book(client, "9780099448396", "Crash")
+
+    page = client.get("/book/1").text
+
+    for chip in ('"/book/1?everywhere=1"', '"/book/1?refresh=1"'):
+        tag = re.search(r"<a[^>]*href=" + re.escape(chip) + r"[^>]*>", page)
+        assert tag and "data-replace" in tag.group(0)

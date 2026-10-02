@@ -17,7 +17,7 @@
 {#- Still digging: the app is working out which copies are really this book.
     The word shimmers; tapping it says why it takes a while. -#}
 {% macro digging(label="digging") -%}
-{{ explain(label, "Checking which of these copies are really this book. We ask the public catalogues slowly on purpose: they're free, and we'd like them to stay that way.", "digging") }}
+{{ explain(label, "Checking which of these copies are really this book. We ask the public catalogs slowly on purpose: they're free, and we'd like them to stay that way.", "digging") }}
 {%- endmacro %}
 
 
@@ -36,21 +36,21 @@
 
 
 {#- A cover, over its placeholder. The placeholder is always there, so a slow
-    or missing image leaves the book recognisable rather than an empty frame.
+    or missing image leaves the book recognizable rather than an empty frame.
     `url` is the image, or the route that learns it, or none
     when Open Library holds no cover. -#}
 {% macro cover(title, author=None, url=None, size="md") -%}
 <div class="cover cover-{{ size }}" aria-hidden="true">
   {#- The author only on the large size: at 40-52px wide there is room for a
-      title or a name, not both, and the title is what is recognised. -#}
+      title or a name, not both, and the title is what is recognized. -#}
   <span class="cover-ph" lang="en"><span class="cover-ph-title">{{ title }}</span>{% if author and size == 'lg' %}<span class="cover-ph-author">{{ author }}</span>{% endif %}</span>
   {%- if url %}<img src="{{ url }}" alt="" loading="lazy" onerror="this.remove()">{% endif %}
 </div>
 {%- endmacro %}
 
 
-{#- The headline price, delivered. Colour and a mark together,
-    never colour alone: ✓ for at or under the limit, the amount over for over.
+{#- The headline price, delivered. Color and a mark together,
+    never color alone: ✓ for at or under the limit, the amount over for over.
     `verdict` is under, over, or none (no limit, or cannot tell). -#}
 {% macro price(text, verdict=None, over_by=None, prefix="") -%}
 <span class="price price-{{ verdict or 'plain' }}">
@@ -70,8 +70,10 @@
 {#- A chip: a small control or fact that sits in a row of them. -#}
 {#- `open` makes the chip open a sheet instead of following its link; the
     link stays as the no-script fallback. -#}
-{% macro chip(label, value=None, href="#", icon=None, open=None) -%}
-<a class="chip" href="{{ href }}"{% if open %} data-open="{{ open }}"{% endif %}>{{ label }}{% if value %} <b>{{ value }}</b>{% endif %}{% if icon %} <span aria-hidden="true">{{ icon }}</span>{% endif %}</a>
+{#- `replace` for a chip that shows the same screen another way: it takes the
+    place of this page in the history, so back still leaves the screen (S45). -#}
+{% macro chip(label, value=None, href="#", icon=None, open=None, replace=False) -%}
+<a class="chip" href="{{ href }}"{% if open %} data-open="{{ open }}"{% endif %}{% if replace %} data-replace{% endif %}>{{ label }}{% if value %} <b>{{ value }}</b>{% endif %}{% if icon %} <span aria-hidden="true">{{ icon }}</span>{% endif %}</a>
 {%- endmacro %}
 
 
@@ -86,6 +88,8 @@
     right. `state` is ok, checking, failed, unchecked, maybes or none. -#}
 {#- On the real list a row carries its id, so a check can swap it back in
     out of band (`oob`), and the trash asks before it removes (S26 B6). -#}
+{#- Tapping anywhere on the row opens the book: the title's link covers it
+    (S46). The trash, "digging" and "Throttled" keep their own taps. -#}
 {% macro book_row(b, oob=False) -%}
 {#- A row that is digging asks for itself again until it isn't, so it clears
     without a reload. A row not digging never asks. -#}
@@ -141,14 +145,10 @@
   {%- endif %}
   <div class="copy-main">
     <div class="copy-price">
-      {%- if c.verdict == 'unknown' -%}
-        <span class="price price-plain">{{ c.price_text }} + shipping?</span>
-      {%- else -%}
-        {{ price(c.price_text ~ (' + shipping?' if c.shipping_unknown else ''), c.verdict, c.over_by) }}
-      {%- endif %}
+      {{- price(c.price_text ~ (' + shipping?' if c.shipping_unknown else ''), c.verdict, c.over_by) }}
       {%- if c.place_text %} <span class="meta">{{ c.place_text }}</span>{% else %} {{ c.place }}{% endif %}
     </div>
-    <div class="copy-tags">{% if c.new %}{{ tag('new', accent=True) }}{% endif %}{{ tag(c.condition, strong=True) }}{% if c.abroad %}{{ tag('ships from ' ~ c.abroad) }}{% endif %}</div>
+    <div class="copy-tags">{% if c.new %}{{ tag('new', accent=True) }}{% endif %}{{ tag(c.condition, strong=True) }}{% if c.abroad %}{{ tag('ships from ' ~ c.abroad) }}{% endif %}{% if c.takes_offers %}{{ tag('takes offers') }}{% endif %}</div>
     <a class="copy-listing" href="{{ c.url }}" rel="noopener noreferrer" target="_blank">{{ c.listing_title }}</a>
   </div>
   {%- if dismiss %}
@@ -169,7 +169,7 @@
   {#- On the real sheet, a row not already on the list is a form whose one
       button covers the whole row (principle 5): tapping anywhere adds it. -#}
   {%- if c.post and not c.on_list %}
-  <form class="candidate-add" method="post" action="/books/chosen">
+  <form class="candidate-add" hx-post="/books/chosen" hx-target="#add-sheet-body" method="post" action="/books/chosen">
     {%- for name, value in c.post.items() %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endfor %}
     <button type="submit" class="candidate-hit" aria-label="Add {{ c.title }}{% if c.author %} by {{ c.author }}{% endif %}{% if c.year %}, {{ c.year }}{% endif %}"></button>
   </form>
@@ -221,7 +221,7 @@
 {%- endmacro %}
 
 
-{#- A labelled text field. The label is always visible; a hint says what the
+{#- A labeled text field. The label is always visible; a hint says what the
     field is for, and an optional field says so rather than leaving it to a
     guess. -#}
 {% macro field(id, label, value="", name=None, hint=None, optional=False, inputmode=None, placeholder=None) -%}

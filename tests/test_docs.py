@@ -245,11 +245,11 @@ def test_slices_are_issues_not_pull_requests(repo):
 def test_slices_carry_the_slice_label(repo):
     write(repo, "docs/milestones/m08-always-current/scope.md", scope(ISSUE))
 
-    unlabelled = check_docs.check(repo, labels=lambda number: {"bug"})
-    labelled = check_docs.check(repo, labels=lambda number: {"slice"})
+    unlabeled = check_docs.check(repo, labels=lambda number: {"bug"})
+    labeled = check_docs.check(repo, labels=lambda number: {"slice"})
 
-    assert any("#105 is not labelled 'slice'" in e for e in unlabelled)
-    assert labelled == []
+    assert any("#105 is not labeled 'slice'" in e for e in unlabeled)
+    assert labeled == []
 
 
 # --- the retired decision log -------------------------------------------------
@@ -260,6 +260,24 @@ def test_code_that_points_at_a_decision_number_fails(repo):
 
     assert check_docs.check(repo) == [
         "src/app.py:1: refers to a decision; state the reason"
+    ]
+
+
+def test_a_decision_number_wrapped_onto_the_next_line_fails(repo):
+    write(repo, "src/app.py", "x = 1\n# Stored as a string (decision\n48).\n")
+
+    assert check_docs.check(repo) == [
+        "src/app.py:2: refers to a decision; state the reason"
+    ]
+
+
+def test_a_decision_number_behind_a_comment_marker_fails(repo):
+    write(repo, "src/app.py", "    # Stored as a string. Decision\n    # 40.\n")
+    write(repo, "src/schema.sql", "-- Stored as a string, see decisions\n-- 47, 52.\n")
+
+    assert sorted(check_docs.check(repo)) == [
+        "src/app.py:1: refers to a decision; state the reason",
+        "src/schema.sql:1: refers to a decision; state the reason",
     ]
 
 
@@ -274,3 +292,34 @@ def test_the_retiring_log_may_number_its_decisions(repo):
     write(repo, "docs/decisions.md", "## 1. Python\n\nSee decision 2.\n")
 
     assert check_docs.check(repo) == []
+
+
+# --- skills -------------------------------------------------------------------
+
+
+def skill(purpose="Choose the next milestone.", sections=("Steps", "Rules")):
+    body = "".join(f"## {s}\n\n- One.\n\n" for s in sections)
+    return (
+        "---\nname: set-milestone\ndescription: Choose the next milestone.\n---\n\n"
+        f"# Set milestone\n\n## Purpose\n\n{purpose}\n\n{body}"
+    )
+
+
+def test_a_skill_with_frontmatter_passes(repo):
+    write(repo, ".claude/skills/set-milestone/SKILL.md", skill())
+
+    assert check_docs.check(repo) == []
+
+
+def test_a_skill_is_checked_like_any_document(repo):
+    write(repo, ".claude/skills/set-milestone/SKILL.md", skill(sections=("Steps",)))
+
+    assert any("SKILL.md: sections must be" in e for e in check_docs.check(repo))
+
+
+def test_a_skills_purpose_is_one_sentence(repo):
+    write(
+        repo, ".claude/skills/plan-slice/SKILL.md", skill(purpose="Plan. Then build.")
+    )
+
+    assert any("one sentence" in e for e in check_docs.check(repo))

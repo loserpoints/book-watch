@@ -8,14 +8,14 @@
   follows your phone's light or dark setting; the swatches show both.
 </p>
 
-<nav class="muted">Pieces: <a href="#book-rows">book rows</a> · <a href="#copy-rows">copy rows</a> · <a href="#candidates">adding</a> · <a href="#pieces">small pieces</a> · <a href="#controls">controls</a>. Tokens: <a href="#colour">colour</a> · <a href="#type">type</a> · <a href="#space">space</a> · <a href="#radius">radius</a></nav>
+<nav class="muted">Pieces: <a href="#book-rows">book rows</a> · <a href="#copy-rows">copy rows</a> · <a href="#candidates">adding</a> · <a href="#pieces">small pieces</a> · <a href="#controls">controls</a>. Tokens: <a href="#color">color</a> · <a href="#type">type</a> · <a href="#space">space</a> · <a href="#radius">radius</a></nav>
 
 <h2 class="design-h" id="book-rows">Book rows</h2>
-<p class="muted">Every state a book on the want-list can be in. Checked with a price under, over and with no limit; a long title; maybes; checking; couldn't check; not checked yet; nothing listed; still digging; throttled.</p>
+<p class="muted">Every state a book on the want-list can be in. Checked with a price under, over and with no limit; a long title; maybes; checking; couldn't check; not checked yet; nothing listed; still digging; throttled. Tap anywhere on a row to open its book. The trash, "digging" and "Throttled" keep their own taps.</p>
 <ul class="ui-list">{% for b in books %}{{ ui.book_row(b) }}{% endfor %}</ul>
 
 <h2 class="design-h" id="copy-rows">Copy rows</h2>
-<p class="muted">Under, under from abroad, over with a condition note, the only new listing, and shipping unknown with a long note. Tap a note to open it.</p>
+<p class="muted">Under, under from abroad, over with a condition note and taking offers, the only new listing, and shipping unknown with a long note. Tap a note to open it.</p>
 {{ ui.market("3 used listed now", market_strip) }}
 <ul class="ui-list">{% for c in copies %}{{ ui.copy_row(c) }}{% endfor %}</ul>
 {% call ui.fold("1 maybe") %}<p class="muted">Copies that carry the title but nothing that proves the book.</p>{% endcall %}
@@ -70,10 +70,10 @@
 
 {{ ui.photo_dialog() }}
 
-<h2 class="design-h" id="colour">Colour</h2>
+<h2 class="design-h" id="color">Color</h2>
 <p class="muted">Contrast is against the page background. AA asks for 4.5 for body text and 3 for large text and marks.</p>
 <div class="swatches">
-  {% for c in colours %}
+  {% for c in colors %}
     <div class="swatch-row">
       <div class="swatch-pair" aria-hidden="true">
         <span class="swatch" style="background: {{ c.dark }}"></span>

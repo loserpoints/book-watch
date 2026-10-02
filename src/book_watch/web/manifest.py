@@ -2,12 +2,12 @@
 
 A phone that adds the site to its home screen reads this for the name under
 the icon, the icons, and to open in a window of its own ("standalone")
-rather than a browser tab. Its colours come from the tokens, so the splash
+rather than a browser tab. Its colors come from the tokens, so the splash
 and the status bar are the app's own and cannot drift from them.
 
 **No service worker**, deliberately. A worker that caches pages is the
 easiest way to serve yesterday's copies as today's, which the page was
-built to prevent; offline behaviour deserves its own slice.
+built to prevent; offline behavior deserves its own slice.
 """
 
 from __future__ import annotations
@@ -43,9 +43,9 @@ def manifest() -> dict:
         "scope": "/",
         "display": "standalone",
         # Dark first (principle 8): the splash and status bar are the page's
-        # own background, the same colour the theme-color meta already uses.
-        "background_color": tokens.colour("bg"),
-        "theme_color": tokens.colour("bg"),
+        # own background, the same color the theme-color meta already uses.
+        "background_color": tokens.color("bg"),
+        "theme_color": tokens.color("bg"),
         "icons": ICONS,
     }
 

@@ -24,7 +24,7 @@ from decimal import Decimal, InvalidOperation
 from typing import Literal
 
 from book_watch.ebay.search import Money, Scope
-from book_watch.isbn import normalise
+from book_watch.isbn import normalize
 from book_watch.matching import Evidence, Target, Tier, grade, is_this_book
 from book_watch.wantlist import Entry, moment
 
@@ -49,6 +49,7 @@ SELECT copy.item_id,
        copy.thumbnail,
        copy.epid,
        copy.located_in,
+       copy.buying_options,
        copy.seen_at,
        copy.first_seen_at,
        copy.listed_at,
@@ -99,12 +100,9 @@ _CURRENT_IN_SCOPE = """
 
 
 #: What a ceiling says about one copy. Three answers rather than two, because
-#: a delivered price is not always knowable — and the page distinguishes the
-#: two reasons it might not be, since one is the seller's silence about
-#: postage and the other is a currency we cannot compare.
-Verdict = Literal[
-    "under", "over", "shipping unstated", "another currency", "no ceiling"
-]
+#: a delivered price is not always knowable. eBay requires shipping on every
+#: listing except local pickup and freight, so "can't tell" is rare.
+Verdict = Literal["under", "over", "can't tell", "no ceiling"]
 
 
 #: Which market a copy belongs to. Not three grades on one scale — new and
@@ -115,7 +113,7 @@ Verdict = Literal[
 ConditionClass = Literal["new", "used", "unknown"]
 
 
-#: eBay's id for a brand-new item. Every other id is some flavour of
+#: eBay's id for a brand-new item. Every other id is some flavor of
 #: secondhand, Like New included: it has had an owner, which is the thing that
 #: separates the two markets.
 _BRAND_NEW = "1000"
@@ -163,6 +161,9 @@ class Copy:
     #: is what keeps it from being new (see `is_new`).
     first_seen: datetime | None = None
     listed: datetime | None = None
+    #: Whether the listing takes Best Offer. False also when eBay hasn't said,
+    #: which is every copy until its first search since S59.
+    takes_offers: bool = False
 
     @property
     def condition_class(self) -> ConditionClass:
@@ -192,41 +193,15 @@ class Copy:
     def against(self, ceiling: Money | None) -> Verdict:
         """Is this copy within what somebody said they would pay?
 
-        Three answers, not two. "Under" and "over" are not exhaustive, because
-        a copy whose shipping eBay never stated has no delivered price at all —
-        and the two honest-looking shortcuts are both wrong:
-
-        - treating unstated shipping as free flatters the copy and invents a
-          bargain, which is the wasted-trust failure the brief is about;
-        - treating it as over is right most of the time and wrong sometimes,
-          with no way to tell which times.
-
-        So there is a third answer and the page says which of the two reasons
-        produced it.
-
-        **One unstated-shipping case is not a guess.** Postage cannot be
-        negative, so a copy whose price *alone* is above the ceiling is over
-        whatever the postage turns out to be. That is a bound, not a guess,
-        and it is never wrong. A price exactly at the ceiling stays "can't
-        tell": free postage would make it under.
-
-        This differs on purpose from `sort_key`, which ranks an unknown total
-        by its price alone. **A sort has to put the row somewhere; a claim does
-        not.** Guessing to order a list is a lesser sin than guessing in an
-        assertion the reader will act on.
+        Judged on the delivered price alone. A copy without one in the
+        ceiling's currency can't be told: calling unknown postage free would
+        invent a bargain, and calling it over would be a guess (S54).
         """
         if ceiling is None:
             return "no ceiling"
-        if self.shipping is None:
-            if (
-                self.price.currency == ceiling.currency
-                and self.price.amount > ceiling.amount
-            ):
-                return "over"
-            return "shipping unstated"
         landed = self.landed_cost
         if landed is None or landed.currency != ceiling.currency:
-            return "another currency"
+            return "can't tell"
         return "under" if landed.amount <= ceiling.amount else "over"
 
     @property
@@ -237,9 +212,7 @@ class Copy:
         cannot be placed among the copies whose cost is known. It goes below
         all of them, where the top of the list is always a price I could pay.
         Among themselves, those copies rank by price alone, which is the least
-        each could cost. A copy whose price alone is over the ceiling stays in
-        that group: it is known to be over, but its delivered price is still
-        unknown, and one rule is easier to read than a rule and an exception.
+        each could cost.
         """
         landed = self.landed_cost
         if landed is None:
@@ -275,9 +248,10 @@ def for_entry(
     """Every stored copy for this book, graded and cheapest first within a tier.
 
     Sorting happens **inside** a tier and never across one. A reader sees one
-    group today, so this looks like an ordering with an extra step — decision
-    33 measured that on the other hunt the cheapest certain copy was wrong,
-    and a sort that crossed tiers would have to be unpicked to support it.
+    group today, so this looks like an ordering with an extra step. On a
+    collector's hunt, copies that only might be the edition measured right
+    8–14% of the time, so a cheapest copy taken across tiers would usually be
+    the wrong edition, and a sort that crossed tiers would have to be unpicked.
     """
     return _listed(connection, entry, _target(connection, entry), scope)
 
@@ -300,7 +274,7 @@ def ever_seen(connection: sqlite3.Connection, entry: Entry) -> list[Copy]:
 def populations(
     connection: sqlite3.Connection, entry: Entry, *, scope: Scope = "us"
 ) -> tuple[list[Copy], list[Copy]]:
-    """Both populations a judgement needs, from **one** derivation of the target.
+    """Both populations a judgment needs, from **one** derivation of the target.
 
     A rank reads what is listed and a range reads everything seen, so anything
     that judges a book needs both — and calling `for_entry` and `ever_seen`
@@ -352,13 +326,13 @@ def unasked(copies: list[Copy]) -> list[str]:
     return [copy.item_id for copy in copies if not copy.looked_at]
 
 
-#: Every number declared on this book's copies, with what the catalogue calls
+#: Every number declared on this book's copies, with what the catalog calls
 #: it and who a seller said wrote it. All three are observations already paid
 #: for, which is why deriving costs no requests.
 _DECLARED_NUMBERS = """
 SELECT DISTINCT declaration.isbn,
                 declaration.author AS declared_author,
-                identity.title     AS catalogue_title
+                identity.title     AS catalog_title
   FROM copy
   JOIN listing_declaration AS declaration ON declaration.item_id = copy.item_id
   JOIN openlibrary_edition AS identity
@@ -388,11 +362,11 @@ def _target(connection: sqlite3.Connection, entry: Entry) -> Target:
     reject it.
 
     Now it is a query over things we observed: what sellers declared, what the
-    catalogue says those numbers are, who sellers say wrote them. Change the
+    catalog says those numbers are, who sellers say wrote them. Change the
     rule and every book on the list is re-judged on the next page view, for
     nothing.
     """
-    typed = normalise(entry.typed) if entry.typed else None
+    typed = normalize(entry.typed) if entry.typed else None
     wanted = Target(
         title=entry.title or entry.search_query,
         # Only ever used to reject. An entry added before authors were asked
@@ -403,7 +377,7 @@ def _target(connection: sqlite3.Connection, entry: Entry) -> Target:
     isbns = {
         row["isbn"]
         for row in connection.execute(_DECLARED_NUMBERS, (entry.work_id,))
-        if is_this_book(row["catalogue_title"], row["declared_author"], wanted)
+        if is_this_book(row["catalog_title"], row["declared_author"], wanted)
     }
     # What somebody typed is not a conclusion and is never re-judged.
     if typed:
@@ -452,25 +426,30 @@ def _to_copy(row: sqlite3.Row, target: Target, entry: Entry) -> Copy:
         declared_publisher=row["declared_publisher"],
         declared_year=row["declared_year"],
         condition_note=row["condition_note"],
-        photos=_photos(row["photos"]),
+        photos=_strings(row["photos"]),
         located_in=row["located_in"],
         looked_at=row["asked_ebay"] is not None,
         first_seen=moment(row["first_seen_at"]),
         listed=moment(row["listed_at"]),
+        takes_offers="BEST_OFFER" in _strings(row["buying_options"]),
     )
 
 
-def _photos(raw: str | None) -> tuple[str, ...]:
-    """The stored JSON list, or nothing. A bad value is not worth a failed page."""
+def _strings(raw: str | None) -> tuple[str, ...]:
+    """A stored JSON list of strings, or nothing.
+
+    Photos and buying options are both kept this way. A bad value is not
+    worth a failed page.
+    """
     if not raw:
         return ()
     try:
-        urls = json.loads(raw)
+        values = json.loads(raw)
     except ValueError:
         return ()
-    if not isinstance(urls, list):
+    if not isinstance(values, list):
         return ()
-    return tuple(url for url in urls if isinstance(url, str))
+    return tuple(value for value in values if isinstance(value, str))
 
 
 def _amount(raw: str) -> Decimal:

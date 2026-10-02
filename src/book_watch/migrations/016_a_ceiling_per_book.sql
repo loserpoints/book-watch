@@ -1,8 +1,8 @@
 -- The most I will pay for this book, delivered.
 --
 -- On the entry rather than the work, and that is not filing. A work is shared
--- between entries, and *Two kinds of hunt* is where two entries for one book
--- start existing — a reader who will take any copy and a collector who wants
+-- between entries, and a collectible entry would give one book two entries
+-- — a reader who will take any copy and a collector who wants
 -- one printing will not pay the same, so a ceiling on the work would make one
 -- of them wrong.
 --

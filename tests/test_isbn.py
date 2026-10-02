@@ -1,12 +1,12 @@
 """Tests for ISBN validation.
 
 The check digit is the whole point: it is what separates "you mistyped" from
-"that is a book", without asking anybody's catalogue.
+"that is a book", without asking anybody's catalog.
 """
 
 import pytest
 
-from book_watch.isbn import normalise
+from book_watch.isbn import normalize
 
 # Crash, Vintage. The same book, spelled four ways.
 CRASH_13 = "9780099448396"
@@ -23,14 +23,14 @@ CRASH_13 = "9780099448396"
         "0-09-944839-4",
     ],
 )
-def test_every_spelling_of_one_book_normalises_to_one_value(typed):
+def test_every_spelling_of_one_book_normalizes_to_one_value(typed):
     """Otherwise the want-list could hold the same book twice."""
-    assert normalise(typed) == CRASH_13
+    assert normalize(typed) == CRASH_13
 
 
 def test_an_isbn10_check_digit_of_x_is_understood():
     """X means ten. A tenth of valid ISBN-10s end in one."""
-    assert normalise("043942089X") == "9780439420891"
+    assert normalize("043942089X") == "9780439420891"
 
 
 @pytest.mark.parametrize(
@@ -42,7 +42,7 @@ def test_an_isbn10_check_digit_of_x_is_understood():
     ],
 )
 def test_a_wrong_check_digit_is_rejected(typed):
-    assert normalise(typed) is None
+    assert normalize(typed) is None
 
 
 @pytest.mark.parametrize(
@@ -50,7 +50,7 @@ def test_a_wrong_check_digit_is_rejected(typed):
     ["", "   ", "not an isbn", "12345", "97800994483961234", "X099448394"],
 )
 def test_things_that_are_not_isbns_are_rejected(typed):
-    assert normalise(typed) is None
+    assert normalize(typed) is None
 
 
 def test_every_single_digit_typo_is_caught():
@@ -64,13 +64,13 @@ def test_every_single_digit_typo_is_caught():
     ]
 
     assert len(changed) == 117
-    assert all(normalise(typo) is None for typo in changed)
+    assert all(normalize(typo) is None for typo in changed)
 
 
 def test_swapping_two_adjacent_digits_that_differ_by_five_is_not_caught():
     """A real hole in ISBN-13, documented rather than papered over.
 
-    The weights alternate 1 and 3, so swapping neighbours changes the total by
+    The weights alternate 1 and 3, so swapping neighbors changes the total by
     twice the difference between them. When that difference is 5 the total
     moves by 10 and the check digit does not notice. Every other adjacent
     transposition is caught.
@@ -86,7 +86,7 @@ def test_swapping_two_adjacent_digits_that_differ_by_five_is_not_caught():
         for swapped in [
             CRASH_13[:i] + CRASH_13[i + 1] + CRASH_13[i] + CRASH_13[i + 2 :]
         ]
-        if normalise(swapped) is not None
+        if normalize(swapped) is not None
     ]
 
     assert missed == ["9780094948396", "9780099443896"]

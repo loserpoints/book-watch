@@ -1,7 +1,7 @@
 """bookwatch installs like an app from the home screen (S35, #99).
 
 What can be checked without a phone: the manifest is served and says what
-Android needs, its colours are the tokens, every icon it names exists at the
+Android needs, its colors are the tokens, every icon it names exists at the
 size it claims, and no service worker is registered anywhere. That the phone
 then opens it full screen is Alan's check, noted in the PR.
 """
@@ -49,7 +49,7 @@ def test_the_app_serves_it():
 
     config = DeletionEndpointConfig(
         verification_token="a" * 32,
-        endpoint_url="https://book-watch.fly.dev/ebay/deletion",
+        endpoint_url="https://book-watch-alan.fly.dev/ebay/deletion",
     )
     client = TestClient(create_app(config))
 
@@ -57,12 +57,12 @@ def test_the_app_serves_it():
     assert client.get("/static/icons/icon-512.png").status_code == 200
 
 
-def test_its_colours_are_the_tokens():
+def test_its_colors_are_the_tokens():
     """So the splash and status bar cannot drift from the app."""
     body = served().json()
 
-    assert body["background_color"] == tokens.colour("bg")
-    assert body["theme_color"] == tokens.colour("bg")
+    assert body["background_color"] == tokens.color("bg")
+    assert body["theme_color"] == tokens.color("bg")
 
 
 def test_every_icon_exists_at_the_size_it_claims():

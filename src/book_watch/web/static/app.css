@@ -1,8 +1,8 @@
 /* Every screen's styles. No build step and no framework.
 
-   Colours, typefaces, type sizes, spacing and corner radii come only from the
+   Colors, typefaces, type sizes, spacing and corner radii come only from the
    tokens (`web/tokens.toml`), which arrive as custom properties
-   in each page's head. `tests/test_tokens.py` fails on a colour, font size,
+   in each page's head. `tests/test_tokens.py` fails on a color, font size,
    margin, padding, gap or radius written here as a raw value. Widths and
    heights are layout, not tokens, and are written where they are used.
 
@@ -328,7 +328,7 @@ details.digging > summary {
 .cover-ph-author { font-size: var(--text-xxs); opacity: 0.8; }
 .cover-lg .cover-ph-title { font-size: var(--text-xs); }
 
-/* The headline price. Colour and a mark together, never colour alone. */
+/* The headline price. Color and a mark together, never color alone. */
 .price {
   font-family: var(--font-figure);
   font-weight: 700;
@@ -406,8 +406,12 @@ details.fold > summary {
 .market-line { display: grid; gap: var(--space-1); padding: var(--space-1) 0; }
 .market-line .strip { width: 100%; }
 
-/* A book on the want-list: title full width above the cover. */
+/* A book on the want-list: title full width above the cover. The title's
+   link stretches over the whole row, so a tap anywhere opens the book
+   (principle 5, S46). The trash, "digging" and "Throttled" sit above it and
+   keep their own taps. */
 .book-row {
+  position: relative;
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: var(--space-1) var(--space-3);
@@ -424,6 +428,10 @@ details.fold > summary {
   color: var(--fg);
   text-decoration: none;
 }
+.book-row-title::after { content: ""; position: absolute; inset: 0; z-index: 1; }
+.book-row-title:focus-visible { outline: none; }
+.book-row:has(.book-row-title:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.book-row-remove, .book-row details.explain { position: relative; z-index: 2; }
 .book-row-remove { grid-column: 3; justify-self: end; }
 .book-row .cover { grid-column: 1; }
 .book-row-body {
@@ -513,7 +521,7 @@ details.copy-note[open] > summary { display: block; }
 .cover-shelf { display: flex; align-items: flex-end; gap: var(--space-3); }
 
 /* ---------------------------------------------------------------------------
-   S30: the controls (#110). Macros in templates/_ui.html, behaviour in
+   S30: the controls (#110). Macros in templates/_ui.html, behavior in
    static/ui.js. Every one is at least a 44px target.
    --------------------------------------------------------------------------- */
 
@@ -538,8 +546,13 @@ details.copy-note[open] > summary { display: block; }
   outline-offset: 2px;
 }
 
+/* The + button floats over the want list, so it sits above every layer a
+   row uses: the row's stretched link (1), and the trash and "digging" (2).
+   Without this, a tap on it opened the book behind it (S58). Sheets open as
+   modal dialogs, which the browser draws above everything. */
 .fab {
   position: fixed;
+  z-index: 3;
   right: var(--space-4);
   bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
   width: 56px;
@@ -728,7 +741,7 @@ dialog.photo-view[open] { display: grid; gap: var(--space-2); justify-items: cen
 .sheet-form .candidate-list { margin: 0; padding: 0; }
 
 /* Something wrong with the morning check, under the list's buttons. The
-   chip's shape in the error colour; absent when nothing is wrong. */
+   chip's shape in the error color; absent when nothing is wrong. */
 .list-alert { margin: var(--space-2) 0; }
 details.alert-pill > summary {
   display: inline-flex;

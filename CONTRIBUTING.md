@@ -3,11 +3,15 @@
 ## Building
 
 - Check a fact against the thing itself before building on it: the service's documentation, a real response, or the browser's own tools. Memory and old notes go stale.
+- When a session can't reach a service's documentation, ask Alan to allow its domain and its subdomains, such as `fly.io` and `*.fly.io`, rather than building on memory.
+- eBay's developer and help pages refuse a session's requests whatever the network allows. Ask Alan to read the page.
 - Measure before deciding when a choice turns on a number, and measure again when the data grows.
 - Before inventing a proxy for a signal, check whether the code already has the signal and throws it away.
 - Decide a design by looking at it on real screens at phone width, and agree beforehand how many rounds a layout gets.
 - Migrations run forward only, and a rollback does not undo them. Keep a migration additive, so the previous code still works if its change is reverted.
+- Reproduce a phone or platform behavior on the phone again before building around it. S47's fallback to the browser went away once the eBay app had been opened.
 - Every step runs from a browser. Deploys and other privileged actions run in CI, with credentials in GitHub or Fly secrets. Say so before building on anything that needs a local install or a local credential.
+- The app runs only on Fly, so a message it shows gives the fix on Fly, not on a laptop.
 - Never commit a key, token or password. Credentials come from environment variables. `.env` is gitignored and `.env.example` lists the names with no values. A committed secret stays in git history, so the only remedy is rotating it.
 - Running cost is about $2–3 a month, all hosting. Say so before adding anything with a recurring cost.
 - Every request to an outside service follows the [rate limits](docs/rules/rate-limits.md).
@@ -21,7 +25,8 @@
 - A check proves nothing until it has been seen to fail. Break the code on purpose, on a committed tree, and confirm the break applied.
 - Reset process-wide state between tests. A test that passes only because another ran first proves nothing.
 - Run the production entrypoint before trusting what only it starts, such as the daily check. No test starts it.
-- Keep labelled real data in the repository as test fixtures, so a study becomes a regression test.
+- Keep labeled real data in the repository as test fixtures, so a study becomes a regression test.
+- A fake of an outside service answers with what the real one sends, field names and units included, taken from a real response or the service's own source. A fake built from memory passes the tests and fails the first real run.
 - Tests start empty and miss what production holds. After a change deploys, Alan checks it on his phone against the live data, and its pull request says what to check.
 
 ## Reviewing

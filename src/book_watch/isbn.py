@@ -1,9 +1,9 @@
-"""Validating and normalising ISBNs.
+"""Validating and normalizing ISBNs.
 
 Arithmetic only. This checks that a number *is* an ISBN — that its check digit
 agrees with the rest of it — and says nothing about whether a book with that
 ISBN exists. Those are different questions with different answers, and only the
-first one can be answered without asking somebody else's catalogue.
+first one can be answered without asking somebody else's catalog.
 
 Everything is stored as ISBN-13. A book with both a 10 and a 13 has one
 identity, and keeping two spellings of it would mean a want-list that can hold
@@ -22,11 +22,11 @@ _ISBN13_PREFIX = "978"
 
 
 def tidy(raw: str) -> str:
-    """Strip separators and normalise case, without judging the result."""
+    """Strip separators and normalize case, without judging the result."""
     return _SEPARATORS.sub("", raw.strip()).upper()
 
 
-def normalise(raw: str) -> str | None:
+def normalize(raw: str) -> str | None:
     """Return `raw` as a valid ISBN-13, or `None` if it is not an ISBN.
 
     Accepts either length and returns one, so callers never have to care which

@@ -1,0 +1,50 @@
+name: Restore data
+
+# Restores the database from a Fly volume snapshot (S52, #148), so a restore
+# needs a browser and nothing else. See docs/runbook.md#restore-data.
+#
+# Leave the snapshot empty to list the snapshots and change nothing. Type
+# `fresh` to snapshot the data now and restore that, which tests the whole
+# path and loses nothing. Paste a snapshot ID to restore that snapshot.
+#
+# A restore snapshots the data first, swaps the volume, then runs Deploy, whose
+# checks prove the app works on the restored data. The app is down for a few
+# minutes, the eBay deletion endpoint included.
+#
+# Requires the repository secrets Deploy uses.
+on:
+  workflow_dispatch:
+    inputs:
+      snapshot:
+        description: "Empty lists the snapshots. `fresh` snapshots now and restores that. A snapshot ID restores that one."
+        required: false
+        default: ""
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    # Never alongside a deploy: both change the machine.
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: List or restore
+        id: restore
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          SNAPSHOT: ${{ inputs.snapshot }}
+        run: python3 scripts/restore_data.py "${SNAPSHOT}"
+
+  # The restore leaves no machine running. Deploy starts one, which attaches
+  # the restored volume, and its checks read the want list and a book page
+  # from it. It runs after a restore that failed too: the script puts the old
+  # data back, and the app may be down until something deploys.
+  deploy:
+    needs: restore
+    if: ${{ always() && inputs.snapshot != '' }}
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit

@@ -21,14 +21,15 @@ The want list shows every book I'm watching and whether any copy is worth my att
 
 ## What you can do
 
-- Tap a book to open its active listings.
+- Tap anywhere on a book's row to open its active listings. The trash, "digging" and "Throttled" keep their own taps.
 - Tap Update to check the books not checked in the last hour.
 - Tap Check all to check every book. It asks first when some were checked in the last hour, unless this device was told not to ask again.
 - Tap the trash icon to remove a book. It asks first.
-- Tap + to add a book (see [adding a book](add-a-book.md)).
+- Tap + to add a book (see [adding a book](add-a-book.md)). Adding leaves nothing to go back through.
+- Press back to leave the app.
 
 ## Open issues
 
 - [Reorder the want-list by recency, lowest price, or by hand](https://github.com/loserpoints/book-watch/issues/131)
 - [Filter the want-list to books with a copy under their limit](https://github.com/loserpoints/book-watch/issues/132)
-- [S46 · Tapping anywhere on a want-list row opens its book](https://github.com/loserpoints/book-watch/issues/159)
+- [Drop the "$X over" amount, and make the limit easy to see on the price strip](https://github.com/loserpoints/book-watch/issues/200)

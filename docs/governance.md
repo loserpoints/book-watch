@@ -16,6 +16,7 @@ Every document in this repository is one of the artifacts below. `scripts/check_
 | Surface | active | `docs/surfaces/{add-a-book,want-list,active-listings}.md` | Purpose (sentence) · What it shows · What you can do · Open issues (links) |
 | Scope | active | `docs/milestones/*/scope.md` | Goal (sentence) · Jobs advanced (job links) · Slices (slice links) |
 | Learnings | active | `docs/milestones/*/learnings.md` | Learnings (routed) · Carried forward (links, may be empty) |
+| Skill | active | `.claude/skills/*/SKILL.md` | Purpose (sentence) · Steps · Rules |
 | Runbook | active | `docs/runbook.md` | Deploy · Roll back · Restore data · Post-deploy checks · Known gaps (links, may be empty) |
 
 **Status.** An *active* artifact is checked. A *migrating* one exists in its old form and is checked once it is rewritten. A *retiring* one is deleted when its migration finishes.
@@ -25,7 +26,7 @@ Every document in this repository is one of the artifacts below. `scripts/check_
 - *(sentence)*: one sentence.
 - *(links)*: a list of GitHub issue or pull request links and nothing else. Problems live as issues, not as prose in a document.
 - *(job links)*: a list of links to jobs in `docs/jobs.md`.
-- *(slice links)*: a list of links to issues labelled `slice`. CI reads the labels from GitHub.
+- *(slice links)*: a list of links to issues labeled `slice`. CI reads the labels from GitHub.
 - *(routed)*: a list in which every item links the document it changed.
 - *may be empty*: the section heading stays, with no list under it.
 - *[…]*: `###` headings required under each `##`, in order. `<n>` and `<name>` stand for any value.
@@ -47,6 +48,8 @@ A Rules section may group its rules under `###` headings, chosen per document.
 | Tech debt | `tech debt` | An internal change I would never see: code, infrastructure or compliance. | What's wrong · What it costs if left |
 | Process gap | `process gap` | How we work is missing something: a doc, a workflow or an operating step. | What went wrong or is missing · Which doc or workflow should change |
 
+A stale reference found anywhere, in a doc, in code or in an issue, is logged as a process gap or tech debt issue, not left.
+
 **Slices.** A slice is an issue a milestone has taken on. It keeps its type label, adds the `slice` label and the milestone, and is titled `S## · outcome`. Its body is rewritten in place into four sections:
 
 - **Outcome:** one sentence. What exists after this that didn't before.
@@ -54,19 +57,13 @@ A Rules section may group its rules under `###` headings, chosen per document.
 - **Decisions it forces:** what the slice settles. Anything expensive to reverse goes in the rules or surface doc it changes, in the same pull request.
 - **External calls:** requests to eBay, Open Library or anything else, how many, and when.
 
-Related issues can become one slice: one is refined, and the others are closed as duplicates of it. An issue that still needs design waits until it can be written as a slice.
+Related issues can become one slice: one is refined, and the others are closed as duplicates of it.
 
 **A slice can ship as several pull requests** when its parts share one outcome and one acceptance list.
 
-**Starting a milestone:**
+**Starting a milestone** uses the `set-milestone` skill. A milestone can start while the one before it waits to close.
 
-1. Choose its issues from the open issues.
-2. Draft its name, its goal and its slices, and have them approved before any issue is rewritten or any code is written.
-3. Turn them into slices.
-4. Create its folder and write `scope.md`.
-5. Create its GitHub milestone, titled `M8 - Always current`, with the goal sentence as its description, followed by a link to its folder on `main`.
-
-A milestone can start while the one before it waits to close.
+**Starting a slice** uses the `plan-slice` skill, before any code.
 
 **Closing a milestone:**
 
@@ -75,7 +72,7 @@ A milestone closes only once its outcome has been checked on the live app. Its c
 1. Bring `scope.md` up to date, with a goal that says what was delivered.
 2. Route each learning into the document that should change because of it: `CONTRIBUTING.md`, `CLAUDE.md`, the runbook, a rules or surface doc, the design system, or this file. Make the change, then record the learning in `learnings.md` with a link to where it went. A learning with nowhere to go is dropped.
 3. List the issues carried forward.
-4. Choose the next milestone from the open issues, if one has not already started.
+4. Start the next milestone with the `set-milestone` skill, if one has not already started.
 
 ## Writing style
 

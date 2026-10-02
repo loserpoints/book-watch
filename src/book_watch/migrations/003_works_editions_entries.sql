@@ -83,9 +83,9 @@ CREATE TABLE entry (
     -- rather than migrated over live rows a second time later.
     --
     -- Only 'reader' is written today. 'collector' is storable and nothing
-    -- reads it — the surface for it waits on its own labelling exercise,
+    -- reads it — the surface for it waits on its own labeling exercise,
     -- because it was measured on six listings and first-edition points live
-    -- in photographs rather than in any catalogue.
+    -- in photographs rather than in any catalog.
     hunt    TEXT NOT NULL CHECK (hunt IN ('reader', 'collector')),
 
     -- A collector wants one printing; a reader will take any. So this is
