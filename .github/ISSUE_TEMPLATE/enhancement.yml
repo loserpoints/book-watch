@@ -14,6 +14,6 @@ body:
     id: job
     attributes:
       label: Job it advances
-      description: "Link the job in docs/jobs.md."
+      description: "Link the job in docs/jobs.md. If none fits, this is a strategy issue instead."
     validations:
       required: true

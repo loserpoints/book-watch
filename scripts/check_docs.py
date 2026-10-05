@@ -84,7 +84,7 @@ def parse_sections(cell: str) -> list[Section]:
     cell = cell.strip()
     if not cell:
         return []
-    # A repeating section: "J<n> · <name> [Job (sentence) · Success signal]".
+    # A repeating section: "J<n> · <name> [Job (sentence) · Status (...)]".
     repeating = re.fullmatch(r"(.+?) \[(.+)\]", cell)
     if repeating:
         parent = parse_section(repeating.group(1))
@@ -152,6 +152,8 @@ def check_body(
     one_sentence = "\n\n" not in body and len(SENTENCE_END.findall(body)) == 1
     if "sentence" in section.flags and not one_sentence:
         return [f"{where}: '{section.name}' must be one sentence"]
+    if "met or not met" in section.flags and not re.match(r"(Met|Not met)\. ", body):
+        return [f"{where}: '{section.name}' must open with 'Met.' or 'Not met.'"]
     if "links" in section.flags:
         bad = [line for line in lines if not ISSUE_LINK.match(line)]
         if bad:

@@ -6,11 +6,15 @@ What I am trying to get done, and how I will know each job works.
 
 ### Job
 
-When the library doesn't have a book I want, I want to hand the title to something that keeps checking, so that finding a copy doesn't depend on me remembering to search again.
+When the library doesn't have a book I want, I want to hand the title to something that keeps checking every marketplace that sells used books, so that finding a copy doesn't depend on me remembering to search again, or on which site I search.
 
 ### Success signal
 
-A title sits on the list for two weeks. When I open the app, the results are already there and dated, and it shows which copies appeared since I last looked. If opening the app is what starts the search, this job is not done.
+A title sits on the list for two weeks. When I open the app, the results are already there and dated, from every marketplace I would otherwise search by hand, and it shows which copies appeared since I last looked. If opening the app is what starts the search, or I still search a marketplace by hand, this job is not done.
+
+### Status
+
+Not met. eBay is the only marketplace searched, so I still search AbeBooks and Biblio by hand. Searching them is blocked: [#145](https://github.com/loserpoints/book-watch/issues/145) waits on Biblio's terms, and AbeBooks closed its API to new developers.
 
 ## J2 · Narrow the pile to the few worth my attention
 
@@ -22,6 +26,10 @@ When a title has forty copies listed and most are wrong, I want the few worth lo
 
 I find what I want in the first handful of copies, and a copy I rejected yesterday is not back at the top today.
 
+### Status
+
+Not met. Nothing remembers a copy I've rejected, so it is back in the list tomorrow ([#105](https://github.com/loserpoints/book-watch/issues/105)).
+
 ## J3 · Judge one copy without opening the listing
 
 ### Job
@@ -31,6 +39,10 @@ When I'm looking at a candidate copy, I want its condition, its delivered cost a
 ### Success signal
 
 I reject an ex-library copy, a wrong edition or a clipped jacket from the list alone, and only open listings I'm seriously considering.
+
+### Status
+
+Met. Each copy shows its condition, its delivered price and its photos in its row, with the seller's condition note one tap away.
 
 ## J4 · Tell me when a copy appears
 
@@ -42,6 +54,10 @@ When a copy under my limit appears, I want to hear about it without having gone 
 
 I buy a book I didn't know was for sale until an email told me. On days when no copy is under a limit, no email arrives.
 
+### Status
+
+Met. The morning email lists copies under their limit, and arrived on two of three mornings in the week M9 was checked, with nothing on the third.
+
 ## J5 · Buy without wondering if I overpaid
 
 ### Job
@@ -52,6 +68,10 @@ When I find a copy at a price high enough that being wrong would annoy me, I wan
 
 I act on a listing without opening a second tab to check its price.
 
+### Status
+
+Met. Each copy shows where its price sits among the copies of the same book, on the price strip and in its rank.
+
 ## J6 · Take a book off the list when I'm done with it
 
 ### Job
@@ -61,3 +81,7 @@ When I've bought a copy or no longer want the book, I want it off the list, so t
 ### Success signal
 
 Everything on the list is something I would still buy today.
+
+### Status
+
+Met. A book can be removed from the want list, after a confirmation.

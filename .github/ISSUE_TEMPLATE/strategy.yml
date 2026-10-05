@@ -1,0 +1,19 @@
+name: Strategy
+description: "A change to what the app is for: its value proposition, its jobs, or who and what it is built for"
+labels: ["strategy"]
+body:
+  - type: textarea
+    id: change
+    attributes:
+      label: What would change
+      description: "What the app would promise that it doesn't today. Name the job it would add or change in docs/jobs.md, or the line of the value proposition."
+    validations:
+      required: true
+
+  - type: textarea
+    id: worth
+    attributes:
+      label: Why it might be worth it
+      description: "And what would have to be true first. Nothing is committed until it is adopted."
+    validations:
+      required: true
