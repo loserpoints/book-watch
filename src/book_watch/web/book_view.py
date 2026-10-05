@@ -19,6 +19,7 @@ from book_watch.copies import Copy, Verdict
 from book_watch.ebay.search import Money
 from book_watch.standing import Market, Standing
 from book_watch.web import strips
+from book_watch.web.filters import since
 
 SYMBOLS = {"USD": "$", "GBP": "£", "EUR": "€"}
 
@@ -52,11 +53,6 @@ def copy_row(
     """One copy, as `ui.copy_row` takes it."""
     delivered = copy.landed_cost
     place = _place(copy, placed, listed)
-    if verdict == "another currency":
-        # A price we cannot compare with the limit says so, and
-        # says which reason, rather than going uncoloured in silence. It takes
-        # the rank's place: the limit is what the reader came to judge by.
-        place = {"place": None, "place_text": "can't compare: another currency"}
     return {
         "url": copy.url,
         "new": new,
@@ -79,6 +75,10 @@ def copy_row(
         "abroad": copy.located_in
         if copy.located_in and copy.located_in != "US"
         else None,
+        "takes_offers": copy.takes_offers,
+        # When eBay first listed it (S62), kept through a relist. No date
+        # means no age, never an age of zero.
+        "listed": since(copy.listed) if copy.listed else None,
         # Delivered when it can be known; otherwise the asking
         # price, and the row says shipping is unknown rather than implying it.
         "price_text": money(delivered) if delivered else money(copy.price),
@@ -89,36 +89,20 @@ def copy_row(
 
 
 def _against(copy: Copy, verdict: Verdict, ceiling: Money | None) -> dict:
-    """Colour, and how far over.
-
-    Over is written the same way whether or not shipping is known. When it is
-    not, the copy is over on its price alone,
-    so the amount is a floor and carries a +: "$2+ over".
-    """
+    """Under or over the limit. A copy that can't be told, or has no limit
+    to be told against, is left uncolored. How far over is not said (S61):
+    the strip shows where the limit sits."""
     if verdict == "under":
-        return {"verdict": "under", "over_by": None}
-    if verdict == "over" and ceiling is not None:
-        delivered = copy.landed_cost
-        if delivered is not None:
-            return {
-                "verdict": "over",
-                "over_by": money(delivered.amount - ceiling.amount, ceiling.currency),
-            }
-        floor = money(copy.price.amount - ceiling.amount, ceiling.currency)
-        return {"verdict": "over", "over_by": f"{floor}+"}
-    if verdict == "shipping unstated":
-        return {"verdict": "unknown", "over_by": None}
-    # No ceiling, or another currency: nothing to colour.
-    return {"verdict": None, "over_by": None}
+        return {"verdict": "under"}
+    if verdict == "over" and ceiling is not None and copy.landed_cost is not None:
+        return {"verdict": "over"}
+    return {"verdict": None}
 
 
 def _place(copy: Copy, placed: Standing | None, listed: Prices) -> dict:
     """Where this copy sits among the others of its kind listed now."""
     if placed is None:
         return {"place": None, "place_text": None}
-    if placed.unplaced == "no delivered price":
-        reason = "shipping unknown" if copy.shipping is None else "another currency"
-        return {"place": None, "place_text": f"can't place: {reason}"}
     if placed.unplaced is not None:
         return {"place": None, "place_text": f"can't place: {placed.unplaced}"}
     if placed.listed == 1:

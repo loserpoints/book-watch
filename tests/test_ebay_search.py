@@ -299,7 +299,9 @@ def test_a_listing_with_no_image_is_still_a_listing():
 
 
 def test_an_unreadable_date_does_not_lose_the_listing():
-    summary = a_summary(itemCreationDate="the day before yesterday")
+    summary = a_summary(
+        itemCreationDate="the day before yesterday", itemOriginDate="last spring"
+    )
     (listing,) = build_browse(responds_with(search_response(summary))).search("x")
 
     assert listing.listing_date is None
@@ -477,3 +479,89 @@ def test_without_a_ship_to_zip_the_app_searches_and_says_shipping_is_off(
 
     assert RecordingBrowse.built == [None]
     assert "Shipping for calculated listings is off" in caplog.text
+
+
+def test_a_raw_search_keeps_fields_the_app_does_not_read():
+    """`search_raw` is the same request as `search`, with nothing dropped."""
+    seen = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return search_response(a_summary(somethingNew=["kept"]))
+
+    with build_browse(handler) as browse:
+        payload = browse.search_raw("Crash Ballard")
+        browse.search("Crash Ballard")
+
+    assert payload["itemSummaries"][0]["somethingNew"] == ["kept"]
+    assert seen[0].url == seen[1].url
+
+
+def test_a_raw_search_refuses_what_a_search_refuses():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(500, text="down")
+
+    with build_browse(handler) as browse, pytest.raises(EbaySearchError):
+        browse.search_raw("Crash Ballard")
+
+
+# --- how a copy is sold (S59) -------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("scope", "sent"),
+    [
+        ("us", "buyingOptions:{FIXED_PRICE},itemLocationCountry:US"),
+        ("everywhere", "buyingOptions:{FIXED_PRICE}"),
+    ],
+)
+def test_every_search_asks_for_fixed_price_listings_only(scope, sent):
+    """An auction's price is its current bid, so auctions are never asked for."""
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return search_response(a_summary())
+
+    build_browse(handler).search("Stoner John Williams", scope=scope)
+
+    (request,) = seen
+    assert request.url.params["filter"] == sent
+
+
+def test_a_copy_that_takes_offers_says_so():
+    """Shaped like the real Pride and Prejudice search in #211."""
+    offers = a_summary(itemId="v1|1|0", buyingOptions=["FIXED_PRICE", "BEST_OFFER"])
+    firm = a_summary(itemId="v1|2|0", buyingOptions=["FIXED_PRICE"])
+    unstated = a_summary(itemId="v1|3|0")
+
+    listings = build_browse(responds_with(search_response(offers, firm, unstated)))
+    found = {listing.item_id: listing for listing in listings.search("Austen")}
+
+    assert found["v1|1|0"].takes_offers
+    assert not found["v1|2|0"].takes_offers
+    assert found["v1|3|0"].buying_options == ()
+    assert not found["v1|3|0"].takes_offers
+
+
+# --- when a copy was listed (S62) --------------------------------------------
+
+
+def test_a_relisted_copy_keeps_the_date_it_was_first_listed():
+    """eBay: itemOriginDate "will be retained if an item is relisted", and
+    itemCreationDate is when this listing was created."""
+    relisted = a_summary(
+        itemCreationDate="2026-09-30T10:00:00.000Z",
+        itemOriginDate="2026-03-02T09:00:00.000Z",
+    )
+    (listing,) = build_browse(responds_with(search_response(relisted))).search("x")
+
+    assert listing.listing_date == datetime(2026, 3, 2, 9, 0, tzinfo=UTC)
+
+
+def test_without_an_origin_date_the_creation_date_stands_in():
+    summary = a_summary(itemCreationDate="2026-09-01T12:00:00.000Z")
+    summary.pop("itemOriginDate", None)
+    (listing,) = build_browse(responds_with(search_response(summary))).search("x")
+
+    assert listing.listing_date == datetime(2026, 9, 1, 12, 0, tzinfo=UTC)

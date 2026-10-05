@@ -42,7 +42,7 @@ RESEND_URL = "https://api.resend.com/emails"
 #: Resend's shared sending address. It delivers only to the account's own
 #: address, which is why no domain is needed.
 SENDER = "book-watch <onboarding@resend.dev>"
-APP_URL = "https://book-watch.fly.dev"
+APP_URL = "https://book-watch-alan.fly.dev"
 TIMEOUT_SECONDS = 30
 
 
@@ -227,8 +227,10 @@ def send_test(
     send(
         settings,
         "book-watch test email",
-        "<p>This is a test from book-watch. The morning email is set up.</p>",
-        "This is a test from book-watch. The morning email is set up.\n",
+        "<p>This is a test from book-watch. The morning email is set up.</p>"
+        f'<p><a href="{APP_URL}">Open book-watch</a></p>',
+        "This is a test from book-watch. The morning email is set up.\n"
+        f"Open book-watch: {APP_URL}\n",
         post,
     )
     return TEST_SENT

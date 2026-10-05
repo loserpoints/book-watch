@@ -1,4 +1,4 @@
-"""The price strips: dots on one scale, and a range labelled in whole dollars."""
+"""The price strips: dots on one scale, and a range labeled in whole dollars."""
 
 import re
 from decimal import Decimal
@@ -11,20 +11,21 @@ def positions(svg, cls):
 
 
 def test_prices_sit_on_one_scale_between_the_padded_ends():
-    svg = strips.range_strip([10, 20, 30], width=110, labelled=False)
+    svg = strips.range_strip([10, 20, 30], width=110, labeled=False)
 
     # 5px pad each side leaves 100px for a $20 span: $10 per 50px.
     assert positions(svg, "strip-dot") == [5.0, 55.0, 105.0]
 
 
-def test_the_limit_widens_the_scale_when_it_lies_outside_the_prices():
-    svg = strips.range_strip([10, 20], limit=30, width=110, labelled=False)
+def test_a_limit_outside_the_prices_leaves_the_scale_to_the_prices():
+    """S61: the scale no longer stretches to reach the limit, so a limit far
+    below every price cannot squeeze the dots and their labels together."""
+    svg = strips.range_strip([10, 20], limit=30, width=110, labeled=False)
 
-    assert positions(svg, "strip-dot") == [5.0, 55.0]
-    assert 'class="strip-limit" x1="105.0"' in svg
+    assert positions(svg, "strip-dot strip-dot-under") == [5.0, 105.0]
 
 
-def test_the_ends_are_labelled_in_whole_dollars():
+def test_the_ends_are_labeled_in_whole_dollars():
     svg = strips.range_strip([Decimal("10.49"), Decimal("26.5")])
 
     assert ">$10</text>" in svg
@@ -32,7 +33,7 @@ def test_the_ends_are_labelled_in_whole_dollars():
 
 
 def test_every_dot_on_the_range_strip_is_the_same():
-    """The cheapest is always the left end, so emphasising it says nothing."""
+    """The cheapest is always the left end, so emphasizing it says nothing."""
     svg = strips.range_strip([10, 12, 27])
 
     assert set(re.findall(r'<circle class="([\w-]+)"', svg)) == {"strip-dot"}
@@ -52,7 +53,7 @@ def test_a_single_copy_has_no_rank_strip():
 
 
 def test_one_price_sits_in_the_middle_rather_than_dividing_by_zero():
-    svg = strips.range_strip([12], width=110, labelled=False)
+    svg = strips.range_strip([12], width=110, labeled=False)
 
     assert positions(svg, "strip-dot") == [55.0]
 
@@ -61,3 +62,85 @@ def test_the_strip_says_what_it_shows_to_a_screen_reader():
     svg = strips.range_strip([10.49, 12, 27])
 
     assert 'aria-label="3 asking prices seen, $10 to $27"' in svg
+
+
+# --- the limit (S61) ---------------------------------------------------------
+
+
+def dots(svg):
+    return re.findall(r'class="strip-dot ?([a-z-]*)"', svg)
+
+
+def test_each_dot_is_judged_like_a_price():
+    svg = strips.range_strip([8, 10, 14], limit=10, width=110)
+
+    by_place = {
+        cx: cls
+        for cls, cx in re.findall(r'class="strip-dot ([a-z-]+)" cx="([\d.]+)"', svg)
+    }
+    # $8 and $10 at or under, $14 over: 5px pad, $6 over 100px.
+    assert by_place == {
+        "5.0": "strip-dot-under",
+        "38.3": "strip-dot-under",
+        "105.0": "strip-dot-over",
+    }
+
+
+def test_without_a_limit_the_dots_are_left_unjudged():
+    svg = strips.range_strip([8, 14])
+
+    assert dots(svg) == ["", ""]
+    assert "strip-limit" not in svg
+
+
+def test_the_limit_is_drawn_when_it_falls_among_the_prices():
+    svg = strips.range_strip([10, 20, 30], limit=15, width=110, labeled=False)
+
+    assert 'class="strip-limit" x1="30.0"' in svg
+
+
+def test_the_limit_is_drawn_at_either_end_of_the_prices():
+    for limit in (10, 30):
+        assert "strip-limit" in strips.range_strip([10, 20, 30], limit=limit)
+
+
+def test_a_limit_outside_the_prices_draws_no_line():
+    """No line with a ✓ means every copy is under; no line without one means
+    every copy is over. Either way the reading needs no color."""
+    for limit in (9, 31):
+        assert "strip-limit" not in strips.range_strip([10, 20, 30], limit=limit)
+
+
+def test_the_strip_says_how_many_prices_are_under_the_limit():
+    svg = strips.range_strip([8, 10, 14], limit=Decimal("10.49"))
+
+    assert "2 at or under the limit of $10" in svg
+
+
+def test_green_dots_are_drawn_over_red_ones():
+    """Later in an SVG is on top. Where dots crowd, a copy you could buy must
+    not hide under one you couldn't."""
+    svg = strips.range_strip([8, 15, 9, 16, 9.5], limit=9)
+
+    order = dots(svg)
+    assert order == sorted(order, key=lambda cls: cls == "strip-dot-under")
+    assert order.count("strip-dot-under") == 2
+
+
+def test_the_limit_line_is_centered_on_the_dots_and_clears_the_labels():
+    """Even above and below the dots, and 1px short of the labels' digits,
+    whose tops sit 3px under the strip's height at 10px type."""
+    for height in (16, 20):
+        svg = strips.range_strip([10, 20, 30], limit=15, height=height)
+
+        y1, y2 = (
+            float(v)
+            for v in re.search(
+                r'class="strip-limit"[^>]*y1="([-\d.]+)" y2="([-\d.]+)"', svg
+            ).groups()
+        )
+        dot_y = float(
+            re.search(r'class="strip-dot[^"]*" cx="[\d.]+" cy="([\d.]+)"', svg).group(1)
+        )
+        assert dot_y - y1 == y2 - dot_y
+        assert y2 == height + 2

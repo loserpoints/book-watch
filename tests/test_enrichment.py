@@ -95,11 +95,15 @@ class CountingDetail:
 
 
 class CountingResolver:
-    def __init__(self, connection, answers, raises=None, raise_after=None):
+    def __init__(
+        self, connection, answers, raises=None, raise_after=None, fails_for=()
+    ):
         self._connection = connection
         self.answers = answers
         self.raises = raises
         self.raise_after = raise_after
+        #: Numbers Open Library always fails on, whatever else it answers.
+        self.fails_for = set(fails_for)
         self.asked = []
         self.recaptured = []
 
@@ -110,6 +114,8 @@ class CountingResolver:
         return row is not None
 
     def identify(self, isbn):
+        if isbn in self.fails_for:
+            raise OpenLibraryUnavailable(f"GET /isbn/{isbn}.json returned 500")
         if self.raises and (
             self.raise_after is None or len(self.asked) >= self.raise_after
         ):
@@ -229,13 +235,16 @@ def test_open_library_going_down_leaves_what_was_learned(database):
     _, connection = database
     a_copy(connection, "v1|1|0")
     a_copy(connection, "v1|2|0")
+    a_copy(connection, "v1|3|0")
     detail = CountingDetail(
         {
             "v1|1|0": Declared("v1|1|0", isbn="9781590171998"),
             "v1|2|0": Declared("v1|2|0", isbn="9781598537024"),
+            "v1|3|0": Declared("v1|3|0", isbn="9781598537031"),
         }
     )
 
+    # Down after the first answer: two failures in a row (S57).
     result, _ = run(
         database,
         detail,
@@ -245,13 +254,69 @@ def test_open_library_going_down_leaves_what_was_learned(database):
     )
 
     assert not result.completed
+    assert result.stopped_because == "open library"
     # The eBay half finished and is kept: the next pass will not redo it.
     assert (
         connection.execute("SELECT count(*) AS n FROM listing_declaration").fetchone()[
             "n"
         ]
-        == 2
+        == 3
     )
+    row = connection.execute("SELECT enriched_at FROM work WHERE id = 1").fetchone()
+    assert row["enriched_at"] is None
+
+
+def test_a_number_open_library_fails_on_is_skipped_and_the_rest_are_asked(database):
+    """S57: one bad number no longer stops the book at the same place every
+    day. It is asked again when the book next has new copies."""
+    _, connection = database
+    a_copy(connection, "v1|1|0")
+    a_copy(connection, "v1|2|0")
+    detail = CountingDetail(
+        {
+            "v1|1|0": Declared("v1|1|0", isbn="9781590171998"),
+            "v1|2|0": Declared("v1|2|0", isbn="9781598537024"),
+        }
+    )
+
+    result, resolver = run(
+        database,
+        detail,
+        {"9781598537024": OMNIBUS},
+        fails_for={"9781590171998"},
+    )
+
+    assert resolver.asked == ["9781598537024"]
+    assert result.completed
+    assert result.resolved == 1
+    row = connection.execute("SELECT enriched_at FROM work WHERE id = 1").fetchone()
+    assert row["enriched_at"] is not None
+    # Nothing is stored for the number that failed.
+    assert not resolver.known("9781590171998")
+
+
+def test_failures_apart_are_each_skipped(database):
+    """Only failures in a row look like Open Library being down."""
+    _, connection = database
+    numbers = ["9781590171998", "9781598537024", "9781598537031"]
+    for n in range(1, len(numbers) + 1):
+        a_copy(connection, f"v1|{n}|0")
+    detail = CountingDetail(
+        {
+            f"v1|{n}|0": Declared(f"v1|{n}|0", isbn=isbn)
+            for n, isbn in enumerate(numbers, 1)
+        }
+    )
+
+    result, resolver = run(
+        database,
+        detail,
+        {"9781598537024": OMNIBUS},
+        fails_for={"9781590171998", "9781598537031"},
+    )
+
+    assert resolver.asked == ["9781598537024"]
+    assert result.completed
 
 
 def test_an_unfinished_pass_is_not_recorded_as_finished(database):
@@ -339,7 +404,7 @@ def test_a_pass_gives_an_untitled_book_its_title(database):
     assert row["resolved_at"] is not None
 
 
-def test_a_book_the_catalogue_cannot_identify_stops_saying_it_is_being_looked_up(
+def test_a_book_the_catalog_cannot_identify_stops_saying_it_is_being_looked_up(
     database,
 ):
     """Asked, and there is no answer. Claiming somebody is still looking
@@ -525,6 +590,30 @@ def test_a_stale_number_is_asked_about_again(database):
 
     assert resolver.recaptured == ["9781590171998"]
     assert result.stale_remaining == 0
+
+
+def test_a_stale_number_open_library_fails_on_is_skipped(database):
+    """The same rule when re-asking (S57): the stale answer stays as it was,
+    and the other stale numbers are still brought up to date."""
+    _, connection = database
+    a_copy(connection, "v1|1|0")
+    a_copy(connection, "v1|2|0")
+    detail = CountingDetail(
+        {
+            "v1|1|0": Declared("v1|1|0", isbn="9781590171998"),
+            "v1|2|0": Declared("v1|2|0", isbn="9781598537024"),
+        }
+    )
+    answers = {"9781590171998": STONER, "9781598537024": OMNIBUS}
+    run(database, detail, answers)
+    captured_long_ago(connection, isbn="9781590171998")
+    captured_long_ago(connection, isbn="9781598537024")
+
+    result, _ = run(database, detail, answers, fails_for={"9781590171998"})
+
+    assert result.completed
+    assert result.recaptured == 1
+    assert result.stale_remaining == 1
 
 
 def test_what_is_left_stale_is_reported_when_a_pass_stops_early(database):

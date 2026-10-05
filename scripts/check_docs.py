@@ -32,8 +32,13 @@ Labels = Callable[[int], set[str]]
 MILESTONE_DIR = re.compile(r"^m\d{2}-[a-z0-9-]+$")
 SENTENCE_END = re.compile(r"[.!?](?=\s|$)")
 #: "decision 33", "decisions 47, 52", "decisions.md entry 4". The decision
-#: log is retired: a reason is stated where it applies, not pointed at.
-DECISION_REF = re.compile(r"\b[Dd]ecisions?(\.md)?( entry| entries)? \d+")
+#: log is retired: a reason is stated where it applies, not pointed at. A
+#: comment can wrap between the word and its number, so the gap may hold a
+#: line break and the next line's comment marker.
+GAP = r"(?:\s|#|--|\*|//)+"
+DECISION_REF = re.compile(
+    rf"\b[Dd]ecisions?(\.md)?(?:{GAP}entry|{GAP}entries)?{GAP}\d+"
+)
 #: Where decision references are looked for. This file and its tests hold the
 #: pattern on purpose.
 SOURCE_SUFFIXES = {".py", ".html", ".js", ".css", ".toml", ".sql", ".sh", ".yml"}
@@ -167,7 +172,7 @@ def check_body(
 def check_slices(
     where: str, section: Section, lines: list[str], labels: Labels | None
 ) -> list[str]:
-    """Issue links only, and each issue labelled `slice` when labels are known."""
+    """Issue links only, and each issue labeled `slice` when labels are known."""
     errors = []
     for line in lines:
         match = ISSUE_LINK.match(line)
@@ -178,7 +183,7 @@ def check_slices(
             continue
         number = int(line.rstrip(")").rsplit("/", 1)[1])
         if labels is not None and "slice" not in labels(number):
-            errors.append(f"{where}: #{number} is not labelled 'slice'")
+            errors.append(f"{where}: #{number} is not labeled 'slice'")
     return errors
 
 
@@ -200,10 +205,15 @@ def check_routed(
     return errors
 
 
+#: A skill opens with YAML frontmatter, which Claude Code reads and the
+#: sections check does not.
+FRONTMATTER = re.compile(r"\A---\n.*?\n---\n", re.S)
+
+
 def check_file(
     root: Path, rel: str, artifact: Artifact, labels: Labels | None = None
 ) -> list[str]:
-    text = (root / rel).read_text()
+    text = FRONTMATTER.sub("", (root / rel).read_text(), count=1)
     errors = []
     titles = [line for line in text.splitlines() if line.startswith("# ")]
     if not text.lstrip().startswith("# ") or len(titles) != 1:
@@ -260,6 +270,10 @@ def documents(root: Path) -> list[str]:
         for p in (root / "docs").rglob("*")
         if p.is_file()
     ]
+    found += [
+        p.relative_to(root).as_posix()
+        for p in (root / ".claude" / "skills").glob("*/SKILL.md")
+    ]
     return sorted(
         found
         + [
@@ -292,9 +306,10 @@ def check_decision_refs(root: Path, retiring: set[str]) -> list[str]:
         rel = path.relative_to(root).as_posix()
         if rel in NOT_SCANNED or rel in retiring:
             continue
-        for n, line in enumerate(path.read_text(errors="ignore").splitlines(), 1):
-            if DECISION_REF.search(line):
-                errors.append(f"{rel}:{n}: refers to a decision; state the reason")
+        text = path.read_text(errors="ignore")
+        for match in DECISION_REF.finditer(text):
+            n = text.count("\n", 0, match.start()) + 1
+            errors.append(f"{rel}:{n}: refers to a decision; state the reason")
     return errors
 
 

@@ -7,8 +7,7 @@ answer stays current.
 
 Kept apart from `copies` because the questions differ in tense. That module
 asks what is for sale now; this one asks what was true when we last looked,
-and a page that confuses the two shows copies that sold days ago (decision
-48).
+and a page that confuses the two shows copies that sold days ago.
 
 A sweep **adds**. It used to delete a book's copies and reinsert them, which
 answered the page's question by destroying the answer to a later one — what a
@@ -18,6 +17,7 @@ a price, and it arrives in a search we already ran.
 
 from __future__ import annotations
 
+import json
 import sqlite3
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -164,8 +164,8 @@ def store(
             INSERT INTO copy (
                 item_id, work_id, title, url, price, currency, shipping,
                 condition, condition_id, seller, thumbnail, epid, listed_at,
-                located_in, first_seen_at, last_seen_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                located_in, buying_options, first_seen_at, last_seen_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                       datetime('now'), datetime('now'))
             ON CONFLICT (item_id, work_id) DO UPDATE SET
                 title = excluded.title,
@@ -180,6 +180,7 @@ def store(
                 epid = excluded.epid,
                 listed_at = excluded.listed_at,
                 located_in = excluded.located_in,
+                buying_options = excluded.buying_options,
                 last_seen_at = datetime('now')
             """,
             (
@@ -197,6 +198,9 @@ def store(
                 listing.epid,
                 listing.listing_date.isoformat() if listing.listing_date else None,
                 listing.located_in,
+                json.dumps(list(listing.buying_options))
+                if listing.buying_options
+                else None,
             ),
         )
         connection.execute(

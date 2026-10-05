@@ -37,11 +37,16 @@ class EbayCredentials:
 
 
 def _require(name: str) -> str:
+    """The setting's value, or an error that says where to set it.
+
+    The fix named is Fly's, because the app runs only there: this message is
+    read on the book page, in the daily check's log and in the test email's
+    run, all on Fly. A developer running it elsewhere has the README.
+    """
     value = os.environ.get(name, "").strip()
     if not value:
         raise MissingCredentialError(
-            f"{name} is not set. Copy .env.example to .env and fill it in, "
-            f"or export {name} in your shell."
+            f"{name} is not set. Add it under the app's Secrets on Fly."
         )
     return value
 

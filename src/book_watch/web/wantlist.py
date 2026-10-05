@@ -23,6 +23,7 @@ from collections.abc import Callable
 from contextlib import closing
 from datetime import UTC, datetime
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from fastapi import APIRouter, BackgroundTasks, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
@@ -32,7 +33,7 @@ from book_watch import covers, daily, db, enrichment, standing, sweeps, wantlist
 from book_watch.config import MissingCredentialError, load_database_path
 from book_watch.ebay.errors import EbayError
 from book_watch.ebay.search import DEFAULT_LIMIT
-from book_watch.isbn import normalise
+from book_watch.isbn import normalize
 from book_watch.openlibrary import (
     CallBudget,
     OpenLibraryClient,
@@ -49,7 +50,7 @@ ROW_PATH = "/books/{book_id}/row"
 ConnectFn = Callable[[], sqlite3.Connection]
 
 
-class LazyCatalogue:
+class LazyCatalog:
     """Holds one Open Library client for the life of the application.
 
     One, rather than one per request, and this is load-bearing. The pause
@@ -98,9 +99,35 @@ def open_configured_database() -> sqlite3.Connection:
     return connection
 
 
+def from_htmx(request: Request) -> bool:
+    """Whether htmx sent this, so the answer can be a piece of the page that
+    leaves the history alone rather than a whole new page (S45)."""
+    return request.headers.get("HX-Request") == "true"
+
+
+#: The page address for the want list narrowed to books with a copy under
+#: their limit (S60, #132). It lives in the address, not in the database or
+#: the device, so it survives opening a book and going back, and opening the
+#: app fresh shows everything.
+UNDER_LIMIT_URL = "/?show=under"
+
+
+def wants_under(request: Request) -> bool:
+    """Whether this request is for the list narrowed to books under a limit.
+
+    Asked by the address itself, or, for a piece htmx fetches from another
+    path, by the address of the page it came from. That is how deleting a
+    book keeps the filter on without the delete knowing about it.
+    """
+    if request.query_params.get("show") == "under":
+        return True
+    current = request.headers.get("HX-Current-URL", "")
+    return "show=under" in urlsplit(current).query.split("&")
+
+
 def build_router(
     connect: ConnectFn | None = None,
-    catalogue: LazyCatalogue | None = None,
+    catalog: LazyCatalog | None = None,
     search: SearchFn | None = None,
     enrich: enrichment.EnrichFn | None = None,
 ) -> APIRouter:
@@ -113,7 +140,7 @@ def build_router(
     open_database: ConnectFn = (
         connect if connect is not None else open_configured_database
     )
-    open_library = catalogue if catalogue is not None else LazyCatalogue(open_database)
+    open_library = catalog if catalog is not None else LazyCatalog(open_database)
     run_search: SearchFn = search if search is not None else LazyBrowseSearch()
     start_enrichment: enrichment.EnrichFn = (
         enrich if enrich is not None else enrichment.configured(open_database)
@@ -137,6 +164,18 @@ def build_router(
         """
         return {book.id: standing.glance(connection, book) for book in books}
 
+    def under_limit(glances: dict[int, object]) -> set[int]:
+        """The books whose row price is green: a copy at or under the limit.
+
+        The row's own verdict, so the filter can never disagree with what the
+        row shows. No limit, or a price without shipping, is never under.
+        """
+        return {
+            book_id
+            for book_id, glance in glances.items()
+            if glance.headline is not None and glance.headline.verdict == "under"
+        }
+
     def out_of_date(connection: sqlite3.Connection, books: list) -> int:
         """How many books Update would check: the same gate `check_all` uses,
         so the count on the button is what pressing it costs."""
@@ -146,22 +185,38 @@ def build_router(
             if sweeps.due_for_sweep(connection, book.work_id, scope="us")
         )
 
-    def render_list(request: Request, *, checking: int | None = None) -> HTMLResponse:
+    def render_list(
+        request: Request,
+        *,
+        checking: int | None = None,
+        template: str = "_list.html",
+        under: bool | None = None,
+    ) -> HTMLResponse:
         with closing(open_database()) as connection:
             books = wantlist.all_books(connection)
             glances = at_a_glance(connection, books)
             stale = out_of_date(connection, books)
             morning = daily.status(connection, datetime.now(UTC))
+        under_ids = under_limit(glances)
+        if under is None:
+            under = wants_under(request)
         return templates.TemplateResponse(
             request,
-            "_list.html",
+            template,
             {
+                # An empty add sheet, for `_added.html`.
+                "isbn": "",
+                "title": "",
+                "author": "",
                 "books": books,
                 "glances": glances,
                 "checking": checking,
                 "stale": stale,
                 "throttled": throttled(books),
                 "daily": morning,
+                "under_ids": under_ids,
+                # Nothing under a limit shows everything, never an empty list.
+                "filtering": under and bool(under_ids),
             },
         )
 
@@ -184,15 +239,22 @@ def build_router(
             stale = out_of_date(connection, books)
             morning = daily.status(connection, datetime.now(UTC))
             on_list = wantlist.listed_works(connection) if candidates else set()
+        under_ids = under_limit(glances)
+        # Through htmx, only the sheet comes back, and it comes back as a
+        # success: htmx does not swap an error status in, and the error is
+        # the answer the sheet exists to show (S45).
+        htmx = from_htmx(request)
         return templates.TemplateResponse(
             request,
-            "wantlist.html",
+            "_add_sheet.html" if htmx else "wantlist.html",
             {
                 "books": books,
                 "glances": glances,
                 "stale": stale,
                 "throttled": throttled(books),
                 "daily": morning,
+                "under_ids": under_ids,
+                "filtering": wants_under(request) and bool(under_ids),
                 # The book just added, which starts checking itself on load.
                 # Adding a book is an explicit act, so this is not an
                 # exception to "nothing sweeps on page load" — and it means a
@@ -209,7 +271,7 @@ def build_router(
                 "title": title,
                 "author": author,
             },
-            status_code=status_code,
+            status_code=200 if htmx else status_code,
         )
 
     def store(request: Request, put_on_list, duplicate_of: str) -> HTMLResponse:
@@ -225,11 +287,30 @@ def build_router(
         # The whole page comes back, so the form clears and the new row shows
         # — already checking itself, because the first thing you want to know
         # about a book you just added is whether anybody is selling it.
-        return render_page(request, checking=added.id)
+        if not from_htmx(request):
+            return render_page(request, checking=added.id)
+        # Through htmx the list is swapped in place and the sheet emptied and
+        # closed, so adding a book leaves nothing in the history (S45).
+        # The whole list shows, filter off, so the new book is there to see:
+        # it has no price yet, and would otherwise vanish as it was added.
+        response = render_list(
+            request, checking=added.id, template="_added.html", under=False
+        )
+        response.headers["HX-Replace-Url"] = "/"
+        response.headers["HX-Retarget"] = "#want-list"
+        response.headers["HX-Reswap"] = "outerHTML"
+        response.headers["HX-Trigger"] = "added"
+        return response
 
     @router.get("/", response_class=HTMLResponse)
     def want_list(request: Request) -> HTMLResponse:
         return render_page(request)
+
+    @router.get("/books/list", response_class=HTMLResponse)
+    def the_list(request: Request) -> HTMLResponse:
+        """The list alone, for the switch between all books and those under a
+        limit. The switch replaces the page address, so it adds no history."""
+        return render_list(request)
 
     @router.post("/books", response_class=HTMLResponse)
     def add_book(
@@ -259,9 +340,9 @@ def build_router(
     def _add_by_number(
         request: Request, typed: str, title: str, author: str, override: bool
     ) -> HTMLResponse:
-        normalised = normalise(typed)
+        normalized = normalize(typed)
 
-        if normalised is None:
+        if normalized is None:
             if not override:
                 # Not an error yet — an offer. The check digit says this is not
                 # an ISBN, which is usually a typo and occasionally a book that
@@ -279,7 +360,7 @@ def build_router(
                     status_code=400,
                 )
             # Stored as typed, spaces and all: it is not an ISBN, so
-            # normalising it would be pretending otherwise.
+            # normalizing it would be pretending otherwise.
             return store(
                 request,
                 lambda c: wantlist.add(c, typed, title or None),
@@ -287,16 +368,16 @@ def build_router(
             )
 
         if override:
-            # A valid number Open Library did not recognise, added anyway
+            # A valid number Open Library did not recognize, added anyway
             # because the person holding the book says it is real.
             return store(
                 request,
-                lambda c: wantlist.add(c, normalised, title or None),
-                duplicate_of=normalised,
+                lambda c: wantlist.add(c, normalized, title or None),
+                duplicate_of=normalized,
             )
 
         try:
-            identity = open_library.identify_isbn(normalised)
+            identity = open_library.identify_isbn(normalized)
         except OpenLibraryUnavailable:
             return render_page(
                 request,
@@ -305,7 +386,7 @@ def build_router(
                     "check this number against right now."
                 ),
                 offer_override=True,
-                isbn=normalised,
+                isbn=normalized,
                 title=title,
                 author=author,
                 status_code=503,
@@ -315,12 +396,12 @@ def build_router(
             return render_page(
                 request,
                 error=(
-                    f"Open Library has no record of {normalised}. That is "
+                    f"Open Library has no record of {normalized}. That is "
                     "usually a mistyped digit — and occasionally a real book "
                     "it simply does not hold."
                 ),
                 offer_override=True,
-                isbn=normalised,
+                isbn=normalized,
                 title=title,
                 author=author,
                 status_code=404,
@@ -335,10 +416,10 @@ def build_router(
                 title=identity.title,
                 author=author or None,
                 openlibrary_work_id=identity.work_id,
-                isbn=normalised,
+                isbn=normalized,
                 edition_cover=identity.cover_id,
             ),
-            duplicate_of=normalised,
+            duplicate_of=normalized,
         )
 
     def _search_by_title(request: Request, title: str, author: str) -> HTMLResponse:

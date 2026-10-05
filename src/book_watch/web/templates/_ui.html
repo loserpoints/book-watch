@@ -17,7 +17,7 @@
 {#- Still digging: the app is working out which copies are really this book.
     The word shimmers; tapping it says why it takes a while. -#}
 {% macro digging(label="digging") -%}
-{{ explain(label, "Checking which of these copies are really this book. We ask the public catalogues slowly on purpose: they're free, and we'd like them to stay that way.", "digging") }}
+{{ explain(label, "Checking which of these copies are really this book. We ask the public catalogs slowly on purpose: they're free, and we'd like them to stay that way.", "digging") }}
 {%- endmacro %}
 
 
@@ -36,29 +36,30 @@
 
 
 {#- A cover, over its placeholder. The placeholder is always there, so a slow
-    or missing image leaves the book recognisable rather than an empty frame.
+    or missing image leaves the book recognizable rather than an empty frame.
     `url` is the image, or the route that learns it, or none
     when Open Library holds no cover. -#}
 {% macro cover(title, author=None, url=None, size="md") -%}
 <div class="cover cover-{{ size }}" aria-hidden="true">
   {#- The author only on the large size: at 40-52px wide there is room for a
-      title or a name, not both, and the title is what is recognised. -#}
+      title or a name, not both, and the title is what is recognized. -#}
   <span class="cover-ph" lang="en"><span class="cover-ph-title">{{ title }}</span>{% if author and size == 'lg' %}<span class="cover-ph-author">{{ author }}</span>{% endif %}</span>
   {%- if url %}<img src="{{ url }}" alt="" loading="lazy" onerror="this.remove()">{% endif %}
 </div>
 {%- endmacro %}
 
 
-{#- The headline price, delivered. Colour and a mark together,
-    never colour alone: ✓ for at or under the limit, the amount over for over.
+{#- The headline price, delivered. ✓ and green for at or under the limit;
+    red for over, with no mark, since what matters is whether you can buy it
+    and the missing ✓ says you can't (S61). A screen reader hears either way.
     `verdict` is under, over, or none (no limit, or cannot tell). -#}
-{% macro price(text, verdict=None, over_by=None, prefix="") -%}
+{% macro price(text, verdict=None, prefix="") -%}
 <span class="price price-{{ verdict or 'plain' }}">
   {%- if verdict == 'under' %}<span class="price-mark" aria-hidden="true">✓ </span>{% endif -%}
   {{ prefix }}{{ text }}
   {%- if verdict == 'under' %}<span class="sr-only"> (under your limit)</span>{% endif -%}
+  {%- if verdict == 'over' %}<span class="sr-only"> (over your limit)</span>{% endif -%}
 </span>
-{%- if verdict == 'over' and over_by %} <span class="price-over-by">{{ over_by }} over</span>{% endif %}
 {%- endmacro %}
 
 
@@ -70,8 +71,10 @@
 {#- A chip: a small control or fact that sits in a row of them. -#}
 {#- `open` makes the chip open a sheet instead of following its link; the
     link stays as the no-script fallback. -#}
-{% macro chip(label, value=None, href="#", icon=None, open=None) -%}
-<a class="chip" href="{{ href }}"{% if open %} data-open="{{ open }}"{% endif %}>{{ label }}{% if value %} <b>{{ value }}</b>{% endif %}{% if icon %} <span aria-hidden="true">{{ icon }}</span>{% endif %}</a>
+{#- `replace` for a chip that shows the same screen another way: it takes the
+    place of this page in the history, so back still leaves the screen (S45). -#}
+{% macro chip(label, value=None, href="#", icon=None, open=None, replace=False) -%}
+<a class="chip" href="{{ href }}"{% if open %} data-open="{{ open }}"{% endif %}{% if replace %} data-replace{% endif %}>{{ label }}{% if value %} <b>{{ value }}</b>{% endif %}{% if icon %} <span aria-hidden="true">{{ icon }}</span>{% endif %}</a>
 {%- endmacro %}
 
 
@@ -86,6 +89,8 @@
     right. `state` is ok, checking, failed, unchecked, maybes or none. -#}
 {#- On the real list a row carries its id, so a check can swap it back in
     out of band (`oob`), and the trash asks before it removes (S26 B6). -#}
+{#- Tapping anywhere on the row opens the book: the title's link covers it
+    (S46). The trash, "digging" and "Throttled" keep their own taps. -#}
 {% macro book_row(b, oob=False) -%}
 {#- A row that is digging asks for itself again until it isn't, so it clears
     without a reload. A row not digging never asks. -#}
@@ -111,8 +116,10 @@
     </div>
     {% if b.state == 'ok' and b.price_text %}
       <div class="book-row-price">
-        {{ price(b.price_text, b.verdict, b.over_by, prefix="from ") }}
-        {{ b.strip }}
+        {{ price(b.price_text, b.verdict, prefix="from ") }}
+        {%- if b.limit_text %}<span class="row-limit">{{ b.limit_text }}</span>{% endif %}
+        {#- One price is a point, not a shape, and draws no strip. -#}
+        {% if b.strip %}{{ b.strip }}{% endif %}
       </div>
     {% endif %}
   </div>
@@ -141,14 +148,10 @@
   {%- endif %}
   <div class="copy-main">
     <div class="copy-price">
-      {%- if c.verdict == 'unknown' -%}
-        <span class="price price-plain">{{ c.price_text }} + shipping?</span>
-      {%- else -%}
-        {{ price(c.price_text ~ (' + shipping?' if c.shipping_unknown else ''), c.verdict, c.over_by) }}
-      {%- endif %}
+      {{- price(c.price_text ~ (' + shipping?' if c.shipping_unknown else ''), c.verdict) }}
       {%- if c.place_text %} <span class="meta">{{ c.place_text }}</span>{% else %} {{ c.place }}{% endif %}
     </div>
-    <div class="copy-tags">{% if c.new %}{{ tag('new', accent=True) }}{% endif %}{{ tag(c.condition, strong=True) }}{% if c.abroad %}{{ tag('ships from ' ~ c.abroad) }}{% endif %}</div>
+    <div class="copy-tags">{% if c.new %}{{ tag('new', accent=True) }}{% endif %}{{ tag(c.condition, strong=True) }}{% if c.abroad %}{{ tag('ships from ' ~ c.abroad) }}{% endif %}{% if c.takes_offers %}{{ tag('takes offers') }}{% endif %}{% if c.listed %}<span class="meta copy-listed">listed {{ c.listed }}</span>{% endif %}</div>
     <a class="copy-listing" href="{{ c.url }}" rel="noopener noreferrer" target="_blank">{{ c.listing_title }}</a>
   </div>
   {%- if dismiss %}
@@ -169,7 +172,7 @@
   {#- On the real sheet, a row not already on the list is a form whose one
       button covers the whole row (principle 5): tapping anywhere adds it. -#}
   {%- if c.post and not c.on_list %}
-  <form class="candidate-add" method="post" action="/books/chosen">
+  <form class="candidate-add" hx-post="/books/chosen" hx-target="#add-sheet-body" method="post" action="/books/chosen">
     {%- for name, value in c.post.items() %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endfor %}
     <button type="submit" class="candidate-hit" aria-label="Add {{ c.title }}{% if c.author %} by {{ c.author }}{% endif %}{% if c.year %}, {{ c.year }}{% endif %}"></button>
   </form>
@@ -221,7 +224,7 @@
 {%- endmacro %}
 
 
-{#- A labelled text field. The label is always visible; a hint says what the
+{#- A labeled text field. The label is always visible; a hint says what the
     field is for, and an optional field says so rather than leaving it to a
     guess. -#}
 {% macro field(id, label, value="", name=None, hint=None, optional=False, inputmode=None, placeholder=None) -%}
@@ -238,11 +241,16 @@
 
 {#- One tap between two ways in (principle 4). Radios under the hood, so the
     choice needs no JavaScript and submits with the form; the sheet shows the
-    matching fields with CSS :has(). -#}
+    matching fields with CSS :has().
+
+    An option may carry a third item, a dict of attributes for its radio: the
+    want list's switch fetches the list with htmx, and greys out an empty
+    side with `disabled`. -#}
 {% macro switch(name, options, selected) -%}
 <div class="switch" role="radiogroup">
-  {%- for value, label in options %}
-  <label class="switch-option"><input type="radio" name="{{ name }}" value="{{ value }}"{% if value == selected %} checked{% endif %}><span>{{ label }}</span></label>
+  {%- for option in options %}
+  {%- set value, label = option[0], option[1] %}
+  <label class="switch-option"><input type="radio" name="{{ name }}" value="{{ value }}"{% if value == selected %} checked{% endif %}{% if option | length > 2 %}{{ option[2] | xmlattr }}{% endif %}><span data-label="{{ label }}">{{ label }}</span></label>
   {%- endfor %}
 </div>
 {%- endmacro %}

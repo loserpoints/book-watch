@@ -17,6 +17,7 @@ Run it directly to see what comes back:
 
 from __future__ import annotations
 
+import json
 import sys
 from dataclasses import dataclass
 from datetime import datetime
@@ -57,6 +58,13 @@ Scope = Literal["us", "everywhere"]
 #: eBay's filters are positive. There is no "not located in the US", so the
 #: other scope is simply no filter, which returns both.
 _LOCATION_FILTER = {"us": "itemLocationCountry:US", "everywhere": None}
+
+#: Every search asks for fixed-price listings only (S59). An auction's `price`
+#: is its current bid, which is not a price anyone can pay, so it has no place
+#: beside a limit, a rank or an email. A listing that takes Best Offer is still
+#: fixed price, and comes back with `BEST_OFFER` in its `buyingOptions`.
+#: Collectibles will want auctions back (#144).
+_BUYING_FILTER = "buyingOptions:{FIXED_PRICE}"
 
 DEFAULT_LIMIT = 50
 
@@ -114,7 +122,7 @@ class Listing:
     #: eBay did not say. Absent is not "overseas" — it is unknown, and a copy
     #: is never called an import on the strength of a missing field.
     located_in: str | None = None
-    #: eBay's own product id, where its catalogue matched this listing to one.
+    #: eBay's own product id, where its catalog matched this listing to one.
     #: It is one of three identifier signals and the least
     #: trustworthy — it over-merges, so distinct Crash editions share one —
     #: but it finds 80% of the copies of a given edition, which nothing else
@@ -126,6 +134,14 @@ class Listing:
     shipping_cost: Money | None = None
     thumbnail_url: str | None = None
     listing_date: datetime | None = None
+    #: eBay's buying formats for this listing, such as `FIXED_PRICE` and
+    #: `BEST_OFFER`. Empty when eBay sent none, which is unknown, not "no".
+    buying_options: tuple[str, ...] = ()
+
+    @property
+    def takes_offers(self) -> bool:
+        """Whether the seller will consider an offer below the asking price."""
+        return "BEST_OFFER" in self.buying_options
 
     @property
     def landed_cost(self) -> Money | None:
@@ -184,6 +200,30 @@ class BrowseClient:
         doing it in the client would bake one use case's preference into the
         layer both modes share.
         """
+        return _parse_listings(
+            self._get(query, limit=limit, search_by=search_by, scope=scope)
+        )
+
+    def search_raw(
+        self,
+        query: str,
+        *,
+        limit: int = DEFAULT_LIMIT,
+        search_by: SearchBy = "keyword",
+        scope: Scope = "us",
+    ) -> dict[str, Any]:
+        """The same request as `search`, with eBay's answer left as it came.
+
+        For seeing a field the app does not read yet, and for capturing a real
+        response as a test fixture.
+        """
+        return _decode_json(
+            self._get(query, limit=limit, search_by=search_by, scope=scope)
+        )
+
+    def _get(
+        self, query: str, *, limit: int, search_by: SearchBy, scope: Scope
+    ) -> httpx.Response:
         term = query.strip()
         if not term:
             raise EbaySearchError("A search needs a non-empty query.")
@@ -195,8 +235,10 @@ class BrowseClient:
         params: dict[str, str | int] = {"limit": limit}
         params["gtin" if search_by == "gtin" else "q"] = term
         location = _LOCATION_FILTER[scope]
-        if location is not None:
-            params["filter"] = location
+        # eBay takes several filters as one comma-separated parameter.
+        params["filter"] = ",".join(
+            part for part in (_BUYING_FILTER, location) if part is not None
+        )
 
         try:
             response = self._client.get(
@@ -210,7 +252,7 @@ class BrowseClient:
         if response.status_code != httpx.codes.OK:
             raise EbaySearchError(_describe_failure(response))
 
-        return _parse_listings(response)
+        return response
 
     def _headers(self) -> dict[str, str]:
         headers = {
@@ -264,6 +306,23 @@ def search_listings(
         BrowseClient(tokens, ship_to_zip=ship_to_zip) as browse,
     ):
         return browse.search(query, limit=limit, search_by=search_by)
+
+
+def search_listings_raw(
+    query: str, *, search_by: SearchBy = "keyword"
+) -> dict[str, Any]:
+    """Search eBay for `query` once, the way the app does, and return the JSON.
+
+    The app's own search drops every field it does not read. This keeps them,
+    so a field can be checked against a real answer before it is built on.
+    """
+    credentials = load_ebay_credentials()
+    ship_to_zip = load_ship_to_zip()
+    with (
+        EbayTokenProvider(credentials) as tokens,
+        BrowseClient(tokens, ship_to_zip=ship_to_zip) as browse,
+    ):
+        return browse.search_raw(query, search_by=search_by)
 
 
 class Results(list[Listing]):
@@ -330,9 +389,23 @@ def _parse_listing(item: Any, index: int) -> Listing:
         seller=_parse_seller(item.get("seller")),
         shipping_cost=_parse_shipping(item.get("shippingOptions"), index),
         thumbnail_url=_parse_thumbnail(item),
-        listing_date=_parse_date(item.get("itemCreationDate")),
+        listing_date=_listing_date(item),
         located_in=_parse_country(item.get("itemLocation")),
+        buying_options=_parse_buying_options(item.get("buyingOptions")),
     )
+
+
+def _parse_buying_options(options: Any) -> tuple[str, ...]:
+    """eBay's buying formats, as a list of strings.
+
+    Confirmed against a real response (#211): `["FIXED_PRICE", "BEST_OFFER"]`
+    on a copy that takes offers, `["FIXED_PRICE"]` on one that doesn't.
+    Anything else is treated as not stated rather than refused, since it says
+    nothing about whether the copy can be bought.
+    """
+    if not isinstance(options, list):
+        return ()
+    return tuple(option for option in options if isinstance(option, str))
 
 
 def _parse_country(location: Any) -> str | None:
@@ -370,7 +443,7 @@ def _parse_shipping(options: Any, index: int) -> Money | None:
     """Take the cheapest stated shipping cost, or `None` if none is stated.
 
     eBay returns several options — economy, expedited, sometimes local pickup
-    — and the brief optimises for landed cost, so the cheapest is the one that
+    — and the brief optimizes for landed cost, so the cheapest is the one that
     decides whether a copy is worth buying. An option with no `shippingCost`
     usually means "calculated at checkout", which is not a number we can rank
     on and must not be read as free.
@@ -408,6 +481,20 @@ def _parse_thumbnail(item: dict[str, Any]) -> str | None:
                 if url:
                     return url
     return None
+
+
+def _listing_date(item: dict[str, Any]) -> datetime | None:
+    """When the copy was first listed, kept through a relist (S62, #69).
+
+    eBay's descriptions: `itemOriginDate` is "when the listing was first made
+    available. This date will be retained if an item is relisted";
+    `itemCreationDate` is when this listing was created, so a relist's own
+    date. The app read the second until S62, which let a relist count as new.
+    The second stands in only when the first is missing or unreadable.
+    """
+    return _parse_date(item.get("itemOriginDate")) or _parse_date(
+        item.get("itemCreationDate")
+    )
 
 
 def _parse_date(raw: Any) -> datetime | None:
@@ -501,16 +588,31 @@ def _excerpt(response: httpx.Response, limit: int = 200) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Print what eBay returns for a search term. One request."""
+    """Print what eBay returns for a search term. One request.
+
+    `--raw` prints eBay's JSON as it came, every field included.
+    """
     args = list(sys.argv[1:] if argv is None else argv)
     search_by: SearchBy = "gtin" if "--gtin" in args else "keyword"
     terms = [arg for arg in args if not arg.startswith("--")]
     if not terms:
         print(
-            "usage: python -m book_watch.ebay.search <search term> [--gtin]",
+            "usage: python -m book_watch.ebay.search <search term> [--gtin] [--raw]",
             file=sys.stderr,
         )
         return 2
+
+    if "--raw" in args:
+        try:
+            payload = search_listings_raw(" ".join(terms), search_by=search_by)
+        except MissingCredentialError as exc:
+            print(f"Not configured: {exc}", file=sys.stderr)
+            return 2
+        except (EbayAuthError, EbaySearchError) as exc:
+            print(f"Search failed: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
+        return 0
 
     try:
         listings = search_listings(" ".join(terms), search_by=search_by)

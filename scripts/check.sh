@@ -2,7 +2,7 @@
 # Every check CI runs, in the order CI runs them.
 #
 # This file exists so there is exactly one definition of "does this pass".
-# CI calls it, and the slice issue template tells you to run it, so the
+# CI calls it, and every slice's acceptance ends with it, so the
 # checklist you validate against cannot drift from what the pipeline
 # actually enforces. It has drifted once already: an acceptance list that
 # named two of the three checks let a formatting failure reach CI.

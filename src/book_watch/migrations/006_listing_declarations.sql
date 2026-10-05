@@ -6,7 +6,7 @@
 -- matching study measured that the declared ISBN is the strongest signal available for
 -- deciding whether a listing is the book.
 --
--- What is here is what the *seller* claims, prefilled by eBay's catalogue
+-- What is here is what the *seller* claims, prefilled by eBay's catalog
 -- where their listing matched it and typed by hand where it did not. It is
 -- evidence, not fact: the S6 study found three listings that declared the
 -- exact right number while photographing something else.
@@ -22,7 +22,7 @@ CREATE TABLE listing_declaration (
 
     -- Displayed, never matched on. "Trade Paperback" and "books" and
     -- "198x130x17 mm" all occur, because this is prefilled when the listing
-    -- matched eBay's catalogue and typed freehand when it did not.
+    -- matched eBay's catalog and typed freehand when it did not.
     format      TEXT,
     publisher   TEXT,
     published   TEXT,

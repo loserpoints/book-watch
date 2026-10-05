@@ -2,13 +2,14 @@
 
 The edition set used to be a table a pass wrote conclusions into. It is now
 derived on read from things we observed — what sellers declared, what the
-catalogue says those numbers are, who sellers say wrote them.
+catalog says those numbers are, who sellers say wrote them.
 
 That is the difference between a rule change reaching every book on the list
 and reaching only the next one added, so most of this file is about what a
 change to the rules would do to books that already exist.
 """
 
+from dataclasses import replace
 from decimal import Decimal
 
 import pytest
@@ -37,11 +38,11 @@ def a_book(connection, title, author):
 
 def a_copy_declaring(connection, work_id, item_id, declared, *, epid=None, title=None):
     """One copy for sale, and everything observed about it."""
-    isbn, catalogue_title, declared_author = declared
+    isbn, catalog_title, declared_author = declared
     connection.execute(
         "INSERT INTO copy (item_id, work_id, title, url, price, currency, epid) "
         "VALUES (?, ?, ?, 'https://ebay/x', '9.99', 'USD', ?)",
-        (item_id, work_id, title or catalogue_title, epid),
+        (item_id, work_id, title or catalog_title, epid),
     )
     connection.execute(
         "INSERT OR IGNORE INTO listing_declaration (item_id, isbn, author) "
@@ -51,7 +52,7 @@ def a_copy_declaring(connection, work_id, item_id, declared, *, epid=None, title
     connection.execute(
         "INSERT OR IGNORE INTO openlibrary_edition (isbn, found, title) "
         "VALUES (?, 1, ?)",
-        (isbn, catalogue_title),
+        (isbn, catalog_title),
     )
     # A real copy only exists because a sweep found it, and the page shows the
     # newest sweep of a scope. Registering that here keeps these fixtures
@@ -85,7 +86,7 @@ def tiers(connection, entry):
 # --- which numbers count as this book ---------------------------------------
 
 
-def test_a_number_the_catalogue_calls_this_book_counts(database):
+def test_a_number_the_catalog_calls_this_book_counts(database):
     book = a_book(database, "Stoner", "John Williams")
     a_copy_declaring(database, book.work_id, "v1|1|0", STONER)
 
@@ -427,30 +428,20 @@ def test_exactly_at_the_ceiling_is_under():
 
 
 def test_unstated_shipping_cannot_be_judged():
-    """Not under, and not over. Calling it free would invent a bargain, which
-    is the wasted-trust failure the brief exists to avoid; calling it over
-    would be right most of the time with no way to know which times."""
-    assert priced("5.00", None).against(EIGHT) == "shipping unstated"
+    """Not under, and not over. Calling it free would invent a bargain, and
+    calling it over would be a guess."""
+    assert priced("5.00", None).against(EIGHT) == "can't tell"
 
 
-def test_a_price_alone_over_the_ceiling_is_over_whatever_the_postage():
-    """Postage cannot be negative, so this is a bound rather than a guess —
-    the one unstated-shipping case that is never wrong."""
-    assert priced("9.00", None).against(EIGHT) == "over"
-
-
-def test_a_price_exactly_at_the_ceiling_with_unstated_postage_cannot_be_judged():
-    """The boundary: free postage would make it under, so it is not over."""
-    assert priced("8.00", None).against(EIGHT) == "shipping unstated"
-
-
-def test_a_price_alone_over_in_another_currency_is_still_not_compared():
-    """£9 against an $8 ceiling says nothing, postage or not."""
-    assert priced("9.00", None, currency="GBP").against(EIGHT) == "shipping unstated"
+def test_a_price_alone_over_the_ceiling_is_still_not_judged():
+    """S54: one rule for every copy without a delivered price. eBay allows
+    one only for local pickup and freight, so the bound this used to carry
+    had no copies behind it."""
+    assert priced("9.00", None).against(EIGHT) == "can't tell"
 
 
 def test_another_currency_cannot_be_judged():
-    assert priced("5.00", "2.00", currency="GBP").against(EIGHT) == "another currency"
+    assert priced("5.00", "2.00", currency="GBP").against(EIGHT) == "can't tell"
 
 
 def test_without_a_ceiling_nothing_is_judged():
@@ -487,8 +478,7 @@ def test_a_ceiling_never_hides_or_reorders_anything(database):
 
 def test_copies_with_no_delivered_price_sort_below_every_known_one(database):
     """S44: the top of the list is always a price I could pay. The unknown
-    group is ordered by price alone, including a copy whose price alone is
-    already over the limit."""
+    group is ordered by price alone."""
     book = a_book(database, "Stoner", "John Williams")
     swept(
         database,
@@ -513,7 +503,7 @@ def test_copies_with_no_delivered_price_sort_below_every_known_one(database):
         "v1|5|0",
         "v1|4|0",
     ]
-    assert listed[-1].against(EIGHT) == "over"
+    assert listed[-1].against(EIGHT) == "can't tell"
 
 
 def test_shipping_in_another_currency_sorts_with_the_unknown():
@@ -825,7 +815,7 @@ def test_only_copies_that_are_certainly_this_book_are_compared(database):
     book = a_book(database, "Stoner", "John Williams")
     a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
     a_certain_copy(database, book.work_id, "v1|2|0", price="24.00")
-    # Declares a number the catalogue calls a different book entirely.
+    # Declares a number the catalog calls a different book entirely.
     a_certain_copy(database, book.work_id, "v1|3|0", price="1.00", declared=GILLMOR)
 
     stands = standing_for(database, book)
@@ -873,7 +863,7 @@ def markets_for(connection, entry):
 
 def test_used_comes_before_new(database):
     """The reading hunt is the dominant one and a new copy is usually bulk
-    inventory. *Two kinds of hunt* may invert this for collectible entries,
+    inventory. Collectible entries (#144) may invert this,
     which is why the order lives in one place rather than in a template."""
     book = a_book(database, "Stoner", "John Williams")
     a_certain_copy(
@@ -1023,6 +1013,47 @@ def test_the_headline_carries_the_ceiling_verdict(database):
     assert lead.verdict == "under"
 
 
+def a_book_with_both_markets(connection, *, used, new, limit):
+    book = a_book(connection, "Stoner", "John Williams")
+    a_certain_copy(connection, book.work_id, "v1|1|0", price=used)
+    a_certain_copy(
+        connection, book.work_id, "v1|2|0", price=new, condition_id=BRAND_NEW
+    )
+    wantlist.set_ceiling(connection, book.id, limit, "USD")
+    connection.commit()
+    return wantlist.get(connection, book.id)
+
+
+def test_a_new_copy_under_the_limit_leads_over_used_copies_above_it(database):
+    """S60 (#132). A red used price must not hide a new copy you could buy,
+    and the morning email already reports it."""
+    book = a_book_with_both_markets(database, used="18.00", new="9.00", limit="10.00")
+
+    lead = glance_at(database, book).headline
+
+    assert lead.market.condition_class == "new"
+    assert lead.cheapest.amount == Decimal("9.00")
+    assert lead.verdict == "under"
+
+
+def test_used_still_leads_when_both_markets_have_a_copy_under_the_limit(database):
+    book = a_book_with_both_markets(database, used="9.50", new="4.00", limit="10.00")
+
+    lead = glance_at(database, book).headline
+
+    assert lead.market.condition_class == "used"
+    assert lead.verdict == "under"
+
+
+def test_used_still_leads_when_neither_market_is_under_the_limit(database):
+    book = a_book_with_both_markets(database, used="18.00", new="12.00", limit="10.00")
+
+    lead = glance_at(database, book).headline
+
+    assert lead.market.condition_class == "used"
+    assert lead.verdict == "over"
+
+
 def test_a_book_nobody_has_checked_is_told_apart_from_an_empty_one(database):
     """Two different facts. Saying the second about the first is a confident
     claim about a market we never asked about."""
@@ -1038,7 +1069,7 @@ def test_uncertain_copies_are_counted_rather_than_called_nothing(database):
     """ "Nothing listed" over five copies carrying the title would be false."""
     book = a_book(database, "Stoner", "John Williams")
     # Carries the title and nothing that proves the book — no number from the
-    # seller, no product the catalogue recognises. Text alone never reaches
+    # seller, no product the catalog recognizes. Text alone never reaches
     # certain, so this is the "might be this book" pile.
     a_copy_declaring(database, book.work_id, "v1|1|0", STONER, title="Stoner")
     database.execute("DELETE FROM listing_declaration WHERE item_id = 'v1|1|0'")
@@ -1089,3 +1120,33 @@ def test_the_glance_derives_it_once_too(database, monkeypatch):
     standing.glance(database, book)
 
     assert len(derived) == 1
+
+
+# --- how a copy is sold ------------------------------------------------------
+
+
+def test_a_copy_that_takes_offers_says_so_once_searched(database):
+    """Stored at the next search, so a copy seen before S59 catches up."""
+    book = a_book(database, "Stoner", "John Williams")
+    swept(database, book.work_id, [a_listing()])
+    database.commit()
+    (before,) = copies.for_entry(database, book)
+
+    offers = replace(a_listing(), buying_options=("FIXED_PRICE", "BEST_OFFER"))
+    swept(database, book.work_id, [offers])
+    database.commit()
+    (after,) = copies.for_entry(database, book)
+
+    assert not before.takes_offers
+    assert after.takes_offers
+
+
+def test_a_copy_at_a_firm_price_does_not_take_offers(database):
+    book = a_book(database, "Stoner", "John Williams")
+    swept(
+        database, book.work_id, [replace(a_listing(), buying_options=("FIXED_PRICE",))]
+    )
+    database.commit()
+
+    (copy,) = copies.for_entry(database, book)
+    assert not copy.takes_offers

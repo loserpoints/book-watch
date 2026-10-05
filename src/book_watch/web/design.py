@@ -44,6 +44,7 @@ def sample_books() -> list[dict]:
             "price_text": "$10.49",
             "verdict": "under",
             "strip": strips.range_strip(SEEN, 12),
+            "limit_text": "your limit: $12",
         },
         {
             **base,
@@ -56,8 +57,8 @@ def sample_books() -> list[dict]:
             "examining": "digging",
             "price_text": "$18",
             "verdict": "over",
-            "over_by": "$3",
             "strip": strips.range_strip([18, 19.5, 21, 22, 24, 26, 29, 31, 36], 15),
+            "limit_text": "your limit: $15",
         },
         {
             **base,
@@ -71,6 +72,7 @@ def sample_books() -> list[dict]:
             "price_text": "$21",
             "verdict": None,
             "strip": strips.range_strip([21, 23, 25, 30, 36]),
+            "limit_text": "no limit set",
         },
         {
             **base,
@@ -83,6 +85,7 @@ def sample_books() -> list[dict]:
             "price_text": "$7.99",
             "verdict": "under",
             "strip": strips.range_strip(LONG_SEEN, 10),
+            "limit_text": "your limit: $10",
         },
         {
             **base,
@@ -143,6 +146,7 @@ def sample_copies() -> list[dict]:
             "place": strips.rank_strip(used, 10.49),
             "condition": "Good",
             "new": True,
+            "listed": "2d",
             "listing_title": (
                 "Crash by J. G. Ballard (1995, Vintage paperback) good reading copy"
             ),
@@ -155,6 +159,7 @@ def sample_copies() -> list[dict]:
             "place": strips.rank_strip(used, 12.0),
             "condition": "Very Good",
             "abroad": "GB",
+            "listed": "3w",
             "seller": "thriftbooks",
             "listing_title": "CRASH J.G. Ballard Vintage International PB very good",
         },
@@ -162,7 +167,8 @@ def sample_copies() -> list[dict]:
             **common,
             "price_text": "$27",
             "verdict": "over",
-            "over_by": "$15",
+            "takes_offers": True,
+            "listed": "5mo",
             "place": strips.rank_strip(used, 27.0),
             "condition": "Good",
             "seller": "oldpaperbacks",
@@ -174,8 +180,8 @@ def sample_copies() -> list[dict]:
             **common,
             "price_text": "$19",
             "verdict": "over",
-            "over_by": "$7",
             "place_text": "only new listing",
+            "listed": "1y",
             "condition": "Brand New",
             "seller": "bookdepot",
             "listing_title": "Crash: A Novel by J. G. Ballard, New Paperback",
@@ -183,8 +189,8 @@ def sample_copies() -> list[dict]:
         {
             **common,
             "price_text": "$7.50",
-            "verdict": "unknown",
-            "place_text": "can't place: shipping unknown",
+            "shipping_unknown": True,
+            "place_text": "can't place: no delivered price",
             "condition": "Acceptable",
             "seller": "goodwill_books",
             "listing_title": "Crash Ballard paperback",
@@ -200,7 +206,7 @@ def sample_copies() -> list[dict]:
 
 
 #: A stand-in seller's photo: sample content, not interface, so it carries its
-#: own colours. A real one is an eBay image URL, which `photos.larger` enlarges.
+#: own colors. A real one is an eBay image URL, which `photos.larger` enlarges.
 def _sample_photo(label: str) -> str:
     return (
         "data:image/svg+xml;utf8,"
@@ -254,26 +260,26 @@ def build_router() -> APIRouter:
     @router.get("/design", response_class=HTMLResponse)
     def design(request: Request) -> HTMLResponse:
         data = tokens.load()
-        colours = [
+        colors = [
             {
                 "name": name,
                 "use": entry.get("use", ""),
                 "dark": entry["dark"],
                 "light": entry["light"],
                 "dark_contrast": tokens.contrast(
-                    entry["dark"], tokens.colour("bg", "dark")
+                    entry["dark"], tokens.color("bg", "dark")
                 ),
                 "light_contrast": tokens.contrast(
-                    entry["light"], tokens.colour("bg", "light")
+                    entry["light"], tokens.color("bg", "light")
                 ),
             }
-            for name, entry in data["colour"].items()
+            for name, entry in data["color"].items()
         ]
         return templates.TemplateResponse(
             request,
             "design.html",
             {
-                "colours": colours,
+                "colors": colors,
                 "text": data["text"],
                 "space": data["space"],
                 "radius": data["radius"],

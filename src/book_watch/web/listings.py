@@ -22,9 +22,10 @@ from contextlib import closing
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
+from urllib.parse import urlencode
 
 from fastapi import APIRouter, BackgroundTasks, Form, Query, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
 from book_watch import copies, covers, enrichment, standing, sweeps, wantlist
@@ -35,16 +36,39 @@ from book_watch.ebay.search import (
     MAX_LIMIT,
     Scope,
 )
-from book_watch.isbn import normalise
+from book_watch.isbn import normalize
 from book_watch.web import assets, book_view, filters
 from book_watch.web.searching import LazyBrowseSearch, SearchFn
-from book_watch.web.wantlist import ConnectFn, open_configured_database
+from book_watch.web.wantlist import ConnectFn, from_htmx, open_configured_database
 
 SEARCH_PATH = "/search"
 BOOK_PATH = "/book/{book_id}"
 CEILING_PATH = "/book/{book_id}/ceiling"
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
+
+
+def _book_url(
+    book_id: int,
+    *,
+    everywhere: bool,
+    limit: int = DEFAULT_LIMIT,
+    newest: bool = False,
+    refresh: bool = False,
+) -> str:
+    """A book's page, in the scope and order it was viewed in.
+
+    The order rides along on every link the page makes, so changing scope or
+    checking again keeps it (S62). Opening a book fresh shows cheapest first.
+    """
+    query = [("everywhere", "1")] if everywhere else []
+    if limit != DEFAULT_LIMIT:
+        query.append(("limit", str(limit)))
+    if newest:
+        query.append(("sort", "newest"))
+    if refresh:
+        query.append(("refresh", "1"))
+    return f"/book/{book_id}" + ("?" + urlencode(query) if query else "")
 
 
 def build_router(
@@ -86,7 +110,7 @@ def build_router(
             # An overridden entry is not an ISBN, so eBay gets a keyword
             # search for whatever was typed. Say so; "nothing listed" would
             # otherwise look like a fact about the market.
-            "is_isbn": normalise(query) is not None,
+            "is_isbn": normalize(query) is not None,
         }
 
         # These two status codes are a contract, not decoration: the deploy
@@ -135,6 +159,7 @@ def build_router(
         limit: int = Query(DEFAULT_LIMIT, ge=1, le=MAX_LIMIT),
         refresh: int = 0,
         everywhere: int = 0,
+        sort: str = "",
     ) -> HTMLResponse:
         """What is for sale for one book, graded by how sure we are.
 
@@ -147,6 +172,7 @@ def build_router(
         # visit searched for would be a setting wearing a link's clothes, and
         # settings are #72.
         scope: Scope = "everywhere" if everywhere else "us"
+        newest = sort == "newest"
         with closing(open_database()) as connection:
             try:
                 book = wantlist.get(connection, book_id)
@@ -167,8 +193,7 @@ def build_router(
             # Opening a book is a request to see what is listed *now* — there
             # is no other reason to click a book's title. It used to search
             # only on a book's first-ever view, so the page showed copies that
-            # may have sold days earlier and hid copies listed since. Decision
-            # 40, amended.
+            # may have sold days earlier and hid copies listed since.
             # The gate is per scope. A recent US sweep must not block a
             # first look at everything: they are different questions, and an
             # everywhere sweep finds fewer US copies because imports displace
@@ -188,6 +213,21 @@ def build_router(
                     error = (f"eBay is not configured: {exc}", 500)
                 except EbayError as exc:
                     error = (f"eBay could not be searched: {exc}", 502)
+                else:
+                    if refresh:
+                        # Searched, so now show the page at an address without
+                        # `refresh`: a reload of it, or a return to it, must
+                        # not search eBay again (S45). The visit is recorded
+                        # by the page this redirects to.
+                        return RedirectResponse(
+                            _book_url(
+                                book_id,
+                                everywhere=bool(everywhere),
+                                limit=limit,
+                                newest=newest,
+                            ),
+                            status_code=303,
+                        )
 
             # Recorded after the search, so a copy this visit's own search
             # found is never new on the want-list afterwards: I have seen it.
@@ -205,9 +245,9 @@ def build_router(
             for_sale, seen = copies.populations(connection, book, scope=scope)
             placed = standing.standings(for_sale, seen)
 
-        # Scheduled after the response is written, never before it. Decision
-        # 40: examining fifty copies is twenty-five seconds of eBay, and this
-        # page owes an answer in two.
+        # Scheduled after the response is written, never before it: examining
+        # fifty copies is twenty-five seconds of eBay, and this page owes an
+        # answer in two.
         #
         # The condition is "has a pass finished", not "is there a copy eBay
         # has never been asked about". The second was the original and it was
@@ -220,6 +260,15 @@ def build_router(
             background.add_task(enrichment.queued(start_enrichment, book.work_id))
 
         shown = [copy for copy in for_sale if copy.tier != "excluded"]
+        if newest:
+            # Within each group, since the groups are split below. A copy
+            # with no listing date says nothing about newness, so it goes last.
+            shown.sort(
+                key=lambda copy: (
+                    copy.listed is None,
+                    -copy.listed.timestamp() if copy.listed else 0,
+                )
+            )
         verdicts = {copy.item_id: copy.against(ceiling) for copy in for_sale}
         listed_prices = standing.prices(for_sale)
         seen_prices = standing.prices(seen)
@@ -266,6 +315,21 @@ def build_router(
             "is_isbn": not book.searched_as_text,
             # The same facts, as the system's pieces take them (S34).
             "copy_rows": rows(True),
+            "newest": newest,
+            "urls": {
+                name: _book_url(book.id, limit=limit, **choice)
+                for name, choice in {
+                    "us": {"everywhere": False, "newest": newest},
+                    "everywhere": {"everywhere": True, "newest": newest},
+                    "refresh": {
+                        "everywhere": bool(everywhere),
+                        "newest": newest,
+                        "refresh": True,
+                    },
+                    "cheapest": {"everywhere": bool(everywhere)},
+                    "newest": {"everywhere": bool(everywhere), "newest": True},
+                }.items()
+            },
             "maybe_rows": rows(False),
             "market_lines": [
                 book_view.market_line(market, seen_prices, ceiling)
@@ -289,14 +353,26 @@ def build_router(
         A redirect rather than a rendered page, so a refresh does not re-post
         the form — and so the answer comes back through the one route that
         knows how to draw a book.
+
+        From the sheet, through htmx, the page reloads in place instead (S45).
+        A redirect would add a second entry for the same book to the history,
+        so back would show the book again rather than the want list. A limit
+        that cannot be read is answered inside the sheet, which stays open.
         """
+        htmx = from_htmx(request)
         with closing(open_database()) as connection:
             try:
                 wantlist.set_ceiling(connection, book_id, ceiling, currency)
             except LookupError:
                 return HTMLResponse("That book is not on the want-list.", 404)
             except ValueError as exc:
+                if htmx:
+                    return templates.TemplateResponse(
+                        request, "_sheet_error.html", {"error": str(exc)}
+                    )
                 return HTMLResponse(str(exc), 400)
+        if htmx:
+            return Response(status_code=204, headers={"HX-Refresh": "true"})
         return RedirectResponse(f"/book/{book_id}", status_code=303)
 
     return router

@@ -3,10 +3,10 @@
 Both put prices on one horizontal scale, the way a dot plot does:
 
 - **The range strip** shows every asking price seen for a book,
-  with the lowest and highest labelled under the ends in
-  whole dollars and the limit as a dashed guide. Every dot is the same
-  colour: the cheapest is always the left end, so emphasising it would say
-  nothing (S27).
+  with the lowest and highest labeled under the ends in
+  whole dollars. Each dot is green at or under the limit and red over it,
+  with green drawn on top, and a blue line marks the limit when it falls
+  among the prices (S61).
 - **The rank strip** shows the copies of one kind listed now,
   with this copy as the large dot. It replaces "2nd of 3",
   which did not say it was about price.
@@ -28,6 +28,11 @@ Number = Decimal | float | int
 
 #: Room at each end so a dot on the extreme is not cut in half.
 PAD = 5.0
+
+#: How far the limit's line reaches past the strip's own height, above and
+#: below alike. Measured at 360px: the tops of the range labels' digits sit
+#: this far past the strip plus 1px, so the line stops 1px short of them.
+LIMIT_REACH = 2
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,30 +69,46 @@ def range_strip(
     *,
     width: int = 104,
     height: int = 16,
-    labelled: bool = True,
+    labeled: bool = True,
     symbol: str = "$",
 ) -> Markup:
-    """Every asking price seen, the limit as a guide, and the range labelled."""
+    """Every asking price seen, each judged against the limit, and the range.
+
+    The scale spans the prices alone, so a limit far from them never squeezes
+    the dots together (S61, #200). A dot is green at or under the limit and
+    red over it, like a price; with no limit it keeps the accent color. A
+    blue line marks the limit only when it falls among the prices: with no
+    line, a ✓ beside the price means every copy is under, and none means every
+    copy is over. That reading needs no color.
+    """
     if not seen:
         return Markup("")
-    scale = scale_for([*seen, limit] if limit is not None else seen, width)
+    scale = scale_for(seen, width)
     mid = height / 2
+    low, high = min(seen, key=float), max(seen, key=float)
     parts = [
         f'<line class="strip-axis" x1="{PAD}" x2="{width - PAD}" '
         f'y1="{mid}" y2="{mid}"/>'
     ]
-    if limit is not None:
+    if limit is not None and float(low) <= float(limit) <= float(high):
+        # Centered on the dots, as tall as the labels below allow.
         x = scale.x(limit)
+        reach = mid + LIMIT_REACH
         parts.append(
-            f'<line class="strip-limit" x1="{x}" x2="{x}" y1="2" y2="{height - 2}"/>'
+            f'<line class="strip-limit" x1="{x}" x2="{x}" '
+            f'y1="{mid - reach}" y2="{mid + reach}"/>'
         )
+    # Green last, so a copy you could buy is never hidden under one you
+    # couldn't where dots crowd together.
+    in_order = sorted(
+        seen, key=lambda v: limit is not None and float(v) <= float(limit)
+    )
     parts += [
-        f'<circle class="strip-dot" cx="{scale.x(v)}" cy="{mid}" r="2.6"/>'
-        for v in seen
+        f'<circle class="{_dot_class(v, limit)}" cx="{scale.x(v)}" cy="{mid}" r="2.6"/>'
+        for v in in_order
     ]
     total = height
-    low, high = min(seen, key=float), max(seen, key=float)
-    if labelled:
+    if labeled:
         total = height + 12
         parts.append(
             f'<text class="strip-label" x="{scale.x(low)}" y="{height + 10}" '
@@ -100,12 +121,24 @@ def range_strip(
     label = (
         f"{len(seen)} asking prices seen, {whole(low, symbol)} to {whole(high, symbol)}"
     )
+    if limit is not None:
+        under = sum(1 for v in seen if float(v) <= float(limit))
+        label += f", {under} at or under the limit of {whole(limit, symbol)}"
     return Markup(
         f'<svg class="strip" width="{width}" height="{total}" '
         f'viewBox="0 0 {width} {total}" role="img" aria-label="{escape(label)}">'
         + "".join(parts)
         + "</svg>"
     )
+
+
+def _dot_class(value: Number, limit: Number | None) -> str:
+    """A price's dot, judged as the price itself would be."""
+    if limit is None:
+        return "strip-dot"
+    if float(value) <= float(limit):
+        return "strip-dot strip-dot-under"
+    return "strip-dot strip-dot-over"
 
 
 def rank_strip(

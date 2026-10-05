@@ -13,8 +13,19 @@
       hour and asks first, offering the cheaper Update as the alternative. -#}
   {% set total = books | length %}
   {% set fresh = total - stale %}
+  {#- All, or only the books whose price is green (S60). No counts: they
+      widened the switch until it pushed Update and Check all onto a second
+      line, and the width then changed with the list. "Under limit" greys out
+      when nothing qualifies. The choice lives in the page address, replaced
+      rather than pushed, so it survives going back from a book and adds
+      nothing to the history. -#}
+  {% set under = under_ids | length %}
+  {% set fetch = {"hx-target": "#want-list", "hx-swap": "outerHTML", "hx-trigger": "change"} %}
   <div class="list-bar">
-    <span class="meta">{{ total }} book{{ '' if total == 1 else 's' }}</span>
+    {{ ui.switch("show", [
+         ("all", "All", dict(fetch, **{"hx-get": "/books/list", "hx-replace-url": "/"})),
+         ("under", "Under limit", dict(fetch, **{"hx-get": "/books/list?show=under", "hx-replace-url": "/?show=under", "disabled": None if under else ""})),
+       ], "under" if filtering else "all") }}
     <span class="list-bar-actions">
       <button type="button" class="btn btn-plain"
               hx-get="/books/check" hx-target="#sweep-runner" hx-swap="outerHTML"
@@ -45,7 +56,7 @@
   {% endwith %}
 
   <ul class="ui-list">
-  {% for book in books %}
+  {% for book in books if not filtering or book.id in under_ids %}
     {% set glance = glances.get(book.id) if glances else None %}
     {% set state = 'checking' if book.id == checking else 'idle' %}
     {% with oob = false %}{% include "_entry.html" %}{% endwith %}

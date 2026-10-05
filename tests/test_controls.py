@@ -1,11 +1,12 @@
 """The controls (S30, #110): what the markup promises the browser.
 
-Behaviour that only a browser shows — focus returning to the opener, the back
+Behavior that only a browser shows — focus returning to the opener, the back
 gesture closing a sheet — is checked on a phone and recorded in the PR. What
 is tested here is that the markup asks for it correctly.
 """
 
 import re
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -138,7 +139,7 @@ def test_every_opener_points_at_a_dialog_on_the_page():
     assert targets <= dialogs
 
 
-def test_a_sheet_is_a_labelled_dialog():
+def test_a_sheet_is_a_labeled_dialog():
     page = design_page()
 
     opening = '<dialog class="sheet" id="add-sheet"'
@@ -189,3 +190,40 @@ def test_a_switched_side_is_never_laid_out_inline():
     assert not re.search(
         r'data-when="\w+"[^>]*style=|style=[^>]*data-when=', design_page()
     )
+
+
+def test_the_add_button_sits_above_every_other_layer():
+    """S58: a want-list row's link and trash are stacked layers, and the +
+    button floats over them. Any layer at or above it takes its taps."""
+    css = (
+        Path(__file__).parent.parent / "src/book_watch/web/static/app.css"
+    ).read_text()
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.DOTALL)
+    rules = re.findall(r"([^{}]+)\{([^}]*)\}", css)
+    layers = {
+        selector.strip(): int(z)
+        for selector, body in rules
+        for z in re.findall(r"z-index:\s*(-?\d+)", body)
+    }
+    fab = layers.pop(".fab", 0)
+
+    assert all(z < fab for z in layers.values()), layers
+
+
+def test_the_design_page_shows_a_copy_that_takes_offers():
+    assert "takes offers" in design_page()
+
+
+def test_every_switch_option_keeps_room_for_its_label_in_bold():
+    """Choosing a side must not change the switch's width: on the want list
+    that reflowed Update and Check all onto another line (S60). Each label is
+    carried in `data-label`, which the stylesheet sets in bold, unseen."""
+    options = re.findall(
+        r'<label class="switch-option">.*?<span([^>]*)>([^<]*)</span>', design_page()
+    )
+
+    assert options
+    for attributes, label in options:
+        assert f'data-label="{label}"' in attributes
+    css = (Path(assets.STATIC_DIR) / "app.css").read_text()
+    assert re.search(r"\.switch-option span::after\s*\{[^}]*attr\(data-label\)", css)

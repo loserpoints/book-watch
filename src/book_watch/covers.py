@@ -9,7 +9,7 @@ one.
 Whose cover follows the hunt:
 
     reader     the work's cover — any edition will do, and the work's cover is
-               the one somebody recognises
+               the one somebody recognizes
     collector  the edition's cover — that printing is the thing being hunted
 
 Each falls back to the other, because a cover of the right book is better
@@ -21,7 +21,7 @@ from __future__ import annotations
 import sqlite3
 from typing import Literal, Protocol
 
-from book_watch.isbn import normalise
+from book_watch.isbn import normalize
 from book_watch.openlibrary import EditionIdentity, OpenLibraryError
 
 COVERS_URL = "https://covers.openlibrary.org/b/id"
@@ -31,7 +31,7 @@ COVERS_URL = "https://covers.openlibrary.org/b/id"
 Size = Literal["S", "M", "L"]
 
 
-class Catalogue(Protocol):
+class Catalog(Protocol):
     def work_cover(self, work_id: str) -> int | None: ...
 
     def identify_isbn(self, isbn: str) -> EditionIdentity | None: ...
@@ -54,7 +54,7 @@ def chosen(hunt: str, work_cover: int | None, edition_cover: int | None) -> int 
     return work_cover or edition_cover
 
 
-def look_up(connection: sqlite3.Connection, catalogue: Catalogue, work_id: int) -> None:
+def look_up(connection: sqlite3.Connection, catalog: Catalog, work_id: int) -> None:
     """Learn a work's cover, once, for a book that arrived without one.
 
     Runs when the browser asks for the cover, never while the list renders, so
@@ -88,13 +88,13 @@ def look_up(connection: sqlite3.Connection, catalogue: Catalogue, work_id: int) 
     cover_from = "work"
     try:
         if row["openlibrary_work_id"]:
-            cover = catalogue.work_cover(row["openlibrary_work_id"])
+            cover = catalog.work_cover(row["openlibrary_work_id"])
         elif (isbn := _typed_isbn(connection, work_id)) is not None:
-            edition = catalogue.identify_isbn(isbn)
+            edition = catalog.identify_isbn(isbn)
             if edition is not None and edition.cover_id is not None:
                 cover, cover_from = edition.cover_id, "edition"
             elif edition is not None and edition.work_id:
-                cover = catalogue.work_cover(edition.work_id)
+                cover = catalog.work_cover(edition.work_id)
     except OpenLibraryError:
         # Unreachable, or our own ceiling reached. Neither is an answer about
         # the cover, so neither may be written down as one.
@@ -122,7 +122,7 @@ def _typed_isbn(connection: sqlite3.Connection, work_id: int) -> str | None:
     for row in connection.execute(
         "SELECT typed FROM entry WHERE work_id = ? AND typed IS NOT NULL", (work_id,)
     ):
-        isbn = normalise(row["typed"])
+        isbn = normalize(row["typed"])
         if isbn is not None:
             return isbn
     return None

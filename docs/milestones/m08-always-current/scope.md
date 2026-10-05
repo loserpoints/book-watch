@@ -2,7 +2,7 @@
 
 ## Goal
 
-The list checks itself every day, and opening the app shows what's new since I last looked.
+The list checks itself at 7am New York time every day, and opening the app shows which copies are new since I last opened each book.
 
 ## Jobs advanced
 

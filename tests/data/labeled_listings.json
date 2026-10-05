@@ -1,5 +1,5 @@
 {
- "_": "227 eBay listings for three books, each hand-classified twice by the person who would buy them: is this the book, and is this that edition. `declared_author` is absent for Pride and Prejudice, which was labelled before aspects were fetched. Gathered and labelled during S6. The numbers this corpus produces are asserted in test_matching.py, so a change that quietly degrades matching fails the build.",
+ "_": "227 eBay listings for three books, each hand-classified twice by the person who would buy them: is this the book, and is this that edition. `declared_author` is absent for Pride and Prejudice, which was labeled before aspects were fetched. Gathered and labeled during S6. The numbers this corpus produces are asserted in test_matching.py, so a change that quietly degrades matching fails the build.",
  "books": {
   "pride-and-prejudice": {
    "title": "Pride and Prejudice",
