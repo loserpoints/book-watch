@@ -146,14 +146,15 @@ def test_jobs_advanced_link_to_jobs_only(repo):
     assert any("more than job links" in e for e in check_docs.check(repo))
 
 
-def test_each_job_has_its_two_parts(repo):
+def test_each_job_has_its_three_parts(repo):
     governance = repo / "docs" / "governance.md"
     governance.write_text(
         governance.read_text().replace("| Jobs | migrating |", "| Jobs | active |")
     )
     good = (
         "## J1 · Keep looking\n\n### Job\n\nWatch for me.\n\n"
-        "### Success signal\n\nI stop searching.\n"
+        "### Success signal\n\nI stop searching.\n\n"
+        "### Status\n\nMet. It watches for me.\n"
     )
     write(repo, "docs/jobs.md", "# Jobs\n\n" + good)
     assert check_docs.check(repo) == []
@@ -163,7 +164,21 @@ def test_each_job_has_its_two_parts(repo):
         "docs/jobs.md",
         "# Jobs\n\n" + good.replace("### Success signal", "### Signal"),
     )
-    assert any("needs ['Job', 'Success signal']" in e for e in check_docs.check(repo))
+    assert any(
+        "needs ['Job', 'Success signal', 'Status']" in e for e in check_docs.check(repo)
+    )
+
+
+def test_a_jobs_status_says_met_or_not_met(repo):
+    job = (
+        "## J1 · Keep looking\n\n### Job\n\nWatch for me.\n\n"
+        "### Success signal\n\nI stop searching.\n\n### Status\n\n{}\n"
+    )
+    write(repo, "docs/jobs.md", "# Jobs\n\n" + job.format("Not met. Only eBay."))
+    assert check_docs.check(repo) == []
+
+    write(repo, "docs/jobs.md", "# Jobs\n\n" + job.format("Mostly. Only eBay."))
+    assert any("'Met.' or 'Not met.'" in e for e in check_docs.check(repo))
 
 
 def retire(repo, path):

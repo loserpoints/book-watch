@@ -11,23 +11,26 @@ Choose the next milestone from the open issues by one order of priority, and set
 
 ## Steps
 
-1. List every open issue from GitHub with its type label: defect, enhancement, tech debt or process gap. Count them from that list, never from memory.
-2. Choose the milestone's frame by the first rule under Priority that applies, and say which rule chose it and the counts behind it.
-3. Choose 3–5 issues for it, judging each by impact and effort.
-4. Draft each one as a slice in the four sections `docs/governance.md` gives, asking the questions in the `plan-slice` skill as each is written. Check first whether a doc or skill written since the issue was logged already answers it.
-5. Present the draft to Alan: the frame and why, the name, the goal sentence, each slice with its impact and effort, what was left out and why, and how the outcome will be checked on the phone. Stop until Alan approves. Nothing on GitHub changes before then.
-6. Turn each approved issue into a slice: keep its type label, add the `slice` label and the milestone, title it `S## · outcome` numbered on from the last slice, and rewrite its body. Close issues folded into a slice as duplicates of it.
-7. Create `docs/milestones/mNN-name/` and write `scope.md`.
-8. Create the GitHub milestone, titled like `M8 - Always current`, with the goal sentence as its description and a link to its folder on `main`. If the tools can't create milestones, ask Alan to.
-9. Open a pull request with the folder and `scope.md`.
+1. List every open issue from GitHub with its type label: defect, enhancement, tech debt, process gap or strategy. Count them from that list, never from memory. An enhancement that links no job in `docs/jobs.md` is fixed first: link its job, or relabel it strategy.
+2. Before anything else, show Alan the open strategy issues and ask whether he wants to adopt any. Adopting one is its own pull request, changing the value proposition and `docs/jobs.md` together, and it merges before the milestone is chosen.
+3. Read each job's status in `docs/jobs.md`.
+4. Choose the milestone's frame by the first rule under Priority that applies, and say which rule chose it and the counts behind it.
+5. Choose 3–5 issues for it, judging each by impact and effort.
+6. Draft each one as a slice in the four sections `docs/governance.md` gives, asking the questions in the `plan-slice` skill as each is written. Check first whether a doc or skill written since the issue was logged already answers it.
+7. Present the draft to Alan: the frame and why, the name, the goal sentence, each slice with its impact and effort, what was left out and why, and how the outcome will be checked on the phone. Stop until Alan approves. Nothing on GitHub changes before then.
+8. Turn each approved issue into a slice: keep its type label, add the `slice` label and the milestone, title it `S## · outcome` numbered on from the last slice, and rewrite its body. Close issues folded into a slice as duplicates of it.
+9. Create `docs/milestones/mNN-name/` and write `scope.md`.
+10. Create the GitHub milestone, titled like `M8 - Always current`, with the goal sentence as its description and a link to its folder on `main`. If the tools can't create milestones, ask Alan to.
+11. Open a pull request with the folder and `scope.md`.
 
 ## Rules
 
 ### Priority
 
 1. **A bad bug starts the milestone.** A defect is bad when it gives a wrong answer Alan could act on, such as a wrong price, a copy wrongly under or over its limit, or a missed or false email. It is also bad when it loses data, stops the daily check, or causes excessive calls to eBay, Open Library or Resend, or excessive cost. Other bugs that fit its theme, or other small bugs, fill the milestone. A bad bug can be a milestone on its own.
-2. **Five or more open tech-debt and process-gap issues, counted together, make a cleanup milestone.** Cleanup is done in batches, never one at a time, and never left to pile up.
-3. **Otherwise, the enhancement of highest value frames the milestone,** with a theme built from other enhancements around it.
+2. **Five or more open tech-debt and process-gap issues, counted together, make a cleanup milestone.** Cleanup is done in batches, never one at a time, and never left to pile up. Alan can set cleanup aside for a job not met, and never for an enhancement to a job that is met.
+3. **A job not met frames the milestone next.** The issue of highest value toward a job whose status is not met frames it, with a theme built around that job. When its work is blocked, its first slice is the research that either unblocks it or shows it can't be done. When it can't be done, the value proposition and the job are rewritten to stop promising it.
+4. **Otherwise, the enhancement of highest value to a met job frames the milestone,** with a theme built from other enhancements around it.
 
 ### Filling
 
