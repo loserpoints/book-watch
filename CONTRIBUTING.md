@@ -12,8 +12,10 @@
 - Migrations run forward only, and a rollback does not undo them. Keep a migration additive, so the previous code still works if its change is reverted.
 - Reproduce a phone or platform behavior on the phone again before building around it. S47's fallback to the browser went away once the eBay app had been opened.
 - Every step runs from a browser. Deploys and other privileged actions run in CI, with credentials in GitHub or Fly secrets. Say so before building on anything that needs a local install or a local credential.
+- A one-off command that needs the app's secrets runs inside the live Fly machine, from a workflow through `flyctl ssh console`. The deploy token allows it, and the secrets never enter GitHub.
 - The app runs only on Fly, so a message it shows gives the fix on Fly, not on a laptop.
 - Never commit a key, token or password. Credentials come from environment variables. `.env` is gitignored and `.env.example` lists the names with no values. A committed secret stays in git history, so the only remedy is rotating it.
+- Actions logs are public, like the repository. A workflow prints nothing that holds an address or a key.
 - Running cost is about $2–3 a month, all hosting. Say so before adding anything with a recurring cost.
 - Every request to an outside service follows the [rate limits](docs/rules/rate-limits.md).
 
@@ -21,6 +23,8 @@
 
 - `scripts/check.sh` is the one definition of passing: lint, formatting, the docs check and the tests. CI runs it on every pull request.
 - Read a check's exit status. Piping it through another command hides a failure.
+- A feature that acts on an outside event, such as an email sent when a copy appears, needs a way to trigger it on demand, built in its slice. Otherwise nothing proves it works until the event comes.
+- A trigger on demand proves the plumbing, not the choice of what to act on. Check that on the live app with data that makes the event likely, such as a book with many listings and a generous limit.
 - Run every change to a screen in a real browser at 360px wide, in both themes, and look at it. Tests miss layout, fonts and taps.
 - Test a layout fix in the case that broke: the phone width and the data where it happened. A fix that only measures what changed can miss that the layout no longer fits.
 - This environment holds real eBay keys. Run the app locally with outbound requests cut off, or a book page that opens can search eBay and examine every copy it finds.
