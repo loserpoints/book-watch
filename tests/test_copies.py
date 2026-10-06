@@ -588,9 +588,12 @@ def a_certain_copy(
 
 
 def standing_for(connection, entry):
-    return standing.standings(
+    """Standings by eBay item id: every copy in these tests is eBay's."""
+    found = standing.standings(
         copies.for_entry(connection, entry), copies.ever_seen(connection, entry)
     )
+    assert {marketplace for marketplace, _ in found} <= {"ebay"}
+    return {item_id: placed for (_, item_id), placed in found.items()}
 
 
 def test_a_new_copy_does_not_move_a_used_copys_rank(database):

@@ -25,6 +25,7 @@ from typing import Literal
 
 from book_watch.ebay.search import Money, Scope
 from book_watch.isbn import normalize
+from book_watch.marketplaces import NEW, Marketplace
 from book_watch.matching import Evidence, Target, Tier, grade, is_this_book
 from book_watch.wantlist import Entry, moment
 
@@ -37,7 +38,8 @@ from book_watch.wantlist import Entry, moment
 #: recorded. What is *for sale* is a narrower question, and `_CURRENT_IN_SCOPE`
 #: below is what narrows it.
 _SELECT = """
-SELECT copy.item_id,
+SELECT copy.marketplace,
+       copy.item_id,
        copy.title,
        copy.url,
        copy.price,
@@ -53,7 +55,7 @@ SELECT copy.item_id,
        copy.seen_at,
        copy.first_seen_at,
        copy.listed_at,
-       declaration.item_id AS asked_ebay,
+       declaration.item_id AS declared,
        declaration.isbn    AS declared_isbn,
        declaration.author  AS declared_author,
        declaration.format  AS declared_format,
@@ -65,7 +67,8 @@ SELECT copy.item_id,
        identity.title      AS identity_title
   FROM copy
   LEFT JOIN listing_declaration AS declaration
-         ON declaration.item_id = copy.item_id
+         ON declaration.marketplace = copy.marketplace
+        AND declaration.item_id = copy.item_id
   LEFT JOIN openlibrary_edition AS identity
          ON identity.isbn = declaration.isbn AND identity.found = 1
  WHERE copy.work_id = ?
@@ -87,12 +90,17 @@ SELECT copy.item_id,
 #: timestamp cannot say so. `IS` rather than `=` so that a book with no sweep
 #: at all matches its copies instead of silently showing none.
 _CURRENT_IN_SCOPE = """
-   AND copy.item_id IN (
-       SELECT seen.item_id FROM copy_seen AS seen
-        WHERE seen.work_id = ? AND seen.scope = ?
+   AND EXISTS (
+       SELECT 1 FROM copy_seen AS seen
+        WHERE seen.marketplace = copy.marketplace
+          AND seen.item_id = copy.item_id
+          AND seen.work_id = copy.work_id
+          AND seen.scope = ?
           AND seen.sweep_id IS (
               SELECT sweep.id FROM sweep
-               WHERE sweep.work_id = seen.work_id AND sweep.scope = seen.scope
+               WHERE sweep.work_id = seen.work_id
+                 AND sweep.scope = seen.scope
+                 AND sweep.marketplace = seen.marketplace
             ORDER BY sweep.id DESC LIMIT 1
           )
    )
@@ -116,7 +124,7 @@ ConditionClass = Literal["new", "used", "unknown"]
 #: eBay's id for a brand-new item. Every other id is some flavor of
 #: secondhand, Like New included: it has had an owner, which is the thing that
 #: separates the two markets.
-_BRAND_NEW = "1000"
+_BRAND_NEW = NEW
 
 
 @dataclass(frozen=True, slots=True)
@@ -153,8 +161,9 @@ class Copy:
     #: property of the *search*, and by the time a copy is on this page it is
     #: one we asked for.
     located_in: str | None = None
-    #: Whether eBay has been asked what this seller declared. False means the
-    #: copy is graded on its listing name alone and may firm up later.
+    #: Whether what this seller declared is known: asked of eBay, or read with
+    #: the search on a marketplace that shows it there. False means the copy
+    #: is graded on its listing name alone and may firm up later.
     looked_at: bool = True
     #: When we first saw this copy, and when eBay says it was listed. A
     #: relisted copy has a new item id and its original listing date, which
@@ -164,6 +173,14 @@ class Copy:
     #: Whether the listing takes Best Offer. False also when eBay hasn't said,
     #: which is every copy until its first search since S59.
     takes_offers: bool = False
+    #: Which marketplace the copy is listed on. With `item_id`, what the copy
+    #: is: see `key`.
+    marketplace: Marketplace = "ebay"
+
+    @property
+    def key(self) -> tuple[Marketplace, str]:
+        """The copy's identity: its marketplace and its id there."""
+        return (self.marketplace, self.item_id)
 
     @property
     def condition_class(self) -> ConditionClass:
@@ -298,7 +315,7 @@ def _listed(
     found = _read(
         connection,
         _SELECT + _CURRENT_IN_SCOPE,
-        (entry.work_id, entry.work_id, scope),
+        (entry.work_id, scope),
         target,
         entry,
     )
@@ -322,8 +339,15 @@ def _read(
 
 
 def unasked(copies: list[Copy]) -> list[str]:
-    """Item ids nobody has asked eBay about, so a caller can go and find out."""
-    return [copy.item_id for copy in copies if not copy.looked_at]
+    """eBay item ids nobody has asked eBay about, so a caller can go and find out.
+
+    eBay's only: another marketplace's declarations arrive with its search.
+    """
+    return [
+        copy.item_id
+        for copy in copies
+        if copy.marketplace == "ebay" and not copy.looked_at
+    ]
 
 
 #: Every number declared on this book's copies, with what the catalog calls
@@ -334,7 +358,9 @@ SELECT DISTINCT declaration.isbn,
                 declaration.author AS declared_author,
                 identity.title     AS catalog_title
   FROM copy
-  JOIN listing_declaration AS declaration ON declaration.item_id = copy.item_id
+  JOIN listing_declaration AS declaration
+       ON declaration.marketplace = copy.marketplace
+      AND declaration.item_id = copy.item_id
   JOIN openlibrary_edition AS identity
        ON identity.isbn = declaration.isbn AND identity.found = 1
  WHERE copy.work_id = ? AND declaration.isbn IS NOT NULL
@@ -347,7 +373,9 @@ SELECT DISTINCT declaration.isbn,
 _DECLARED_PRODUCT_IDS = """
 SELECT DISTINCT copy.epid, declaration.isbn
   FROM copy
-  JOIN listing_declaration AS declaration ON declaration.item_id = copy.item_id
+  JOIN listing_declaration AS declaration
+       ON declaration.marketplace = copy.marketplace
+      AND declaration.item_id = copy.item_id
  WHERE copy.work_id = ? AND copy.epid IS NOT NULL AND declaration.isbn IS NOT NULL
 """
 
@@ -408,6 +436,7 @@ def _to_copy(row: sqlite3.Row, target: Target, entry: Entry) -> Copy:
         declared_author=row["declared_author"],
     )
     return Copy(
+        marketplace=row["marketplace"],
         item_id=row["item_id"],
         title=row["title"],
         url=row["url"],
@@ -428,7 +457,7 @@ def _to_copy(row: sqlite3.Row, target: Target, entry: Entry) -> Copy:
         condition_note=row["condition_note"],
         photos=_strings(row["photos"]),
         located_in=row["located_in"],
-        looked_at=row["asked_ebay"] is not None,
+        looked_at=row["declared"] is not None,
         first_seen=moment(row["first_seen_at"]),
         listed=moment(row["listed_at"]),
         takes_offers="BEST_OFFER" in _strings(row["buying_options"]),

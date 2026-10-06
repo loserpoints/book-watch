@@ -4,6 +4,10 @@
 question `ItemDetailClient.declared_by` does, but reads what we already know
 first and writes down whatever it learns.
 
+eBay's listings only: a row here is keyed by marketplace and listing id, and
+every query below reads and writes eBay's. Another marketplace's declarations
+arrive with its search and are written by whatever stores that search.
+
 One request per item, ever. The per-listing detail call is
 affordable only on that basis — a fifty-result search is fifty calls against a
 5,000-a-day allowance, and a version of this that re-asked on every page view
@@ -56,7 +60,8 @@ class Declarations:
         get the same nothing.
         """
         row = self._connection.execute(
-            f"SELECT {_COLUMNS} FROM listing_declaration WHERE item_id = ?",
+            f"SELECT {_COLUMNS} FROM listing_declaration "
+            "WHERE marketplace = 'ebay' AND item_id = ?",
             (item_id,),
         ).fetchone()
         if row is not None:
@@ -69,7 +74,9 @@ class Declarations:
     def known(self, item_id: str) -> bool:
         """Whether this listing can be answered for without asking eBay."""
         row = self._connection.execute(
-            "SELECT 1 FROM listing_declaration WHERE item_id = ?", (item_id,)
+            "SELECT 1 FROM listing_declaration "
+            "WHERE marketplace = 'ebay' AND item_id = ?",
+            (item_id,),
         ).fetchone()
         return row is not None
 
@@ -84,7 +91,7 @@ class Declarations:
         placeholders = ",".join("?" * len(item_ids))
         rows = self._connection.execute(
             "SELECT item_id FROM listing_declaration "
-            f"WHERE item_id IN ({placeholders})",
+            f"WHERE marketplace = 'ebay' AND item_id IN ({placeholders})",
             item_ids,
         )
         seen = {row["item_id"] for row in rows}
@@ -101,7 +108,8 @@ class Declarations:
         placeholders = ",".join("?" * len(item_ids))
         rows = self._connection.execute(
             "SELECT item_id FROM listing_declaration "
-            f"WHERE item_id IN ({placeholders}) AND captured_by < ?",
+            f"WHERE marketplace = 'ebay' AND item_id IN ({placeholders}) "
+            "AND captured_by < ?",
             [*item_ids, CAPTURE],
         )
         behind = {row["item_id"] for row in rows}
@@ -123,7 +131,8 @@ class Declarations:
         declared = self._client.declared_by(item_id)
         if not declared.present:
             self._connection.execute(
-                "UPDATE listing_declaration SET captured_by = ? WHERE item_id = ?",
+                "UPDATE listing_declaration SET captured_by = ? "
+                "WHERE marketplace = 'ebay' AND item_id = ?",
                 (CAPTURE, item_id),
             )
             return self.of(item_id)
@@ -152,9 +161,9 @@ class Declarations:
         )
         self._connection.execute(
             f"""
-            INSERT INTO listing_declaration ({_COLUMNS}, captured_by)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT (item_id) {resolution}
+            INSERT INTO listing_declaration (marketplace, {_COLUMNS}, captured_by)
+            VALUES ('ebay', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (marketplace, item_id) {resolution}
             """,
             (
                 declared.item_id,

@@ -12,6 +12,14 @@ These rules decide which eBay listings are copies of the book being watched, and
 - Searches return copies from US sellers. Searching everywhere is a choice made per view, and is not saved.
 - Searches return fixed-price listings only, never auctions (see [pricing](pricing.md#prices)).
 
+### Which listing it is
+
+- A listing is identified by its marketplace and its id there, everywhere it is stored. Two marketplaces may use the same id for different listings.
+- What is listed now is each marketplace's own newest search, so a search of one marketplace never hides another's copies.
+- Only eBay's listings are ever sent to eBay to ask what a seller declared. Another marketplace's declarations are stored with the search that found them.
+- One search that returns US and foreign sellers together feeds both views: everywhere shows every copy, and US-only shows the copies whose seller is in the US.
+- Condition is stored on eBay's scale whatever the marketplace, with the marketplace's own words kept beside it. AbeBooks: New is New; As New and Fine are Like New; Near Fine and Very Good are Very Good; Good is Good; Fair and Poor are Acceptable. Near Fine maps down, so a grade undersells rather than oversells.
+
 ### Which numbers are this book
 
 - The ISBN a book was added by always counts as this book.
