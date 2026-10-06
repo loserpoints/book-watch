@@ -320,6 +320,24 @@ def test_the_daily_check_carries_on_when_abebooks_fails(connect):
     assert outcome == "ok"
 
 
+def test_the_daily_check_reads_abebooks_whatever_the_hour(connect):
+    """As eBay's search does: the email covers this morning's copies."""
+    entry = add_crash(connect)
+    reader = FakeReader(a_page(a_copy()))
+    with closing(connect()) as connection:
+        abebooks.check_book(connection, entry, reader)  # Opened just before 7.
+
+    daily.run(
+        connect,
+        lambda query, limit, **_: Results([], total=0),
+        lambda work_id: None,
+        lambda: 0,
+        read_abebooks=reader,
+    )
+
+    assert len(reader.urls) == 2
+
+
 # --- the email ---------------------------------------------------------------
 
 

@@ -32,7 +32,7 @@ These rules keep the app's requests to eBay and Open Library small, spaced out a
 ### AbeBooks
 
 - A book costs one request: page 1 of AbeBooks' title search. Nothing past page 1 is read.
-- AbeBooks is read at the same moments as eBay: the daily check, Update, and opening a book. Each reads a book only if its last AbeBooks check, whatever the outcome, was over an hour ago. Tapping Checked and Check all read regardless.
+- AbeBooks is read at the same moments as eBay: the daily check, Update, and opening a book. Update and opening a book read it only if its last AbeBooks check, whatever the outcome, was over an hour ago. The daily check, tapping Checked and Check all read regardless.
 - One request per book serves both the US-only and everywhere views.
 - The daily check reads one book at a time, right after that book's eBay search and before its copies are examined.
 - Requests from anywhere in the app are at least 3 seconds apart.

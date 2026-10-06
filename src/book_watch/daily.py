@@ -131,9 +131,11 @@ def run(
                     failed += 1
                     continue
                 # Before the copies are examined, so the pass sees both
-                # marketplaces' copies. A failure here is the book page's to
-                # show, and costs the run nothing: eBay's copies are in.
-                abebooks.check_book(connection, book, read_abebooks)
+                # marketplaces' copies. Past the hour, as eBay's search is, so
+                # the email covers this morning's copies whenever the book was
+                # last opened. A failure here is the book page's to show, and
+                # costs the run nothing: eBay's copies are in.
+                abebooks.check_book(connection, book, read_abebooks, force=True)
                 book = wantlist.get(connection, book_id)
             if book.being_enriched and not enrichment.busy(book.work_id):
                 result = enrichment.queued(enrich, book.work_id)()
