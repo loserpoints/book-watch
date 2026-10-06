@@ -54,6 +54,18 @@ Read 2026-10-05.
 - **Comparison.** A site that shows AbeBooks prices beside other sites' prices shows AbeBooks' lowest new price and, if provided, its lowest used price (operating agreement, linking requirements).
 - **Disclosure.** The site states that it participates in the AbeBooks affiliate program (operating agreement, section 10).
 - **Fixed IP.** On Fly, an outbound address that doesn't change costs $3.60 a month ([egress IPs](https://fly.io/docs/networking/egress-ips/)).
+- **Website terms.** The [Terms and Conditions](https://www.abebooks.com/docs/legal/termsAndConditions.shtml) grant "a limited license to access and make personal use of the Web Site", which "does not include ... any collection and use of any product listings, descriptions, or prices; ... or any use of data mining, robots, or similar data gathering and extraction tools", and bar use "for any commercial purpose without express written consent of AbeBooks" (License and site access). Read 2026-10-06.
+- **robots.txt.** [robots.txt](https://www.abebooks.com/robots.txt) disallows `/servlet/`, `/search/`, `/abe/`, `/abep/`, `/cgi/`, `/collections/`, `/checkout/` and `/discovery/` for every robot, and allows `/search/` and `/servlet/` pages only to named search engines. It states no crawl delay. It is a request to crawlers, separate from the website terms. Read 2026-10-06.
+
+#### AbeBooks' pages
+
+Read 2026-10-06, from seven requests sent from a Claude Code session.
+
+- **Title search.** `/book-search/title/<title>/author/<author>/` lists 30 rows a page, sorted by relevance. Each row gives title, ISBN when the seller entered one, publisher and year, binding, seller, condition, price, shipping to the US, and whether it is a first edition, signed or in a dust jacket. A row for an edition with several copies says "Used offers from US$ X", the delivered price of its cheapest copy. Later pages are under `/servlet/SearchResults`. [Example](https://www.abebooks.com/book-search/title/geronimo-rex/author/barry-hannah/).
+- **ISBN page.** `/book-search/isbn/<ISBN>/used/` lists one ISBN's used copies, 30 a page, sorted by delivered price, cheapest first, with the same fields per copy and a count of results. Later pages are under `/servlet/SearchResults`. [Example with 9 copies](https://www.abebooks.com/book-search/isbn/9780670337286/used/), [example with 207](https://www.abebooks.com/book-search/isbn/9780590353427/used/).
+- **Edition page.** `/<ISBN>/<title>/plp` shows about 10 copies of one edition, not sorted by price. Its summary of lowest and highest price excludes shipping. [Example](https://www.abebooks.com/9780140449136/Crime-Punishment-Penguin-Classics-Dostoyevsky-0140449132/plp).
+- **Copies without an ISBN** appear only in the title search. In the *Geronimo Rex* example, 18 of the first page's 30 rows had none, most of them first editions.
+- **Shipping** is priced to a country, not a ZIP code, from the visitor's shopping preferences or location.
 
 ### Biblio
 
@@ -62,6 +74,8 @@ Read 2026-10-05 from search results, because Biblio's pages refuse scripted requ
 - **Access.** The API is for affiliates and booksellers. The [API documentation](https://www.biblio.com/blog/2013/01/biblio-inventory-api-documentation/) says to register an account on biblio.com, then email Biblio's marketing team from that account's address to request a key.
 - **Program.** The [affiliate program](https://www.biblio.com/affiliate-program) runs through [Awin](https://ui.awin.com/merchant-profile/88369). Joining it gives no API access on its own.
 - **License.** Not read. The API's terms are not public.
+- **robots.txt.** [robots.txt](https://www.biblio.com/robots.txt) disallows `/search.php`, `/b/`, `/app/` and others for every robot. Read 2026-10-06.
+- **Pages.** Biblio's pages answered requests from a Claude Code session with a Cloudflare challenge instead of the page.
 
 ### Alibris
 

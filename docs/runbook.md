@@ -11,6 +11,7 @@
 - "Shipping for calculated listings is off" in Fly's logs means `SHIP_TO_ZIP` is not set, so copies with calculated shipping show "+ shipping?".
 - After setting or changing the Resend key, run Actions → Send a test email. It sends one email from the live app with its real settings, or fails with the reason.
 - To see exactly what eBay sends for a search, field by field, run Actions → Search eBay once with a title and author or an ISBN. It makes one search on the Fly machine, the way the app does, and prints eBay's JSON in the run's log.
+- To see what an AbeBooks or Biblio page holds when read from Fly, run Actions → Read a marketplace page once with an `https://www.abebooks.com/book-search/...` or `https://www.biblio.com/...` address. It makes one request on the Fly machine and prints the status, the page's count, and the delivered prices on it. Paths the site's robots.txt disallows are refused.
 
 ## Roll back
 
