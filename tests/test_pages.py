@@ -21,6 +21,12 @@ def test_an_isbn_page_gives_its_count_and_each_copy_delivered():
     ]
 
 
+def test_a_large_count_says_over():
+    page = pages.parse(ISBN_PAGE.replace("(9 results)", "(Over 1,500 results)"))
+
+    assert page.result_count == 1500
+
+
 def test_free_shipping_counts_as_no_shipping_cost():
     third = pages.parse(ISBN_PAGE).copies[2]
 

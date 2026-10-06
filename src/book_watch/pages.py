@@ -56,7 +56,10 @@ DISALLOWED: dict[str, tuple[str, ...]] = {
     ),
 }
 
-_COUNT = re.compile(r'data-test-id="result-count"[^>]*>\s*\(([\d,]+) results?\)')
+#: "(71 results)", or "(Over 1,500 results)" for large ones.
+_COUNT = re.compile(
+    r'data-test-id="result-count"[^>]*>\s*\((?:Over )?([\d,]+) results?\)'
+)
 _LISTING = re.compile(r'data-srp-item-role="listing"')
 _LISTING_ID = re.compile(r'data-csa-c-item-id="(\d+)"')
 _PRICE = re.compile(r"US\$\s?([\d,]+\.\d{2})")
