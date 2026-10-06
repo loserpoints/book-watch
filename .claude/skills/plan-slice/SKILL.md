@@ -28,6 +28,7 @@ Before any code, check that a slice covers what its outcome means to the person 
 - What does the original issue say already works? Is the slice still needed without that part?
 - What would a literal reading of the outcome miss?
 - Does the case it handles happen at all? Check the outside service's own rules before planning to measure it.
+- Does it depend on an outside service? Read that service's terms for this use, by this app and by anyone it might be offered to, before planning the build.
 - Which docs, design page entries and tests change with it?
 - Which requests to eBay, Open Library or Resend does it add, remove or repeat?
 - How will Alan check it on the phone after deploy?
@@ -37,7 +38,7 @@ Before any code, check that a slice covers what its outcome means to the person 
 - A screen change is planned from mocks, never from a description alone.
 - Mocks are rendered by the app itself, with every case the slice handles seeded: each state, the edges, and real-looking amounts. A drawing made apart from the app misses what the app's layout and data do.
 - Each mock is shown at 360px in both themes, with the trade-off of each option stated.
-- The app runs locally with outbound requests cut off. This environment holds real eBay keys, and a page can search eBay when it opens.
+- The app runs locally only through `scripts/serve_local.py`, which fakes eBay's search and refuses every request. This environment holds real eBay keys, and the app as built for production searches eBay when a page opens.
 
 ### Scope
 

@@ -11,6 +11,7 @@ This document records what each marketplace's own terms say about using its list
 - Each entry quotes or paraphrases the marketplace's own document, names the section, and links it. The link is the source; the summary is only a way back to it.
 - Each entry gives the version or date of the document as it was read. Terms change, so check the link before relying on a summary.
 - eBay's license page and Biblio's and Alibris's sites refuse requests from a Claude Code session. Alan reads those pages in a browser and pastes the text.
+- A marketplace page is read from Fly, with Read a marketplace page once, before anything is built on its shape. AbeBooks served a Claude Code session a different version of the same page: sorted another way, with grouped rows and copies without an ISBN.
 
 ### eBay
 
