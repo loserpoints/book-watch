@@ -59,11 +59,16 @@ Read 2026-10-05.
 
 #### AbeBooks' pages
 
-Read 2026-10-06, from seven requests sent from a Claude Code session.
+Read 2026-10-06, from 18 requests sent from a Claude Code session and 7 sent from the Fly machine with Actions → Read a marketplace page once.
 
-- **Title search.** `/book-search/title/<title>/author/<author>/` lists 30 rows a page, sorted by relevance. Each row gives title, ISBN when the seller entered one, publisher and year, binding, seller, condition, price, shipping to the US, and whether it is a first edition, signed or in a dust jacket. A row for an edition with several copies says "Used offers from US$ X", the delivered price of its cheapest copy. Later pages are under `/servlet/SearchResults`. [Example](https://www.abebooks.com/book-search/title/geronimo-rex/author/barry-hannah/).
+- **Title search.** `/book-search/title/<title>/author/<author>/` lists 30 rows a page. It comes in two versions, below. Each row gives title, ISBN when the seller entered one, publisher and year, binding, seller, condition, price, shipping to the US, and whether it is a first edition, signed or in a dust jacket. A row for an edition with several copies says "Used offers from US$ X", the delivered price of its cheapest copy. Later pages are under `/servlet/SearchResults`. [Example](https://www.abebooks.com/book-search/title/geronimo-rex/author/barry-hannah/).
 - **ISBN page.** `/book-search/isbn/<ISBN>/used/` lists one ISBN's used copies, 30 a page, sorted by delivered price, cheapest first, with the same fields per copy and a count of results. Later pages are under `/servlet/SearchResults`. [Example with 9 copies](https://www.abebooks.com/book-search/isbn/9780670337286/used/), [example with 207](https://www.abebooks.com/book-search/isbn/9780590353427/used/).
 - **Edition page.** `/<ISBN>/<title>/plp` shows about 10 copies of one edition, not sorted by price. Its summary of lowest and highest price excludes shipping. [Example](https://www.abebooks.com/9780140449136/Crime-Punishment-Penguin-Classics-Dostoyevsky-0140449132/plp).
+- **The version served to Fly.** Every row is one copy, sorted by delivered price, cheapest first, and every row has an ISBN. Page 1 is the book's 30 cheapest copies across its editions. An edition whose copies all cost more than the 30th does not appear, nor do copies without an ISBN. Seen on three searches, every time, on 2026-10-06.
+- **The version served to the Claude Code session.** Rows are sorted by relevance, and an edition with several copies gets one grouped row. Copies without an ISBN are included.
+- **Writing the search.** The title and author in the path are search words, not the address of one book. Small words make no difference: `crime-punishment` and `crime-and-punishment` gave the same results. Punctuation must be dropped: `jesus-son` found *Jesus' Son*, and `jesuss-son` found nothing. A subtitle narrows the search: `already-dead` gave 66 results, `already-dead-california-gothic` 44.
+- **No results.** A search that matches nothing returns an ordinary page with no rows and no count, the same for a misspelled title as for a book with no copies.
+- **The count** reads "(71 results)", or "(Over 1,500 results)" for large ones.
 - **Copies without an ISBN** appear only in the title search. In the *Geronimo Rex* example, 21 of the first page's 30 rows had none, most of them first editions.
 - **Shipping** is priced to a country, not a ZIP code, from the visitor's shopping preferences or location.
 
@@ -75,7 +80,7 @@ Read 2026-10-05 from search results, because Biblio's pages refuse scripted requ
 - **Program.** The [affiliate program](https://www.biblio.com/affiliate-program) runs through [Awin](https://ui.awin.com/merchant-profile/88369). Joining it gives no API access on its own.
 - **License.** Not read. The API's terms are not public.
 - **robots.txt.** [robots.txt](https://www.biblio.com/robots.txt) disallows `/search.php`, `/b/`, `/app/` and others for every robot. Read 2026-10-06.
-- **Pages.** Biblio's pages answered requests from a Claude Code session with a Cloudflare challenge instead of the page.
+- **Pages.** Biblio's pages answered with a Cloudflare challenge instead of the page, from a Claude Code session and from the Fly machine (status 403).
 
 ### Alibris
 
@@ -94,6 +99,6 @@ Read 2026-10-05.
 
 ## Open issues
 
-- [S64 · What AbeBooks' pages give is known, and the limits for reading them are written down](https://github.com/loserpoints/book-watch/issues/227)
+- [S66 · AbeBooks copies appear on a book's page, in the daily check and in the morning email](https://github.com/loserpoints/book-watch/issues/229)
 - [Search Biblio as a second marketplace](https://github.com/loserpoints/book-watch/issues/145)
 - [Others can try book-watch in a public demo, or run their own copy](https://github.com/loserpoints/book-watch/issues/225)
