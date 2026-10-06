@@ -14,7 +14,8 @@ These rules decide which eBay listings are copies of the book being watched, and
 - AbeBooks is searched by the book's main title, before any colon, and its author, written as AbeBooks writes them in a path: lowercase, punctuation dropped, words joined by hyphens. A book with no title is searched by the ISBN it was added by.
 - AbeBooks answers with the 30 cheapest copies by delivered price, across editions and sellers worldwide. An edition whose copies all cost more than the 30th is not seen, and neither is any copy the seller gave no ISBN: the page served to the app leaves them out.
 - AbeBooks' search also returns other books that share the title. Each copy is graded by the rules below, as eBay's are.
-- An AbeBooks page in any shape other than one row per copy, cheapest first, with a count and each copy's price, shipping, id and link, fails the check. Nothing is guessed from it, and the copies from the last good check stay listed.
+- An AbeBooks page that is a bot challenge, has grouped rows, has copies but no count, or has a copy without a price, shipping, id or link fails the check. Nothing is guessed from it, and the copies from the last good check stay listed.
+- Price order is measured, not required. Real pages are only roughly cheapest first: page 1 of *Geronimo Rex* on 2026-10-06 had two neighbors 2 cents out of order and a French edition last at $32.53 among copies near $39.50. A copy is out of place when it is more than $1 cheaper than a copy above it, and a page with more than 3 out of place is out of order. Out-of-order pages are still read, logged, and counted in the daily check.
 - An empty AbeBooks result links to the search that was read, so a book with no copies can be told from a search written wrong.
 
 ### Which listing it is

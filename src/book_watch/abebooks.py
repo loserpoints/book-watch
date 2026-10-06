@@ -5,9 +5,11 @@ the Fly machine as one row per copy, cheapest first by delivered price: the
 book's 30 cheapest copies across its editions. Nothing past page 1 and no path
 robots.txt disallows is ever requested. See docs/rules/api-policies.md.
 
-A page in any other shape fails the check rather than being guessed at: the
-book's page says the check failed, the log says why, and eBay's copies are
-untouched.
+A page the app cannot read correctly fails the check rather than being
+guessed at: the book's page says the check failed, the log says why, and
+eBay's copies are untouched. Price order is measured rather than required:
+real pages are only roughly cheapest first, and the daily check counts the
+pages that are not.
 """
 
 from __future__ import annotations
@@ -20,6 +22,8 @@ import threading
 import time
 import unicodedata
 from collections.abc import Callable
+from dataclasses import dataclass
+from decimal import Decimal
 
 import httpx
 
@@ -38,6 +42,14 @@ PAGE_SIZE = 30
 
 #: The least time between two requests to AbeBooks, from anywhere in the app.
 SPACING_SECONDS = 3.0
+
+#: How much cheaper than a copy above it a copy must be to count as out of
+#: place. Rounding moves neighbors by cents, which says nothing.
+ORDER_SLACK = Decimal("1.00")
+
+#: More copies out of place than this, and the page is out of order: no
+#: longer the cheapest-first page S64 found.
+OUT_OF_PLACE_ALLOWED = 3
 
 #: A country as AbeBooks writes it at the end of a seller's location, as the
 #: two-letter code eBay uses. A country not here is left unknown, which shows
@@ -126,9 +138,38 @@ def checked(page: pages.Page) -> pages.Page:
         not copy.listing_id or not copy.url for copy in page.copies
     ):
         raise AbeBooksError("a copy without a price, an id or a link")
-    if delivered != sorted(delivered):  # type: ignore[type-var]
-        raise AbeBooksError("copies not cheapest first")
     return page
+
+
+def out_of_place(page: pages.Page) -> int:
+    """How many copies are more than `ORDER_SLACK` cheaper than one above.
+
+    Measured, never enforced: a real page has a straggler or two, such as a
+    foreign seller sorted at a different price than it shows.
+    """
+    dearest: Decimal | None = None
+    count = 0
+    for copy in page.copies:
+        price = copy.delivered
+        if price is None:
+            continue
+        if dearest is not None and price < dearest - ORDER_SLACK:
+            count += 1
+        dearest = price if dearest is None else max(dearest, price)
+    return count
+
+
+@dataclass(frozen=True, slots=True)
+class Result:
+    """How one book's check went."""
+
+    #: "ok", "empty" or "failed".
+    outcome: str
+    out_of_place: int = 0
+
+    @property
+    def unordered(self) -> bool:
+        return self.out_of_place > OUT_OF_PLACE_ALLOWED
 
 
 def country(location: str | None) -> str | None:
@@ -205,22 +246,30 @@ def check(
     work_id: int,
     url: str | None,
     reader: Reader,
-) -> str:
+) -> Result:
     """Read one book's AbeBooks page and store what it holds.
 
-    Returns the outcome: "ok", "empty", or "failed". A failure stores no
-    sweep, so the copies from the last good check stay listed as of then.
-    Commits.
+    A failure stores no sweep, so the copies from the last good check stay
+    listed as of then. Commits.
     """
     if url is None:
-        return "empty"
+        return Result("empty")
     try:
         page = reader(url)
     except (AbeBooksError, httpx.HTTPError, pages.RefusedPath) as exc:
         logger.warning("AbeBooks check failed for work %s: %s", work_id, exc)
         _record(connection, work_id, "failed", str(exc))
         connection.commit()
-        return "failed"
+        return Result("failed")
+
+    result = Result("ok" if page.copies else "empty", out_of_place(page))
+    if result.unordered:
+        logger.warning(
+            "AbeBooks page out of order for work %s: %d of %d copies out of place",
+            work_id,
+            result.out_of_place,
+            len(page.copies),
+        )
 
     listings = Results(
         [_listing(copy) for copy in page.copies], total=page.result_count or 0
@@ -230,10 +279,9 @@ def check(
     )
     for copy in page.copies:
         _declare(connection, copy)
-    outcome = "ok" if page.copies else "empty"
-    _record(connection, work_id, outcome, None)
+    _record(connection, work_id, result.outcome, None)
     connection.commit()
-    return outcome
+    return result
 
 
 def last_outcome(connection: sqlite3.Connection, work_id: int) -> str | None:
@@ -267,10 +315,10 @@ def check_book(
     reader: Reader | None,
     *,
     force: bool = False,
-) -> str | None:
+) -> Result | None:
     """Check one want-list book, if a reader is set and the gate allows.
 
-    Returns the outcome, or None when nothing was read. Called right after
+    Returns how it went, or None when nothing was read. Called right after
     eBay's search and before new copies are examined, so a book says
     "digging" until both marketplaces' copies have been looked at.
     """

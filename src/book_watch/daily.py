@@ -106,6 +106,7 @@ def run(
         books = [book.id for book in wantlist.all_books(connection)]
     before = spent()
     failed = 0
+    abebooks_read = abebooks_failed = abebooks_unordered = 0
     throttled = False
     crashed = False
     emailed = 0
@@ -135,7 +136,13 @@ def run(
                 # the email covers this morning's copies whenever the book was
                 # last opened. A failure here is the book page's to show, and
                 # costs the run nothing: eBay's copies are in.
-                abebooks.check_book(connection, book, read_abebooks, force=True)
+                checked = abebooks.check_book(
+                    connection, book, read_abebooks, force=True
+                )
+                if checked is not None:
+                    abebooks_read += 1
+                    abebooks_failed += int(checked.outcome == "failed")
+                    abebooks_unordered += int(checked.unordered)
                 book = wantlist.get(connection, book_id)
             if book.being_enriched and not enrichment.busy(book.work_id):
                 result = enrichment.queued(enrich, book.work_id)()
@@ -159,7 +166,8 @@ def run(
             connection.execute(
                 "UPDATE daily_run SET finished_at = datetime('now'), outcome = ?, "
                 "books = ?, failed = ?, openlibrary_spent = ?, emailed = ?, "
-                "email_failed = ? WHERE id = ?",
+                "email_failed = ?, abebooks_read = ?, abebooks_failed = ?, "
+                "abebooks_unordered = ? WHERE id = ?",
                 (
                     outcome,
                     len(books),
@@ -167,17 +175,24 @@ def run(
                     spent() - before,
                     emailed,
                     int(email_failed),
+                    abebooks_read,
+                    abebooks_failed,
+                    abebooks_unordered,
                     run_id,
                 ),
             )
             connection.commit()
     logger.info(
-        "Daily check: %s, %d books, %d failed, %d Open Library requests, %d emailed",
+        "Daily check: %s, %d books, %d failed, %d Open Library requests, "
+        "%d emailed, AbeBooks: %d read, %d failed, %d out of order",
         outcome,
         len(books),
         failed,
         spent() - before,
         emailed,
+        abebooks_read,
+        abebooks_failed,
+        abebooks_unordered,
     )
     return run_id
 

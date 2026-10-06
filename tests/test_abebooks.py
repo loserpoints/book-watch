@@ -129,7 +129,6 @@ def test_every_url_it_writes_is_one_robots_txt_allows():
         (a_page(a_copy(grouped=True)), "grouped"),
         (a_page(a_copy(shipping=None)), "without a price"),
         (a_page(a_copy(url=None)), "without a price, an id or a link"),
-        (a_page(a_copy(2), a_copy(1)), "not cheapest first"),
     ],
 )
 def test_a_page_in_a_shape_never_seen_fails_rather_than_being_guessed_at(page, why):
@@ -143,6 +142,49 @@ def test_an_empty_page_is_an_ordinary_answer():
 
 def test_a_count_over_the_page_is_fine():
     assert abebooks.checked(a_page(a_copy(), count=1500)).result_count == 1500
+
+
+def priced(*totals: str) -> pages.Page:
+    """A page whose copies cost these, delivered, in this order."""
+    return a_page(
+        *(
+            a_copy(n, price=Decimal(total), shipping=Decimal("0"))
+            for n, total in enumerate(totals)
+        )
+    )
+
+
+def test_a_page_out_of_price_order_is_still_read():
+    """Real pages are only roughly cheapest first. Order is measured, not
+    required: it failed four books on the first Check all."""
+    page = priced("9.40", "39.51", "39.49", "32.53")
+
+    assert abebooks.checked(page) is page
+
+
+def test_cents_out_of_order_are_not_out_of_place():
+    assert abebooks.out_of_place(priced("9.40", "39.51", "39.49")) == 0
+
+
+def test_geronimo_rexs_real_page_reads_as_in_order():
+    """The prices on page 1 as read from Fly on 2026-10-06: a 2-cent pair,
+    and a French edition last at $32.53 among copies near $39."""
+    page = priced(
+        "9.40", "9.41", "9.55", "9.73", "11.31", "11.40", "11.74", "17.58",
+        "17.59", "18.44", "18.51", "18.97", "19.63", "19.80", "20.65", "21.00",
+        "22.15", "23.66", "25.55", "29.54", "31.97", "33.84", "34.49", "34.98",
+        "34.98", "35.80", "36.47", "39.51", "39.49", "32.53",
+    )  # fmt: skip
+
+    assert abebooks.out_of_place(page) == 1
+    assert not abebooks.Result("ok", abebooks.out_of_place(page)).unordered
+
+
+def test_a_page_sorted_some_other_way_is_out_of_order():
+    page = priced("30.00", "8.00", "25.00", "6.00", "40.00", "9.00", "12.00")
+
+    assert abebooks.out_of_place(page) == 5
+    assert abebooks.Result("ok", 5).unordered
 
 
 # --- storing a check ---------------------------------------------------------
@@ -171,7 +213,7 @@ def test_a_check_stores_the_copies_for_both_views(connect):
             "WHERE marketplace = 'abebooks' AND item_id = '31081277001'"
         ).fetchone()
 
-    assert outcome == "ok"
+    assert outcome.outcome == "ok"
     assert reader.urls == [
         "https://www.abebooks.com/book-search/title/crash/author/j-g-ballard/"
     ]
@@ -229,7 +271,7 @@ def test_a_failed_check_leaves_ebays_copies_alone_and_logs_why(connect, caplog):
         ).fetchone()[0]
         last = abebooks.last_outcome(connection, entry.work_id)
 
-    assert outcome == "failed"
+    assert outcome.outcome == "failed"
     assert [row[0] for row in stored] == ["ebay"]
     assert abebooks_sweeps == 0
     assert last == "failed"
@@ -265,8 +307,8 @@ def test_the_hour_gate_holds_whatever_the_last_outcome(connect):
         later = abebooks.check_book(connection, entry, reader)
 
     assert again is None
-    assert forced == "failed"
-    assert later == "failed"
+    assert forced.outcome == "failed"
+    assert later.outcome == "failed"
     assert len(reader.urls) == 3
 
 
@@ -336,6 +378,39 @@ def test_the_daily_check_reads_abebooks_whatever_the_hour(connect):
     )
 
     assert len(reader.urls) == 2
+
+
+def test_the_daily_check_counts_how_abebooks_went(connect, caplog):
+    with closing(connect()) as connection:
+        for isbn, title in (
+            (CRASH, "Crash"),
+            ("9780802135698", "Geronimo Rex"),
+            ("9780670337286", "Geronimo Rex 1972"),
+        ):
+            wantlist.add(connection, isbn, title)
+        connection.commit()
+    reader = FakeReader(
+        priced("9.00", "10.00"),
+        priced("30.00", "8.00", "25.00", "6.00", "40.00", "9.00", "12.00"),
+        abebooks.AbeBooksError("bot challenge"),
+    )
+
+    with caplog.at_level(logging.INFO):
+        daily.run(
+            connect,
+            lambda query, limit, **_: Results([], total=0),
+            lambda work_id: None,
+            lambda: 0,
+            read_abebooks=reader,
+        )
+    with closing(connect()) as connection:
+        run = connection.execute(
+            "SELECT abebooks_read, abebooks_failed, abebooks_unordered FROM daily_run"
+        ).fetchone()
+
+    assert tuple(run) == (3, 1, 1)
+    assert "AbeBooks: 3 read, 1 failed, 1 out of order" in caplog.text
+    assert "5 of 7 copies out of place" in caplog.text
 
 
 # --- the email ---------------------------------------------------------------
