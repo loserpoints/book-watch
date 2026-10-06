@@ -15,6 +15,7 @@ from decimal import Decimal
 
 from markupsafe import Markup
 
+from book_watch import marketplaces
 from book_watch.copies import Copy, Verdict
 from book_watch.ebay.search import Money
 from book_watch.standing import Market, Standing
@@ -55,6 +56,8 @@ def copy_row(
     place = _place(copy, placed, listed)
     return {
         "url": copy.url,
+        "marketplace": copy.marketplace,
+        "marketplace_name": marketplaces.NAMES[copy.marketplace],
         "new": new,
         "listing_title": copy.title,
         "photo_url": copy.thumbnail,

@@ -52,6 +52,16 @@
   {{ ui.chip("Checked", checked | since, href=urls.refresh, icon="↻", replace=True) }}
 </div>
 
+{#- One line when AbeBooks' last check failed or found nothing (S66). eBay's
+    copies show either way; a failure's reason is in the log, not here. An
+    empty result links to the search, to tell no copies from a bad search. -#}
+{%- if abebooks_notice %}
+<p class="meta abebooks-notice">
+  {%- if abebooks_url %}<a href="{{ abebooks_url }}" rel="noopener noreferrer" target="_blank">{{ abebooks_notice }}</a>
+  {%- else %}{{ abebooks_notice }}{% endif -%}
+</p>
+{%- endif %}
+
 {% if not copies and not uncertain %}
   <p class="meta">
     {% if scope == 'everywhere' %}

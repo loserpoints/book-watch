@@ -137,6 +137,7 @@ def sample_copies() -> list[dict]:
         "edition": "Paperback · Vintage · 1995",
         "abroad": None,
         "note": None,
+        "marketplace_name": "eBay",
     }
     return [
         {
@@ -157,10 +158,11 @@ def sample_copies() -> list[dict]:
             "price_text": "$12",
             "verdict": "under",
             "place": strips.rank_strip(used, 12.0),
-            "condition": "Very Good",
+            "condition": "Used - Very good",
             "abroad": "GB",
-            "listed": "3w",
+            "listed": None,
             "seller": "thriftbooks",
+            "marketplace_name": "AbeBooks",
             "listing_title": "CRASH J.G. Ballard Vintage International PB very good",
         },
         {

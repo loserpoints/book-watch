@@ -25,7 +25,7 @@ from decimal import Decimal
 
 import httpx
 
-from book_watch import copies, wantlist
+from book_watch import copies, marketplaces, wantlist
 from book_watch.config import AlertConfig, MissingCredentialError, load_alert_config
 from book_watch.copies import Copy
 from book_watch.ebay.auth import USER_AGENT
@@ -141,6 +141,8 @@ def compose(alerts: list[Alert]) -> tuple[str, str, str]:
         if alert.was is not None:
             price = f"Price drop from {money(alert.was)}: {price}"
         condition = copy.condition or "condition unstated"
+        # Where the link goes, since a copy can be on either marketplace.
+        condition = f"{condition} · on {marketplaces.NAMES[copy.marketplace]}"
         book_url = f"{APP_URL}/book/{entry.id}"
         parts_html.append(
             f"<p><b>{html.escape(entry.name)}</b><br>"

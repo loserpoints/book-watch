@@ -12,7 +12,8 @@ These rules decide when the app emails me about a copy, so that an email is alwa
 - A copy that was over the limit when the book was last opened, and is at or under it now, is in the email too, marked as a price drop with its old price. The old price is read from the copy's price history.
 - Raising a limit does not email the copies seen when it was raised, since they were seen at the new limit.
 - A copy with unknown shipping is never in the email.
-- Each copy shows its book, its delivered price against the limit, its condition, a link to the listing and a link to the book in the app.
+- Each copy shows its book, its delivered price against the limit, its condition, which marketplace it is on, a link to the listing and a link to the book in the app.
+- Copies from every marketplace follow the same rules. An AbeBooks copy is new by when it was first seen (see [matching](matching.md#what-is-new)).
 
 ### When it is sent
 

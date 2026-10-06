@@ -40,11 +40,12 @@ Collectible editions, where condition matters more than price, are not built.
 | Data | SQLite on a Fly volume | One user and one file. Snapshotted daily by Fly. |
 | Hosting | Fly.io | About $2–3 a month, the project's whole running cost. |
 | Listings | eBay Browse API | Free, 5,000 calls a day, and prices shipping per copy. |
+| Listings | AbeBooks search pages | No API is open to this use. One page per book, read within robots.txt. It breaks AbeBooks' website terms, a cost accepted for one user's app ([API policies](docs/rules/api-policies.md#abebooks)). |
 | Email | Resend | Free, and its shared sending address needs no domain. It delivers only to the Resend account's own address, which is the one reader. |
 | Editions | Open Library | Free, with a works and editions model. Every answer is cached. |
 | CI and deploy | GitHub Actions | Every step runs from a browser, with credentials held as secrets. |
 
-eBay is the only marketplace for now. What AbeBooks, Biblio, Alibris and Amazon allow through their APIs, and where their terms say so, is in [API policies](docs/rules/api-policies.md).
+eBay and AbeBooks are the marketplaces for now. What AbeBooks, Biblio, Alibris and Amazon allow through their APIs, and where their terms say so, is in [API policies](docs/rules/api-policies.md).
 
 ## Running it
 

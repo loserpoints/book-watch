@@ -14,7 +14,8 @@ import re
 import sys
 from dataclasses import dataclass, field
 from decimal import Decimal
-from urllib.parse import urlsplit
+from html.parser import HTMLParser
+from urllib.parse import urljoin, urlsplit
 
 import httpx
 
@@ -68,6 +69,16 @@ _FIRST_EDITION = re.compile(r"\bFirst Edition\b")
 #: "ISBN 10 / ISBN 13: 0670337285 / 9780670337286" or "ISBN 13: 9780670337286".
 _ISBN13 = re.compile(r"ISBN (?:10 / ISBN )?13: (?:[\dX]{10} / )?(97[89]\d{10})")
 _GROUPED = re.compile(r"(?:Used|New) offers from US\$")
+_PHOTO = re.compile(r'<img\b[^>]*\bsrc="(https://pictures\.abebooks\.com/[^"]+)"')
+#: "Published by The Viking Press, New York, 1972": the publisher, then the year.
+_PUBLISHED = re.compile(r"^Published by (.+?)(?:, (\d{4}))?$")
+_BINDING = re.compile(
+    r"\b(Hardcover|Softcover|Paperback|Mass Market Paperback|Leather Bound|"
+    r"Hard cover|Soft cover)\b"
+)
+_ORIGIN = "https://www.abebooks.com"
+#: Elements that never close, so they never open a level.
+_VOID = {"img", "br", "input", "meta", "link", "hr", "source", "wbr", "area"}
 
 
 class RefusedPath(ValueError):
@@ -85,6 +96,21 @@ class Copy:
     isbn: str | None = None
     #: A row that stands for every copy of its edition, priced at the cheapest.
     grouped: bool = False
+    title: str | None = None
+    #: The listing's page on the marketplace, absolute.
+    url: str | None = None
+    author: str | None = None
+    publisher: str | None = None
+    published: str | None = None
+    binding: str | None = None
+    #: The marketplace's own words, such as "Used - Very good".
+    condition: str | None = None
+    seller: str | None = None
+    #: Where the seller is, as the page writes it: "Silver Spring, MD, U.S.A.".
+    location: str | None = None
+    photo: str | None = None
+    #: The seller's description of the copy.
+    note: str | None = None
 
     @property
     def delivered(self) -> Decimal | None:
@@ -123,6 +149,75 @@ def _money(value: str) -> Decimal:
     return Decimal(value.replace(",", ""))
 
 
+class _Fields(HTMLParser):
+    """The text and attributes of each element a listing marks with a test id."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self._depth = 0
+        self._open: list[tuple[str, int]] = []
+        self.text: dict[str, list[str]] = {}
+        self.attrs: dict[str, dict[str, str | None]] = {}
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        named = dict(attrs)
+        test_id = named.get("data-test-id")
+        if test_id and test_id not in self.attrs:
+            self.attrs[test_id] = named
+            self.text[test_id] = []
+        if tag in _VOID:
+            return
+        self._depth += 1
+        if test_id:
+            self._open.append((test_id, self._depth))
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in _VOID:
+            return
+        self._open = [
+            (name, depth) for name, depth in self._open if depth < self._depth
+        ]
+        self._depth -= 1
+
+    def handle_data(self, data: str) -> None:
+        for name, _ in self._open:
+            self.text[name].append(data)
+
+    def get(self, name: str) -> str | None:
+        """The text of the element with this test id, or with it numbered.
+
+        Some ids carry the row's number, such as "description-2"; a different
+        id that merely starts the same way, such as "listing-condition-label",
+        is not this one.
+        """
+        numbered = re.compile(rf"{re.escape(name)}(?:-\d+)?$")
+        for found in (name, *self.text):
+            if found in self.text and numbered.match(found):
+                value = re.sub(r"\s+", " ", "".join(self.text[found])).strip()
+                return value or None
+        return None
+
+    def link(self, name: str) -> str | None:
+        href = self.attrs.get(name, {}).get("href")
+        return urljoin(_ORIGIN, html.unescape(href)) if href else None
+
+    def has(self, prefix: str) -> bool:
+        return any(name.startswith(prefix) for name in self.attrs)
+
+
+def _location(seller_info: str | None, seller: str | None) -> str | None:
+    """The location from "Seller: Type Punch Matrix, Silver Spring, MD, U.S.A."."""
+    if not seller_info:
+        return None
+    text = seller_info.removeprefix("Seller:").strip()
+    if seller and text.startswith(seller):
+        text = text[len(seller) :].lstrip(", ")
+    # The page repeats the line; the first copy of it is enough.
+    if seller and seller in text:
+        text = text[: text.index(seller)].rstrip(", ")
+    return text or None
+
+
 def parse(page: str) -> Page:
     """What a search or ISBN page holds: its count and each copy on it."""
     if "<title>Just a moment...</title>" in page:
@@ -144,6 +239,12 @@ def parse(page: str) -> Page:
             cost = Decimal("0")
         else:
             cost = None
+        fields = _Fields()
+        fields.feed(block)
+        seller = fields.get("listing-seller-link")
+        published = _PUBLISHED.match(fields.get("publisher") or "")
+        binding = _BINDING.search(fields.get("listing-item") or text)
+        photo = _PHOTO.search(block)
         copies.append(
             Copy(
                 listing_id=listing_id.group(1) if listing_id else None,
@@ -151,7 +252,18 @@ def parse(page: str) -> Page:
                 shipping=cost,
                 first_edition=bool(_FIRST_EDITION.search(text)),
                 isbn=isbn.group(1) if (isbn := _ISBN13.search(text)) else None,
-                grouped=bool(_GROUPED.search(text)),
+                grouped=bool(_GROUPED.search(text)) or fields.has("listing-rollup"),
+                title=fields.get("listing-title"),
+                url=fields.link("listing-title-link"),
+                author=fields.get("listing-author"),
+                publisher=published.group(1) if published else None,
+                published=published.group(2) if published else None,
+                binding=binding.group(1) if binding else None,
+                condition=fields.get("listing-condition"),
+                seller=seller,
+                location=_location(fields.get("seller-info"), seller),
+                photo=photo.group(1) if photo else None,
+                note=fields.get("description"),
             )
         )
     return Page(

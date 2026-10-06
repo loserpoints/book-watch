@@ -12,6 +12,7 @@
 - After setting or changing the Resend key, run Actions → Send a test email. It sends one email from the live app with its real settings, or fails with the reason.
 - To see exactly what eBay sends for a search, field by field, run Actions → Search eBay once with a title and author or an ISBN. It makes one search on the Fly machine, the way the app does, and prints eBay's JSON in the run's log.
 - To see what an AbeBooks or Biblio page holds when read from Fly, run Actions → Read a marketplace page once with an `https://www.abebooks.com/book-search/...` or `https://www.biblio.com/...` address. It makes one request on the Fly machine and prints the status, the page's count, and the delivered prices on it. Paths the site's robots.txt disallows are refused.
+- "AbeBooks check failed" on a book's page has its reason in Fly's logs, `AbeBooks check failed for work 12: grouped rows`. A reason naming the page's shape means AbeBooks changed its page: read the book's search with Read a marketplace page once to see what it serves now. The book's eBay copies, and its AbeBooks copies from the last good check, stay listed meanwhile.
 
 ## Roll back
 

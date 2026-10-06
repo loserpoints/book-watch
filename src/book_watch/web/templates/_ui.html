@@ -142,11 +142,17 @@
   {%- set all_photos = c.photos or [c.photo_url] %}
   <button type="button" class="copy-photo" data-open="photo-view" data-photo="{{ larger_photo(c.photo_url) }}" data-photo-small="{{ c.photo_url }}" data-photos='{{ all_photos | map("larger_photo") | list | tojson }}' aria-label="Enlarge the seller's photo{% if all_photos | length > 1 %}, one of {{ all_photos | length }}{% endif %}"><img src="{{ c.photo_url }}" alt="" loading="lazy">
     {%- if all_photos | length > 1 %}<span class="photo-count" aria-hidden="true">{{ all_photos | length }}</span>{% endif -%}
+    {%- if c.marketplace_name %}<span class="copy-market" aria-hidden="true">{{ c.marketplace_name }}</span>{% endif -%}
   </button>
   {%- else %}
-  <span class="copy-photo" aria-hidden="true"></span>
+  <span class="copy-photo" aria-hidden="true">
+    {%- if c.marketplace_name %}<span class="copy-market">{{ c.marketplace_name }}</span>{% endif -%}
+  </span>
   {%- endif %}
   <div class="copy-main">
+    {#- The band on the photo is hidden from screen readers with the photo,
+        so the marketplace is said here instead (S66). -#}
+    {%- if c.marketplace_name %}<span class="sr-only">On {{ c.marketplace_name }}.</span>{% endif %}
     <div class="copy-price">
       {{- price(c.price_text ~ (' + shipping?' if c.shipping_unknown else ''), c.verdict) }}
       {%- if c.place_text %} <span class="meta">{{ c.place_text }}</span>{% else %} {{ c.place }}{% endif %}

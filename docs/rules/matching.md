@@ -11,6 +11,11 @@ These rules decide which eBay listings are copies of the book being watched, and
 - A book added by ISBN, or by text added anyway, is searched by exactly what was typed, as a keyword. A book picked from a title search is searched by its title and author.
 - Searches return copies from US sellers. Searching everywhere is a choice made per view, and is not saved.
 - Searches return fixed-price listings only, never auctions (see [pricing](pricing.md#prices)).
+- AbeBooks is searched by the book's main title, before any colon, and its author, written as AbeBooks writes them in a path: lowercase, punctuation dropped, words joined by hyphens. A book with no title is searched by the ISBN it was added by.
+- AbeBooks answers with the 30 cheapest copies by delivered price, across editions and sellers worldwide. An edition whose copies all cost more than the 30th is not seen, and neither is any copy the seller gave no ISBN: the page served to the app leaves them out.
+- AbeBooks' search also returns other books that share the title. Each copy is graded by the rules below, as eBay's are.
+- An AbeBooks page in any shape other than one row per copy, cheapest first, with a count and each copy's price, shipping, id and link, fails the check. Nothing is guessed from it, and the copies from the last good check stay listed.
+- An empty AbeBooks result links to the search that was read, so a book with no copies can be told from a search written wrong.
 
 ### Which listing it is
 
@@ -18,7 +23,8 @@ These rules decide which eBay listings are copies of the book being watched, and
 - What is listed now is each marketplace's own newest search, so a search of one marketplace never hides another's copies.
 - Only eBay's listings are ever sent to eBay to ask what a seller declared. Another marketplace's declarations are stored with the search that found them.
 - One search that returns US and foreign sellers together feeds both views: everywhere shows every copy, and US-only shows the copies whose seller is in the US.
-- Condition is stored on eBay's scale whatever the marketplace, with the marketplace's own words kept beside it. AbeBooks: New is New; As New and Fine are Like New; Near Fine and Very Good are Very Good; Good is Good; Fair and Poor are Acceptable. Near Fine maps down, so a grade undersells rather than oversells.
+- Condition is stored on eBay's scale whatever the marketplace, with the marketplace's own words kept beside it. AbeBooks: New is New; As New and Fine are Like New; Near Fine and Very Good are Very Good; Good is Good; Fair and Poor are Acceptable. Near Fine maps down, so a grade undersells rather than oversells. A bare Used is eBay's generic Used: it counts in the used market and shows only "Used".
+- AbeBooks writes a seller's country at the end of their location. A copy whose country is not recognized is shown under everywhere and never under US-only.
 
 ### Which numbers are this book
 
@@ -53,7 +59,7 @@ These rules decide which eBay listings are copies of the book being watched, and
 - A copy's listing date is the date eBay first listed it, which eBay keeps when an item is relisted (`itemOriginDate`).
 - A relisted copy gets a new item id and keeps its original listing date, so it is not new.
 - The day's margin covers eBay's search showing a listing after it was listed. A copy relisted within a day of first being listed shows as new.
-- A copy with no listing date is new when it was first seen after the visit.
+- A copy with no listing date is new when it was first seen after the visit. AbeBooks gives no listing date, so this is how every AbeBooks copy is judged, and a relisted AbeBooks copy shows as new.
 - Nothing is new on a book never opened.
 
 ## Open issues

@@ -29,9 +29,18 @@ These rules keep the app's requests to eBay and Open Library small, spaced out a
 - Every book is searched once a day at 7am New York time, one at a time, and each book's new copies are examined before the next book is searched. A run the app was down for runs when it starts again. Each run records how many Open Library requests it spent.
 - Each listing's details are fetched once, ever. A listing is fetched again only when the app starts reading a new field, and only while it is listed.
 
+### AbeBooks
+
+- A book costs one request: page 1 of AbeBooks' title search. Nothing past page 1 is read.
+- AbeBooks is read at the same moments as eBay: the daily check, Update, and opening a book. Update and opening a book read it only if its last AbeBooks check, whatever the outcome, was over an hour ago. The daily check, tapping Checked and Check all read regardless.
+- One request per book serves both the US-only and everywhere views.
+- The daily check reads one book at a time, right after that book's eBay search and before its copies are examined.
+- Requests from anywhere in the app are at least 3 seconds apart.
+- A failed request is not retried. The next check of that book tries again.
+
 ### AbeBooks and Biblio
 
-- Pages are read only by the Read a marketplace page once workflow, one request per run.
+- Apart from the checks above, pages are read only by the Read a marketplace page once workflow, one request per run.
 - A path the site's robots.txt disallows is refused before anything is sent.
 - A failed request is not retried.
 
