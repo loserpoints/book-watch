@@ -14,7 +14,7 @@ A title sits on the list for two weeks. When I open the app, the results are alr
 
 ### Status
 
-Not met. eBay is the only marketplace searched, so I still search AbeBooks and Biblio by hand. Searching them is blocked: [#145](https://github.com/loserpoints/book-watch/issues/145) waits on Biblio's terms, and AbeBooks closed its API to new developers.
+Not met. eBay is the only marketplace searched, so I still search AbeBooks and Biblio by hand. What each one's API allows is in [API policies](rules/api-policies.md).
 
 ## J2 · Narrow the pile to the few worth my attention
 

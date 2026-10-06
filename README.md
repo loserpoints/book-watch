@@ -44,7 +44,7 @@ Collectible editions, where condition matters more than price, are not built.
 | Editions | Open Library | Free, with a works and editions model. Every answer is cached. |
 | CI and deploy | GitHub Actions | Every step runs from a browser, with credentials held as secrets. |
 
-AbeBooks closed its API to new developers, so eBay is the only marketplace for now.
+eBay is the only marketplace for now. What AbeBooks, Biblio, Alibris and Amazon allow through their APIs, and where their terms say so, is in [API policies](docs/rules/api-policies.md).
 
 ## Running it
 
