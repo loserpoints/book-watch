@@ -35,6 +35,25 @@ def test_each_copy_keeps_its_listing_id_and_first_edition():
     assert first.first_edition
 
 
+def test_each_copy_keeps_its_isbn():
+    copies = pages.parse(ISBN_PAGE).copies
+
+    assert {c.isbn for c in copies} == {"9780670337286"}
+
+
+def test_a_copy_without_an_isbn_says_so():
+    row = (
+        '<div data-srp-item-role="listing" data-csa-c-item-id="1">'
+        "GERONIMO REX. Hannah, Barry. Published by Viking, 1972 Hardcover "
+        "First Edition Condition: Fine US$ 75.00 US$ 5.75 shipping</div>"
+    )
+
+    copy = pages.parse(row).copies[0]
+
+    assert copy.isbn is None
+    assert copy.delivered == Decimal("80.75")
+
+
 def test_a_bot_challenge_is_reported_rather_than_read_as_empty():
     challenge = "<html><head><title>Just a moment...</title></head></html>"
 

@@ -62,6 +62,9 @@ _LISTING_ID = re.compile(r'data-csa-c-item-id="(\d+)"')
 _PRICE = re.compile(r"US\$\s?([\d,]+\.\d{2})")
 _SHIPPING = re.compile(r"US\$\s?([\d,]+\.\d{2}) shipping")
 _FIRST_EDITION = re.compile(r"\bFirst Edition\b")
+#: "ISBN 10 / ISBN 13: 0670337285 / 9780670337286" or "ISBN 13: 9780670337286".
+_ISBN13 = re.compile(r"ISBN (?:10 / ISBN )?13: (?:[\dX]{10} / )?(97[89]\d{10})")
+_GROUPED = re.compile(r"(?:Used|New) offers from US\$")
 
 
 class RefusedPath(ValueError):
@@ -75,6 +78,10 @@ class Copy:
     #: Zero for free shipping. None when the page states no shipping at all.
     shipping: Decimal | None
     first_edition: bool
+    #: None when the seller entered no ISBN.
+    isbn: str | None = None
+    #: A row that stands for every copy of its edition, priced at the cheapest.
+    grouped: bool = False
 
     @property
     def delivered(self) -> Decimal | None:
@@ -140,6 +147,8 @@ def parse(page: str) -> Page:
                 price=_money(price.group(1)) if price else None,
                 shipping=cost,
                 first_edition=bool(_FIRST_EDITION.search(text)),
+                isbn=isbn.group(1) if (isbn := _ISBN13.search(text)) else None,
+                grouped=bool(_GROUPED.search(text)),
             )
         )
     return Page(
@@ -186,6 +195,15 @@ def main(argv: list[str] | None = None) -> int:
     print(f"cheapest   {', '.join(str(d) for d in delivered[:10]) or 'none'}")
     print(f"in order   {'yes' if delivered == sorted(delivered) else 'no'}")
     print(f"first ed.  {sum(c.first_edition for c in page.copies)}")
+    isbns = sorted({c.isbn for c in page.copies if c.isbn})
+    print(f"isbns      {len(isbns)}: {', '.join(isbns) or 'none'}")
+    print(f"no isbn    {sum(c.isbn is None for c in page.copies)}")
+    for copy in page.copies:
+        print(
+            f"  {copy.isbn or '-':13}  {str(copy.delivered or '?'):>8}"
+            f"  {'grouped' if copy.grouped else '       '}"
+            f"  {'first ed.' if copy.first_edition else ''}"
+        )
     return 0 if status == 200 else 1
 
 

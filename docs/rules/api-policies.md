@@ -64,7 +64,7 @@ Read 2026-10-06, from seven requests sent from a Claude Code session.
 - **Title search.** `/book-search/title/<title>/author/<author>/` lists 30 rows a page, sorted by relevance. Each row gives title, ISBN when the seller entered one, publisher and year, binding, seller, condition, price, shipping to the US, and whether it is a first edition, signed or in a dust jacket. A row for an edition with several copies says "Used offers from US$ X", the delivered price of its cheapest copy. Later pages are under `/servlet/SearchResults`. [Example](https://www.abebooks.com/book-search/title/geronimo-rex/author/barry-hannah/).
 - **ISBN page.** `/book-search/isbn/<ISBN>/used/` lists one ISBN's used copies, 30 a page, sorted by delivered price, cheapest first, with the same fields per copy and a count of results. Later pages are under `/servlet/SearchResults`. [Example with 9 copies](https://www.abebooks.com/book-search/isbn/9780670337286/used/), [example with 207](https://www.abebooks.com/book-search/isbn/9780590353427/used/).
 - **Edition page.** `/<ISBN>/<title>/plp` shows about 10 copies of one edition, not sorted by price. Its summary of lowest and highest price excludes shipping. [Example](https://www.abebooks.com/9780140449136/Crime-Punishment-Penguin-Classics-Dostoyevsky-0140449132/plp).
-- **Copies without an ISBN** appear only in the title search. In the *Geronimo Rex* example, 18 of the first page's 30 rows had none, most of them first editions.
+- **Copies without an ISBN** appear only in the title search. In the *Geronimo Rex* example, 21 of the first page's 30 rows had none, most of them first editions.
 - **Shipping** is priced to a country, not a ZIP code, from the visitor's shopping preferences or location.
 
 ### Biblio
