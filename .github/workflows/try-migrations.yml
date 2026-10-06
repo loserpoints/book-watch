@@ -1,0 +1,51 @@
+name: Try migrations on production data
+
+# On a pull request that changes a migration, copies the live database from
+# the Fly machine, applies the branch's migrations to the copy, and fails if a
+# migration fails or a table loses rows. The live database is never written.
+#
+# The copy exists only on the runner, for the length of the run. The log
+# prints table names and row counts, never rows, because Actions logs are
+# public.
+#
+# Requires the FLY_API_TOKEN repository secret that Deploy uses.
+on:
+  pull_request:
+    paths:
+      - "src/book_watch/migrations/**"
+
+permissions:
+  contents: read
+
+jobs:
+  try:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Copy the live database
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          app=$(sed -n 's/^app = "\(.*\)"$/\1/p' fly.toml)
+          flyctl ssh console --app "${app}" \
+            -C "/app/.venv/bin/python -m book_watch.backup /tmp/try-migrations.db"
+          flyctl ssh sftp get --app "${app}" /tmp/try-migrations.db copy.db
+          flyctl ssh console --app "${app}" -C "rm -f /tmp/try-migrations.db"
+
+      - name: Migrate the copy
+        run: uv run python scripts/try_migrations.py copy.db
+
+      - name: Remove the copy
+        if: always()
+        run: rm -f copy.db
