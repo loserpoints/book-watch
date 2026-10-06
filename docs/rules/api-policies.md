@@ -80,6 +80,6 @@ Read 2026-10-05.
 
 ## Open issues
 
-- [S64 · The case for scraping AbeBooks, for me alone and for other people, is written](https://github.com/loserpoints/book-watch/issues/227)
+- [S64 · What AbeBooks' pages give is known, and the limits for reading them are written down](https://github.com/loserpoints/book-watch/issues/227)
 - [Search Biblio as a second marketplace](https://github.com/loserpoints/book-watch/issues/145)
-- [Other people can use book-watch](https://github.com/loserpoints/book-watch/issues/225)
+- [Others can try book-watch in a public demo, or run their own copy](https://github.com/loserpoints/book-watch/issues/225)
