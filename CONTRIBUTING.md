@@ -18,6 +18,7 @@
 - Actions logs are public, like the repository. A workflow prints nothing that holds an address or a key.
 - Running cost is about $2–3 a month, all hosting. Say so before adding anything with a recurring cost.
 - Every request to an outside service follows the [rate limits](docs/rules/rate-limits.md).
+- A check on data the app reads from outside fails only what the app can't read correctly. A property it can read through, such as a page's price order, is measured and counted instead. A rule drawn from a few samples fails real data, as AbeBooks' order check did on its first day.
 
 ## Testing
 
@@ -27,9 +28,10 @@
 - A trigger on demand proves the plumbing, not the choice of what to act on. Check that on the live app with data that makes the event likely, such as a book with many listings and a generous limit.
 - Run every change to a screen in a real browser at 360px wide, in both themes, and look at it. Tests miss layout, fonts and taps.
 - Test a layout fix in the case that broke: the phone width and the data where it happened. A fix that only measures what changed can miss that the layout no longer fits.
-- This environment holds real eBay keys. Run the app locally with outbound requests cut off, or a book page that opens can search eBay and examine every copy it finds.
+- This environment holds real eBay keys. Run the app locally only with `uv run python scripts/serve_local.py <database> [port]`, which fakes eBay's search, never reads AbeBooks, and refuses every request. The app as built for production searches eBay when a book page opens and examines every copy it finds.
 - Tests check what a reader sees, not the markup that carries it, so they survive a redesign.
 - A check proves nothing until it has been seen to fail. Break the code on purpose, on a committed tree, and confirm the break applied.
+- A migration's test checks that its own migration ran, not that it is the newest. S65's test assumed 025 was the last and broke when 026 arrived.
 - Reset process-wide state between tests. A test that passes only because another ran first proves nothing.
 - Run the production entrypoint before trusting what only it starts, such as the daily check. No test starts it.
 - Keep labeled real data in the repository as test fixtures, so a study becomes a regression test.

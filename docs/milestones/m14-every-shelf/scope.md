@@ -2,7 +2,7 @@
 
 ## Goal
 
-Every way in to AbeBooks and Biblio has been checked, a way in is chosen, and a book's page shows AbeBooks copies beside eBay's, priced and graded the same way and marked with where each is from.
+Every way in to AbeBooks and Biblio was checked, and AbeBooks, read from one page per book, now shows its copies beside eBay's on a book's page, in the daily check and in the morning email, priced, graded and marked the same way, while Biblio was checked but not built.
 
 ## Jobs advanced
 

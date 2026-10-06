@@ -14,7 +14,7 @@ A title sits on the list for two weeks. When I open the app, the results are alr
 
 ### Status
 
-Not met. eBay is the only marketplace searched, so I still search AbeBooks and Biblio by hand. What each one's API allows is in [API policies](rules/api-policies.md).
+Met. Judged on the live app on 2026-10-06. eBay and AbeBooks are searched every morning without the app being opened, and copies new since I last looked are marked. AbeBooks filled out the price range, though none of its copies beat eBay's cheapest in the first checks.
 
 ## J2 · Narrow the pile to the few worth my attention
 

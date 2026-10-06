@@ -17,7 +17,9 @@ from fastapi.staticfiles import StaticFiles
 
 from book_watch.abebooks import Reader
 from book_watch.config import DeletionEndpointConfig, load_deletion_config
+from book_watch.enrichment import EnrichFn
 from book_watch.web import design, ebay_deletion, listings, manifest, wantlist
+from book_watch.web.searching import SearchFn
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -25,6 +27,9 @@ STATIC_DIR = Path(__file__).parent / "static"
 def create_app(
     config: DeletionEndpointConfig | None = None,
     read_abebooks: Reader | None = None,
+    *,
+    search: SearchFn | None = None,
+    enrich: EnrichFn | None = None,
 ) -> FastAPI:
     """Build the application.
 
@@ -38,6 +43,10 @@ def create_app(
 
     AbeBooks is read only when a reader is passed, which only the production
     entry point does, so nothing that builds the app for a test reads it.
+
+    `search` and `enrich` default to the real eBay and Open Library clients.
+    `scripts/serve_local.py` passes fakes, so the app runs locally without
+    making a request.
     """
     app = FastAPI(
         title="book-watch",
@@ -46,8 +55,12 @@ def create_app(
         redoc_url=None,
     )
     app.include_router(ebay_deletion.build_router(config or load_deletion_config()))
-    app.include_router(listings.build_router(read_abebooks=read_abebooks))
-    app.include_router(wantlist.build_router(read_abebooks=read_abebooks))
+    app.include_router(
+        listings.build_router(search, enrich=enrich, read_abebooks=read_abebooks)
+    )
+    app.include_router(
+        wantlist.build_router(search=search, enrich=enrich, read_abebooks=read_abebooks)
+    )
     app.include_router(design.build_router())
     app.include_router(manifest.build_router())
     # htmx is vendored rather than loaded from a CDN: one file, no runtime
