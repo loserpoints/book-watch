@@ -7,12 +7,13 @@
 - One deploy runs at a time.
 - To redeploy without a commit, for example after changing a secret: Actions → Deploy → Run workflow, on `main`.
 - A deploy after 7am New York time, on a day whose daily check has not finished, starts that check as the app boots.
-- Each daily check logs one line, `Daily check: ok, 6 books, 0 failed, 0 Open Library requests, 1 emailed`, readable in Fly's log viewer. "Email is off" before it means `RESEND_API_KEY` or `ALERT_EMAIL_TO` is not set on Fly.
+- Each daily check logs one line, `Daily check: ok, 6 books, 0 failed, 0 Open Library requests, 1 emailed, AbeBooks: 6 read, 0 failed, 0 out of order`, readable in Fly's log viewer. "Email is off" before it means `RESEND_API_KEY` or `ALERT_EMAIL_TO` is not set on Fly.
 - "Shipping for calculated listings is off" in Fly's logs means `SHIP_TO_ZIP` is not set, so copies with calculated shipping show "+ shipping?".
 - After setting or changing the Resend key, run Actions → Send a test email. It sends one email from the live app with its real settings, or fails with the reason.
 - To see exactly what eBay sends for a search, field by field, run Actions → Search eBay once with a title and author or an ISBN. It makes one search on the Fly machine, the way the app does, and prints eBay's JSON in the run's log.
 - To see what an AbeBooks or Biblio page holds when read from Fly, run Actions → Read a marketplace page once with an `https://www.abebooks.com/book-search/...` or `https://www.biblio.com/...` address. It makes one request on the Fly machine and prints the status, the page's count, and the delivered prices on it. Paths the site's robots.txt disallows are refused.
 - "AbeBooks check failed" on a book's page has its reason in Fly's logs, `AbeBooks check failed for work 12: grouped rows`. A reason naming the page's shape means AbeBooks changed its page: read the book's search with Read a marketplace page once to see what it serves now. The book's eBay copies, and its AbeBooks copies from the last good check, stay listed meanwhile.
+- "Out of order" in the daily line counts books whose AbeBooks page had more than 3 copies well out of price order, each also logged as `AbeBooks page out of order for work 12: 5 of 30 copies out of place`. One now and then is a quirk. Most books, morning after morning, means AbeBooks no longer sorts the page cheapest first, so page 1 may not be a book's cheapest copies: read one with Read a marketplace page once, whose "in order" line and prices show it.
 
 ## Roll back
 
