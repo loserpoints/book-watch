@@ -21,6 +21,8 @@
 
 A rollback reverts code, not the database. Migrations run forward only, so a migration that dropped or rewrote data needs a restore.
 
+A pull request that changes a migration runs Try migrations on production data: it copies the live database to the runner, applies the branch's migrations to the copy, and fails if a migration fails or a table loses rows. The live database is never written, and the log shows row counts only.
+
 ## Restore data
 
 - Fly snapshots the data volume daily and keeps five days, so data can be restored to roughly the previous midnight.
