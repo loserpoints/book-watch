@@ -27,6 +27,7 @@ from typing import Literal
 
 from book_watch.copies import ConditionClass, Copy, Verdict, is_new, populations
 from book_watch.ebay.search import Money, Scope
+from book_watch.marketplaces import Marketplace
 from book_watch.sweeps import swept_at
 from book_watch.wantlist import Entry
 
@@ -73,7 +74,9 @@ class Standing:
     unplaced: Unplaced | None = None
 
 
-def standings(listed: list[Copy], seen: list[Copy]) -> dict[str, Standing]:
+def standings(
+    listed: list[Copy], seen: list[Copy]
+) -> dict[tuple[Marketplace, str], Standing]:
     """Place each listed copy among the others, by item id.
 
     **Certain copies only, on both sides.** The possible tier ran at 8–14%
@@ -97,7 +100,7 @@ def standings(listed: list[Copy], seen: list[Copy]) -> dict[str, Standing]:
     """
     listed_prices, seen_prices = prices(listed), prices(seen)
 
-    standing: dict[str, Standing] = {}
+    standing: dict[tuple[Marketplace, str], Standing] = {}
     for copy in listed:
         if copy.tier != "certain":
             continue
@@ -106,7 +109,7 @@ def standings(listed: list[Copy], seen: list[Copy]) -> dict[str, Standing]:
             # Which kind of silence it was. A seller who filled nothing in is
             # a different situation from a copy we recorded before the code
             # was kept, and only the first is the seller's doing.
-            standing[copy.item_id] = Standing(
+            standing[copy.key] = Standing(
                 kind,
                 unplaced=(
                     "condition unstated"
@@ -117,13 +120,13 @@ def standings(listed: list[Copy], seen: list[Copy]) -> dict[str, Standing]:
             continue
         delivered = copy.landed_cost
         if delivered is None:
-            standing[copy.item_id] = Standing(kind, unplaced="no delivered price")
+            standing[copy.key] = Standing(kind, unplaced="no delivered price")
             continue
 
         key = (kind, delivered.currency)
         here = sorted(listed_prices.get(key, []))
         everything = seen_prices.get(key, [])
-        standing[copy.item_id] = Standing(
+        standing[copy.key] = Standing(
             condition_class=kind,
             # Competition ranking: two copies at the same price are both
             # cheapest, and the next one along is third. Handing one of them
@@ -194,7 +197,7 @@ class Market:
 _MARKET_ORDER: dict[ConditionClass, int] = {"used": 0, "new": 1, "unknown": 2}
 
 
-def markets(standing: dict[str, Standing]) -> list[Market]:
+def markets(standing: dict[tuple[Marketplace, str], Standing]) -> list[Market]:
     """The classes this book's listed copies sit in, one entry each.
 
     Derived from the per-copy standings rather than from a second query: every
@@ -249,7 +252,9 @@ class Headline:
 
 
 def headline(
-    listed: list[Copy], standing: dict[str, Standing], ceiling: Money | None
+    listed: list[Copy],
+    standing: dict[tuple[Marketplace, str], Standing],
+    ceiling: Money | None,
 ) -> Headline | None:
     """Pick the market worth leading with, and the copy that leads it.
 
@@ -282,21 +287,21 @@ def headline(
 def _lead(
     market: Market,
     listed: list[Copy],
-    standing: dict[str, Standing],
+    standing: dict[tuple[Marketplace, str], Standing],
     ceiling: Money | None,
 ) -> Headline | None:
     """The cheapest copy of one market, as a headline, or None if unpriced."""
     assert market.low is not None  # a market exists only where a price did
     cheapest = {
-        item_id
-        for item_id, placed in standing.items()
+        key
+        for key, placed in standing.items()
         if placed.rank == 1
         and placed.condition_class == market.condition_class
         and placed.low is not None
         and placed.low.currency == market.low.currency
     }
     # Ties share rank 1 and share a price, so either will do.
-    copy = next((one for one in listed if one.item_id in cheapest), None)
+    copy = next((one for one in listed if one.key in cheapest), None)
     if copy is None or copy.landed_cost is None:
         return None
     return Headline(

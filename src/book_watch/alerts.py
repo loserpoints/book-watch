@@ -74,7 +74,7 @@ def due(connection: sqlite3.Connection) -> list[Alert]:
             if (
                 copy.tier != "certain"
                 or copy.against(ceiling) != "under"
-                or _emailed(connection, copy.item_id, entry.work_id)
+                or _emailed(connection, copy, entry.work_id)
             ):
                 continue
             if copies.is_new(copy, entry.last_looked):
@@ -99,9 +99,10 @@ def _at_last_visit(
     row = connection.execute(
         "SELECT sighting.price, sighting.currency, sighting.shipping "
         "FROM sighting JOIN sweep ON sweep.id = sighting.sweep_id "
-        "WHERE sighting.work_id = ? AND sighting.item_id = ? AND sweep.at <= ? "
+        "WHERE sighting.work_id = ? AND sighting.marketplace = ? "
+        "  AND sighting.item_id = ? AND sweep.at <= ? "
         "ORDER BY sighting.sweep_id DESC LIMIT 1",
-        (entry.work_id, copy.item_id, entry.looked_at),
+        (entry.work_id, copy.marketplace, copy.item_id, entry.looked_at),
     ).fetchone()
     if row is None:
         return None
@@ -115,11 +116,12 @@ def _at_last_visit(
     )
 
 
-def _emailed(connection: sqlite3.Connection, item_id: str, work_id: int) -> bool:
+def _emailed(connection: sqlite3.Connection, copy: Copy, work_id: int) -> bool:
     return (
         connection.execute(
-            "SELECT 1 FROM emailed_copy WHERE item_id = ? AND work_id = ?",
-            (item_id, work_id),
+            "SELECT 1 FROM emailed_copy "
+            "WHERE marketplace = ? AND item_id = ? AND work_id = ?",
+            (copy.marketplace, copy.item_id, work_id),
         ).fetchone()
         is not None
     )
@@ -200,8 +202,12 @@ def notify(
             return 0
         send(settings, *compose(alerts), post)
         connection.executemany(
-            "INSERT OR IGNORE INTO emailed_copy (item_id, work_id) VALUES (?, ?)",
-            [(alert.copy.item_id, alert.entry.work_id) for alert in alerts],
+            "INSERT OR IGNORE INTO emailed_copy (marketplace, item_id, work_id) "
+            "VALUES (?, ?, ?)",
+            [
+                (alert.copy.marketplace, alert.copy.item_id, alert.entry.work_id)
+                for alert in alerts
+            ],
         )
         connection.commit()
     return len(alerts)

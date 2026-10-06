@@ -1,9 +1,9 @@
 """What a search saw, and when it saw it.
 
-A *sweep* is one call to eBay for one book in one scope, and everything this
-module does is about recording one honestly: which copies it returned, what
-they cost, whether it saw the whole market or only a window, and how long its
-answer stays current.
+A *sweep* is one search of one marketplace for one book in one scope, and
+everything this module does is about recording one honestly: which copies it
+returned, what they cost, whether it saw the whole market or only a window, and
+how long its answer stays current.
 
 Kept apart from `copies` because the questions differ in tense. That module
 asks what is for sale now; this one asks what was true when we last looked,
@@ -23,6 +23,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from book_watch.ebay.search import Listing, Money, Scope
+from book_watch.marketplaces import Marketplace, is_us
 
 #: How long a book's results are treated as current.
 #:
@@ -50,6 +51,7 @@ def due_for_sweep(
     work_id: int,
     *,
     scope: Scope = "us",
+    marketplace: Marketplace = "ebay",
     current_for: timedelta | None = None,
 ) -> bool:
     """Should opening this book spend a search?
@@ -71,8 +73,9 @@ def due_for_sweep(
     if current_for is None:
         current_for = CURRENT_FOR
     row = connection.execute(
-        "SELECT at FROM sweep WHERE work_id = ? AND scope = ? ORDER BY id DESC LIMIT 1",
-        (work_id, scope),
+        "SELECT at FROM sweep WHERE work_id = ? AND scope = ? AND marketplace = ? "
+        "ORDER BY id DESC LIMIT 1",
+        (work_id, scope, marketplace),
     ).fetchone()
     if row is None:
         return True
@@ -83,12 +86,17 @@ def due_for_sweep(
 
 
 def swept_at(
-    connection: sqlite3.Connection, work_id: int, *, scope: Scope = "us"
+    connection: sqlite3.Connection,
+    work_id: int,
+    *,
+    scope: Scope = "us",
+    marketplace: Marketplace = "ebay",
 ) -> datetime | None:
-    """When this book was last searched for in this scope, or None if never."""
+    """When this book was last searched for on this marketplace in this scope."""
     row = connection.execute(
-        "SELECT at FROM sweep WHERE work_id = ? AND scope = ? ORDER BY id DESC LIMIT 1",
-        (work_id, scope),
+        "SELECT at FROM sweep WHERE work_id = ? AND scope = ? AND marketplace = ? "
+        "ORDER BY id DESC LIMIT 1",
+        (work_id, scope, marketplace),
     ).fetchone()
     return _parse_timestamp(row["at"]) if row else None
 
@@ -111,8 +119,9 @@ def store(
     *,
     asked_for: int | None = None,
     scope: Scope = "us",
+    marketplace: Marketplace = "ebay",
 ) -> int:
-    """Record what eBay just returned, keeping everything seen before it.
+    """Record what a marketplace just returned, keeping everything seen before.
 
     This used to delete the book's copies and reinsert the new ones, which
     answered the page's question — what is for sale now — by destroying the
@@ -126,9 +135,9 @@ def store(
     sweep that saw it. Returns the sweep id.
     """
     sweep_id = connection.execute(
-        "INSERT INTO sweep (work_id, asked_for, total_matching, scope) "
-        "VALUES (?, ?, ?, ?) RETURNING id",
-        (work_id, asked_for, getattr(listings, "total", None), scope),
+        "INSERT INTO sweep (work_id, asked_for, total_matching, scope, marketplace) "
+        "VALUES (?, ?, ?, ?, ?) RETURNING id",
+        (work_id, asked_for, getattr(listings, "total", None), scope, marketplace),
     ).fetchone()["id"]
 
     previous = {
@@ -138,16 +147,18 @@ def store(
             "       copy.condition, seen.sweep_id AS last_sweep_id "
             "  FROM copy "
             "  LEFT JOIN copy_seen AS seen "
-            "         ON seen.item_id = copy.item_id "
+            "         ON seen.marketplace = copy.marketplace "
+            "        AND seen.item_id = copy.item_id "
             "        AND seen.work_id = copy.work_id AND seen.scope = ? "
-            " WHERE copy.work_id = ?",
-            (scope, work_id),
+            " WHERE copy.work_id = ? AND copy.marketplace = ?",
+            (scope, work_id, marketplace),
         )
     }
     latest_before = connection.execute(
         "SELECT id, asked_for, total_matching FROM sweep "
-        "WHERE work_id = ? AND scope = ? AND id < ? ORDER BY id DESC LIMIT 1",
-        (work_id, scope, sweep_id),
+        "WHERE work_id = ? AND scope = ? AND marketplace = ? AND id < ? "
+        "ORDER BY id DESC LIMIT 1",
+        (work_id, scope, marketplace, sweep_id),
     ).fetchone()
     was_current = latest_before["id"] if latest_before else None
     # Whether absence from that sweep was evidence of anything at all.
@@ -162,12 +173,13 @@ def store(
         connection.execute(
             """
             INSERT INTO copy (
-                item_id, work_id, title, url, price, currency, shipping,
-                condition, condition_id, seller, thumbnail, epid, listed_at,
-                located_in, buying_options, first_seen_at, last_seen_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                marketplace, item_id, work_id, title, url, price, currency,
+                shipping, condition, condition_id, seller, thumbnail, epid,
+                listed_at, located_in, buying_options, first_seen_at,
+                last_seen_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                       datetime('now'), datetime('now'))
-            ON CONFLICT (item_id, work_id) DO UPDATE SET
+            ON CONFLICT (marketplace, item_id, work_id) DO UPDATE SET
                 title = excluded.title,
                 url = excluded.url,
                 price = excluded.price,
@@ -184,6 +196,7 @@ def store(
                 last_seen_at = datetime('now')
             """,
             (
+                marketplace,
                 listing.item_id,
                 work_id,
                 listing.title,
@@ -204,18 +217,19 @@ def store(
             ),
         )
         connection.execute(
-            "INSERT INTO copy_seen (item_id, work_id, scope, sweep_id) "
-            "VALUES (?, ?, ?, ?) "
-            "ON CONFLICT (item_id, work_id, scope) DO UPDATE SET "
+            "INSERT INTO copy_seen (marketplace, item_id, work_id, scope, sweep_id) "
+            "VALUES (?, ?, ?, ?, ?) "
+            "ON CONFLICT (marketplace, item_id, work_id, scope) DO UPDATE SET "
             "    sweep_id = excluded.sweep_id",
-            (listing.item_id, work_id, scope, sweep_id),
+            (marketplace, listing.item_id, work_id, scope, sweep_id),
         )
         if _worth_recording(before, listing, shipping, was_current, saw_everything):
             connection.execute(
-                "INSERT INTO sighting "
-                "(item_id, work_id, sweep_id, price, currency, shipping, condition) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO sighting (marketplace, item_id, work_id, sweep_id, "
+                "price, currency, shipping, condition) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 (
+                    marketplace,
                     listing.item_id,
                     work_id,
                     sweep_id,
@@ -242,6 +256,42 @@ def store(
             (work_id,),
         )
     return sweep_id
+
+
+def store_both_scopes(
+    connection: sqlite3.Connection,
+    work_id: int,
+    listings: list[Listing],
+    *,
+    asked_for: int | None = None,
+    marketplace: Marketplace,
+) -> tuple[int, int]:
+    """Record one search that mixes US and foreign sellers as both views.
+
+    eBay's US-only and everywhere views are two searches. A marketplace whose
+    one search returns sellers from everywhere feeds both: everywhere gets
+    every copy, and US-only gets the copies whose seller is in the US. The
+    count of matching listings belongs to the search as a whole, so it is
+    kept only on the everywhere sweep. Returns the two sweep ids, everywhere
+    first.
+    """
+    everywhere = store(
+        connection,
+        work_id,
+        listings,
+        asked_for=asked_for,
+        scope="everywhere",
+        marketplace=marketplace,
+    )
+    us = store(
+        connection,
+        work_id,
+        [listing for listing in listings if is_us(listing.located_in)],
+        asked_for=None,
+        scope="us",
+        marketplace=marketplace,
+    )
+    return everywhere, us
 
 
 def _was_complete(sweep: sqlite3.Row) -> bool:
@@ -301,7 +351,10 @@ def _worth_recording(
 
 
 def price_history(
-    connection: sqlite3.Connection, work_id: int, item_id: str
+    connection: sqlite3.Connection,
+    work_id: int,
+    item_id: str,
+    marketplace: Marketplace = "ebay",
 ) -> list[tuple[str, Money, Money | None]]:
     """What one copy has cost, each time that changed, oldest first.
 
@@ -320,9 +373,10 @@ def price_history(
         for row in connection.execute(
             "SELECT sweep.at, sighting.price, sighting.currency, sighting.shipping "
             "FROM sighting JOIN sweep ON sweep.id = sighting.sweep_id "
-            "WHERE sighting.work_id = ? AND sighting.item_id = ? "
+            "WHERE sighting.work_id = ? AND sighting.marketplace = ? "
+            "  AND sighting.item_id = ? "
             "ORDER BY sighting.sweep_id",
-            (work_id, item_id),
+            (work_id, marketplace, item_id),
         )
     ]
 

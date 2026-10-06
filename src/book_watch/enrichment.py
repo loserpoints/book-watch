@@ -198,10 +198,13 @@ def _run(
     identified = False
     numbers: set[str] = set()
 
+    # Only eBay's listings are asked about: another marketplace's
+    # declarations arrived with its search, and eBay knows nothing of them.
     item_ids = [
         row["item_id"]
         for row in connection.execute(
-            "SELECT item_id FROM copy WHERE work_id = ?", (work_id,)
+            "SELECT item_id FROM copy WHERE work_id = ? AND marketplace = 'ebay'",
+            (work_id,),
         )
     ]
     for item_id in item_ids:
@@ -218,6 +221,7 @@ def _run(
         if declared.isbn:
             numbers.add(declared.isbn)
     connection.commit()
+    numbers |= _declared_elsewhere(connection, work_id)
 
     # Only copies in the newest sweep are re-asked about. A copy that has
     # stopped appearing is not buyable, so a better answer about it changes
@@ -335,8 +339,29 @@ def _run(
     )
 
 
+def _declared_elsewhere(connection: sqlite3.Connection, work_id: int) -> set[str]:
+    """Numbers declared on this book's copies from marketplaces other than eBay.
+
+    Those declarations were stored with the search that found them, so they
+    cost nothing here, and they count toward which numbers Open Library is
+    asked about just as eBay's do.
+    """
+    return {
+        row["isbn"]
+        for row in connection.execute(
+            "SELECT DISTINCT declaration.isbn FROM copy "
+            "  JOIN listing_declaration AS declaration "
+            "       ON declaration.marketplace = copy.marketplace "
+            "      AND declaration.item_id = copy.item_id "
+            " WHERE copy.work_id = ? AND copy.marketplace != 'ebay' "
+            "   AND declaration.isbn IS NOT NULL",
+            (work_id,),
+        )
+    }
+
+
 def _on_sale_now(connection: sqlite3.Connection, work_id: int) -> list[str]:
-    """Item ids in the newest sweep of *any* scope.
+    """eBay item ids in eBay's newest sweep of *any* scope.
 
     Any scope rather than one, because the question this answers is "can
     somebody buy this today" — and a copy found by looking everywhere is
@@ -348,9 +373,11 @@ def _on_sale_now(connection: sqlite3.Connection, work_id: int) -> list[str]:
         row["item_id"]
         for row in connection.execute(
             "SELECT DISTINCT seen.item_id FROM copy_seen AS seen "
-            " WHERE seen.work_id = ? AND seen.sweep_id IS ("
+            " WHERE seen.work_id = ? AND seen.marketplace = 'ebay' "
+            "   AND seen.sweep_id IS ("
             "   SELECT id FROM sweep WHERE work_id = seen.work_id "
-            "    AND scope = seen.scope ORDER BY id DESC LIMIT 1)",
+            "    AND scope = seen.scope AND marketplace = seen.marketplace "
+            "  ORDER BY id DESC LIMIT 1)",
             (work_id,),
         )
     ]

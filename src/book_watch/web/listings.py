@@ -269,7 +269,7 @@ def build_router(
                     -copy.listed.timestamp() if copy.listed else 0,
                 )
             )
-        verdicts = {copy.item_id: copy.against(ceiling) for copy in for_sale}
+        verdicts = {copy.key: copy.against(ceiling) for copy in for_sale}
         listed_prices = standing.prices(for_sale)
         seen_prices = standing.prices(seen)
         market_list = standing.markets(placed)
@@ -278,8 +278,8 @@ def build_router(
             return [
                 book_view.copy_row(
                     copy,
-                    verdicts[copy.item_id],
-                    placed.get(copy.item_id),
+                    verdicts[copy.key],
+                    placed.get(copy.key),
                     ceiling,
                     listed_prices,
                     new=copies.is_new(copy, since),
