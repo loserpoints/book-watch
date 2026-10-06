@@ -6,7 +6,7 @@ not require the environment to be configured.
 
 import logging
 
-from book_watch import alerts, daily, enrichment
+from book_watch import abebooks, alerts, daily, enrichment
 from book_watch.openlibrary import CallBudget
 from book_watch.web.app import create_app
 from book_watch.web.searching import LazyBrowseSearch
@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(messag
 # httpx logs every request at INFO. The app's own lines are the ones to read.
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
-app = create_app()
+app = create_app(read_abebooks=abebooks.read)
 
 # The morning check. Here and not in `create_app`, so nothing that builds the
 # app for a test starts a thread that searches eBay.
@@ -30,4 +30,5 @@ daily.start(
     enrichment.configured(open_configured_database),
     CallBudget(open_configured_database).spent,
     notify=lambda: alerts.notify(open_configured_database),
+    read_abebooks=abebooks.read,
 )

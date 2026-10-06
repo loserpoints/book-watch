@@ -13,8 +13,13 @@ from typing import Literal
 
 Marketplace = Literal["ebay", "abebooks"]
 
+#: How each marketplace is named to Alan, on screen and in the email.
+NAMES: dict[str, str] = {"ebay": "eBay", "abebooks": "AbeBooks"}
+
 #: eBay's condition ids for the grades a book can carry.
 NEW = "1000"
+#: Secondhand, no grade stated.
+USED = "3000"
 LIKE_NEW = "2750"
 VERY_GOOD = "4000"
 GOOD = "5000"
@@ -36,14 +41,17 @@ _ABEBOOKS_CONDITION = {
 
 
 def abebooks_condition_id(words: str | None) -> str | None:
-    """eBay's condition id for AbeBooks' words, or None when they say no grade.
+    """eBay's condition id for AbeBooks' words, or None when they say nothing.
 
     AbeBooks writes "New", "Used - Very good" or just "Used". The grade is the
-    part after the dash; "Used" alone states none.
+    part after the dash. "Used" alone states no grade, and is eBay's generic
+    Used: secondhand, counted in the used market, without claiming a grade.
     """
     if not words:
         return None
     grade = words.split(" - ", 1)[-1].strip().lower()
+    if grade == "used":
+        return USED
     return _ABEBOOKS_CONDITION.get(grade)
 
 

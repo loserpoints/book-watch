@@ -28,7 +28,15 @@ from fastapi import APIRouter, BackgroundTasks, Form, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
-from book_watch import copies, covers, enrichment, standing, sweeps, wantlist
+from book_watch import (
+    abebooks,
+    copies,
+    covers,
+    enrichment,
+    standing,
+    sweeps,
+    wantlist,
+)
 from book_watch.config import MissingCredentialError
 from book_watch.ebay.errors import EbayError
 from book_watch.ebay.search import (
@@ -75,7 +83,10 @@ def build_router(
     search: SearchFn | None = None,
     connect: ConnectFn | None = None,
     enrich: enrichment.EnrichFn | None = None,
+    read_abebooks: abebooks.Reader | None = None,
 ) -> APIRouter:
+    """`read_abebooks` is None unless production passes one, so no test reads
+    AbeBooks by accident."""
     router = APIRouter()
     templates = Jinja2Templates(directory=TEMPLATES_DIR)
     filters.register(templates.env)
@@ -198,6 +209,9 @@ def build_router(
             # first look at everything: they are different questions, and an
             # everywhere sweep finds fewer US copies because imports displace
             # them out of the fifty slots.
+            # AbeBooks on its own hour, read before the copies are examined
+            # so the book says digging until both marketplaces' are.
+            abebooks.check_book(connection, book, read_abebooks, force=bool(refresh))
             if refresh or sweeps.due_for_sweep(connection, book.work_id, scope=scope):
                 try:
                     sweeps.store(
@@ -244,6 +258,11 @@ def build_router(
             # the edition set, so there is no second one to disagree with it.
             for_sale, seen = copies.populations(connection, book, scope=scope)
             placed = standing.standings(for_sale, seen)
+            abebooks_outcome = (
+                abebooks.last_outcome(connection, book.work_id)
+                if read_abebooks is not None
+                else None
+            )
 
         # Scheduled after the response is written, never before it: examining
         # fifty copies is twenty-five seconds of eBay, and this page owes an
@@ -336,6 +355,15 @@ def build_router(
                 for market in market_list
             ],
             "ceiling_text": book_view.money(ceiling) if ceiling else None,
+            "abebooks_notice": {
+                "failed": "AbeBooks check failed",
+                "empty": "No copies on AbeBooks",
+            }.get(abebooks_outcome or ""),
+            # The search that came back empty, so I can see whether the book
+            # has no copies or the search was written wrong.
+            "abebooks_url": abebooks.search_url(book.title, book.author, book.typed)
+            if abebooks_outcome == "empty"
+            else None,
         }
         return templates.TemplateResponse(
             request, "book.html", context, status_code=error[1] if error else 200

@@ -467,6 +467,21 @@ details.fold > summary {
   overflow: hidden;
 }
 .copy-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Which marketplace the copy is on (S66): a band across the photo's foot, in
+   the same place on every row so it reads down the list. Text and ground are
+   the page's own, swapped, so dark mode flips it to a light band. */
+.copy-photo .copy-market {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0;
+  background: var(--fg);
+  color: var(--bg);
+  font-size: var(--text-xs);
+  line-height: 1.3;
+  text-align: center;
+}
 .copy-main { display: grid; gap: var(--space-1); min-width: 0; }
 .copy-price { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
 .copy-tags { display: flex; gap: var(--space-1); flex-wrap: wrap; }
@@ -694,7 +709,7 @@ dialog.photo-view[open] { display: grid; gap: var(--space-2); justify-items: cen
 .photo-count {
   position: absolute;
   right: var(--space-1);
-  bottom: var(--space-1);
+  top: var(--space-1);
   padding: 0 var(--space-1);
   border-radius: var(--radius-sm);
   background: var(--surface);

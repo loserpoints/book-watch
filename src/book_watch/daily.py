@@ -25,7 +25,7 @@ from datetime import UTC, datetime, timedelta
 from datetime import time as clock_time
 from zoneinfo import ZoneInfo
 
-from book_watch import enrichment, sweeps, wantlist
+from book_watch import abebooks, enrichment, sweeps, wantlist
 from book_watch.alerts import AlertError
 from book_watch.config import MissingCredentialError
 from book_watch.ebay.errors import EbayError
@@ -90,6 +90,7 @@ def run(
     enrich: enrichment.EnrichFn,
     spent: SpentFn,
     notify: NotifyFn | None = None,
+    read_abebooks: abebooks.Reader | None = None,
 ) -> int:
     """Search every book once, examining new copies as it goes, and record
     how it went. Returns the run's id.
@@ -129,6 +130,10 @@ def run(
                     logger.warning("Daily check could not search %s: %s", book_id, exc)
                     failed += 1
                     continue
+                # Before the copies are examined, so the pass sees both
+                # marketplaces' copies. A failure here is the book page's to
+                # show, and costs the run nothing: eBay's copies are in.
+                abebooks.check_book(connection, book, read_abebooks)
                 book = wantlist.get(connection, book_id)
             if book.being_enriched and not enrichment.busy(book.work_id):
                 result = enrichment.queued(enrich, book.work_id)()
@@ -182,11 +187,14 @@ def tick(
     spent: SpentFn,
     now: datetime,
     notify: NotifyFn | None = None,
+    read_abebooks: abebooks.Reader | None = None,
 ) -> int | None:
     """Run the check if it is due. Returns the run's id, or `None`."""
     with closing(connect()) as connection:
         owed = due(connection, now)
-    return run(connect, search, enrich, spent, notify) if owed else None
+    if not owed:
+        return None
+    return run(connect, search, enrich, spent, notify, read_abebooks)
 
 
 def start(
@@ -196,6 +204,7 @@ def start(
     spent: SpentFn,
     *,
     notify: NotifyFn | None = None,
+    read_abebooks: abebooks.Reader | None = None,
     now: Callable[[], datetime] = lambda: datetime.now(UTC),
 ) -> threading.Thread:
     """Start the thread that runs the check when it is due."""
@@ -203,7 +212,7 @@ def start(
     def loop() -> None:
         while True:
             try:
-                tick(connect, search, enrich, spent, now(), notify)
+                tick(connect, search, enrich, spent, now(), notify, read_abebooks)
             except Exception:
                 # A run that raised has recorded itself as failed, if it got
                 # as far as starting. Either way the thread lives to try again.

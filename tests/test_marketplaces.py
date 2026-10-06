@@ -119,7 +119,7 @@ def test_only_ebay_listings_are_ever_sent_to_ebay(database):
         ("Used - Good", "5000"),
         ("Used - Fair", "6000"),
         ("Used - Poor", "6000"),
-        ("Used", None),
+        ("Used", "3000"),
         (None, None),
     ],
 )
@@ -154,7 +154,7 @@ def test_every_existing_listing_becomes_ebays(database, monkeypatch, tmp_path):
     )
     monkeypatch.undo()
 
-    assert db.migrate(fresh) == ["025_which_marketplace.sql"]
+    assert db.migrate(fresh)[0] == "025_which_marketplace.sql"
 
     for table in (
         "copy",

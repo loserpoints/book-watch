@@ -29,7 +29,16 @@ from fastapi import APIRouter, BackgroundTasks, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
-from book_watch import covers, daily, db, enrichment, standing, sweeps, wantlist
+from book_watch import (
+    abebooks,
+    covers,
+    daily,
+    db,
+    enrichment,
+    standing,
+    sweeps,
+    wantlist,
+)
 from book_watch.config import MissingCredentialError, load_database_path
 from book_watch.ebay.errors import EbayError
 from book_watch.ebay.search import DEFAULT_LIMIT
@@ -130,6 +139,7 @@ def build_router(
     catalog: LazyCatalog | None = None,
     search: SearchFn | None = None,
     enrich: enrichment.EnrichFn | None = None,
+    read_abebooks: abebooks.Reader | None = None,
 ) -> APIRouter:
     router = APIRouter()
     templates = Jinja2Templates(directory=TEMPLATES_DIR)
@@ -632,7 +642,10 @@ def build_router(
                     connection.commit()
                 except (MissingCredentialError, EbayError):
                     state = "failed"
-                book = wantlist.get(connection, book_id)
+            # Its own hour, and before the copies are examined, as on the
+            # book's page. A failure shows there, not on this row.
+            abebooks.check_book(connection, book, read_abebooks, force=bool(force))
+            book = wantlist.get(connection, book_id)
             glance = standing.glance(connection, book)
 
         # New copies are examined straight away, as opening the book does.
