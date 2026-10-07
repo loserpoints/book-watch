@@ -30,4 +30,6 @@ Tests enforce the rules:
 
 Jinja macros in `src/book_watch/web/templates/_ui.html`. Each takes plain values, so a screen maps its data onto them. The [design page](https://book-watch-alan.fly.dev/design) draws every component in every state, and a new component is added there when it is added here. A screen uses these pieces and never builds its own version of one. A control that floats over a screen, such as the + button, sits above every layer of what it floats over, and a test holds it there.
 
+A row that leads somewhere, a book on the want list or a copy on a book's page, is one target: its link stretches over it, and its own controls sit above the link. Pressed, the whole row fills with the sheet color, never the phone's own highlight.
+
 A choice between two ways of seeing the same thing, such as Cheapest · Newest or Title & author · ISBN, looks the same everywhere: the chosen one in bold, the other underlined in the accent, a dot between. A filter that is on or off is a switch. Both keep their 44px targets.

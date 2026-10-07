@@ -528,6 +528,26 @@ details.fold > summary {
   overflow: hidden;
 }
 .copy-dismiss { grid-column: 3; grid-row: 1; }
+/* A tap anywhere on a copy opens its listing (S73, #190), as a tap anywhere
+   on a want-list row opens its book: the listing link stretches over the
+   row. The photo, the note and the price caret sit above it and keep their
+   own taps. */
+.copy-row { position: relative; }
+.copy-listing::after { content: ""; position: absolute; inset: 0; z-index: 1; }
+.copy-listing:focus-visible { outline: none; }
+.copy-row:has(.copy-listing:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.copy-photo, details.copy-note, .copy-dismiss, .copy-row details.move { position: relative; z-index: 2; }
+
+/* Pressed (S73): the phone's own highlight lit only the link's box, the
+   title, whatever part of the row was tapped. A row being pressed fills with
+   the sheet color edge to edge instead, on both screens. A tap on one of the
+   row's own controls doesn't press the row. */
+.book-row, .copy-row { -webkit-tap-highlight-color: transparent; }
+.book-row:has(.book-row-title:active),
+.copy-row:has(.copy-listing:active) {
+  background: var(--surface);
+  box-shadow: 0 0 0 var(--space-2) var(--surface);
+}
 .copy-says {
   grid-column: 1 / 4;
   margin: 0;
