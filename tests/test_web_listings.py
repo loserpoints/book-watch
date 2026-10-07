@@ -1024,17 +1024,19 @@ def test_the_range_on_the_page_spans_copies_that_have_stopped_appearing(book_cli
 # a row that says which of the four things is true of it.
 
 
-def follow(client, url, *, limit=12):
+def follow(client, url, *, limit=12, responses=False):
     """Walk the chain the way a browser would, returning every response.
 
     HTMX is not running here, so the trigger has to be followed by hand — and
     following it by hand is also how a test can prove there was only ever one
-    to follow.
+    to follow. Each response's text, or the responses themselves when asked.
     """
     seen = []
+    kept = []
     while url and len(seen) < limit:
         page = client.get(url.replace("&amp;", "&"))
         seen.append(page.text)
+        kept.append(page)
         # One outstanding request at a time is the whole design: a second
         # trigger in one response would be two eBay calls and two writers
         # against a database that takes one.
@@ -1043,7 +1045,7 @@ def follow(client, url, *, limit=12):
         )
         found = re.search(r'hx-get="([^"]+)"[^>]*hx-trigger="load"', page.text)
         url = found.group(1) if found else None
-    return seen
+    return kept if responses else seen
 
 
 def a_shelf(book_client, *, fails=(), enrich=None):
@@ -1276,6 +1278,108 @@ def test_update_counts_what_it_would_check_and_check_all_asks_first(book_client)
     assert 'data-open="check-all-sheet"' in after
     assert "3 of them were checked within the last hour" in visible(after)
     assert "Don't ask me again" in visible(after)
+
+
+def header_after(client, step):
+    """The header as the page asks for it once a response has settled: only
+    when the response says the list changed, sending the runner's inputs as
+    `hx-include` would, so it knows whether a check is still running. None
+    when the response doesn't ask."""
+    if step.headers.get("HX-Trigger-After-Settle") != "list-changed":
+        return None
+    walking = 'name="walking"' in step.text
+    return client.get("/books/bar" + ("?walking=1" if walking else "")).text
+
+
+def walk_watching_the_header(client, url="/books/check"):
+    """Follow a check step by step, asking for the header after each step as
+    the page does, before the next step runs."""
+    headers = []
+    while url:
+        step = client.get(url.replace("&amp;", "&"))
+        headers.append(header_after(client, step))
+        found = re.search(r'hx-get="([^"]+)"[^>]*hx-trigger="load"', step.text)
+        url = found.group(1) if found else None
+    return headers
+
+
+def button(page, label):
+    """The opening tag of the button a reader sees as `label`."""
+    found = re.search(rf"<button([^>]*)>\s*{label}", page)
+    assert found, f"no {label!r} button"
+    return found.group(1)
+
+
+def test_the_header_counts_down_as_a_check_runs(book_client):
+    """S67 (#244): it kept the count it had when the page loaded, so Update
+    still said "Update 3" after checking all three."""
+    client, _ = a_shelf(book_client)
+
+    headers = walk_watching_the_header(client)
+
+    assert None not in headers
+    said = [visible(h) for h in headers]
+    assert "Update 3" in said[0]
+    assert "Update 2" in said[1]
+    assert "Update 1" in said[2]
+    assert "All current" in said[3]
+
+
+def test_after_a_check_check_all_asks_first(book_client):
+    """S67 (#244): drawn when nothing was fresh, Check all stayed the button
+    that runs at once, and a second tap checked everything again unasked."""
+    client, _ = a_shelf(book_client)
+    assert "check-all-sheet" not in client.get("/").text
+
+    last = follow(client, "/books/check", responses=True)[-1]
+    header = header_after(client, last)
+
+    assert 'data-open="check-all-sheet"' in button(header, "Check all")
+    assert "3 of them were checked within the last hour" in visible(header)
+
+
+def test_while_a_check_runs_neither_button_starts_another(book_client):
+    """A second walk would fight the first over the runner."""
+    client, _ = a_shelf(book_client)
+
+    headers = walk_watching_the_header(client)
+    during, after = headers[0], headers[-1]
+
+    assert "disabled" in button(during, "Update")
+    assert "disabled" in button(during, "Check all")
+    assert "disabled" not in button(after, "Check all")
+
+
+def test_a_book_just_added_holds_the_buttons_while_it_checks(book_client):
+    """Adding a book starts its check, so the list it comes back with has one
+    running."""
+    client, _ = a_shelf(book_client)
+    follow(client, "/books/check")
+
+    page = client.post(
+        "/books",
+        data={"isbn": "9780156031219", "title": "The Little Prince", "override": "1"},
+        headers={"HX-Request": "true"},
+    ).text
+
+    assert "disabled" in button(page, "Update")
+    assert "disabled" in button(page, "Check all")
+
+
+def test_a_row_that_finishes_digging_tells_the_header(book_client, monkeypatch):
+    """Copies count toward "Under limit" only once examined, which can end
+    after the check's last step."""
+    client, _ = a_shelf(book_client)
+    follow(client, "/books/check")
+
+    monkeypatch.setattr(enrichment_module, "busy", lambda work_id: True)
+    digging = client.get("/books/1/row")
+    monkeypatch.setattr(enrichment_module, "busy", lambda work_id: False)
+    done = client.get("/books/1/row")
+
+    assert "digging" in visible(digging.text)
+    assert digging.headers.get("HX-Trigger-After-Settle") is None
+    assert done.headers.get("HX-Trigger-After-Settle") == "list-changed"
 
 
 def test_a_row_can_be_removed_and_asks_first(book_client):
