@@ -20,6 +20,7 @@
 - Actions logs are public, like the repository. A workflow prints nothing that holds an address or a key.
 - Running cost is about $2–3 a month, all hosting. Say so before adding anything with a recurring cost.
 - Every request to an outside service follows the [rate limits](docs/rules/rate-limits.md).
+- Make work that can overlap harmless where it happens, rather than blocking the ways in. S68 found a second check during a running examination lost copies for good. Greying out the buttons would have left the 7am check, and any path not yet thought of, still losing them.
 - A check on data the app reads from outside fails only what the app can't read correctly. A property it can read through, such as a page's price order, is measured and counted instead. A rule drawn from a few samples fails real data, as AbeBooks' order check did on its first day.
 
 ## Testing
@@ -32,6 +33,7 @@
 - Test a layout fix in the case that broke: the phone width and the data where it happened. A fix that only measures what changed can miss that the layout no longer fits.
 - This environment holds real eBay keys. Run the app locally only with `uv run python scripts/serve_local.py <database> [port]`, which fakes eBay's search, never reads AbeBooks, and refuses every request. The app as built for production searches eBay when a book page opens and examines every copy it finds.
 - Tests check what a reader sees, not the markup that carries it, so they survive a redesign.
+- A test of a request htmx makes sends what htmx sends with it, such as `HX-Current-URL`. From S60 to S69, switching "Under limit" off kept the list filtered, because the tests asked for the list without the page it came from.
 - A check proves nothing until it has been seen to fail. Break the code on purpose, on a committed tree, and confirm the break applied.
 - A migration's test checks that its own migration ran, not that it is the newest. S65's test assumed 025 was the last and broke when 026 arrived.
 - Reset process-wide state between tests. A test that passes only because another ran first proves nothing.
@@ -39,6 +41,7 @@
 - Keep labeled real data in the repository as test fixtures, so a study becomes a regression test.
 - A fake of an outside service answers with what the real one sends, field names and units included, taken from a real response or the service's own source. A fake built from memory passes the tests and fails the first real run.
 - Tests start empty and miss what production holds. After a change deploys, Alan checks it on his phone against the live data, and its pull request says what to check.
+- That check starts from a fresh open of the app. An app left open through a deploy redraws in new markup with the stylesheet it loaded before, as S69 did on its first check.
 
 ## Reviewing
 
