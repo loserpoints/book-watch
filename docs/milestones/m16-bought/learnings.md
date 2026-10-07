@@ -8,6 +8,7 @@
 - S73's pressed fill showed in the browser and on the want list, but not on a copy on the phone, whose tap hands the listing to the eBay app. Desktop Chromium shows no pressed state for a touch, so the app now sets it from the touch, and a pressed look is checked on the phone. [CONTRIBUTING](../../../CONTRIBUTING.md#testing), [Design system](../../design-system.md#components)
 - Choosing M16, Alan judged the two open AbeBooks defects not bad: each is seen only now and then, and the next check undoes it. [Set milestone](../../../.claude/skills/set-milestone/SKILL.md#priority)
 - Closing M16 listed what each job had gained from the milestone, as if features changed jobs. It is the other way round: a close checks whether anything learned changes how a job is understood, and expects not. [Governance](../../governance.md#workflow)
+- Closing M16 ran at the end of a long session that had planned and built the whole milestone. The next milestone now starts in a fresh session, which reads the docs as they stand after the close. [Governance](../../governance.md#workflow)
 
 ## Carried forward
 

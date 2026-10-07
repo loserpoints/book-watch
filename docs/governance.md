@@ -83,7 +83,7 @@ A milestone closes only once its outcome has been checked on the live app. Its c
 2. Check whether anything the milestone learned changes how a job or its success signal is understood. Expect not. A job is edited only when that understanding changes, or to say why a job not met is still not met. Building something for a job never changes it.
 3. Route each learning into the document that should change because of it: `CONTRIBUTING.md`, `CLAUDE.md`, the runbook, a rules or surface doc, the design system, or this file. Make the change, then record the learning in `learnings.md` with a link to where it went. A learning with nowhere to go is dropped.
 4. List the issues carried forward.
-5. Start the next milestone with the `set-milestone` skill, if one has not already started.
+5. Start the next milestone with the `set-milestone` skill, in a fresh session, if one has not already started.
 
 ## Writing style
 
