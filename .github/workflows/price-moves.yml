@@ -1,0 +1,40 @@
+name: Count price moves
+
+# Counts how often copies' prices went up or down, and by how much, from the
+# live app's price history (S72, #164). Read only: it asks eBay, AbeBooks,
+# Open Library and Resend nothing.
+#
+# It runs inside the live Fly machine, over `flyctl ssh console`, where the
+# database is. This repository is public and so are these logs: the command
+# prints counts only, never a title, a seller or a price.
+#
+# Requires the FLY_API_TOKEN repository secret that Deploy uses.
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "How many days back to count."
+        default: "14"
+
+jobs:
+  count:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Count
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          DAYS: ${{ inputs.days }}
+        run: |
+          set -euo pipefail
+          # The number becomes part of a command on the machine.
+          if ! [[ "${DAYS}" =~ ^[0-9]{1,3}$ ]]; then
+            echo "Days is a whole number up to 999." >&2
+            exit 2
+          fi
+          app=$(sed -n 's/^app = "\(.*\)"$/\1/p' fly.toml)
+          flyctl ssh console --app "${app}" \
+            -C "/app/.venv/bin/python -m book_watch.price_moves ${DAYS}"
