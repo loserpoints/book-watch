@@ -17,7 +17,7 @@
 {#- Still digging: the app is working out which copies are really this book.
     The word shimmers; tapping it says why it takes a while. -#}
 {% macro digging(label="digging") -%}
-{{ explain(label, "Checking which of these copies are really this book. We ask the public catalogs slowly on purpose: they're free, and we'd like them to stay that way.", "digging") }}
+{{ explain(label, "Looking for copies, and checking which of them are really this book. The counts show once that's done. We ask the public catalogs slowly on purpose: they're free, and we'd like them to stay that way.", "digging") }}
 {%- endmacro %}
 
 
@@ -95,7 +95,7 @@
 {#- A row that is digging asks for itself again until it isn't, so it clears
     without a reload. A row not digging never asks. -#}
 <li class="book-row"{% if b.id %} id="entry-{{ b.id }}"{% endif %}{% if oob %} hx-swap-oob="true"{% endif %}
-  {%- if b.id and b.examining == 'digging' and b.state != 'checking' %} hx-get="/books/{{ b.id }}/row" hx-trigger="every 5s" hx-swap="outerHTML"{% endif %}>
+  {%- if b.id and b.examining == 'digging' and not b.checking %} hx-get="/books/{{ b.id }}/row" hx-trigger="every 5s" hx-swap="outerHTML"{% endif %}>
   <a class="book-row-title" href="{{ b.href }}">{{ b.title }}</a>
   <button class="icon-btn book-row-remove" type="button" aria-label="Remove {{ b.title }}"
     {%- if b.id %} hx-delete="/books/{{ b.id }}" hx-target="#want-list" hx-swap="outerHTML" hx-confirm="Remove {{ b.title }} from the list?"{% endif %}>{{ trash() }}</button>
@@ -104,15 +104,15 @@
     <div class="book-row-facts">
       {% if b.author %}<span class="book-row-author">{{ b.author }}</span>{% endif %}
       <span class="meta">
-        {%- if b.state == 'ok' -%}{{ b.listed }} listed{% if b.new %} · <span class="new-count">{{ b.new }} new</span>{% endif %} · checked {{ b.checked }}
+        {%- if b.working -%}{{ digging() }}
+        {%- elif b.state == 'ok' -%}{{ b.listed }} listed{% if b.new %} · <span class="new-count">{{ b.new }} new</span>{% endif %} · checked {{ b.checked }}
         {%- elif b.state == 'none' -%}0 listed · checked {{ b.checked }}
         {%- elif b.state == 'maybes' -%}{{ b.maybes }} maybe{{ '' if b.maybes == 1 else 's' }} · checked {{ b.checked }}
-        {%- elif b.state == 'checking' -%}<span class="checking">Checking…</span>
         {%- elif b.state == 'failed' -%}Couldn't check just now
         {%- else -%}Not checked yet
         {%- endif -%}
       </span>
-      <span class="meta">added {{ b.added }}{% if b.examining == 'digging' %} · {{ digging() }}{% elif b.examining == 'throttled' %} · {{ throttled() }}{% endif %}</span>
+      <span class="meta">added {{ b.added }}{% if b.examining == 'throttled' %} · {{ throttled() }}{% endif %}</span>
     </div>
     {% if b.state == 'ok' and b.price_text %}
       <div class="book-row-price">

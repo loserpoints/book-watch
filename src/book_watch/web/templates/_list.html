@@ -20,6 +20,11 @@
     {% include "_runner.html" %}
   {% endwith %}
 
+  {%- if hidden_digging %}
+  {#- Not while a check runs: replacing the list would stop it. -#}
+  <div hidden hx-get="/books/list" hx-target="#want-list" hx-swap="outerHTML"
+       hx-trigger="every 5s [!document.querySelector('#sweep-runner.sweeping')]"></div>
+  {%- endif %}
   <ul class="ui-list">
   {% for book in books if not filtering or book.id in under_ids %}
     {% set glance = glances.get(book.id) if glances else None %}

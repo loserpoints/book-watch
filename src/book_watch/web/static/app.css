@@ -264,11 +264,8 @@ details.digging > summary {
   animation: dig-shimmer 1.6s linear infinite;
 }
 @keyframes dig-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
-.checking { animation: dig-pulse 1.2s ease-in-out infinite; }
-@keyframes dig-pulse { 50% { opacity: 0.45; } }
 @media (prefers-reduced-motion: reduce) {
   details.digging > summary { animation: none; -webkit-text-fill-color: var(--accent); }
-  .checking { animation: none; }
 }
 
 /* A cover on a shelf: spine highlight down the left edge, a cast shadow. The

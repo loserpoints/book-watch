@@ -204,7 +204,6 @@ def test_the_design_page_draws_every_row_state():
     for sample in design.sample_books():
         assert sample["title"].replace("'", "&#39;") in page
     for words in (
-        "Checking…",
         "Couldn't check just now",
         "Not checked yet",
         "2 maybes",

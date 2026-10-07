@@ -1144,9 +1144,11 @@ def test_a_row_says_it_is_being_checked_while_it_is(book_client):
     would leave the list looking frozen for two seconds a book."""
     client, _ = a_shelf(book_client)
 
-    first = as_read(follow(client, "/books/check", limit=1)[0])
+    first = visible(follow(client, "/books/check", limit=1)[0])
 
-    assert first.count("Checking…") == 1
+    # One working state from the search on (S68, #240), in place of counts.
+    assert "digging" in first
+    assert "Checking…" not in first
 
 
 def test_the_gate_stops_a_second_walk_from_spending_anything(book_client):
@@ -1380,6 +1382,28 @@ def test_a_row_that_finishes_digging_tells_the_header(book_client, monkeypatch):
     assert "digging" in visible(digging.text)
     assert digging.headers.get("HX-Trigger-After-Settle") is None
     assert done.headers.get("HX-Trigger-After-Settle") == "list-changed"
+
+
+def test_a_filtered_list_asks_for_itself_while_a_hidden_book_digs(
+    book_client, monkeypatch
+):
+    """S68 (#240): a book "Under limit" hides has no row to ask for itself
+    while it digs, so nothing would ever add it once it went under."""
+    client, _ = a_shelf(book_client)
+    follow(client, "/books/check")
+    all_certain(client)
+    client.post("/book/1/ceiling", data={"ceiling": "20.00", "currency": "USD"})
+
+    monkeypatch.setattr(enrichment_module, "busy", lambda work_id: True)
+    digging = client.get("/?show=under").text
+    monkeypatch.setattr(enrichment_module, "busy", lambda work_id: False)
+    settled = client.get("/?show=under").text
+    unfiltered = client.get("/").text
+
+    poll = 'hx-get="/books/list" hx-target="#want-list"'
+    assert poll in digging
+    assert poll not in settled
+    assert poll not in unfiltered
 
 
 def test_back_to_the_want_list_asks_for_it_again(book_client):
