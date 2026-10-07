@@ -26,21 +26,12 @@
   <div hidden hx-get="/books/list" hx-target="#want-list" hx-swap="outerHTML"
        hx-trigger="every 5s [!document.querySelector('#sweep-runner.sweeping')]"></div>
   {%- endif %}
-  {%- if mock_layout != "b" and books | length > 1 %}
+  {%- if books | length > 1 %}
   {#- How many books show, and the order, as a book's page shows its
       matches and Cheapest · Newest (S69, #217). -#}
   {% set shown = (books | selectattr("id", "in", under_ids) | list | length) if filtering else books | length %}
   <div class="list-meta">
-    {%- if mock_filter == "meta" %}
-    {% set under = under_ids | length %}
-    {% set fetch = {"hx-target": "#want-list", "hx-swap": "outerHTML"} %}
-    <p class="meta">{{ shown }} book{{ '' if shown == 1 else 's' }} · {{ ui.toggle("Under limit", filtering, dict(fetch, **{
-       "hx-get": views.under_off.fetch if filtering else views.under_on.fetch,
-       "hx-replace-url": views.under_off.page if filtering else views.under_on.page}),
-     disabled=not under, style="meta") }}</p>
-    {%- else %}
     <p class="meta">{{ shown }} book{{ '' if shown == 1 else 's' }}</p>
-    {%- endif %}
     {% include "_sort_pair.html" %}
   </div>
   {%- endif %}

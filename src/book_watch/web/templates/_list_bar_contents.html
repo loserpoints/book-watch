@@ -33,30 +33,15 @@
   {{ ui.toggle("Under limit", filtering, dict(fetch, **{
        "hx-get": views.under_off.fetch if filtering else views.under_on.fetch,
        "hx-replace-url": views.under_off.page if filtering else views.under_on.page}),
-     disabled=not under, style=mock_filter) }}
+     disabled=not under) }}
 {%- endmacro %}
 
-{% if mock_layout == "b" %}
-  {#- B: the order and the filter tucked into an area that opens. Its
-      summary says what is chosen, so a filter on is never hidden. -#}
-  <div class="list-bar">
-    {{ check_button() }}
-    <details class="view-menu">
-      <summary>{{ "Cheapest" if sort == "cheapest" else "Added" }}{% if filtering %} · Under limit{% endif %}</summary>
-      <div class="view-panel">
-        {% include "_sort_pair.html" %}
-        {{ under_toggle() }}
-      </div>
-    </details>
-  </div>
-{% else %}
-  {#- A: the filter beside the button; the order over the rows, as on a
-      book's page. -#}
-  <div class="list-bar">
-    {{ check_button() }}
-    {% if mock_filter != "meta" %}{{ under_toggle() }}{% endif %}
-  </div>
-{% endif %}
+{#- The button, and the filter beside it. The order sits over the rows, as
+    on a book's page (S69). -#}
+<div class="list-bar">
+  {{ check_button() }}
+  {{ under_toggle() }}
+</div>
 
 {% if not stale and total %}
 {% call ui.sheet("check-all-sheet", "Check all %d book%s?" % (total, '' if total == 1 else 's')) %}

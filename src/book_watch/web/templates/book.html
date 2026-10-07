@@ -23,7 +23,7 @@
     {% if book.added_by %}<span class="meta book-isbn">{{ book.added_by }}</span>{% endif %}
     {#- Honest rather than hidden: the first look at a new book is genuinely
         less certain than the second. Tapping says why (S29). -#}
-    {% if unlooked and (copies or uncertain) %}<div class="meta">{{ ui.digging("Still digging through the shelves.") }}</div>{% endif %}
+    {% if unlooked and (copies or uncertain) %}<div class="meta">{{ ui.digging("Still checking.") }}</div>{% endif %}
   </div>
 </div>
 

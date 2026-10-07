@@ -30,7 +30,7 @@
   <p>{{ ui.tag("Very Good", strong=True) }} {{ ui.tag("ships from GB") }}</p>
   <p>{{ ui.chip("Limit", "$12", icon="✎") }} {{ ui.chip("US", icon="▾") }} {{ ui.chip("Checked 4m", icon="↻") }}</p>
   <div class="meta">added 2d · {{ ui.digging() }} · {{ ui.throttled() }}</div>
-  <div>{{ ui.alert_pill("Daily check failed", "The check that finished Sep 29 at 7:04am couldn't search 2 of 6 books. Update checks them now.") }}</div>
+  <div>{{ ui.explain("Daily check failed", "The check that finished Sep 29 at 7:04am couldn't search 2 of 6 books. Tap Check to search them now.", "daily-note") }}</div>
   <div>{{ ui.explain("Why the hour?", "A book checked in the last hour is skipped, so a quick second look does not spend another search.") }}</div>
   <div class="cover-shelf">{{ ui.cover("Crash", "J. G. Ballard", size="lg") }} {{ ui.cover("Honored Guest", "Joy Williams") }} {{ ui.cover("Stoner", "John Williams", size="sm") }}</div>
 </div>
@@ -38,13 +38,22 @@
 <h2 class="design-h" id="controls">Controls</h2>
 <p class="muted">Tap the photos above to enlarge them. Sheets open from the buttons below and close with Escape, the back gesture, a tap outside, or their own buttons.</p>
 <div class="controls-demo">
-  {{ ui.button("Check all", "primary") }} {{ ui.button("Update 2") }} {{ ui.button("Cancel", "ghost") }} {{ ui.button("Disabled", disabled=True) }}
+  {{ ui.button("Search", "primary") }} {{ ui.button("Cancel", "ghost") }} {{ ui.button("Disabled", disabled=True) }}
+</div>
+<p class="muted">The want list's one Check button: books out of date, none out of date (it asks first), and a check running.</p>
+<div class="controls-demo">
+  <button type="button" class="btn btn-plain check-btn">Check <span class="badge">2</span></button>
+  <button type="button" class="btn btn-plain check-btn" data-open="check-sheet">Check all</button>
+  <button type="button" class="btn btn-plain check-btn" disabled>Checking 2 of 5…</button>
 </div>
 <div class="controls-demo">
-  {{ ui.button("Add a book…", "primary", open="add-sheet") }} {{ ui.button("Check all…", open="check-sheet") }} {{ ui.fab("Add a book", "add-sheet") }}
+  {{ ui.button("Add a book…", "primary", open="add-sheet") }} {{ ui.fab("Add a book", "add-sheet") }}
 </div>
+<p class="muted">A two-way choice, the same everywhere: with radios for a sheet, or links and buttons for an order.</p>
 <div class="controls-demo">{{ ui.switch("way-demo", [("title", "Title & author"), ("isbn", "ISBN")], "title") }}</div>
-<div class="controls-demo">{{ ui.switch("show-demo", [("all", "All"), ("under", "Under limit")], "under") }} {{ ui.switch("show-none-demo", [("all", "All"), ("under", "Under limit", {"disabled": ""})], "all") }}</div>
+<div class="controls-demo">{{ ui.pair([("Cheapest", {"href": "#"}, True), ("Newest", {"href": "#"}, False)], "Order") }} {{ ui.pair([("Cheapest", {}, False), ("Added", {}, True)], "Order") }}</div>
+<p class="muted">A filter that is on or off: off, on, and greyed out when no book qualifies.</p>
+<div class="controls-demo">{{ ui.toggle("Under limit", False, {}) }} {{ ui.toggle("Under limit", True, {}) }} {{ ui.toggle("Under limit", False, {}, disabled=True) }}</div>
 <div class="controls-demo" style="display: grid">{{ ui.field("demo-title", "Title", "stoner") }}{{ ui.field("demo-author", "Author", optional=True, hint="Narrows a title search.") }}</div>
 
 {% call ui.sheet("add-sheet", "Add a book") %}
@@ -64,9 +73,9 @@
 {% endcall %}
 
 {% call ui.sheet("check-sheet", "Check all 7 books?") %}
-  <p class="sheet-note">5 of them were checked within the last hour and will be searched again. To check only the 2 that are out of date, use Update.</p>
+  <p class="sheet-note">All 7 were checked within the last hour and will be searched again.</p>
   <label class="sheet-note"><input type="checkbox"> Don't ask me again</label>
-  <div class="sheet-actions">{{ ui.button("Update 2", close=True) }}{{ ui.button("Check all 7", "primary", close=True) }}</div>
+  <div class="sheet-actions">{{ ui.button("Cancel", close=True) }}{{ ui.button("Check all 7", "primary", close=True) }}</div>
 {% endcall %}
 
 {{ ui.photo_dialog() }}

@@ -18,7 +18,6 @@ run while somebody waits.
 
 from __future__ import annotations
 
-import os
 import sqlite3
 from collections.abc import Callable
 from contextlib import closing
@@ -220,10 +219,6 @@ def build_router(
     assets.register(templates.env)
     templates.env.filters["cover_url"] = covers.url
     templates.env.globals["want_row"] = list_view.row
-    # S69 round 1 only: which header arrangement the mocks draw. Removed once
-    # Alan picks one.
-    templates.env.globals["mock_layout"] = os.environ.get("BOOK_WATCH_MOCK_LAYOUT", "a")
-    templates.env.globals["mock_filter"] = os.environ.get("BOOK_WATCH_MOCK_FILTER", "switch")
     open_database: ConnectFn = (
         connect if connect is not None else open_configured_database
     )
@@ -264,7 +259,7 @@ def build_router(
         }
 
     def out_of_date(connection: sqlite3.Connection, books: list) -> int:
-        """How many books Update would check: the same gate `check_all` uses,
+        """How many books "Check N" would check: the same gate `check_all` uses,
         so the count on the button is what pressing it costs."""
         return sum(
             1
@@ -706,7 +701,10 @@ def build_router(
                 "sort": order,
                 "views": views(filtering, order),
                 "walking": bool(walking),
-                "progress": (done + 1, done + remaining) if walking else None,
+                # Without the runner's count, it says only that a check runs.
+                "progress": (done + 1, done + remaining)
+                if walking and remaining
+                else None,
             },
         )
 

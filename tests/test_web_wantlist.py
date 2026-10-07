@@ -130,6 +130,14 @@ def test_an_empty_list_says_so(client):
     assert "Nothing on the list yet" in page
 
 
+def test_an_empty_list_offers_nothing_to_check(client):
+    """S69 (#217): with no books there is nothing to check, so no button."""
+    page = client.get("/").text
+
+    assert "check-btn" not in page
+    assert "Under limit" not in page
+
+
 def test_a_book_is_added_and_appears_on_the_list(client):
     response = add(client, "9780099448396", "Crash")
 
@@ -723,6 +731,27 @@ def test_the_list_says_when_the_morning_check_failed(client):
     assert "couldn&#39;t search 1 of 1 books" in page
 
 
+def test_a_failed_morning_check_is_plain_text_under_the_title(client):
+    """S69 (#217): the notice reads as a book's page says its AbeBooks check
+    failed, under the title and before the button that fixes it, not as a
+    pill beside it."""
+    add(client, "9780099448396", "Crash")
+    with client.app.state.connect() as connection:
+        connection.execute(
+            "INSERT INTO daily_run (finished_at, outcome, books, failed) "
+            "VALUES (datetime('now'), 'failed', 1, 1)"
+        )
+        connection.commit()
+
+    page = client.get("/").text
+
+    assert re.search(r'<details class="[^"]*daily-note', page)
+    assert "alert-pill" not in page
+    assert page.index("<h1>Want list</h1>") < page.index("Daily check failed")
+    assert page.index("Daily check failed") < page.index("check-btn")
+    assert "Tap Check to search them now." in page
+
+
 def test_the_list_says_nothing_when_the_morning_check_went_well(client):
     add(client, "9780099448396", "Crash")
     with client.app.state.connect() as connection:
@@ -848,13 +877,20 @@ def test_a_price_with_no_strip_draws_nothing_in_its_place(client, three_books):
     assert "None" not in page
 
 
-def test_the_switch_names_both_sides_without_counts(client, three_books):
-    """Counts widened the switch onto a second line on a 412px phone, and the
-    width changed with the list, so the labels carry none."""
+def under_toggle(page):
+    """The "Under limit" switch's opening tag, as a reader's tap finds it."""
+    found = re.search(r'<button type="button" class="toggle"[^>]*>Under limit', page)
+    assert found, "no Under limit switch"
+    return found.group(0)
+
+
+def test_under_limit_is_a_switch_without_a_count(client, three_books):
+    """S69 (#217): a filter that is on or off is a switch, not a pair, and
+    carries no count."""
     page = client.get("/").text
 
-    labels = re.findall(r'value="(?:all|under)"[^>]*><span[^>]*>([^<]*)</span>', page)
-    assert labels == ["All", "Under limit"]
+    toggle = under_toggle(page)
+    assert 'aria-pressed="false"' in toggle
     assert shown(page) == {"Stoner", "Crash", "Kindred"}
 
 
@@ -864,15 +900,17 @@ def test_under_limit_shows_only_the_books_with_a_copy_under_their_limit(
     page = client.get("/?show=under").text
 
     assert shown(page) == {"Stoner"}
-    assert re.search(r'value="under" checked', page)
+    assert 'aria-pressed="true"' in under_toggle(page)
 
 
 def test_the_switch_fetches_the_list_without_adding_history(client, three_books):
-    page = client.get("/books/list?show=under").text
+    page = client.get("/").text
 
-    assert shown(page) == {"Stoner"}
-    assert 'hx-replace-url="/?show=under"' in page
+    toggle = under_toggle(page)
+    assert 'hx-get="/books/list?show=under"' in toggle
+    assert 'hx-replace-url="/?show=under"' in toggle
     assert "hx-push-url" not in page
+    assert shown(client.get("/books/list?show=under").text) == {"Stoner"}
 
 
 def test_with_nothing_under_a_limit_the_switch_is_greyed_and_all_shows(
@@ -887,16 +925,110 @@ def test_with_nothing_under_a_limit_the_switch_is_greyed_and_all_shows(
     page = client.get("/?show=under").text
 
     assert shown(page) == {"Stoner", "Crash", "Kindred"}
-    under = re.search(r'<input[^>]*value="under"[^>]*>', page).group(0)
-    assert "disabled" in under
-    assert "checked" not in under
+    toggle = under_toggle(page)
+    assert "disabled" in toggle
+    assert 'aria-pressed="false"' in toggle
 
 
 def test_with_a_book_under_its_limit_the_switch_is_not_greyed(client, three_books):
+    assert "disabled" not in under_toggle(client.get("/").text)
+
+
+# --- the order (S69, #217) ------------------------------------------------------
+
+
+def priced_at(amount):
+    """What `standing.glance` says of a book whose cheapest copy costs
+    `amount`, or of a book with no price when `amount` is None."""
+    from datetime import UTC, datetime
+    from decimal import Decimal
+
+    from book_watch.ebay.search import Money
+    from book_watch.standing import Glance, Headline, Market
+
+    if amount is None:
+        return Glance(checked=datetime.now(UTC), listed=0, uncertain=0, headline=None)
+    price = Money(Decimal(amount), "USD")
+    return Glance(
+        checked=datetime.now(UTC),
+        listed=1,
+        uncertain=0,
+        headline=Headline(
+            market=Market(listed=1, seen=1, low=price, high=price),
+            cheapest=price,
+            verdict="no ceiling",
+        ),
+    )
+
+
+@pytest.fixture
+def three_prices(client, monkeypatch):
+    """Added in this order: Stoner at $12, Crash at $5, Kindred with no price."""
+    from book_watch import standing, wantlist
+
+    amounts = {}
+    with closing(client.app.state.connect()) as connection:
+        for title, amount in (
+            ("Stoner", "12.00"),
+            ("Crash", "5.00"),
+            ("Kindred", None),
+        ):
+            book = wantlist.add_identified(connection, title=title)
+            amounts[book.id] = amount
+        connection.commit()
+    monkeypatch.setattr(
+        standing, "glance", lambda connection, book, **_: priced_at(amounts[book.id])
+    )
+    return amounts
+
+
+def order(page):
+    """The books in the order a reader sees them."""
+    return [
+        title
+        for title in re.findall(r'class="book-row-title"[^>]*>([^<]+)<', page)
+        if title in ("Stoner", "Crash", "Kindred")
+    ]
+
+
+def test_the_list_is_newest_added_first_by_default(client, three_prices):
     page = client.get("/").text
 
-    under = re.search(r'<input[^>]*value="under"[^>]*>', page).group(0)
-    assert "disabled" not in under
+    assert order(page) == ["Kindred", "Crash", "Stoner"]
+    assert re.search(r'<b class="pair-option" aria-current="true"[^>]*>Added<', page)
+
+
+def test_cheapest_goes_by_the_price_each_row_shows_and_unpriced_go_last(
+    client, three_prices
+):
+    page = client.get("/?sort=cheapest").text
+
+    assert order(page) == ["Crash", "Stoner", "Kindred"]
+    assert re.search(r'<b class="pair-option" aria-current="true"[^>]*>Cheapest<', page)
+
+
+def test_the_order_and_the_filter_keep_each_other(client, three_books):
+    """Each choice keeps the other in the page address, so a book's page and
+    going back, or a reload, show the list as it was."""
+    page = client.get("/?show=under&sort=cheapest").text
+
+    assert 'hx-replace-url="/?sort=cheapest"' in under_toggle(page)
+    assert 'hx-replace-url="/?show=under"' in page  # Added, keeping the filter
+
+
+def test_a_piece_of_the_list_keeps_the_order_of_the_page_it_came_from(
+    client, three_prices
+):
+    """Deleting a book or the header asking for itself comes from another
+    path, and reads the order from the page's own address."""
+    crash = next(i for i, v in three_prices.items() if v == "5.00")
+
+    page = client.delete(
+        f"/books/{crash}",
+        headers={"HX-Request": "true", "HX-Current-URL": "http://x/?sort=cheapest"},
+    ).text
+
+    assert order(page) == ["Stoner", "Kindred"]
 
 
 def test_deleting_a_book_keeps_the_filter_on(client, three_books):

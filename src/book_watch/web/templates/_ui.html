@@ -28,12 +28,6 @@
 {%- endmacro %}
 
 
-{#- Something wrong, said once where it applies, and explained on tap. Absent
-    when nothing is wrong, so its appearance means something. -#}
-{% macro alert_pill(label, text) -%}
-<details class="explain alert-pill"><summary>{{ label }}</summary><p class="explain-text">{{ text }}</p></details>
-{%- endmacro %}
-
 
 {#- A cover, over its placeholder. The placeholder is always there, so a slow
     or missing image leaves the book recognizable rather than an empty frame.
@@ -286,15 +280,11 @@
 </span>
 {%- endmacro %}
 
-{#- A filter that is on or off: one word, filled when on (principle 4: two
-    states are a toggle). Greyed out when it would show nothing. -#}
-{% macro toggle(text, on, attrs, disabled=False, style="pill") -%}
-<button type="button" class="toggle toggle-{{ style }}" aria-pressed="{{ 'true' if on else 'false' }}"{{ attrs | xmlattr }}{% if disabled %} disabled{% endif %}>
-  {%- if style == "checkbox" %}<span class="toggle-box" aria-hidden="true">{% if on %}✓{% endif %}</span>{{ text }}
-  {%- elif style == "switch" %}{{ text }}<span class="toggle-track" aria-hidden="true"><span class="toggle-thumb"></span></span>
-  {%- elif style in ("link", "meta") %}{{ text }}{% if on %}<span class="toggle-clear" aria-hidden="true"> ✕</span>{% endif %}
-  {%- else %}{% if on %}✓ {% endif %}{{ text }}{% endif -%}
-</button>
+{#- A filter that is on or off, as a switch beside its name (S69, #217):
+    principle 4, two states are a toggle. Greyed out when it would show
+    nothing. -#}
+{% macro toggle(text, on, attrs, disabled=False) -%}
+<button type="button" class="toggle" aria-pressed="{{ 'true' if on else 'false' }}"{{ attrs | xmlattr }}{% if disabled %} disabled{% endif %}>{{ text }}<span class="toggle-track" aria-hidden="true"><span class="toggle-thumb"></span></span></button>
 {%- endmacro %}
 
 

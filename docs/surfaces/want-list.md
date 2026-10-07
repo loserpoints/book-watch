@@ -6,33 +6,36 @@ The want list shows every book I'm watching and whether any copy is worth my att
 
 ## What it shows
 
-- One row per book, most recently added first.
+- One row per book, most recently added first, or cheapest first.
 - The book's title, cover and author. A book with no cover shows its title on a placeholder.
 - The cheapest copy's delivered price, as "from $10.49". It is green with ✓ when under the book's limit, and red when over (see [pricing](../rules/pricing.md)).
 - The book's limit under the price, "your limit: $10", or "no limit set".
 - A strip of every asking price seen, when there are at least two different prices. Each dot is green at or under the limit and red over it, with green on top, or blue with no limit. A blue line marks the limit only when it falls among the prices.
 - How many copies are listed, how many are new since the book was last opened, and how long ago it was checked: "3 listed · 2 new · checked 2h". Both count the same copies, so new is never more than listed.
 - When the book was added: "added 3w".
-- "digging" in place of the counts from the moment a book is checked until its copies have been examined, with its last price kept meanwhile. The row updates itself when that finishes. Tapping it explains.
+- "checking" in place of the counts from the moment a book is checked until its copies have been examined, with its last price kept meanwhile. The row updates itself when that finishes. Tapping it explains.
 - "Throttled" when that work is waiting because the day's Open Library requests are used up. Tapping it explains.
 - A row's state when there is no price: Couldn't check just now, Not checked yet, 2 maybes, or 0 listed.
-- A switch between all the books and those with a copy under their limit: "All · Under limit". "Under limit" is greyed out when no book has a copy under its limit. With it on, a book joins or leaves the list once a check and its digging finish.
-- Whether any books need checking: "Update 2", or "All current". It counts down as books are checked, and keeps up after adding a book and when a book's copies finish being examined.
+- Under the title, only when something is wrong with the daily check: "Daily check failed", "Daily check throttled" or "Daily check didn't run", as plain text. Tapping it says when and why.
+- One Check button. It reads "Check 2" when two books weren't checked in the last hour, and "Check all" when every book was. While a check runs it says how far it has got, "Checking 2 of 5…", and is greyed out. It counts down as books are checked, and keeps up after adding a book and when a book's copies finish being examined.
+- An "Under limit" switch beside it, to show only the books with a copy under their limit. It is greyed out when no book has one. With it on, a book joins or leaves the list once a check finishes.
+- Over the rows, how many books show and their order: "6 books · Cheapest · Added". Cheapest goes by each row's "from $X", with books that have no price last. Not shown for a single book.
 - The whole list drawn again on going back to it, and on coming back to the app after a minute or more away, unless a check is running.
-- Update and Check all greyed out while a check is running.
-- Under those buttons, only when something is wrong with the daily check: "Daily check failed", "Daily check throttled" or "Daily check didn't run". Tapping it says when and why.
 - "Nothing on the list yet" when the list is empty.
 
 ## What you can do
 
-- Tap anywhere on a book's row to open its active listings. The trash, "digging" and "Throttled" keep their own taps.
-- Tap "Under limit" to see only the books whose price is green, and "All" to see every book. The choice stays through opening a book and going back, and opening the app shows all. Adding a book shows all.
-- Tap Update to check the books not checked in the last hour.
-- Tap Check all to check every book. It asks first when some were checked in the last hour, unless this device was told not to ask again.
+- Tap anywhere on a book's row to open its active listings. The trash, "checking" and "Throttled" keep their own taps.
+- Tap the "Under limit" switch to see only the books whose price is green, and again to see every book.
+- Tap Cheapest or Added to change the order.
+- The switch and the order stay through opening a book and going back. Opening the app shows every book, newest added first, and so does adding a book.
+- Tap "Check 2" to check the books not checked in the last hour.
+- Tap "Check all" to check every book again. It asks first, unless this device was told not to ask again.
 - Tap the trash icon to remove a book. It asks first.
 - Tap + to add a book (see [adding a book](add-a-book.md)). Adding leaves nothing to go back through.
 - Press back to leave the app.
 
 ## Open issues
 
-- [Reorder the want-list by recency, lowest price, or by hand](https://github.com/loserpoints/book-watch/issues/131)
+- [Mark a book bought, with what I paid and where, and keep a record of what I've bought](https://github.com/loserpoints/book-watch/issues/223)
+- [Show when a copy's price has dropped](https://github.com/loserpoints/book-watch/issues/164)

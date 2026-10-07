@@ -19,7 +19,8 @@
     <input type="hidden" name="walking" value="1">
     <input type="hidden" name="done" value="{{ done or 0 }}">
     <input type="hidden" name="remaining" value="{{ remaining }}">
-    Checking {{ remaining }} book{{ '' if remaining == 1 else 's' }}…
+    {#- Says nothing: the Check button says how far the check has got
+        (S69, #217). -#}
   </div>
 {% else %}
   <div id="sweep-runner" class="muted">{{ message or '' }}</div>

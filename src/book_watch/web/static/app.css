@@ -635,34 +635,25 @@ b.pair-option, .pair-option:has(input:checked) { color: var(--fg); font-weight: 
 .pair-option span { display: inline-flex; flex-direction: column; }
 .pair-option:has(span)::after { content: none; }
 
-/* A filter that is on or off (S69). */
+/* A filter that is on or off: its name, then a switch (S69). */
 .toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   min-height: 44px;
-  padding: 0 var(--space-3);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--muted);
+  padding: 0 var(--space-1);
+  border: 0;
+  background: none;
+  color: var(--fg);
   font: inherit;
   font-size: var(--text-sm);
   cursor: pointer;
 }
-.toggle[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
 .toggle:disabled { opacity: 0.45; cursor: not-allowed; }
-/* Round 2's ways of showing the filter (S69). */
-.toggle-link, .toggle-meta, .toggle-checkbox, .toggle-switch { border: 0; border-radius: 0; padding: 0 var(--space-1); display: inline-flex; align-items: center; gap: var(--space-2); }
-.toggle-link, .toggle-meta { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
-.toggle-meta { min-height: 44px; font-size: inherit; }
-.toggle-link[aria-pressed="true"], .toggle-meta[aria-pressed="true"] { background: none; color: var(--fg); font-weight: 700; text-decoration: none; }
-.toggle-clear { color: var(--muted); font-weight: 400; }
-.toggle-checkbox, .toggle-switch { color: var(--fg); }
-.toggle-checkbox[aria-pressed="true"], .toggle-switch[aria-pressed="true"] { background: none; color: var(--fg); font-weight: 400; }
-.toggle-box { display: inline-grid; place-items: center; width: 18px; height: 18px; border: 1px solid var(--muted); border-radius: var(--radius-sm); font-size: var(--text-xs); }
-.toggle-checkbox[aria-pressed="true"] .toggle-box { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .toggle-track { position: relative; display: inline-block; width: 36px; height: 20px; border-radius: var(--radius-pill); background: var(--line); }
-.toggle-thumb { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--fg); }
-.toggle-switch[aria-pressed="true"] .toggle-track { background: var(--accent); }
-.toggle-switch[aria-pressed="true"] .toggle-thumb { left: 18px; background: var(--on-accent); }
+.toggle-thumb { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: var(--radius-pill); background: var(--fg); }
+.toggle[aria-pressed="true"] .toggle-track { background: var(--accent); }
+.toggle[aria-pressed="true"] .toggle-thumb { left: 18px; background: var(--on-accent); }
 /* The morning check's notice, plain text under the title (S69). */
 details.daily-note > summary { display: inline-flex; align-items: center; min-height: 44px; color: var(--over); font-size: var(--text-sm); cursor: pointer; list-style: none; }
 details.daily-note > summary::-webkit-details-marker { display: none; }
@@ -766,7 +757,8 @@ dialog.photo-view[open] { display: grid; gap: var(--space-2); justify-items: cen
 .match-count { margin: 0 0 var(--space-1); }
 .sheet-form { display: grid; gap: var(--space-3); }
 
-/* The want-list (S34, #98): the count, Update and Check all, then the rows. */
+/* The want-list (S34, #98; S69, #217): the Check button and the "Under limit"
+   switch, then the count and the order, then the rows. */
 .list-bar {
   display: flex;
   align-items: center;
@@ -774,31 +766,13 @@ dialog.photo-view[open] { display: grid; gap: var(--space-2); justify-items: cen
   gap: var(--space-2);
   flex-wrap: nowrap;
 }
-.list-bar-actions { display: flex; gap: var(--space-2); }
 /* The count of books and their order, over the rows (S69). */
 .list-meta { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .list-meta .meta { margin: 0; }
-/* Arrangement B: the order and the filter in an area that opens (S69). */
-.view-menu > summary {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  padding: 0 var(--space-1);
-  color: var(--accent);
-  font-size: var(--text-sm);
-  cursor: pointer;
-  list-style: none;
-}
-.view-menu > summary::-webkit-details-marker { display: none; }
-.view-menu > summary::after { content: "▾"; margin-left: var(--space-1); }
-.view-menu[open] > summary::after { content: "▴"; }
-.list-bar:has(.view-menu) { align-items: start; }
 /* The Check button looks only as tall as its text needs, and keeps a 44px
    target around it (S69). */
 .check-btn { position: relative; min-height: 32px; }
 .check-btn::before { content: ""; position: absolute; inset: -6px 0; }
-.view-menu { display: flex; flex-direction: column; align-items: flex-end; }
-.view-panel { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-1); }
 .badge {
   display: inline-grid;
   place-items: center;
@@ -830,19 +804,7 @@ dialog.photo-view[open] { display: grid; gap: var(--space-2); justify-items: cen
 .sheet-error { margin: 0; color: var(--over); font-size: var(--text-sm); }
 .sheet-form .candidate-list { margin: 0; padding: 0; }
 
-/* Something wrong with the morning check, under the list's buttons. The
-   chip's shape in the error color; absent when nothing is wrong. */
-/* The warning keeps its 44px tap height, pulled up so its text sits just
-   under the title rather than in the middle of empty space (S69). */
+/* Something wrong with the morning check: plain text under the title,
+   absent when nothing is wrong. It keeps its 44px tap height, pulled up so
+   its text sits just under the title rather than in empty space (S69). */
 .list-alert { margin: calc(-1 * var(--space-3)) 0 calc(-1 * var(--space-2)); }
-details.alert-pill > summary {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  padding: 0 var(--space-3);
-  border: 1px solid var(--over);
-  border-radius: var(--radius-pill);
-  color: var(--over);
-  font-size: var(--text-sm);
-  text-decoration: none;
-}
