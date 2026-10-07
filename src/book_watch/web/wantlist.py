@@ -223,7 +223,7 @@ def build_router(
     # S69 round 1 only: which header arrangement the mocks draw. Removed once
     # Alan picks one.
     templates.env.globals["mock_layout"] = os.environ.get("BOOK_WATCH_MOCK_LAYOUT", "a")
-    templates.env.globals["mock_filter"] = os.environ.get("BOOK_WATCH_MOCK_FILTER", "pill")
+    templates.env.globals["mock_filter"] = os.environ.get("BOOK_WATCH_MOCK_FILTER", "switch")
     open_database: ConnectFn = (
         connect if connect is not None else open_configured_database
     )
