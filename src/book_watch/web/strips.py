@@ -7,7 +7,7 @@ Both put prices on one horizontal scale, the way a dot plot does:
   whole dollars. Each dot is green at or under the limit and red over it,
   with green drawn on top, and a blue line marks the limit when it falls
   among the prices (S61).
-- **The rank strip** shows the copies of one kind listed now,
+- **The rank strip** shows the copies listed now,
   with this copy as the large dot. It replaces "2nd of 3",
   which did not say it was about price.
 
@@ -144,7 +144,7 @@ def _dot_class(value: Number, limit: Number | None) -> str:
 def rank_strip(
     peers: Sequence[Number], mine: Number, *, width: int = 64, height: int = 14
 ) -> Markup:
-    """Where this copy sits among the copies of its kind listed now."""
+    """Where this copy sits among the copies listed now."""
     if len(peers) < 2:
         return Markup("")
     scale = scale_for(peers, width)

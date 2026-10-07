@@ -210,7 +210,7 @@ def test_the_design_page_draws_every_row_state():
         "2 maybes",
         "0 listed",
         "can&#39;t place",
-        "only new listing",
+        "only listing",
         "On your list",
         "(over your limit)",
     ):

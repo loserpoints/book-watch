@@ -182,7 +182,7 @@ def sample_copies() -> list[dict]:
             **common,
             "price_text": "$19",
             "verdict": "over",
-            "place_text": "only new listing",
+            "place_text": "only listing",
             "listed": "1y",
             "condition": "Brand New",
             "seller": "bookdepot",

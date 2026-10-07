@@ -15,8 +15,8 @@
 <ul class="ui-list">{% for b in books %}{{ ui.book_row(b) }}{% endfor %}</ul>
 
 <h2 class="design-h" id="copy-rows">Copy rows</h2>
-<p class="muted">Under, under from abroad, over with a condition note and taking offers, the only new listing, and shipping unknown with a long note. Tap a note to open it.</p>
-{{ ui.market("3 used listed now", market_strip) }}
+<p class="muted">Under, under from abroad, over with a condition note and taking offers, the only listing, and shipping unknown with a long note. Tap a note to open it.</p>
+{{ ui.market("3 listed now", market_strip) }}
 <ul class="ui-list">{% for c in copies %}{{ ui.copy_row(c) }}{% endfor %}</ul>
 {% call ui.fold("1 maybe") %}<p class="muted">Copies that carry the title but nothing that proves the book.</p>{% endcall %}
 {% call ui.fold("Dismissed · 0") %}<p class="muted">Nothing dismissed.</p>{% endcall %}
