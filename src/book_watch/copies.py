@@ -25,7 +25,7 @@ from typing import Literal
 
 from book_watch.ebay.search import Money, Scope
 from book_watch.isbn import normalize
-from book_watch.marketplaces import NEW, Marketplace
+from book_watch.marketplaces import Marketplace
 from book_watch.matching import Evidence, Target, Tier, grade, is_this_book
 from book_watch.wantlist import Entry, moment
 
@@ -113,20 +113,6 @@ _CURRENT_IN_SCOPE = """
 Verdict = Literal["under", "over", "can't tell", "no ceiling"]
 
 
-#: Which market a copy belongs to. Not three grades on one scale — new and
-#: used are two different markets, priced by different things: a new copy by
-#: publisher and distributor economics through bulk sellers, a used copy by
-#: scarcity and wear. Pooling them puts a floor under the used number that has
-#: nothing to do with the used market.
-ConditionClass = Literal["new", "used", "unknown"]
-
-
-#: eBay's id for a brand-new item. Every other id is some flavor of
-#: secondhand, Like New included: it has had an owner, which is the thing that
-#: separates the two markets.
-_BRAND_NEW = NEW
-
-
 @dataclass(frozen=True, slots=True)
 class Copy:
     """One copy for sale, with how sure we are that it is the book."""
@@ -181,20 +167,6 @@ class Copy:
     def key(self) -> tuple[Marketplace, str]:
         """The copy's identity: its marketplace and its id there."""
         return (self.marketplace, self.item_id)
-
-    @property
-    def condition_class(self) -> ConditionClass:
-        """Which market this copy is in, from the id and never from the words.
-
-        Unknown when eBay stated no id — which is both a seller who filled
-        nothing in and every copy recorded before the id was stored. It is
-        left as its own answer rather than folded into used: a copy that might
-        be shrink-wrapped and might be water-damaged is not evidence about
-        either market.
-        """
-        if self.condition_id is None:
-            return "unknown"
-        return "new" if self.condition_id == _BRAND_NEW else "used"
 
     @property
     def landed_cost(self) -> Money | None:

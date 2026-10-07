@@ -596,12 +596,9 @@ def standing_for(connection, entry):
     return {item_id: placed for (_, item_id), placed in found.items()}
 
 
-def test_a_new_copy_does_not_move_a_used_copys_rank(database):
-    """The heart of the slice. New and used are two markets, not two grades on
-    one scale: a new copy is priced by distributor economics through bulk
-    sellers and a used one by scarcity and wear. Pooling them would put a
-    floor under the used number that has nothing to do with the used market —
-    and would make an ordinary used copy look like a find."""
+def test_new_and_used_copies_are_ranked_together(database):
+    """S70 (#247): for a reader, condition is something to judge a copy by,
+    not a separate market. A $4 new copy is simply the cheapest copy."""
     book = a_book(database, "Stoner", "John Williams")
     a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
     a_certain_copy(database, book.work_id, "v1|2|0", price="24.00")
@@ -611,16 +608,13 @@ def test_a_new_copy_does_not_move_a_used_copys_rank(database):
 
     stands = standing_for(database, book)
 
-    # The $4 new copy is cheaper than both used copies and changes neither.
-    assert (stands["v1|1|0"].rank, stands["v1|1|0"].listed) == (1, 2)
-    assert (stands["v1|2|0"].rank, stands["v1|2|0"].listed) == (2, 2)
-    assert (stands["v1|3|0"].rank, stands["v1|3|0"].listed) == (1, 1)
-    assert stands["v1|1|0"].condition_class == "used"
-    assert stands["v1|3|0"].condition_class == "new"
+    assert (stands["v1|3|0"].rank, stands["v1|3|0"].listed) == (1, 3)
+    assert (stands["v1|1|0"].rank, stands["v1|1|0"].listed) == (2, 3)
+    assert (stands["v1|2|0"].rank, stands["v1|2|0"].listed) == (3, 3)
 
 
-def test_the_range_never_reaches_across_the_two_markets(database):
-    """The same split, applied to the range rather than the rank."""
+def test_the_range_spans_new_and_used_alike(database):
+    """The same pooling, applied to the range rather than the rank."""
     book = a_book(database, "Stoner", "John Williams")
     a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
     a_certain_copy(database, book.work_id, "v1|2|0", price="36.00")
@@ -630,35 +624,8 @@ def test_the_range_never_reaches_across_the_two_markets(database):
 
     used = standing_for(database, book)["v1|1|0"]
 
-    assert (used.low.amount, used.high.amount) == (Decimal("18.00"), Decimal("36.00"))
-    assert used.seen == 2
-
-
-def test_like_new_is_still_a_used_copy(database):
-    """It has had an owner, which is the thing that separates the markets.
-    'Like New' is a grade within secondhand, not a second kind of new."""
-    book = a_book(database, "Stoner", "John Williams")
-    a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
-    a_certain_copy(
-        database, book.work_id, "v1|2|0", price="24.00", condition_id=LIKE_NEW
-    )
-
-    stands = standing_for(database, book)
-
-    assert stands["v1|2|0"].condition_class == "used"
-    assert stands["v1|1|0"].listed == 2
-
-
-def test_the_class_comes_from_the_id_and_never_from_the_words(database):
-    """The S6 matching study lost seven listings to trusting eBay's category strings.
-    The display string is localized and re-worded; the number is not. So a
-    copy whose words say one thing and whose id says another follows the id."""
-    book = a_book(database, "Stoner", "John Williams")
-    a_certain_copy(
-        database, book.work_id, "v1|1|0", condition_id=USED, condition="Brand New"
-    )
-
-    assert standing_for(database, book)["v1|1|0"].condition_class == "used"
+    assert (used.low.amount, used.high.amount) == (Decimal("4.00"), Decimal("36.00"))
+    assert used.seen == 3
 
 
 def test_a_copy_alone_in_its_class_says_so_rather_than_ranking(database):
@@ -727,33 +694,21 @@ def test_a_ceiling_does_not_change_where_a_copy_ranks(database):
     assert with_limit.listed == 2
 
 
-def test_a_copy_with_no_stated_condition_is_not_ranked(database):
-    """Its own class of one, which means it mostly says nothing — the honest
-    outcome. Two copies that might each be shrink-wrapped or water-damaged are
-    not evidence about one another."""
+def test_a_copy_with_no_stated_condition_is_still_ranked(database):
+    """S70 (#247): condition no longer decides which copies a copy is compared
+    with, so a seller who stated none still has a copy at a price. Its row
+    still says "condition unstated"."""
     book = a_book(database, "Stoner", "John Williams")
-    a_certain_copy(database, book.work_id, "v1|1|0", condition_id=None)
-    a_certain_copy(database, book.work_id, "v1|2|0", condition_id=None)
+    a_certain_copy(database, book.work_id, "v1|1|0", price="9.00", condition_id=None)
+    a_certain_copy(database, book.work_id, "v1|2|0", price="12.00")
 
     stands = standing_for(database, book)
 
-    assert stands["v1|1|0"].unplaced == "condition unstated"
-    assert stands["v1|1|0"].rank is None
+    assert (stands["v1|1|0"].rank, stands["v1|1|0"].listed) == (1, 2)
+    assert stands["v1|1|0"].unplaced is None
 
 
-def test_words_without_a_code_are_a_different_silence(database):
-    """A copy can carry eBay's words without eBay's number — every row
-    recorded before the code was kept does. That is not the seller staying
-    quiet, and the page must not say it was."""
-    book = a_book(database, "Stoner", "John Williams")
-    a_certain_copy(
-        database, book.work_id, "v1|1|0", condition_id=None, condition="Good"
-    )
-
-    assert standing_for(database, book)["v1|1|0"].unplaced == "no condition code"
-
-
-def test_an_unstated_condition_does_not_enter_anyone_elses_range(database):
+def test_an_unstated_condition_joins_the_range(database):
     book = a_book(database, "Stoner", "John Williams")
     a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
     a_certain_copy(database, book.work_id, "v1|2|0", price="24.00")
@@ -761,8 +716,8 @@ def test_an_unstated_condition_does_not_enter_anyone_elses_range(database):
 
     used = standing_for(database, book)["v1|1|0"]
 
-    assert used.seen == 2
-    assert used.high.amount == Decimal("24.00")
+    assert used.seen == 3
+    assert used.high.amount == Decimal("99.00")
 
 
 def test_a_copy_without_a_delivered_price_cannot_be_placed(database):
@@ -850,31 +805,30 @@ def test_a_copy_recorded_before_the_id_was_stored_reads_as_unknown(database):
     only = copies.for_entry(database, book)[0]
 
     assert only.condition_id is None
-    assert only.condition_class == "unknown"
 
 
 # --- the markets a book sits in ----------------------------------------------
 #
-# The same numbers as a standing, lifted from the copy to the book. What these
-# guard is mostly what is *absent*: a class with nothing listed, the unknown
-# class, and a range that is really one number.
+# The same numbers as a standing, lifted from the copy to the book, one per
+# currency. What these guard is mostly what is *absent*: copies all gone, and
+# a range that is really one number.
 
 
 def markets_for(connection, entry):
     return standing.markets(standing_for(connection, entry))
 
 
-def test_used_comes_before_new(database):
-    """The reading hunt is the dominant one and a new copy is usually bulk
-    inventory. Collectible entries (#144) may invert this,
-    which is why the order lives in one place rather than in a template."""
+def test_new_and_used_make_one_market(database):
+    """S70 (#247): one line and one strip on a book's page."""
     book = a_book(database, "Stoner", "John Williams")
     a_certain_copy(
         database, book.work_id, "v1|1|0", price="4.00", condition_id=BRAND_NEW
     )
     a_certain_copy(database, book.work_id, "v1|2|0", price="18.00")
 
-    assert [m.condition_class for m in markets_for(database, book)] == ["used", "new"]
+    (market,) = markets_for(database, book)
+
+    assert (market.listed, market.seen) == (2, 2)
 
 
 def test_a_market_counts_listed_copies_and_spans_seen_ones(database):
@@ -889,26 +843,22 @@ def test_a_market_counts_listed_copies_and_spans_seen_ones(database):
     assert (used.low.amount, used.high.amount) == (Decimal("18.00"), Decimal("36.00"))
 
 
-def test_the_unknown_class_is_never_a_market(database):
-    """It has no range worth stating and no rank to head, so the page mentions
-    it only on the copies themselves, where it says why it could not be
-    placed."""
+def test_a_copy_with_no_stated_condition_makes_a_market(database):
     book = a_book(database, "Stoner", "John Williams")
     a_certain_copy(database, book.work_id, "v1|1|0", condition_id=None)
 
-    assert markets_for(database, book) == []
+    (market,) = markets_for(database, book)
+
+    assert market.listed == 1
 
 
-def test_a_class_whose_copies_have_all_gone_heads_nothing(database):
-    """These head a list. A class with nothing in that list has no list to
-    head — its range is a real fact and a different statement from this one."""
+def test_copies_that_have_all_gone_head_nothing(database):
+    """These head a list. With nothing in that list there is no list to head,
+    though the range those copies made is a real fact."""
     book = a_book(database, "Stoner", "John Williams")
     a_certain_copy(database, book.work_id, "v1|1|0", price="18.00", listed=False)
-    a_certain_copy(
-        database, book.work_id, "v1|2|0", price="4.00", condition_id=BRAND_NEW
-    )
 
-    assert [m.condition_class for m in markets_for(database, book)] == ["new"]
+    assert markets_for(database, book) == []
 
 
 def test_one_copy_is_not_a_range(database):
@@ -961,21 +911,19 @@ def glance_at(connection, entry):
     return standing.glance(connection, entry)
 
 
-def test_the_headline_leads_with_the_cheapest_used_copy(database):
+def test_the_headline_leads_with_the_cheapest_copy(database):
     book = a_book(database, "Stoner", "John Williams")
     a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
     a_certain_copy(database, book.work_id, "v1|2|0", price="9.00", shipping="3.00")
 
     lead = glance_at(database, book).headline
 
-    assert lead.market.condition_class == "used"
     assert lead.cheapest.amount == Decimal("12.00")
 
 
-def test_a_book_with_no_used_copies_falls_back_to_the_new_market(database):
+def test_a_book_with_only_new_copies_leads_with_one(database):
     """*State of Grace* is five copies, all Brand New. "Nothing listed" would
-    be false, and showing nothing would be worse than showing the new price
-    as long as it says which market it came from."""
+    be false."""
     book = a_book(database, "Stoner", "John Williams")
     a_certain_copy(
         database, book.work_id, "v1|1|0", price="21.00", condition_id=BRAND_NEW
@@ -986,13 +934,12 @@ def test_a_book_with_no_used_copies_falls_back_to_the_new_market(database):
 
     lead = glance_at(database, book).headline
 
-    assert lead.market.condition_class == "new"
     assert lead.cheapest.amount == Decimal("21.00")
 
 
-def test_one_used_copy_beats_a_cheaper_new_one_for_the_headline(database):
-    """The fallback is a fallback, not a comparison. A $4 new copy does not
-    displace the used market the reading hunt is actually watching."""
+def test_a_cheaper_new_copy_leads_over_a_used_one(database):
+    """S70 (#247): the cheapest copy leads, whatever its condition. Before, a
+    $4 new copy hid behind an $18 used one."""
     book = a_book(database, "Stoner", "John Williams")
     a_certain_copy(database, book.work_id, "v1|1|0", price="18.00")
     a_certain_copy(
@@ -1001,8 +948,7 @@ def test_one_used_copy_beats_a_cheaper_new_one_for_the_headline(database):
 
     lead = glance_at(database, book).headline
 
-    assert lead.market.condition_class == "used"
-    assert lead.cheapest.amount == Decimal("18.00")
+    assert lead.cheapest.amount == Decimal("4.00")
 
 
 def test_the_headline_carries_the_ceiling_verdict(database):
@@ -1034,26 +980,25 @@ def test_a_new_copy_under_the_limit_leads_over_used_copies_above_it(database):
 
     lead = glance_at(database, book).headline
 
-    assert lead.market.condition_class == "new"
     assert lead.cheapest.amount == Decimal("9.00")
     assert lead.verdict == "under"
 
 
-def test_used_still_leads_when_both_markets_have_a_copy_under_the_limit(database):
+def test_the_cheapest_leads_when_new_and_used_are_both_under_the_limit(database):
     book = a_book_with_both_markets(database, used="9.50", new="4.00", limit="10.00")
 
     lead = glance_at(database, book).headline
 
-    assert lead.market.condition_class == "used"
+    assert lead.cheapest.amount == Decimal("4.00")
     assert lead.verdict == "under"
 
 
-def test_used_still_leads_when_neither_market_is_under_the_limit(database):
+def test_the_cheapest_leads_when_nothing_is_under_the_limit(database):
     book = a_book_with_both_markets(database, used="18.00", new="12.00", limit="10.00")
 
     lead = glance_at(database, book).headline
 
-    assert lead.market.condition_class == "used"
+    assert lead.cheapest.amount == Decimal("12.00")
     assert lead.verdict == "over"
 
 

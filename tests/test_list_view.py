@@ -62,13 +62,11 @@ def usd(amount):
 
 
 def test_the_cheapest_leads_and_the_strip_draws_every_price_seen():
-    market = Market("used", listed=3, seen=4, low=usd("10"), high=usd("27"))
+    market = Market(listed=3, seen=4, low=usd("10"), high=usd("27"))
     glance = a_glance(
         listed=3,
         headline=Headline(market=market, cheapest=usd("10.49"), verdict="under"),
-        seen_prices={
-            ("used", "USD"): [Decimal(x) for x in ("10.49", "12", "14", "27")]
-        },
+        seen_prices={"USD": [Decimal(x) for x in ("10.49", "12", "14", "27")]},
     )
 
     row = list_view.row(an_entry(), glance)
