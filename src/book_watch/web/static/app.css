@@ -773,7 +773,6 @@ dialog.photo-view[open] { display: grid; gap: var(--space-2); justify-items: cen
   justify-content: space-between;
   gap: var(--space-2);
   flex-wrap: nowrap;
-  margin-bottom: var(--space-2);
 }
 .list-bar-actions { display: flex; gap: var(--space-2); }
 /* The count of books and their order, over the rows (S69). */
