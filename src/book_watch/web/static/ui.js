@@ -160,4 +160,39 @@
     },
     true
   );
+
+  // The want list draws itself again when it comes back into view, since its
+  // books may have gone out of date unseen: the phone slept, another app was
+  // in front, or back restored the page from the browser's memory (S67,
+  // #244). The whole list, not only the header, so rows and the morning
+  // check's pill are current too. Not while a check runs, which replacing
+  // the list would stop and whose own steps keep the header current, and not
+  // while the Check all sheet is open in it.
+  var AWAY_MS = 60 * 1000;
+  var hiddenAt = null;
+  var redrawnAt = 0;
+
+  function redrawList() {
+    var list = document.getElementById("want-list");
+    if (!list || !window.htmx) return;
+    if (document.querySelector("#sweep-runner.sweeping")) return;
+    if (list.querySelector("dialog[open]")) return;
+    // Back from the browser's memory fires both events below; one redraw.
+    if (Date.now() - redrawnAt < 2000) return;
+    redrawnAt = Date.now();
+    htmx.ajax("GET", "/books/list", { target: "#want-list", swap: "outerHTML" });
+  }
+
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") {
+      hiddenAt = Date.now();
+      return;
+    }
+    if (hiddenAt !== null && Date.now() - hiddenAt >= AWAY_MS) redrawList();
+    hiddenAt = null;
+  });
+
+  window.addEventListener("pageshow", function (event) {
+    if (event.persisted) redrawList();
+  });
 })();

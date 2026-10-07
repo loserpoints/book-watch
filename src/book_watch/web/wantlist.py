@@ -325,7 +325,14 @@ def build_router(
 
     @router.get("/", response_class=HTMLResponse)
     def want_list(request: Request) -> HTMLResponse:
-        return render_page(request)
+        response = render_page(request)
+        # Asked for again on back, not taken from the browser's cache: in
+        # Chromium, back from a book's page showed the list as it was before
+        # that book was checked (S67, #244). "no-cache" was not enough, since
+        # back may show a cached page without revalidating it; only
+        # "no-store" makes it ask.
+        response.headers["Cache-Control"] = "no-store"
+        return response
 
     @router.get("/books/list", response_class=HTMLResponse)
     def the_list(request: Request) -> HTMLResponse:
