@@ -907,10 +907,25 @@ def test_the_switch_fetches_the_list_without_adding_history(client, three_books)
     page = client.get("/").text
 
     toggle = under_toggle(page)
-    assert 'hx-get="/books/list?show=under"' in toggle
+    assert 'hx-get="/books/list?show=under&amp;sort=added"' in toggle
     assert 'hx-replace-url="/?show=under"' in toggle
     assert "hx-push-url" not in page
     assert shown(client.get("/books/list?show=under").text) == {"Stoner"}
+
+
+def test_switching_the_filter_off_shows_every_book(client, three_books):
+    """S69: the switch is tapped on a page whose address still has the
+    filter on, so what it asks for has to win over where it was asked from.
+    A browser run of the build found the list stuck on one book."""
+    page = client.get("/?show=under").text
+    off = re.search(r'hx-get="([^"]+)"', under_toggle(page)).group(1)
+
+    answer = client.get(
+        off.replace("&amp;", "&"),
+        headers={"HX-Request": "true", "HX-Current-URL": "http://x/?show=under"},
+    ).text
+
+    assert shown(answer) == {"Stoner", "Crash", "Kindred"}
 
 
 def test_with_nothing_under_a_limit_the_switch_is_greyed_and_all_shows(

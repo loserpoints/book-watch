@@ -139,10 +139,12 @@ def wants_under(request: Request) -> bool:
 
     Asked by the address itself, or, for a piece htmx fetches from another
     path, by the address of the page it came from. That is how deleting a
-    book keeps the filter on without the delete knowing about it.
+    book keeps the filter on without the delete knowing about it. An address
+    that names a choice wins: switching the filter off is asked from a page
+    whose address still has it on.
     """
-    if request.query_params.get("show") == "under":
-        return True
+    if "show" in request.query_params:
+        return request.query_params["show"] == "under"
     current = request.headers.get("HX-Current-URL", "")
     return "show=under" in urlsplit(current).query.split("&")
 
@@ -155,8 +157,8 @@ Sort = Literal["added", "cheapest"]
 
 def wants_sort(request: Request) -> Sort:
     """The order this request is for, asked the same two ways as the filter."""
-    if request.query_params.get("sort") == "cheapest":
-        return "cheapest"
+    if "sort" in request.query_params:
+        return "cheapest" if request.query_params["sort"] == "cheapest" else "added"
     current = request.headers.get("HX-Current-URL", "")
     if "sort=cheapest" in urlsplit(current).query.split("&"):
         return "cheapest"
@@ -178,8 +180,13 @@ def views(under: bool, sort: Sort) -> dict[str, dict[str, str]]:
     the order and the order keeps the filter."""
 
     def to(new_under: bool, new_sort: Sort) -> dict[str, str]:
-        query = view_query(new_under, new_sort)
-        return {"page": "/" + query, "fetch": "/books/list" + query}
+        # The fetch names both choices, since it is asked from a page whose
+        # address still holds the old ones.
+        show = "under" if new_under else "all"
+        return {
+            "page": "/" + view_query(new_under, new_sort),
+            "fetch": f"/books/list?show={show}&sort={new_sort}",
+        }
 
     return {
         "under_on": to(True, sort),
