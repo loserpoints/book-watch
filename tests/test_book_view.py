@@ -8,6 +8,8 @@ shipping is unknown, and a currency we cannot compare said so.
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
+import pytest
+
 from book_watch.copies import Copy
 from book_watch.ebay.search import Money
 from book_watch.standing import Market, Standing
@@ -33,6 +35,28 @@ def row(copy, placed=None, ceiling=LIMIT, listed=None):
     return book_view.copy_row(
         copy, copy.against(ceiling), placed, ceiling, listed or {}
     )
+
+
+@pytest.mark.parametrize(
+    ("condition_id", "words", "tag"),
+    [
+        # Two eBay sellers' words for one grade, and AbeBooks' (S70, #247).
+        ("1000", "New", "Brand New"),
+        ("1000", "Brand New", "Brand New"),
+        ("2750", "Like New", "Like New"),
+        ("4000", "Very good", "Very Good"),
+        # A grade with no name of its own keeps the seller's words.
+        ("1500", "New other (see details)", "New other (see details)"),
+        (None, "Good", "Good"),
+        (None, None, "condition unstated"),
+    ],
+)
+def test_a_condition_tag_names_the_grade_not_the_sellers_words(
+    condition_id, words, tag
+):
+    c = row(a_copy(condition_id=condition_id, condition=words))
+
+    assert c["condition"] == tag
 
 
 def test_money_drops_cents_only_when_there_are_none():

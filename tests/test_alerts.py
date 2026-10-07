@@ -150,6 +150,22 @@ def test_the_email_names_the_book_the_price_and_both_links(morning):
     assert "https://book-watch-alan.fly.dev/book/1" in body["text"]
 
 
+def test_the_email_names_a_grade_the_way_the_page_does(morning):
+    """S70 (#247): a seller's "New" is shown as the grade's one name."""
+    with closing(morning()) as connection:
+        connection.execute(
+            "UPDATE copy SET condition = 'New', condition_id = '1000' "
+            "WHERE item_id = 'new-cheap'"
+        )
+        connection.commit()
+    resend = Resend()
+
+    notify(morning, resend)
+
+    [sent] = resend.sent
+    assert "Brand New · on eBay" in sent["json"]["text"]
+
+
 def test_a_copy_is_never_in_two_emails(morning):
     resend = Resend()
     notify(morning, resend)

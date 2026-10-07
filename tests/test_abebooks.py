@@ -426,7 +426,8 @@ def test_the_email_says_which_marketplace_a_copy_is_on(connect):
 
     _, body_html, body_text = alerts.compose([alerts.Alert(entry, copy, None)])
 
-    assert "Used - Good · on AbeBooks" in body_text
+    assert "Good · on AbeBooks" in body_text
+    assert "Used - Good" not in body_text
     assert a_copy().url in body_html
 
 

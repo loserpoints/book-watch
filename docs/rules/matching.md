@@ -24,7 +24,7 @@ These rules decide which eBay listings are copies of the book being watched, and
 - What is listed now is each marketplace's own newest search, so a search of one marketplace never hides another's copies.
 - Only eBay's listings are ever sent to eBay to ask what a seller declared. Another marketplace's declarations are stored with the search that found them.
 - One search that returns US and foreign sellers together feeds both views: everywhere shows every copy, and US-only shows the copies whose seller is in the US.
-- Condition is stored on eBay's scale whatever the marketplace, with the marketplace's own words kept beside it. AbeBooks: New is New; As New and Fine are Like New; Near Fine and Very Good are Very Good; Good is Good; Fair and Poor are Acceptable. Near Fine maps down, so a grade undersells rather than oversells. A bare Used is eBay's generic Used: it counts in the used market and shows only "Used".
+- Condition is stored on eBay's scale whatever the marketplace, with the marketplace's own words kept beside it. A copy's tag names its grade on that scale, so eBay's "New" and AbeBooks' "New" both read "Brand New", and "new" is left to copies new since the last visit. AbeBooks: New is New; As New and Fine are Like New; Near Fine and Very Good are Very Good; Good is Good; Fair and Poor are Acceptable. Near Fine maps down, so a grade undersells rather than oversells. A bare Used is eBay's generic Used, and shows only "Used".
 - AbeBooks writes a seller's country at the end of their location. A copy whose country is not recognized is shown under everywhere and never under US-only.
 
 ### Which numbers are this book
