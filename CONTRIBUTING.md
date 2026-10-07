@@ -8,7 +8,9 @@
 - eBay's developer and help pages refuse a session's requests whatever the network allows. Ask Alan to read the page, and give him the endpoint and field names from the code, never a page title from memory.
 - Measure before deciding when a choice turns on a number, and measure again when the data grows.
 - Before inventing a proxy for a signal, check whether the code already has the signal and throws it away.
-- Decide a design by looking at it on real screens at phone width, and agree beforehand how many rounds a layout gets.
+- Decide a design by looking at it on real screens at phone width.
+- Ask Alan for his ideas before each round of mocks, and mock them among the options. A round of options that leaves out Alan's idea is usually followed by one that mocks it.
+- A layout aims for three rounds. Past three, it keeps going until the design is right, and its slice records why it took more.
 - Migrations run forward only, and a rollback does not undo them. Keep a migration additive, so the previous code still works if its change is reverted.
 - Reproduce a phone or platform behavior on the phone again before building around it. S47's fallback to the browser went away once the eBay app had been opened.
 - Every step runs from a browser. Deploys and other privileged actions run in CI, with credentials in GitHub or Fly secrets. Say so before building on anything that needs a local install or a local credential.

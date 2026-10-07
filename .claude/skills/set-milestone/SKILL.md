@@ -20,7 +20,7 @@ Choose the next milestone from the open issues by one order of priority, and set
 7. Present the draft to Alan: the frame and why, the name, the goal sentence, each slice with its impact and effort, what was left out and why, and how the outcome will be checked on the phone. Stop until Alan approves. Nothing on GitHub changes before then.
 8. Turn each approved issue into a slice: keep its type label, add the `slice` label and the milestone, title it `S## · outcome` numbered on from the last slice, and rewrite its body. Close issues folded into a slice as duplicates of it.
 9. Create `docs/milestones/mNN-name/` and write `scope.md`.
-10. Create the GitHub milestone, titled like `M8 - Always current`, with the goal sentence as its description and a link to its folder on `main`. If the tools can't create milestones, ask Alan to.
+10. Create the GitHub milestone, titled like `M8 - Always current`, with the goal sentence as its description and a link to its folder on `main`. Create it with `gh api repos/loserpoints/book-watch/milestones -X POST -f title=... -f description=...`, which works in a session even when `gh auth status` reports a failed login. Assign the slices with the milestone's number.
 11. Open a pull request with the folder and `scope.md`.
 
 ## Rules
