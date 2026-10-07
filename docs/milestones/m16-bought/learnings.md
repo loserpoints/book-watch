@@ -7,6 +7,7 @@
 - S72's carets wait on a seller repricing a copy, which nothing can make happen on demand. That was found after the build, not when it was planned. [CONTRIBUTING](../../../CONTRIBUTING.md#testing)
 - S73's pressed fill showed in the browser and on the want list, but not on a copy on the phone, whose tap hands the listing to the eBay app. Desktop Chromium shows no pressed state for a touch, so the app now sets it from the touch, and a pressed look is checked on the phone. [CONTRIBUTING](../../../CONTRIBUTING.md#testing), [Design system](../../design-system.md#components)
 - Choosing M16, Alan judged the two open AbeBooks defects not bad: each is seen only now and then, and the next check undoes it. [Set milestone](../../../.claude/skills/set-milestone/SKILL.md#priority)
+- Closing M16 listed what each job had gained from the milestone, as if features changed jobs. It is the other way round: a close checks whether anything learned changes how a job is understood, and expects not. [Governance](../../governance.md#workflow)
 
 ## Carried forward
 

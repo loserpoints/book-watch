@@ -80,7 +80,7 @@ Related issues can become one slice: one is refined, and the others are closed a
 A milestone closes only once its outcome has been checked on the live app. Its close pull request is drafted on its own branch and stays open until then.
 
 1. Bring `scope.md` up to date, with a goal that says what was delivered.
-2. Ask Alan to judge the status of each job the milestone advanced, on the live app, and update `docs/jobs.md`.
+2. Check whether anything the milestone learned changes how a job or its success signal is understood. Expect not. A job is edited only when that understanding changes, or to say why a job not met is still not met. Building something for a job never changes it.
 3. Route each learning into the document that should change because of it: `CONTRIBUTING.md`, `CLAUDE.md`, the runbook, a rules or surface doc, the design system, or this file. Make the change, then record the learning in `learnings.md` with a link to where it went. A learning with nowhere to go is dropped.
 4. List the issues carried forward.
 5. Start the next milestone with the `set-milestone` skill, if one has not already started.
