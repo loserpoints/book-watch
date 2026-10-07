@@ -40,4 +40,5 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 
 ## Open issues
 
+- [One price strip on a book's page, not one per market](https://github.com/loserpoints/book-watch/issues/247)
 - [Remember which sellers I trust on condition](https://github.com/loserpoints/book-watch/issues/75)
