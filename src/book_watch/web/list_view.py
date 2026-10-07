@@ -7,9 +7,10 @@ decides anything; every verdict and number was derived in `standing`.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
-from book_watch import covers, enrichment
+from book_watch import covers, enrichment, marketplaces
+from book_watch.purchases import Purchase, total
 from book_watch.standing import Glance
 from book_watch.wantlist import Entry
 from book_watch.web import book_view, strips
@@ -160,3 +161,40 @@ def candidate(found, on_list: set[str]) -> dict:
             "cover_id": found.cover_id or "",
         },
     }
+
+
+def bought_row(purchase: Purchase, today: date | None = None) -> dict:
+    """One book bought, as `ui.bought_row` takes it (S71, #223): what was
+    paid, judged against the limit it had then, and where and when."""
+    today = today or datetime.now(UTC).date()
+    on = purchase.bought_on
+    when = f"{on:%b} {on.day}" + (f", {on.year}" if on.year != today.year else "")
+    where = (
+        marketplaces.NAMES[purchase.marketplace]
+        if purchase.marketplace
+        else purchase.shop
+    )
+    return {
+        "title": purchase.title,
+        "author": purchase.author,
+        "cover_url": covers.url(purchase.cover_id) if purchase.cover_id else None,
+        "paid_text": book_view.money(purchase.paid),
+        "verdict": purchase.verdict,
+        "limit_text": f"your limit: {book_view.money(purchase.limit)}"
+        if purchase.limit is not None
+        else "no limit set",
+        "where_when": f"on {where} · {when}",
+    }
+
+
+def bought_total(purchases: list[Purchase]) -> str | None:
+    """ "Bought · 3 books · $26.95", the folded section's label. The total is
+    left out when the books were paid for in more than one currency."""
+    if not purchases:
+        return None
+    count = len(purchases)
+    parts = ["Bought", f"{count} book{'' if count == 1 else 's'}"]
+    spent = total(purchases)
+    if spent is not None:
+        parts.append(book_view.money(spent))
+    return " · ".join(parts)

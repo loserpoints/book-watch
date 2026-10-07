@@ -13,6 +13,8 @@
 <h2 class="design-h" id="book-rows">Book rows</h2>
 <p class="muted">Every state a book on the want-list can be in. Checked with a price under, over and with no limit; a long title; maybes; checking; couldn't check; not checked yet; nothing listed; still digging; throttled. Tap anywhere on a row to open its book. The trash, "digging" and "Throttled" keep their own taps.</p>
 <ul class="ui-list">{% for b in books %}{{ ui.book_row(b) }}{% endfor %}</ul>
+<p class="muted">Below the list, folded, the books bought: paid at or under the limit, with no limit, over it at a shop, and in another year. Nothing to tap.</p>
+{% call ui.fold(bought_total) %}<ul class="ui-list">{% for b in bought %}{{ ui.bought_row(b) }}{% endfor %}</ul>{% endcall %}
 
 <h2 class="design-h" id="copy-rows">Copy rows</h2>
 <p class="muted">Under, under from abroad, over with a condition note and taking offers, the only listing, and shipping unknown with a long note. Tap a note to open it.</p>
@@ -49,6 +51,10 @@
 <div class="controls-demo">
   {{ ui.button("Add a book…", "primary", open="add-sheet") }} {{ ui.fab("Add a book", "add-sheet") }}
 </div>
+<p class="muted">The trash opens the sheet that takes a book off the list: bought, filled in from the copy last opened, or not wanted.</p>
+<div class="controls-demo">
+  <button class="icon-btn" type="button" data-open="off-sheet" aria-label="Take Stoner off the list">{{ ui.trash() }}</button>
+</div>
 <p class="muted">A two-way choice, the same everywhere: with radios for a sheet, or links and buttons for an order.</p>
 <div class="controls-demo">{{ ui.switch("way-demo", [("title", "Title & author"), ("isbn", "ISBN")], "title") }}</div>
 <div class="controls-demo">{{ ui.pair([("Cheapest", {"href": "#"}, True), ("Newest", {"href": "#"}, False)], "Order") }} {{ ui.pair([("Cheapest", {}, False), ("Added", {}, True)], "Order") }}</div>
@@ -69,6 +75,23 @@
     <p class="sheet-note">An exact edition, by its number.</p>
     {{ ui.field("sheet-isbn", "ISBN", "", inputmode="numeric", placeholder="9781590171998") }}
     <div class="sheet-actions">{{ ui.button("Add", "primary") }}</div>
+  </div>
+{% endcall %}
+
+{% call ui.sheet("off-sheet", "Take Stoner off the list") %}
+  {{ ui.switch("off", [("bought", "I bought it"), ("remove", "I don't want it")], "bought") }}
+  <div class="sheet-side" data-when="bought">
+    <p class="sheet-note">Filled in from the copy you opened 2h ago. Change anything that's different.</p>
+    <fieldset class="field"><legend>Where</legend>{{ ui.switch("where", [("ebay", "eBay"), ("abebooks", "AbeBooks"), ("other", "Elsewhere")], "ebay") }}</fieldset>
+    <div data-when="other">{{ ui.field("demo-shop", "Which shop or site", placeholder="Biblio, a bookshop…") }}</div>
+    {{ ui.field("demo-paid", "Paid, delivered", "7.80", inputmode="decimal", hint="Price and shipping together. Your limit is $8.") }}
+    {{ ui.field("demo-on", "Bought on", "2026-10-07", type="date", max="2026-10-07") }}
+    <p class="sheet-error" role="alert">That date hasn't happened yet.</p>
+    <div class="sheet-actions">{{ ui.button("Close", "ghost", close=True) }}{{ ui.button("Mark bought", "primary", close=True) }}</div>
+  </div>
+  <div class="sheet-side" data-when="remove">
+    <p class="sheet-note">It leaves the list and nothing is kept. It stops being checked.</p>
+    <div class="sheet-actions">{{ ui.button("Close", "ghost", close=True) }}{{ ui.button("Remove", "primary", close=True) }}</div>
   </div>
 {% endcall %}
 

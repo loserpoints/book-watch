@@ -472,3 +472,28 @@ def test_search_text_is_gone_rather_than_left_meaning_half_of_something(
     columns = {row[1] for row in both_kinds_of_row.execute("PRAGMA table_info(entry)")}
     assert "typed" in columns
     assert "search_text" not in columns
+
+
+def test_028_keeps_purchases_and_the_copy_last_opened(database):
+    """S71 (#223): a table for what was bought, and three columns on the entry
+    for the copy last opened. Checked by name, not by being the newest."""
+    applied = db.migrate(database)
+
+    assert "028_what_i_bought.sql" in applied
+    assert "purchase" in table_names(database)
+    columns = {row["name"] for row in database.execute("PRAGMA table_info(entry)")}
+    assert {"opened_marketplace", "opened_item_id", "opened_at"} <= columns
+
+
+def test_a_purchase_names_a_marketplace_or_a_shop_never_both(database):
+    db.migrate(database)
+    insert = (
+        "INSERT INTO purchase (title, paid, currency, marketplace, shop, bought_on) "
+        "VALUES ('Stoner', '7.80', 'USD', ?, ?, '2026-10-01')"
+    )
+
+    database.execute(insert, ("ebay", None))
+    database.execute(insert, (None, "Strand Books"))
+    for both_or_neither in (("ebay", "Strand Books"), (None, None)):
+        with pytest.raises(sqlite3.IntegrityError):
+            database.execute(insert, both_or_neither)

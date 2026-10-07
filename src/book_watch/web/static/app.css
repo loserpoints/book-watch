@@ -445,6 +445,8 @@ details.fold > summary {
 .book-row-author { color: var(--muted); font-size: var(--text-sm); }
 .book-row-price { display: grid; justify-items: end; gap: var(--space-1); }
 .row-limit { font-size: var(--text-xs); color: var(--muted); }
+/* A book bought (S71): the same row, with nothing to open. */
+.bought-row .book-row-title::after { content: none; }
 
 /* A copy for sale: price leads; the seller's claim and note run full width. */
 .copy-row {
@@ -666,6 +668,15 @@ details.daily-note > summary::-webkit-details-marker { display: none; }
 .sheet:not(:has(input[name="way"][value="isbn"]:checked)) [data-when="isbn"] {
   display: none;
 }
+/* The take-off sheet's two ways off the list, and the shop's name only for
+   Elsewhere (S71). */
+.sheet:has(input[name="off"][value="remove"]:checked) [data-when="bought"],
+.sheet:not(:has(input[name="off"][value="remove"]:checked)) [data-when="remove"],
+.sheet:not(:has(input[name="where"][value="other"]:checked)) [data-when="other"] {
+  display: none;
+}
+fieldset.field { margin: 0; padding: 0; border: 0; min-width: 0; }
+fieldset.field legend { padding: 0; color: var(--muted); font-size: var(--text-sm); }
 
 /* A bottom sheet: a modal <dialog> pinned to the foot of the screen. */
 dialog.sheet {

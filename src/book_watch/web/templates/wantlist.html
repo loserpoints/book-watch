@@ -16,4 +16,9 @@
 {% call ui.sheet("add-sheet", "Add a book", autoopen=(error or candidates)) %}
   <div id="add-sheet-body">{% include "_add_sheet.html" %}</div>
 {% endcall %}
+{#- The trash fills this with the book it was tapped on, then it opens
+    (S71, #223). -#}
+{% call ui.sheet("off-sheet", "Take this book off the list") %}
+  <div id="off-sheet-body"></div>
+{% endcall %}
 {% endblock %}

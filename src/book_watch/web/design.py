@@ -12,13 +12,17 @@ and not here is a state nobody has designed.
 
 from __future__ import annotations
 
+from datetime import date
+from decimal import Decimal
 from pathlib import Path
 
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from book_watch.web import assets, strips, tokens
+from book_watch.ebay.search import Money
+from book_watch.purchases import Purchase
+from book_watch.web import assets, list_view, strips, tokens
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
@@ -257,6 +261,66 @@ def sample_candidates() -> list[dict]:
     ]
 
 
+#: The day the samples below are judged from, so a year shows only on the
+#: one bought in another.
+TODAY = date(2026, 10, 7)
+
+
+def sample_bought() -> list[Purchase]:
+    """Bought at or under the limit, with no limit, over it from a shop, and
+    in another year (S71)."""
+
+    def usd(amount: str) -> Money:
+        return Money(Decimal(amount), "USD")
+
+    return [
+        Purchase(
+            1,
+            "The Rings of Saturn",
+            "W. G. Sebald",
+            None,
+            usd("8.40"),
+            "ebay",
+            None,
+            date(2026, 10, 3),
+            usd("9"),
+        ),
+        Purchase(
+            2,
+            "Crash",
+            "J. G. Ballard",
+            None,
+            usd("9.55"),
+            "abebooks",
+            None,
+            date(2026, 9, 23),
+            None,
+        ),
+        Purchase(
+            3,
+            "Train Dreams",
+            "Denis Johnson",
+            None,
+            usd("9"),
+            None,
+            "Strand Books",
+            date(2026, 9, 1),
+            usd("8"),
+        ),
+        Purchase(
+            4,
+            "Honored Guest",
+            "Joy Williams",
+            None,
+            usd("6.25"),
+            "ebay",
+            None,
+            date(2025, 12, 28),
+            usd("8"),
+        ),
+    ]
+
+
 def build_router() -> APIRouter:
     router = APIRouter()
     templates = Jinja2Templates(directory=TEMPLATES_DIR)
@@ -292,6 +356,8 @@ def build_router() -> APIRouter:
                 "books": sample_books(),
                 "copies": sample_copies(),
                 "candidates": sample_candidates(),
+                "bought": [list_view.bought_row(p, TODAY) for p in sample_bought()],
+                "bought_total": list_view.bought_total(sample_bought()),
                 "market_strip": strips.range_strip(SEEN, 12, width=320, height=20),
             },
         )

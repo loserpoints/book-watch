@@ -1085,3 +1085,19 @@ def test_a_row_says_its_limit_or_that_there_is_none(client, three_books):
     assert page.count("your limit: $10") == 1
     assert page.count("no limit set") == 2
     assert not re.search(r"\$[\d.]+ over", page)
+
+
+def test_a_cover_asked_for_as_its_book_leaves_the_list_is_a_404(tmp_path):
+    """The list redraws as a book is bought or removed, and its row's cover
+    may still be on its way (S71). The route answers, it doesn't fail."""
+
+    class GoneMidway(FakeCatalog):
+        def work_cover(self, work_id):
+            with closing(client.app.state.connect()) as connection:
+                connection.execute("DELETE FROM entry")
+            return super().work_cover(work_id)
+
+    client = build_client(tmp_path, GoneMidway(work_covers={CRASH.work_id: 240726}))
+    add(client, CRASH.isbn)
+
+    assert client.get("/books/1/cover", follow_redirects=False).status_code == 404

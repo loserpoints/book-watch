@@ -82,7 +82,8 @@
     the facts beside the cover and the price with its range strip on the
     right. `state` is ok, checking, failed, unchecked, maybes or none. -#}
 {#- On the real list a row carries its id, so a check can swap it back in
-    out of band (`oob`), and the trash asks before it removes (S26 B6). -#}
+    out of band (`oob`), and the trash opens the sheet that takes the book
+    off the list, bought or not wanted (S71, #223). -#}
 {#- Tapping anywhere on the row opens the book: the title's link covers it
     (S46). The trash, "digging" and "Throttled" keep their own taps. -#}
 {% macro book_row(b, oob=False) -%}
@@ -91,8 +92,8 @@
 <li class="book-row"{% if b.id %} id="entry-{{ b.id }}"{% endif %}{% if oob %} hx-swap-oob="true"{% endif %}
   {%- if b.id and b.examining == 'digging' and not b.checking %} hx-get="/books/{{ b.id }}/row" hx-trigger="every 5s" hx-swap="outerHTML"{% endif %}>
   <a class="book-row-title" href="{{ b.href }}">{{ b.title }}</a>
-  <button class="icon-btn book-row-remove" type="button" aria-label="Remove {{ b.title }}"
-    {%- if b.id %} hx-delete="/books/{{ b.id }}" hx-target="#want-list" hx-swap="outerHTML" hx-confirm="Remove {{ b.title }} from the list?"{% endif %}>{{ trash() }}</button>
+  <button class="icon-btn book-row-remove" type="button" aria-label="Take {{ b.title }} off the list"
+    {%- if b.id %} hx-get="/books/{{ b.id }}/off" hx-target="#off-sheet-body" hx-swap="innerHTML"{% endif %}>{{ trash() }}</button>
   {{ cover(b.title, b.author, b.cover_url) }}
   <div class="book-row-body">
     <div class="book-row-facts">
@@ -116,6 +117,27 @@
         {% if b.strip %}{{ b.strip }}{% endif %}
       </div>
     {% endif %}
+  </div>
+</li>
+{%- endmacro %}
+
+
+{#- One book bought (S71, #223), in the folded section below the want list:
+    what was paid, colored against the limit the book had then, and where
+    and when. Nothing to tap: the book is off the list. -#}
+{% macro bought_row(b) -%}
+<li class="book-row bought-row">
+  <span class="book-row-title">{{ b.title }}</span>
+  {{ cover(b.title, b.author, b.cover_url) }}
+  <div class="book-row-body">
+    <div class="book-row-facts">
+      {% if b.author %}<span class="book-row-author">{{ b.author }}</span>{% endif %}
+      <span class="meta">{{ b.where_when }}</span>
+    </div>
+    <div class="book-row-price">
+      {{ price(b.paid_text, b.verdict) }}
+      <span class="row-limit">{{ b.limit_text }}</span>
+    </div>
   </div>
 </li>
 {%- endmacro %}
@@ -152,7 +174,10 @@
       {%- if c.place_text %} <span class="meta">{{ c.place_text }}</span>{% else %} {{ c.place }}{% endif %}
     </div>
     <div class="copy-tags">{% if c.new %}{{ tag('new', accent=True) }}{% endif %}{{ tag(c.condition, strong=True) }}{% if c.abroad %}{{ tag('ships from ' ~ c.abroad) }}{% endif %}{% if c.takes_offers %}{{ tag('takes offers') }}{% endif %}{% if c.listed %}<span class="meta copy-listed">listed {{ c.listed }}</span>{% endif %}</div>
-    <a class="copy-listing" href="{{ c.url }}" rel="noopener noreferrer" target="_blank">{{ c.listing_title }}</a>
+    {#- `opened` tells the app which copy was opened, alongside the tap,
+        so the bought sheet can offer it (S71). The link itself goes
+        straight to the marketplace, which is what hands it to the eBay app. -#}
+    <a class="copy-listing" href="{{ c.url }}" rel="noopener noreferrer" target="_blank"{% if c.opened %} data-opened="{{ c.opened }}"{% endif %}>{{ c.listing_title }}</a>
   </div>
   {%- if dismiss %}
   <button class="icon-btn copy-dismiss" type="button" aria-label="Dismiss this copy">✕</button>
@@ -227,10 +252,14 @@
 {#- A labeled text field. The label is always visible; a hint says what the
     field is for, and an optional field says so rather than leaving it to a
     guess. -#}
-{% macro field(id, label, value="", name=None, hint=None, optional=False, inputmode=None, placeholder=None) -%}
+{#- `type` and `max` for a date, which the phone picks with its own
+    calendar (S71). -#}
+{% macro field(id, label, value="", name=None, hint=None, optional=False, inputmode=None, placeholder=None, type=None, max=None) -%}
 <div class="field">
   <label for="{{ id }}">{{ label }}{% if optional %} <span class="field-optional">(optional)</span>{% endif %}</label>
   <input id="{{ id }}" name="{{ name or id }}" value="{{ value }}" autocomplete="off"
+    {%- if type %} type="{{ type }}"{% endif %}
+    {%- if max %} max="{{ max }}"{% endif %}
     {%- if inputmode %} inputmode="{{ inputmode }}"{% endif %}
     {%- if placeholder %} placeholder="{{ placeholder }}"{% endif %}
     {%- if hint %} aria-describedby="{{ id }}-hint"{% endif %}>
