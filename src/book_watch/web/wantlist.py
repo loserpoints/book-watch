@@ -554,28 +554,32 @@ def build_router(
             with closing(open_database()) as connection:
                 next_book = wantlist.get(connection, queue[0])
                 next_glance = standing.glance(connection, next_book)
-        return list_changed(templates.TemplateResponse(
-            request,
-            "_checked.html",
-            {
-                "book": book,
-                "glance": glance,
-                "state": state,
-                "throttled": throttled([b for b in (book, next_book) if b]),
-                "next_book": next_book,
-                "next_glance": next_glance,
-                "next_id": queue[0] if queue else None,
-                "queue": queue[1:],
-                "remaining": len(queue),
-                "force": force,
-                # Carried along the chain rather than recounted, because each
-                # step is a separate request and knows only what it was told.
-                "done": done,
-                "message": (
-                    None if queue else f"Checked {done} book{'' if done == 1 else 's'}."
-                ),
-            },
-        ))
+        return list_changed(
+            templates.TemplateResponse(
+                request,
+                "_checked.html",
+                {
+                    "book": book,
+                    "glance": glance,
+                    "state": state,
+                    "throttled": throttled([b for b in (book, next_book) if b]),
+                    "next_book": next_book,
+                    "next_glance": next_glance,
+                    "next_id": queue[0] if queue else None,
+                    "queue": queue[1:],
+                    "remaining": len(queue),
+                    "force": force,
+                    # Carried along the chain rather than recounted, because each
+                    # step is a separate request and knows only what it was told.
+                    "done": done,
+                    "message": (
+                        None
+                        if queue
+                        else f"Checked {done} book{'' if done == 1 else 's'}."
+                    ),
+                },
+            )
+        )
 
     @router.get(BAR_PATH, response_class=HTMLResponse)
     def the_bar(request: Request, walking: int = 0) -> HTMLResponse:
@@ -587,7 +591,7 @@ def build_router(
             stale = out_of_date(connection, books)
         return templates.TemplateResponse(
             request,
-            "_list_bar.html",
+            "_list_bar_contents.html",
             {
                 "total": len(books),
                 "stale": stale,
@@ -616,19 +620,21 @@ def build_router(
             # Doing nothing is the correct answer and it still has to be said.
             # Silence here reads as a broken button, and every book being
             # inside the hour gate is exactly why nothing happened.
-            # The header said a book needed checking, or this wasn't asked
-            # for, so it is told to look again.
-            return list_changed(templates.TemplateResponse(
-                request,
-                "_runner.html",
-                {
-                    "next_id": None,
-                    "message": (
-                        "Everything is current — every book was checked "
-                        "within the hour."
-                    ),
-                },
-            ))
+            # The header offered a check it didn't need, so it was out of
+            # date. It is told to look again.
+            return list_changed(
+                templates.TemplateResponse(
+                    request,
+                    "_runner.html",
+                    {
+                        "next_id": None,
+                        "message": (
+                            "Everything is current — every book was checked "
+                            "within the hour."
+                        ),
+                    },
+                )
+            )
         # Nothing has been checked yet, so there is no finished row — only
         # the first book moving into its checking state and a runner aimed at
         # that same book. Aiming it at the second is how the first was

@@ -17,7 +17,8 @@ The want list shows every book I'm watching and whether any copy is worth my att
 - "Throttled" when that work is waiting because the day's Open Library requests are used up. Tapping it explains.
 - A row's state when there is no price: Checking…, Couldn't check just now, Not checked yet, 2 maybes, or 0 listed.
 - A switch between all the books and those with a copy under their limit: "All · Under limit". "Under limit" is greyed out when no book has a copy under its limit.
-- Whether any books need checking: "Update 2", or "All current".
+- Whether any books need checking: "Update 2", or "All current". It counts down as books are checked, and keeps up after adding a book and when a book's copies finish being examined.
+- Update and Check all greyed out while a check is running.
 - Under those buttons, only when something is wrong with the daily check: "Daily check failed", "Daily check throttled" or "Daily check didn't run". Tapping it says when and why.
 - "Nothing on the list yet" when the list is empty.
 
