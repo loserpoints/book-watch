@@ -541,8 +541,12 @@ button.copy-photo, details.copy-note, .copy-dismiss, .copy-row details.move { po
 /* Pressed (S73): the phone's own highlight lit only the link's box, the
    title, whatever part of the row was tapped. A row being pressed fills with
    the sheet color edge to edge instead, on both screens. A tap on one of the
-   row's own controls doesn't press the row. */
+   row's own controls doesn't press the row. `.pressed` is set by ui.js from
+   the touch itself, since a copy's tap hands the listing to the eBay app
+   before :active was seen to draw. */
 .book-row, .copy-row { -webkit-tap-highlight-color: transparent; }
+.book-row.pressed,
+.copy-row.pressed,
 .book-row:has(.book-row-title:active),
 .copy-row:has(.copy-listing:active) {
   background: var(--surface);

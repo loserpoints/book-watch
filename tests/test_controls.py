@@ -286,8 +286,23 @@ def test_a_row_being_pressed_fills_on_both_screens():
 
     for row, link in ((".book-row", ".book-row-title"), (".copy-row", ".copy-listing")):
         assert "-webkit-tap-highlight-color: transparent" in rules[row]
-        pressed = rules[f"{row}:has({link}:active)"]
-        assert "background: var(--surface)" in pressed
+        for pressed in (f"{row}:has({link}:active)", f"{row}.pressed"):
+            assert "background: var(--surface)" in rules[pressed], pressed
+
+
+def test_the_app_presses_a_row_from_the_touch_itself():
+    """A copy's tap hands the listing to the eBay app before the browser's
+    own pressed state was seen on the phone (S73, #190). ui.js presses the
+    row when a finger lands on its link, on either screen, and holds it long
+    enough to see."""
+    script = (
+        Path(__file__).parent.parent / "src/book_watch/web/static/ui.js"
+    ).read_text()
+
+    assert '"pointerdown"' in script
+    assert '.closest(".book-row-title, .copy-listing")' in script
+    assert 'classList.add("pressed")' in script
+    assert re.search(r"PRESS_MS = \d+", script)
 
 
 def test_a_copy_row_gets_the_focus_ring_its_link_would():
