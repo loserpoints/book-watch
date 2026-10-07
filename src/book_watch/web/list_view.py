@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 
-from book_watch import covers, enrichment, marketplaces
+from book_watch import covers, enrichment, marketplaces, moves
 from book_watch.purchases import Purchase, total
 from book_watch.standing import Glance
 from book_watch.wantlist import Entry
@@ -123,9 +123,13 @@ def _price(entry: Entry, glance: Glance) -> dict:
             width=ROW_STRIP_WIDTH,
             symbol=book_view.SYMBOLS.get(cheapest.currency, ""),
         )
+    moved = moves.of_from(entry, cheapest)
     return {
         "price_text": book_view.money(cheapest),
         "verdict": verdict,
+        # Which way the latest check moved it, and from what (S72).
+        "move": moved.direction if moved else None,
+        "was_text": book_view.money(moved.was) if moved else None,
         "strip": strip,
         # Where "$X over" was (S61): the limit itself, or that there is none.
         "limit_text": f"your limit: {book_view.money(ceiling)}"

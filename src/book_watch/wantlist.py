@@ -68,6 +68,10 @@ class Entry:
     #: against `looked_at` on the want-list.
     looked_at: str | None = None
     looked_before: str | None = None
+    #: The "from" price just before the latest check (S72), or None when
+    #: there was none or no check has noted it.
+    checked_from: str | None = None
+    checked_from_currency: str | None = None
     #: The work's cover id, and when anybody asked. See migration 018 for why
     #: those are three states and not two.
     work_cover: int | None = None
@@ -102,6 +106,16 @@ class Entry:
             return None
         try:
             return Money(Decimal(self.ceiling), self.ceiling_currency)
+        except InvalidOperation:
+            return None
+
+    @property
+    def from_before_check(self) -> Money | None:
+        """The "from" price just before the latest check, or None (S72)."""
+        if self.checked_from is None or self.checked_from_currency is None:
+            return None
+        try:
+            return Money(Decimal(self.checked_from), self.checked_from_currency)
         except InvalidOperation:
             return None
 
@@ -210,6 +224,8 @@ SELECT entry.id,
        entry.ceiling_currency,
        entry.looked_at,
        entry.looked_before,
+       entry.checked_from,
+       entry.checked_from_currency,
        work.title,
        work.author,
        work.resolved_at,
@@ -497,6 +513,8 @@ def _to_entry(row: sqlite3.Row) -> Entry:
         ceiling_currency=row["ceiling_currency"],
         looked_at=row["looked_at"],
         looked_before=row["looked_before"],
+        checked_from=row["checked_from"],
+        checked_from_currency=row["checked_from_currency"],
         work_cover=row["work_cover"],
         cover_asked_at=row["cover_asked_at"],
         edition_cover=row["edition_cover"],

@@ -8,6 +8,26 @@
 (function () {
   "use strict";
 
+  // An open "Was $12.40" box under a price's caret closes on the next tap
+  // anywhere, and that tap does nothing else (S72, #164): a tap that lands on
+  // a row would otherwise open the book, or a listing, while the person only
+  // meant to put the box away. A tap on its own caret closes it as usual.
+  // Capturing, so it runs before the link, htmx or any other handler.
+  document.addEventListener(
+    "click",
+    function (event) {
+      var open = document.querySelectorAll("details.move[open]");
+      if (!open.length) return;
+      var target = event.target instanceof Element ? event.target : null;
+      var own = target && target.closest("details.move[open] > summary");
+      if (own) return;
+      event.preventDefault();
+      event.stopPropagation();
+      Array.prototype.forEach.call(open, function (box) { box.open = false; });
+    },
+    true
+  );
+
   // [data-open="id"] opens the <dialog id="id"> as a modal. The browser then
   // handles focus, Escape and the Android back gesture, and returns focus to
   // the opener when it closes.

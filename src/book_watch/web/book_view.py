@@ -18,6 +18,7 @@ from markupsafe import Markup
 from book_watch import marketplaces
 from book_watch.copies import Copy, Verdict
 from book_watch.ebay.search import Money
+from book_watch.moves import Move
 from book_watch.standing import Market, Standing
 from book_watch.web import strips
 from book_watch.web.filters import since
@@ -50,11 +51,17 @@ def copy_row(
     ceiling: Money | None,
     listed: Prices,
     new: bool = False,
+    moved: Move | None = None,
 ) -> dict:
-    """One copy, as `ui.copy_row` takes it."""
+    """One copy, as `ui.copy_row` takes it. A new copy carries no caret: its
+    earlier price is not one I saw (S72)."""
     delivered = copy.landed_cost
     place = _place(copy, placed, listed)
+    if new:
+        moved = None
     return {
+        "move": moved.direction if moved else None,
+        "was_text": money(moved.was) if moved else None,
         "url": copy.url,
         "marketplace": copy.marketplace,
         "marketplace_name": marketplaces.NAMES[copy.marketplace],

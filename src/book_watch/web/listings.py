@@ -33,6 +33,7 @@ from book_watch import (
     copies,
     covers,
     enrichment,
+    moves,
     standing,
     sweeps,
     wantlist,
@@ -257,6 +258,8 @@ def build_router(
             # which is a wider question — and both come from one derivation of
             # the edition set, so there is no second one to disagree with it.
             for_sale, seen = copies.populations(connection, book, scope=scope)
+            # Which way the latest check moved each copy's price (S72).
+            moved = moves.of_copies(connection, book.work_id)
             placed = standing.standings(for_sale, seen)
             abebooks_outcome = (
                 abebooks.last_outcome(connection, book.work_id)
@@ -302,6 +305,7 @@ def build_router(
                     ceiling,
                     listed_prices,
                     new=copies.is_new(copy, since),
+                    moved=moved.get(copy.key),
                 )
                 # Which copy was opened, for the bought sheet (S71, #223).
                 | {

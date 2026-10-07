@@ -35,6 +35,13 @@ These rules decide what a copy costs, whether it is under a book's limit, and wh
 - A copy without a delivered price is not ranked, and says why. A copy with no stated condition is ranked like any other.
 - A range is drawn only when it holds at least two different prices.
 
+### Moves
+
+- Each check notes a book's "from" price just before it stores anything. Stores within ten minutes of each other, eBay's and AbeBooks', for US sellers and everywhere, are one check and share one note. Only a US search takes it, since only US copies feed the want list.
+- The want list compares the "from" price now with that note. Lower is a move down and higher a move up, by any amount. The same price, no note, or no price before or now is no move. The next check that leaves the price where it was clears the move.
+- Copies examined after the search count toward the same check.
+- A copy moved when the latest check that saw it changed its delivered price, read from its price history. A copy whose shipping isn't known on either side has no move. A copy new since the last visit shows as new, not moved.
+
 ### Order
 
 - The want-list shows each book's cheapest certain copy, new or used. When copies are listed in more than one currency, a currency with a copy under the limit leads; otherwise the one with the most copies listed.

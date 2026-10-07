@@ -2,7 +2,7 @@
 
 ## Goal
 
-I can mark a book bought and keep a record of what I paid and where, see which copies have dropped in price since I last looked, and tap anywhere on a copy to open it.
+I can mark a book bought and keep a record of what I paid and where, see which way the last check moved a book's price or a copy's, and tap anywhere on a copy to open it.
 
 ## Jobs advanced
 
@@ -14,5 +14,5 @@ I can mark a book bought and keep a record of what I paid and where, see which c
 ## Slices
 
 - [S71 · A book can be marked bought, and joins a record of what I've bought](https://github.com/loserpoints/book-watch/issues/223)
-- [S72 · A copy that has dropped in price since I last looked says so](https://github.com/loserpoints/book-watch/issues/164)
+- [S72 · A price that moved at the last check shows which way](https://github.com/loserpoints/book-watch/issues/164)
 - [S73 · Tapping anywhere on a copy opens its listing, and the whole row lights up](https://github.com/loserpoints/book-watch/issues/190)

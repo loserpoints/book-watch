@@ -134,6 +134,14 @@ def store(
     copy that stopped appearing is left where it is, pointing at the last
     sweep that saw it. Returns the sweep id.
     """
+    if scope == "us":
+        # Before anything is written, the want list's "from" price as it
+        # stands, for the caret that says which way this check moved it
+        # (S72). Only US sweeps feed the want list. Imported here because
+        # `moves` reads the store through modules that import this one.
+        from book_watch import moves
+
+        moves.before_check(connection, work_id, datetime.now(UTC))
     sweep_id = connection.execute(
         "INSERT INTO sweep (work_id, asked_for, total_matching, scope, marketplace) "
         "VALUES (?, ?, ?, ?, ?) RETURNING id",
