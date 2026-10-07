@@ -37,7 +37,9 @@ Before any code, check that a slice covers what its outcome means to the person 
 
 - A screen change is planned from mocks, never from a description alone.
 - Mocks are rendered by the app itself, with every case the slice handles seeded: each state, the edges, and real-looking amounts. A drawing made apart from the app misses what the app's layout and data do.
+- Before each round, ask Alan for his ideas, and mock them among the options.
 - Each mock is shown at 360px in both themes, with the trade-off of each option stated.
+- A layout aims for three rounds. Past three, keep going until it's right, and record in the slice why it took more.
 - The app runs locally only through `scripts/serve_local.py`, which fakes eBay's search and refuses every request. This environment holds real eBay keys, and the app as built for production searches eBay when a page opens.
 
 ### Scope
