@@ -11,12 +11,12 @@ The want list shows every book I'm watching and whether any copy is worth my att
 - The cheapest copy's delivered price, as "from $10.49". It is green with ✓ when under the book's limit, and red when over (see [pricing](../rules/pricing.md)).
 - The book's limit under the price, "your limit: $10", or "no limit set".
 - A strip of every asking price seen, when there are at least two different prices. Each dot is green at or under the limit and red over it, with green on top, or blue with no limit. A blue line marks the limit only when it falls among the prices.
-- How many copies are listed, how many are new since the book was last opened, and how long ago it was checked: "3 listed · 2 new · checked 2h".
+- How many copies are listed, how many are new since the book was last opened, and how long ago it was checked: "3 listed · 2 new · checked 2h". Both count the same copies, so new is never more than listed.
 - When the book was added: "added 3w".
-- "digging" while the app is working out which copies are this book. The row updates itself when that finishes. Tapping it explains.
+- "digging" in place of the counts from the moment a book is checked until its copies have been examined, with its last price kept meanwhile. The row updates itself when that finishes. Tapping it explains.
 - "Throttled" when that work is waiting because the day's Open Library requests are used up. Tapping it explains.
-- A row's state when there is no price: Checking…, Couldn't check just now, Not checked yet, 2 maybes, or 0 listed.
-- A switch between all the books and those with a copy under their limit: "All · Under limit". "Under limit" is greyed out when no book has a copy under its limit.
+- A row's state when there is no price: Couldn't check just now, Not checked yet, 2 maybes, or 0 listed.
+- A switch between all the books and those with a copy under their limit: "All · Under limit". "Under limit" is greyed out when no book has a copy under its limit. With it on, a book joins or leaves the list once a check and its digging finish.
 - Whether any books need checking: "Update 2", or "All current". It counts down as books are checked, and keeps up after adding a book and when a book's copies finish being examined.
 - The whole list drawn again on going back to it, and on coming back to the app after a minute or more away, unless a check is running.
 - Update and Check all greyed out while a check is running.

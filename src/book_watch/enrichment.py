@@ -175,7 +175,16 @@ def enrich(
         _in_progress.add(work_id)
     try:
         with connect() as connection:
-            return _run(connection, work_id, declarations_for, resolver_for)
+            # Again when copies arrived while it ran, from a check made
+            # meanwhile: their sweep cleared the mark this pass would set, and
+            # setting it would leave them unexamined until some later check
+            # happened to find new copies (S68, #240). Bounded, since a pass
+            # that keeps being overtaken has a bigger problem than this.
+            for _ in range(_GO_AGAIN):
+                result = _run(connection, work_id, declarations_for, resolver_for)
+                if result.stopped_because != "copies arrived":
+                    return result
+            return result
     finally:
         with _guard:
             _in_progress.discard(work_id)
@@ -193,6 +202,9 @@ def _run(
     if title is None:
         return Pass(stopped_because="no such book")
 
+    # What this pass is about to examine. A copy not here at the end arrived
+    # while it ran.
+    before = _copy_keys(connection, work_id)
     declarations = declarations_for(connection)
     examined = 0
     identified = False
@@ -323,6 +335,10 @@ def _run(
         recaptured += 1
     connection.commit()
 
+    if _copy_keys(connection, work_id) - before:
+        return Pass(
+            examined, resolved, recaptured=recaptured, stopped_because="copies arrived"
+        )
     connection.execute(
         "UPDATE work SET enriched_at = datetime('now') WHERE id = ?", (work_id,)
     )
@@ -337,6 +353,20 @@ def _run(
         completed=True,
         identified=identified,
     )
+
+
+#: How many times one pass goes round for copies that arrived while it ran.
+_GO_AGAIN = 3
+
+
+def _copy_keys(connection: sqlite3.Connection, work_id: int) -> set[tuple[str, str]]:
+    """Every copy this book has, by marketplace and id."""
+    return {
+        (row["marketplace"], row["item_id"])
+        for row in connection.execute(
+            "SELECT marketplace, item_id FROM copy WHERE work_id = ?", (work_id,)
+        )
+    }
 
 
 def _declared_elsewhere(connection: sqlite3.Connection, work_id: int) -> set[str]:

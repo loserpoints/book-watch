@@ -195,4 +195,14 @@
   window.addEventListener("pageshow", function (event) {
     if (event.persisted) redrawList();
   });
+
+  // With "Under limit" on, a check can change which books belong in the
+  // list, and redrawing one row at a time can't add or remove one. So the
+  // list draws itself again when the list changes, once no check is running
+  // (S68, #240).
+  document.body.addEventListener("list-changed", function () {
+    if (new URLSearchParams(window.location.search).get("show") === "under") {
+      redrawList();
+    }
+  });
 })();

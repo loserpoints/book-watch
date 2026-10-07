@@ -193,6 +193,45 @@ def test_a_finished_pass_is_recorded_so_the_want_list_stops_saying_so(database):
     assert row["enriched_at"] is not None
 
 
+def test_copies_that_arrive_during_a_pass_are_examined_too(database):
+    """S68 (#240): a check made while a pass ran stored copies the pass had
+    not listed, and the pass then marked the book done. Those copies stayed
+    unexamined, and out of the counts, until some later check."""
+    _, connection = database
+    a_copy(connection, "v1|1|0")
+
+    class ACheckMeanwhile(CountingDetail):
+        def declared_by(self, item_id):
+            if not self.asked:
+                a_copy(connection, "v1|2|0")
+            return super().declared_by(item_id)
+
+    detail = ACheckMeanwhile({})
+
+    result, _ = run(database, detail, {})
+
+    assert result.completed
+    assert sorted(detail.asked) == ["v1|1|0", "v1|2|0"]
+    row = connection.execute("SELECT enriched_at FROM work WHERE id = 1").fetchone()
+    assert row["enriched_at"] is not None
+
+
+def test_a_pass_overtaken_every_time_stops_without_claiming_it_finished(database):
+    _, connection = database
+    a_copy(connection, "v1|1|0")
+
+    class ACheckEveryTime(CountingDetail):
+        def declared_by(self, item_id):
+            a_copy(connection, f"v1|new{len(self.asked)}|0")
+            return super().declared_by(item_id)
+
+    result, _ = run(database, ACheckEveryTime({}), {})
+
+    assert result.stopped_because == "copies arrived"
+    row = connection.execute("SELECT enriched_at FROM work WHERE id = 1").fetchone()
+    assert row["enriched_at"] is None
+
+
 def test_a_second_pass_learns_nothing_new_and_asks_ebay_nothing(database):
     """Everything a pass learns is written down, so the next one is free.
 

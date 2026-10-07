@@ -41,7 +41,10 @@ def a_glance(**extra):
 def test_the_states_are_kept_apart():
     entry = an_entry()
     assert list_view.row(entry, None)["state"] == "unchecked"
-    assert list_view.row(entry, a_glance(), "checking")["state"] == "checking"
+    # Being checked is working, not a state of its own (S68, #240): the row
+    # keeps what it knew, and says "digging" in place of its counts.
+    checking = list_view.row(entry, a_glance(), "checking")
+    assert (checking["working"], checking["state"]) == (True, "none")
     assert list_view.row(entry, a_glance(), "failed")["state"] == "failed"
     assert list_view.row(entry, a_glance())["state"] == "none"
     maybes = list_view.row(entry, a_glance(uncertain=2))
@@ -77,3 +80,34 @@ def test_the_cheapest_leads_and_the_strip_draws_every_price_seen():
 
 def test_years_once_a_year_has_passed():
     assert since(datetime.now(UTC) - timedelta(days=800)) == "2y"
+
+
+def test_a_digging_row_keeps_its_last_price_and_hides_its_counts():
+    """S68 (#240): counts are not true until the copies are examined, so the
+    row works in their place. The last price stays meanwhile."""
+    market = Market(listed=3, seen=3, low=usd("10"), high=usd("12"))
+    glance = a_glance(
+        listed=3,
+        headline=Headline(market=market, cheapest=usd("10"), verdict="no ceiling"),
+    )
+
+    row = list_view.row(an_entry(), glance, "checking")
+
+    assert row["working"] is True
+    assert row["price_text"] == "$10"
+
+
+def test_listed_counts_every_copy_new_counts():
+    """S68 (#240): "listed" counted only copies with a delivered price, and
+    "new" every certain copy, so a row could read "17 listed · 18 new"."""
+    market = Market(listed=17, seen=17, low=usd("10"), high=usd("30"))
+    glance = a_glance(
+        listed=18,
+        new=18,
+        headline=Headline(market=market, cheapest=usd("10"), verdict="no ceiling"),
+    )
+
+    row = list_view.row(an_entry(), glance)
+
+    assert row["new"] <= row["listed"]
+    assert row["listed"] == 18

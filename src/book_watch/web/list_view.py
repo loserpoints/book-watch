@@ -51,6 +51,10 @@ def row(
     which of the facts S26 kept apart this is — never one said in another's
     words: nobody has looked, nothing is listed, copies are listed but none
     can be compared, only maybes, and here is the cheapest.
+
+    **One working state** (S68, #240). From the moment its book is searched
+    until its copies are examined, a row says "digging" in place of its
+    counts, which are not true until then, and keeps its last price.
     """
     values = {
         "id": entry.id,
@@ -61,8 +65,10 @@ def row(
         "added": since(added(entry)),
         "examining": examining(entry, throttled),
         "state": "unchecked",
+        "checking": state == "checking",
     }
-    if state in ("checking", "failed"):
+    values["working"] = values["checking"] or values["examining"] == "digging"
+    if state == "failed":
         return {**values, "state": state}
     if glance is None or glance.checked is None:
         return values
@@ -72,7 +78,9 @@ def row(
         return {
             **values,
             "state": "ok",
-            "listed": lead.market.listed,
+            # Every certain copy, as "new" counts, so new is never more than
+            # listed. A copy with no delivered price is listed, unranked.
+            "listed": glance.listed,
             "new": glance.new,
             **_price(entry, glance),
         }

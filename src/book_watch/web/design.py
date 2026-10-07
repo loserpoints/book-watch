@@ -55,6 +55,7 @@ def sample_books() -> list[dict]:
             "checked": "2h",
             "added": "2d",
             "examining": "digging",
+            "working": True,
             "price_text": "$18",
             "verdict": "over",
             "strip": strips.range_strip([18, 19.5, 21, 22, 24, 26, 29, 31, 36], 15),
@@ -100,7 +101,9 @@ def sample_books() -> list[dict]:
             **base,
             "title": "The Quick and the Dead",
             "author": "Joy Williams",
-            "state": "checking",
+            "state": "unchecked",
+            "checking": True,
+            "working": True,
             "added": "just now",
         },
         {

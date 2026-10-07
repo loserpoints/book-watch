@@ -206,6 +206,20 @@ def build_router(
             if sweeps.due_for_sweep(connection, book.work_id, scope="us")
         )
 
+    def hidden_digging(books: list, under_ids: set[int], under: bool) -> bool:
+        """Whether a book the "Under limit" filter hides is digging. It has no
+        row to ask for itself, so the list asks instead until none is, and may
+        then show it (S68, #240)."""
+        return (
+            under
+            and bool(under_ids)
+            and any(
+                list_view.examining(book) == "digging"
+                for book in books
+                if book.id not in under_ids
+            )
+        )
+
     def render_list(
         request: Request,
         *,
@@ -238,6 +252,7 @@ def build_router(
                 "under_ids": under_ids,
                 # Nothing under a limit shows everything, never an empty list.
                 "filtering": under and bool(under_ids),
+                "hidden_digging": hidden_digging(books, under_ids, under),
             },
         )
 
@@ -276,6 +291,9 @@ def build_router(
                 "daily": morning,
                 "under_ids": under_ids,
                 "filtering": wants_under(request) and bool(under_ids),
+                "hidden_digging": hidden_digging(
+                    books, under_ids, wants_under(request)
+                ),
                 # The book just added, which starts checking itself on load.
                 # Adding a book is an explicit act, so this is not an
                 # exception to "nothing sweeps on page load" — and it means a
