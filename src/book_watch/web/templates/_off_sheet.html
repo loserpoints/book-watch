@@ -16,7 +16,7 @@
     {{ ui.switch("where", [("ebay", "eBay"), ("abebooks", "AbeBooks"), ("other", "Elsewhere")], where) }}
   </fieldset>
   <div data-when="other">{{ ui.field("bought-shop", "Which shop or site", shop, name="shop", placeholder="Biblio, a bookshop…") }}</div>
-  {{ ui.field("bought-paid", "Paid, delivered", paid, name="paid", inputmode="decimal", placeholder="7.80", hint="Price and shipping together." ~ (" Your limit is %s." % limit_text if limit_text else "")) }}
+  {{ ui.field("bought-paid", "Paid, delivered", paid, name="paid", inputmode="decimal", placeholder="e.g. 10.99", hint="Price and shipping together." ~ (" Your limit is %s." % limit_text if limit_text else "")) }}
   {{ ui.field("bought-on", "Bought on", bought_on, name="bought_on", type="date", max=today) }}
   {% if error %}<p class="sheet-error" role="alert">{{ error }}</p>{% endif %}
   <p class="sheet-note">It leaves the list and joins what you've bought below it. It stops being checked.</p>
