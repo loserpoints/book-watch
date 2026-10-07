@@ -1839,3 +1839,78 @@ def test_buying_records_the_purchase_and_removes_the_entry_together(book_client)
         assert row["bought_on"] == "2026-10-01"
         gone = connection.execute("SELECT count(*) FROM entry WHERE id = 1")
         assert gone.fetchone()[0] == 0
+
+
+# --- which way the latest check moved a price (S72, #164) -------------------
+
+
+def a_repriced_book(book_client):
+    """Stoner, checked twice through Check all, the second time a day later
+    with its cheapest copy $1.75 cheaper and another $0.50 dearer."""
+    prices = {"0": "8.25", "1": "12.00", "2": "14.00"}
+
+    def search(query, limit, **_):
+        return [
+            a_listing(
+                item_id=f"{ISBN}|{n}",
+                title="Stoner a fine copy",
+                price=Money(Decimal(price), "USD"),
+                shipping_cost=Money(Decimal("0.00"), "USD"),
+                condition_id="5000",
+            )
+            for n, price in prices.items()
+        ]
+
+    client = book_client(search)
+    add_book(client, ISBN, "Stoner")
+    client.post("/book/1/ceiling", data={"ceiling": "8", "currency": "USD"})
+    follow(client, "/books/check?force=1")
+    all_certain(client)
+    with closing(client.app.state.connect()) as connection:
+        connection.execute("UPDATE sweep SET at = datetime(at, '-1 day')")
+        connection.execute(
+            "UPDATE entry SET checked_from_at = datetime('now', '-1 day')"
+        )
+        connection.execute("UPDATE entry SET looked_at = datetime('now', '-2 day')")
+    prices.update({"0": "6.50", "1": "12.50"})
+    follow(client, "/books/check?force=1")
+    return client
+
+
+ISBN = "9781590171998"
+
+
+def test_the_want_list_shows_which_way_the_check_moved_the_from_price(book_client):
+    client = a_repriced_book(book_client)
+
+    page = visible(client.get("/").text)
+
+    assert "from $6.50 (under your limit) Down at the last check" in page
+    assert "Was $8.25" in page
+    assert page.count("at the last check") == 1
+
+
+def test_a_book_page_shows_which_way_the_check_moved_each_copy(book_client):
+    client = a_repriced_book(book_client)
+
+    page = visible(client.get("/book/1").text)
+
+    assert "$6.50 (under your limit) Down at the last check" in page
+    assert "$12.50 (over your limit) Up at the last check" in page
+    assert "Was $8.25" in page
+    assert "Was $12 " in page
+    assert page.count("at the last check") == 2
+
+
+def test_a_new_copy_carries_no_caret(book_client):
+    client = a_repriced_book(book_client)
+    with closing(client.app.state.connect()) as connection:
+        # Every copy first seen after the visit before this one: all new.
+        connection.execute("UPDATE entry SET looked_at = datetime('now', '-30 day')")
+        connection.execute(
+            "UPDATE copy SET first_seen_at = datetime('now'), listed_at = NULL"
+        )
+
+    page = visible(client.get("/book/1").text)
+
+    assert "at the last check" not in page

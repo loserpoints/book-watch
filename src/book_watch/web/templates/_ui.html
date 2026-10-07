@@ -57,6 +57,16 @@
 {%- endmacro %}
 
 
+{#- Which way the latest check moved a price, as a caret in the price's own
+    color (S72, #164): ▾ down, ▴ up. Tapping it says what the price was, in
+    a small box that a tap anywhere closes. -#}
+{% macro move(direction, was_text, verdict=None) -%}
+{%- if direction -%}
+<details class="explain move move-{{ verdict or 'plain' }}"><summary aria-label="{{ 'Down' if direction == 'down' else 'Up' }} at the last check">{{ '▾' if direction == 'down' else '▴' }}</summary><p class="explain-text">Was {{ was_text }}</p></details>
+{%- endif -%}
+{%- endmacro %}
+
+
 {% macro tag(text, strong=False, accent=False) -%}
 <span class="tag{% if strong %} tag-strong{% endif %}{% if accent %} tag-accent{% endif %}">{{ text }}</span>
 {%- endmacro %}
@@ -111,7 +121,7 @@
     </div>
     {% if b.state == 'ok' and b.price_text %}
       <div class="book-row-price">
-        {{ price(b.price_text, b.verdict, prefix="from ") }}
+        <span class="price-line">{{ price(b.price_text, b.verdict, prefix="from ") }}{{ move(b.move, b.was_text, b.verdict) }}</span>
         {%- if b.limit_text %}<span class="row-limit">{{ b.limit_text }}</span>{% endif %}
         {#- One price is a point, not a shape, and draws no strip. -#}
         {% if b.strip %}{{ b.strip }}{% endif %}
@@ -170,7 +180,7 @@
         so the marketplace is said here instead (S66). -#}
     {%- if c.marketplace_name %}<span class="sr-only">On {{ c.marketplace_name }}.</span>{% endif %}
     <div class="copy-price">
-      {{- price(c.price_text ~ (' + shipping?' if c.shipping_unknown else ''), c.verdict) }}
+      {{- price(c.price_text ~ (' + shipping?' if c.shipping_unknown else ''), c.verdict) }}{{ move(c.move, c.was_text, c.verdict) }}
       {%- if c.place_text %} <span class="meta">{{ c.place_text }}</span>{% else %} {{ c.place }}{% endif %}
     </div>
     <div class="copy-tags">{% if c.new %}{{ tag('new', accent=True) }}{% endif %}{{ tag(c.condition, strong=True) }}{% if c.abroad %}{{ tag('ships from ' ~ c.abroad) }}{% endif %}{% if c.takes_offers %}{{ tag('takes offers') }}{% endif %}{% if c.listed %}<span class="meta copy-listed">listed {{ c.listed }}</span>{% endif %}</div>

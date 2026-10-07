@@ -336,6 +336,35 @@ details.digging > summary {
 .price-over { color: var(--over); }
 .price-plain { color: var(--fg); }
 
+/* Which way the latest check moved a price (S72): a caret in the price's own
+   color and figure font. Its tap target reaches 44px by padding pulled back
+   with a negative margin, so it takes no room in the row. "Was $12.40" opens
+   in a small box under it; ui.js closes it on the next tap anywhere. */
+.price-line { display: inline-flex; align-items: baseline; gap: var(--space-1); }
+details.move { position: relative; z-index: 2; display: inline-block; }
+details.move[open] { display: inline-block; }
+details.move > summary {
+  display: inline-block;
+  padding: var(--space-3) var(--space-4);
+  margin: calc(-1 * var(--space-3)) calc(-1 * var(--space-4));
+  font-family: var(--font-figure);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  text-decoration: none;
+}
+.move-under > summary { color: var(--under); }
+.move-over > summary { color: var(--over); }
+.move-plain > summary { color: var(--fg); }
+details.move > .explain-text {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin: 0;
+  white-space: nowrap;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
 /* Strips: dots on one scale, the limit as a line among them. */
 .strip { display: block; overflow: visible; }
 .strip-axis { stroke: var(--line); }
