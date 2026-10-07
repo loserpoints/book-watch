@@ -1382,6 +1382,16 @@ def test_a_row_that_finishes_digging_tells_the_header(book_client, monkeypatch):
     assert done.headers.get("HX-Trigger-After-Settle") == "list-changed"
 
 
+def test_back_to_the_want_list_asks_for_it_again(book_client):
+    """S67 (#244): served from the browser's cache on back, the list still
+    counted a book just checked on its own page as out of date."""
+    client, _ = a_shelf(book_client)
+
+    page = client.get("/")
+
+    assert page.headers.get("Cache-Control") == "no-store"
+
+
 def test_a_row_can_be_removed_and_asks_first(book_client):
     """S26 B6: a trash icon, and it keeps its confirmation."""
     client, _ = a_shelf(book_client)
