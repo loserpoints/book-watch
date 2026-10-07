@@ -65,4 +65,5 @@ These rules decide which eBay listings are copies of the book being watched, and
 
 ## Open issues
 
+- [AbeBooks now groups an edition's cheapest copies into one row, and the check fails on those books](https://github.com/loserpoints/book-watch/issues/253)
 - [A reading copy is searched across every edition](https://github.com/loserpoints/book-watch/issues/130)

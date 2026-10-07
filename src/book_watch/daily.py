@@ -266,7 +266,7 @@ class Status:
         if self.kind == "failed":
             return (
                 f"The check that finished {when} couldn't search {self.failed} "
-                f"of {self.books} books. Update checks them now."
+                f"of {self.books} books. Tap Check to search them now."
             )
         if self.kind == "throttled":
             return (

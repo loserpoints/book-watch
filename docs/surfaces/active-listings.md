@@ -6,7 +6,7 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 
 ## What it shows
 
-- The book's cover, title, author and the ISBN it was added by, with "digging" while the app is still working out which copies are this book.
+- The book's cover, title, author and the ISBN it was added by, with "Still checking." while the app is still working out which copies are this book.
 - A warning when the book was added as text rather than an ISBN, since that search finds worse matches.
 - Three chips: the book's limit, the scope (US or Everywhere) and how long ago it was checked.
 - One line when the book's last AbeBooks check failed, "AbeBooks check failed", or found nothing, "No copies on AbeBooks", which links to the search AbeBooks was asked. eBay's copies show either way.
@@ -18,7 +18,7 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 - Where each copy ships from when outside the US, "takes offers" when the seller accepts Best Offer, and its listing title.
 - "new" on a copy that appeared since the book was last opened (see [matching](../rules/matching.md)).
 - When eBay first listed each copy, "listed 3w". A copy with no listing date, which is every AbeBooks copy, shows no age.
-- "Cheapest · Newest" beside the match count, when there is more than one copy, with the chosen order in bold.
+- "Cheapest · Newest" beside the match count, when there is more than one copy, with the chosen order in bold and the other underlined in blue, as every two-way choice in the app looks.
 - What the seller says the copy is: "goodwill_books says: Paperback · Vintage · 1995".
 - The seller's condition note, clamped to two lines.
 - A photo of each copy, the seller's own or a stock cover, with a count in its top corner when there is more than one.
@@ -36,7 +36,7 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 - Tap a condition note to read all of it, and tap again to collapse it.
 - Tap a listing title to open it on its marketplace.
 - Tap the fold to see the copies that might be this book.
-- Tap "digging" to see what it means.
+- Tap "Still checking." to see what it means.
 - Press back to return to the want list, whatever was done on the page. With a sheet or photo open, back closes it first.
 
 ## Open issues

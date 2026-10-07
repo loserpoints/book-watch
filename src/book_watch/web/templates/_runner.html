@@ -17,7 +17,10 @@
     {#- Sent with the header's request for itself, so it knows a check is
         running and offers no second one (S67). -#}
     <input type="hidden" name="walking" value="1">
-    Checking {{ remaining }} book{{ '' if remaining == 1 else 's' }}…
+    <input type="hidden" name="done" value="{{ done or 0 }}">
+    <input type="hidden" name="remaining" value="{{ remaining }}">
+    {#- Says nothing: the Check button says how far the check has got
+        (S69, #217). -#}
   </div>
 {% else %}
   <div id="sweep-runner" class="muted">{{ message or '' }}</div>

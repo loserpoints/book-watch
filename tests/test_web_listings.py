@@ -437,7 +437,7 @@ def test_copies_nobody_has_examined_yet_are_said_to_be_unexamined(book_client):
 
     # The visible sentence is the whole fact; tapping it gives the reason in
     # place. It used to be a hover `title`, which a touchscreen never shows.
-    assert "Still digging through the shelves." in page
+    assert "Still checking." in page
     assert "We ask the public catalogs slowly on purpose" in page
     assert 'title="We ask' not in page
 
@@ -1129,14 +1129,18 @@ def test_checking_walks_every_book_once(book_client):
 
 
 def test_the_walk_carries_its_count_rather_than_losing_it(book_client):
-    """Each step is a separate request and knows only what it was told."""
+    """Each step is a separate request and knows only what it was told. The
+    Check button says how far it has got (S69, #217); the runner says
+    nothing while it runs, so the count isn't said twice."""
     client, _ = a_shelf(book_client)
 
-    steps = [as_read(step) for step in follow(client, "/books/check")]
+    said = [visible(h) for h in walk_watching_the_header(client)]
+    steps = [visible(step) for step in follow(client, "/books/check?force=1")]
 
-    assert "Checking 3 books…" in steps[0]
-    assert "Checking 2 books…" in steps[1]
-    assert "Checking 1 book…" in steps[2]
+    assert "Checking 1 of 3…" in said[0]
+    assert "Checking 2 of 3…" in said[1]
+    assert "Checking 3 of 3…" in said[2]
+    assert not any("Checking 3 books" in step for step in steps)
 
 
 def test_a_row_says_it_is_being_checked_while_it_is(book_client):
@@ -1146,9 +1150,10 @@ def test_a_row_says_it_is_being_checked_while_it_is(book_client):
 
     first = visible(follow(client, "/books/check", limit=1)[0])
 
-    # One working state from the search on (S68, #240), in place of counts.
-    assert "digging" in first
-    assert "Checking…" not in first
+    # One working state from the search on (S68, #240), in place of counts,
+    # and named "checking" as the Check button is (S69, #217).
+    assert "checking" in first
+    assert "digging" not in first
 
 
 def test_the_gate_stops_a_second_walk_from_spending_anything(book_client):
@@ -1224,7 +1229,7 @@ def test_a_checked_row_says_digging_while_its_pass_runs(book_client):
     steps = [visible(step) for step in follow(client, "/books/check")]
 
     assert during == [True, True, True]
-    assert all("digging" in step for step in steps[1:])
+    assert all("checking" in step for step in steps[1:])
     assert not any(enrichment_module.busy(n) for n in (1, 2, 3))
 
 
@@ -1262,23 +1267,23 @@ def test_a_checked_book_leads_with_its_cheapest_used_copy(book_client):
     assert page.count("3 asking prices seen, $10 to $12") == 3
 
 
-def test_update_counts_what_it_would_check_and_check_all_asks_first(book_client):
-    """S27's pair. Update's count is what pressing it costs; Check all
-    overrides the hour, so it asks first and offers Update instead."""
+def test_one_button_checks_what_is_out_of_date_or_asks_to_check_all(book_client):
+    """S69 (#217): one Check button. With books out of date, its count is what
+    pressing it costs and it asks nothing. With none, it reads Check all and
+    asks first, since it searches books checked within the hour."""
     client, _ = a_shelf(book_client)
 
-    before = visible(client.get("/").text)
-    # Nothing checked yet: all three are out of date, so Check all is the same
-    # request as Update and has nothing to warn about.
-    assert "Update 3" in before
-    assert "check-all-sheet" not in client.get("/").text
+    before = client.get("/").text
+    assert "Check 3" in visible(before)
+    assert 'hx-get="/books/check"' in button(before, "Check")
+    assert "check-all-sheet" not in before
+    assert "Update" not in visible(before)
 
     follow(client, "/books/check")
     after = client.get("/").text
 
-    assert "All current" in visible(after)
-    assert 'data-open="check-all-sheet"' in after
-    assert "3 of them were checked within the last hour" in visible(after)
+    assert 'data-open="check-all-sheet"' in button(after, "Check all")
+    assert "All 3 were checked within the last hour" in visible(after)
     assert "Don't ask me again" in visible(after)
 
 
@@ -1289,8 +1294,12 @@ def header_after(client, step):
     when the response doesn't ask."""
     if step.headers.get("HX-Trigger-After-Settle") != "list-changed":
         return None
-    walking = 'name="walking"' in step.text
-    return client.get("/books/bar" + ("?walking=1" if walking else "")).text
+    # Every input the runner holds, as `hx-include` sends them.
+    inputs = dict(
+        re.findall(r'<input type="hidden" name="(\w+)" value="(\d*)">', step.text)
+    )
+    query = "&".join(f"{name}={value}" for name, value in inputs.items())
+    return client.get("/books/bar" + (f"?{query}" if query else "")).text
 
 
 def walk_watching_the_header(client, url="/books/check"):
@@ -1321,10 +1330,10 @@ def test_the_header_counts_down_as_a_check_runs(book_client):
 
     assert None not in headers
     said = [visible(h) for h in headers]
-    assert "Update 3" in said[0]
-    assert "Update 2" in said[1]
-    assert "Update 1" in said[2]
-    assert "All current" in said[3]
+    assert "Checking 1 of 3…" in said[0]
+    assert "Checking 2 of 3…" in said[1]
+    assert "Checking 3 of 3…" in said[2]
+    assert "Check all" in said[3]
 
 
 def test_after_a_check_check_all_asks_first(book_client):
@@ -1337,7 +1346,7 @@ def test_after_a_check_check_all_asks_first(book_client):
     header = header_after(client, last)
 
     assert 'data-open="check-all-sheet"' in button(header, "Check all")
-    assert "3 of them were checked within the last hour" in visible(header)
+    assert "All 3 were checked within the last hour" in visible(header)
 
 
 def test_while_a_check_runs_neither_button_starts_another(book_client):
@@ -1347,8 +1356,8 @@ def test_while_a_check_runs_neither_button_starts_another(book_client):
     headers = walk_watching_the_header(client)
     during, after = headers[0], headers[-1]
 
-    assert "disabled" in button(during, "Update")
-    assert "disabled" in button(during, "Check all")
+    assert "disabled" in button(during, "Checking")
+    assert "Check all" not in visible(during)
     assert "disabled" not in button(after, "Check all")
 
 
@@ -1364,8 +1373,7 @@ def test_a_book_just_added_holds_the_buttons_while_it_checks(book_client):
         headers={"HX-Request": "true"},
     ).text
 
-    assert "disabled" in button(page, "Update")
-    assert "disabled" in button(page, "Check all")
+    assert "disabled" in button(page, "Checking")
 
 
 def test_a_row_that_finishes_digging_tells_the_header(book_client, monkeypatch):
@@ -1379,7 +1387,7 @@ def test_a_row_that_finishes_digging_tells_the_header(book_client, monkeypatch):
     monkeypatch.setattr(enrichment_module, "busy", lambda work_id: False)
     done = client.get("/books/1/row")
 
-    assert "digging" in visible(digging.text)
+    assert "checking" in visible(digging.text)
     assert digging.headers.get("HX-Trigger-After-Settle") is None
     assert done.headers.get("HX-Trigger-After-Settle") == "list-changed"
 
@@ -1595,11 +1603,13 @@ def test_the_order_rides_along_on_every_link_the_page_makes(book_client):
 
     page = client.get("/book/1?sort=newest").text
 
-    assert re.search(r'<b aria-current="true">Newest</b>', page)
+    assert re.search(
+        r'<b class="pair-option" aria-current="true"[^>]*>Newest</b>', page
+    )
     assert 'href="/book/1?everywhere=1&amp;sort=newest"' in page
     assert 'href="/book/1?sort=newest&amp;refresh=1"' in page
     # Back to cheapest replaces the page rather than adding to the history.
-    assert '<a href="/book/1" data-replace>Cheapest</a>' in page
+    assert re.search(r'<a [^>]*href="/book/1"[^>]*data-replace[^>]*>Cheapest</a>', page)
 
 
 def test_one_copy_offers_no_order_to_choose(book_client):

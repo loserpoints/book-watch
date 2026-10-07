@@ -5,14 +5,15 @@
   <p class="meta">Nothing on the list yet.</p>
 {% else %}
   {% set total = books | length %}
+  {#- Only when the morning check failed, stopped at the Open Library
+      ceiling, or did not happen: plain text under the title, as a book's
+      page says its AbeBooks check failed (S69). Tapping it says why. -#}
+  {% if daily %}<div class="list-alert">{{ ui.explain(daily.label, daily.explanation, "daily-note") }}</div>{% endif %}
   {#- A book just added starts checking itself, so its list arrives with a
       check already running. -#}
   {% with walking = checking is not none %}
     {% include "_list_bar.html" %}
   {% endwith %}
-  {#- Only when the morning check failed, stopped at the Open Library
-      ceiling, or did not happen. -#}
-  {% if daily %}<div class="list-alert">{{ ui.alert_pill(daily.label, daily.explanation) }}</div>{% endif %}
 
   {#- A book just added arrives with the walk already primed for it, so it
       checks itself without the page having asked for anything else. -#}
@@ -24,6 +25,15 @@
   {#- Not while a check runs: replacing the list would stop it. -#}
   <div hidden hx-get="/books/list" hx-target="#want-list" hx-swap="outerHTML"
        hx-trigger="every 5s [!document.querySelector('#sweep-runner.sweeping')]"></div>
+  {%- endif %}
+  {%- if books | length > 1 %}
+  {#- How many books show, and the order, as a book's page shows its
+      matches and Cheapest · Newest (S69, #217). -#}
+  {% set shown = (books | selectattr("id", "in", under_ids) | list | length) if filtering else books | length %}
+  <div class="list-meta">
+    <p class="meta">{{ shown }} book{{ '' if shown == 1 else 's' }}</p>
+    {% include "_sort_pair.html" %}
+  </div>
   {%- endif %}
   <ul class="ui-list">
   {% for book in books if not filtering or book.id in under_ids %}

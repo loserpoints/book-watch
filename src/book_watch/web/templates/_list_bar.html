@@ -1,10 +1,10 @@
-{#- The header over the list: the All · Under limit switch, Update, Check all
-    and the sheet Check all asks with.
+{#- The header over the list: the Check button, the "Under limit" switch, and
+    the sheet "Check all" asks with.
 
     Drawn with the list, and drawn again whenever the list changes: each step
     of a check, and a row whose copies finish being examined, tell the page
     "list-changed", and this asks for itself (S67, #244). Before, it kept the
-    counts it had when the page loaded, so Update still said "Update 3" after
+    counts it had when the page loaded, so it still said "Update 3" after
     checking all three, and Check all ran again without asking.
 
     It sends the runner's inputs with that request, so it knows whether a

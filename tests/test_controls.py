@@ -147,12 +147,14 @@ def test_a_sheet_is_a_labeled_dialog():
     assert 'id="add-sheet-title"' in page
 
 
-def test_the_check_all_sheet_offers_update_instead_of_cancel():
-    """S27: the alternative on offer is the cheaper action, not a dead end."""
+def test_the_check_all_sheet_asks_before_searching_everything_again():
+    """S69 (#217): Check all appears only when every book was checked within
+    the hour, so the sheet's choice is to go ahead or not."""
     sheet = design_page().split('id="check-sheet"')[1].split("</dialog>")[0]
 
-    assert "Update 2" in sheet
-    assert "Cancel" not in sheet
+    assert "Check all 7" in sheet
+    assert "Cancel" in sheet
+    assert "Update" not in sheet
 
 
 def test_the_switch_is_radios_so_it_needs_no_script():
@@ -214,16 +216,21 @@ def test_the_design_page_shows_a_copy_that_takes_offers():
     assert "takes offers" in design_page()
 
 
-def test_every_switch_option_keeps_room_for_its_label_in_bold():
-    """Choosing a side must not change the switch's width: on the want list
-    that reflowed Update and Check all onto another line (S60). Each label is
-    carried in `data-label`, which the stylesheet sets in bold, unseen."""
-    options = re.findall(
-        r'<label class="switch-option">.*?<span([^>]*)>([^<]*)</span>', design_page()
+def test_every_pair_option_keeps_room_for_its_label_in_bold():
+    """Choosing a side must not change a pair's width, or it reflows what sits
+    beside it (S60). Each label is carried in `data-label`, which the
+    stylesheet sets in bold, unseen, whether the option is a radio, a link,
+    a button or the current word (S69)."""
+    page = design_page()
+    radios = re.findall(
+        r'<label class="pair-option">.*?<span([^>]*)>([^<]*)</span>', page
+    )
+    others = re.findall(
+        r'<(?:a|b|button)\b[^>]*class="pair-option"([^>]*)>([^<]*)</', page
     )
 
-    assert options
-    for attributes, label in options:
+    assert radios and others
+    for attributes, label in radios + others:
         assert f'data-label="{label}"' in attributes
     css = (Path(assets.STATIC_DIR) / "app.css").read_text()
-    assert re.search(r"\.switch-option span::after\s*\{[^}]*attr\(data-label\)", css)
+    assert re.search(r"\.pair-option::after[^{]*\{[^}]*attr\(data-label\)", css)

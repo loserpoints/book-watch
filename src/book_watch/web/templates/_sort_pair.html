@@ -1,0 +1,8 @@
+{% import "_ui.html" as ui %}
+{#- The want list's order (S69, #217): cheapest by each row's "from $X", or
+    the newest added first. -#}
+{% set fetch = {"hx-target": "#want-list", "hx-swap": "outerHTML"} %}
+{{ ui.pair([
+     ("Cheapest", dict(fetch, **{"hx-get": views.cheapest.fetch, "hx-replace-url": views.cheapest.page}), sort == "cheapest"),
+     ("Added", dict(fetch, **{"hx-get": views.added.fetch, "hx-replace-url": views.added.page}), sort != "cheapest"),
+   ], "Order") }}
