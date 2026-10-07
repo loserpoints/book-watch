@@ -14,7 +14,8 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 - How many copies match, then one row per certain copy from either marketplace, in one list (see [matching](../rules/matching.md)).
 - Each copy's delivered price, green with ✓ when under the limit, or red when over. A copy with unknown shipping shows its price and "+ shipping?".
 - Where each copy sits among the others listed now, as a strip, or why it can't be placed.
-- Each copy's condition, where it ships from when outside the US, "takes offers" when the seller accepts Best Offer, and its listing title.
+- Each copy's condition, by one name per grade whatever the seller wrote: Brand New, Like New, Very Good, Good, Acceptable or Used. A grade without one of those names shows the seller's words.
+- Where each copy ships from when outside the US, "takes offers" when the seller accepts Best Offer, and its listing title.
 - "new" on a copy that appeared since the book was last opened (see [matching](../rules/matching.md)).
 - When eBay first listed each copy, "listed 3w". A copy with no listing date, which is every AbeBooks copy, shows no age.
 - "Cheapest · Newest" beside the match count, when there is more than one copy, with the chosen order in bold.

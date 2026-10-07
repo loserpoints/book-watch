@@ -3,7 +3,7 @@ thing whichever one it is.
 
 A listing is identified by its marketplace and its id there, never by what its
 id looks like. Condition is stored on eBay's scale for every marketplace, so
-the new and used markets and the condition tags read one column. See
+each copy's condition tag reads one column. See
 docs/rules/matching.md.
 """
 
@@ -24,6 +24,28 @@ LIKE_NEW = "2750"
 VERY_GOOD = "4000"
 GOOD = "5000"
 ACCEPTABLE = "6000"
+
+#: The one name each grade is shown by, whatever words the seller or the
+#: marketplace used (S70, #247). eBay's own listings say "New" for one seller
+#: and "Brand New" for another, and AbeBooks says "New": a bare "New" also
+#: reads as the "new" a copy carries when it appeared since the last visit.
+GRADE_NAMES: dict[str, str] = {
+    NEW: "Brand New",
+    LIKE_NEW: "Like New",
+    VERY_GOOD: "Very Good",
+    GOOD: "Good",
+    ACCEPTABLE: "Acceptable",
+    USED: "Used",
+}
+
+
+def condition_name(condition_id: str | None, words: str | None) -> str:
+    """What a copy's condition tag says: its grade's one name, or the seller's
+    words for a grade without one, or that nothing was stated."""
+    if condition_id in GRADE_NAMES:
+        return GRADE_NAMES[condition_id]
+    return words or "condition unstated"
+
 
 #: AbeBooks' condition words onto eBay's ids. The booksellers' scale runs
 #: As New, Fine, Near Fine, Very Good, Good, Fair, Poor. Near Fine maps down

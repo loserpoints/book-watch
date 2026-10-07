@@ -63,7 +63,7 @@ def copy_row(
         "photo_url": copy.thumbnail,
         "photos": list(copy.photos),
         "note": copy.condition_note,
-        "condition": copy.condition or "condition unstated",
+        "condition": marketplaces.condition_name(copy.condition_id, copy.condition),
         "seller": copy.seller or "The seller",
         "edition": " · ".join(
             part
