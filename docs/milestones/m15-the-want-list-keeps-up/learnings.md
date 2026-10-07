@@ -11,6 +11,7 @@
 
 ## Carried forward
 
+- [An app left open through a deploy redraws the new markup without the new styles](https://github.com/loserpoints/book-watch/issues/256)
 - [AbeBooks now groups an edition's cheapest copies into one row, and the check fails on those books](https://github.com/loserpoints/book-watch/issues/253)
 - [An AbeBooks page the app can't read says "No copies on AbeBooks" instead of failing](https://github.com/loserpoints/book-watch/issues/242)
 - [See what the app does unattended, and hear when something is wrong](https://github.com/loserpoints/book-watch/issues/168)

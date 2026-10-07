@@ -37,5 +37,6 @@ The want list shows every book I'm watching and whether any copy is worth my att
 
 ## Open issues
 
+- [An app left open through a deploy redraws the new markup without the new styles](https://github.com/loserpoints/book-watch/issues/256)
 - [Mark a book bought, with what I paid and where, and keep a record of what I've bought](https://github.com/loserpoints/book-watch/issues/223)
 - [Show when a copy's price has dropped](https://github.com/loserpoints/book-watch/issues/164)
