@@ -28,6 +28,10 @@
     true
   );
 
+  // Safari applies :active on a tap only when the page listens for touches,
+  // and a row's pressed look is :active (S73). The listener does nothing.
+  document.addEventListener("touchstart", function () {}, { passive: true });
+
   // [data-open="id"] opens the <dialog id="id"> as a modal. The browser then
   // handles focus, Escape and the Android back gesture, and returns focus to
   // the opener when it closes.

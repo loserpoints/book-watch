@@ -36,7 +36,7 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 - Tap a copy's photo to see every photo, swiping between them.
 - Tap a condition note to read all of it, and tap again to collapse it.
 - Tap a price's caret to see what it was. The next tap anywhere closes it, and does nothing else.
-- Tap a listing title to open it on its marketplace. The app remembers which copy was opened, so marking the book bought can offer it. Copies opened from the morning email aren't remembered.
+- Tap anywhere on a copy to open its listing on its marketplace. The row fills while pressed. The photo, the condition note and the price's caret keep their own taps. The app remembers which copy was opened, so marking the book bought can offer it. Copies opened from the morning email aren't remembered.
 - Tap the fold to see the copies that might be this book.
 - Tap "Still checking." to see what it means.
 - Press back to return to the want list, whatever was done on the page. With a sheet or photo open, back closes it first.

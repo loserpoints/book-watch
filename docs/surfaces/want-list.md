@@ -27,7 +27,7 @@ The want list shows every book I'm watching and whether any copy is worth my att
 
 ## What you can do
 
-- Tap anywhere on a book's row to open its active listings. The trash, "checking" and "Throttled" keep their own taps.
+- Tap anywhere on a book's row to open its active listings. The row fills while pressed. The trash, the price's caret, "checking" and "Throttled" keep their own taps.
 - Tap the "Under limit" switch to see only the books whose price is green, and again to see every book.
 - Tap Cheapest or Added to change the order.
 - The switch and the order stay through opening a book and going back. Opening the app shows every book, newest added first, and so does adding a book.

@@ -234,3 +234,66 @@ def test_every_pair_option_keeps_room_for_its_label_in_bold():
         assert f'data-label="{label}"' in attributes
     css = (Path(assets.STATIC_DIR) / "app.css").read_text()
     assert re.search(r"\.pair-option::after[^{]*\{[^}]*attr\(data-label\)", css)
+
+
+def css_rules() -> dict[str, str]:
+    """Each selector in the stylesheet, comments gone, with its declarations
+    run together when it appears more than once."""
+    css = (
+        Path(__file__).parent.parent / "src/book_watch/web/static/app.css"
+    ).read_text()
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.DOTALL)
+    rules: dict[str, str] = {}
+    for selectors, body in re.findall(r"([^{}]+)\{([^}]*)\}", css):
+        for selector in selectors.split(","):
+            key = " ".join(selector.split())
+            rules[key] = rules.get(key, "") + body
+    return rules
+
+
+def z(body: str) -> int:
+    found = re.findall(r"z-index:\s*(-?\d+)", body)
+    return int(found[-1]) if found else 0
+
+
+def test_a_copys_listing_link_covers_its_row(  # S73, #190
+):
+    """A tap anywhere on a copy opens its listing, as anywhere on a want-list
+    row opens its book: the link stretches over the row it sits in."""
+    rules = css_rules()
+
+    assert "position: relative" in rules[".copy-row"]
+    stretch = rules[".copy-listing::after"]
+    assert "position: absolute" in stretch and "inset: 0" in stretch
+
+
+def test_a_copys_own_controls_sit_above_its_link():
+    """The photo, the note and the price caret keep their own taps. The photo's
+    placeholder, a copy with none, isn't a control and stays under the link."""
+    rules = css_rules()
+    link = z(rules[".copy-listing::after"])
+
+    for control in ("button.copy-photo", "details.copy-note", ".copy-row details.move"):
+        assert z(rules[control]) > link, control
+    assert z(rules.get(".copy-photo", "")) <= link
+
+
+def test_a_row_being_pressed_fills_on_both_screens():
+    """The phone's own highlight lit only the title. The app draws a pressed
+    row instead, the same on the want list and a book's page, and only when
+    the row's own link is pressed, not one of its controls."""
+    rules = css_rules()
+
+    for row, link in ((".book-row", ".book-row-title"), (".copy-row", ".copy-listing")):
+        assert "-webkit-tap-highlight-color: transparent" in rules[row]
+        pressed = rules[f"{row}:has({link}:active)"]
+        assert "background: var(--surface)" in pressed
+
+
+def test_a_copy_row_gets_the_focus_ring_its_link_would():
+    rules = css_rules()
+
+    assert (
+        "outline: 2px solid var(--accent)"
+        in rules[".copy-row:has(.copy-listing:focus-visible)"]
+    )
