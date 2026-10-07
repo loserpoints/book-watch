@@ -2,7 +2,7 @@
 
 ## Goal
 
-The want list keeps up with every check, its counts agree with each other, one Check button says what it will do and how far a check has got, the list sorts Cheapest · Added, a two-way choice looks the same everywhere, and a book's page shows one price line and one strip for all its copies, so "new" means only a copy that appeared since I last looked.
+The want list keeps up with every check, wherever I come to it from, with rows that say "checking" until their counts agree, one Check button that says what it will check and how far it has got, a Cheapest · Added order, two-way choices that look the same on every screen, and one price line and strip on a book's page.
 
 ## Jobs advanced
 

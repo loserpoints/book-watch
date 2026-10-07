@@ -27,6 +27,7 @@ Before any code, check that a slice covers what its outcome means to the person 
 - Has the current behavior been reproduced, and is its cause confirmed or only guessed?
 - What does the original issue say already works? Is the slice still needed without that part?
 - What would a literal reading of the outcome miss?
+- When it keeps a screen current, which ways does a person reach that screen: opening it, going back to it, coming back to the app after time away, and a piece of it redrawing? Each is a case to plan and check.
 - Does the case it handles happen at all? Check the outside service's own rules before planning to measure it.
 - Does it depend on an outside service? Read that service's terms for this use, by this app and by anyone it might be offered to, before planning the build.
 - Which docs, design page entries and tests change with it?
