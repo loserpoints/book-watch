@@ -93,13 +93,10 @@
   <div class="match-count">
     <p class="meta">{{ copies | length }} match{{ '' if copies | length == 1 else 'es' }}</p>
     {% if copy_rows | length > 1 or maybe_rows | length > 1 %}
-    <p class="meta copy-sort">
-      {%- if newest -%}
-        <a href="{{ urls.cheapest }}" data-replace>Cheapest</a> · <b aria-current="true">Newest</b>
-      {%- else -%}
-        <b aria-current="true">Cheapest</b> · <a href="{{ urls.newest }}" data-replace>Newest</a>
-      {%- endif -%}
-    </p>
+    {{ ui.pair([
+         ("Cheapest", {"href": urls.cheapest, "data-replace": ""}, not newest),
+         ("Newest", {"href": urls.newest, "data-replace": ""}, newest),
+       ], "Order") }}
     {% endif %}
   </div>
 

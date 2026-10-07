@@ -1,68 +1,74 @@
 {% import "_ui.html" as ui %}
 {#- What `_list_bar.html` holds, and what it asks for when the list changes. -#}
-  {#- Checking is an explicit act with a button on it. The list itself renders
-      from the store and spends nothing — opening this page is
-      not a request to search ten books.
+{#- Checking is an explicit act with a button on it. The list itself renders
+    from the store and spends nothing: opening this page is not a request to
+    search ten books.
 
-      Two controls, settled in S27. *Update* checks only the books out of
-      date, so its count says what it will cost. *Check all* overrides the
-      hour and asks first, offering the cheaper Update as the alternative. -#}
-  {% set fresh = total - stale %}
-  {#- All, or only the books whose price is green (S60). No counts: they
-      widened the switch until it pushed Update and Check all onto a second
-      line, and the width then changed with the list. "Under limit" greys out
-      when nothing qualifies. The choice lives in the page address, replaced
-      rather than pushed, so it survives going back from a book and adds
-      nothing to the history. -#}
-  {% set under = under_ids | length %}
-  {% set fetch = {"hx-target": "#want-list", "hx-swap": "outerHTML", "hx-trigger": "change"} %}
-  {#- One check at a time: while one runs, neither button starts another,
-      which would fight the first over the runner. -#}
-  {% set busy = " disabled" if walking else "" %}
+    One button (S69, #217). "Check 2" checks the books out of date at once,
+    so its count says what it costs. With none out of date it reads "Check
+    all", and asks first. While a check runs it says how far it has got and
+    starts nothing, since a second check would fight the first over the
+    runner. -#}
+{% set fetch = {"hx-target": "#want-list", "hx-swap": "outerHTML"} %}
+{% set under = under_ids | length %}
+{% macro check_button() -%}
+  {%- if walking -%}
+    <button type="button" class="btn btn-plain check-btn" disabled>
+      {%- if progress %}Checking {{ progress[0] }} of {{ progress[1] }}…{% else %}Checking…{% endif -%}
+    </button>
+  {%- elif stale -%}
+    <button type="button" class="btn btn-plain check-btn"
+            hx-get="/books/check" hx-target="#sweep-runner" hx-swap="outerHTML"
+            hx-disabled-elt="this">Check <span class="badge">{{ stale }}</span></button>
+  {%- else -%}
+    {#- Asks first, unless this device was told not to. -#}
+    <button type="button" class="btn btn-plain check-btn" data-open="check-all-sheet"
+            data-skip="book-watch:check-all-no-ask">Check all</button>
+  {%- endif -%}
+{%- endmacro %}
+{#- The filter: on or off, greyed out when no book qualifies (S60). It and
+    the order live in the page address, replaced rather than pushed, so they
+    survive going back from a book and add nothing to the history. -#}
+{% macro under_toggle() -%}
+  {{ ui.toggle("Under limit", filtering, dict(fetch, **{
+       "hx-get": views.under_off.fetch if filtering else views.under_on.fetch,
+       "hx-replace-url": views.under_off.page if filtering else views.under_on.page}),
+     disabled=not under) }}
+{%- endmacro %}
+
+{% if mock_layout == "b" %}
+  {#- B: the order and the filter tucked into an area that opens. Its
+      summary says what is chosen, so a filter on is never hidden. -#}
   <div class="list-bar">
-    {{ ui.switch("show", [
-         ("all", "All", dict(fetch, **{"hx-get": "/books/list", "hx-replace-url": "/"})),
-         ("under", "Under limit", dict(fetch, **{"hx-get": "/books/list?show=under", "hx-replace-url": "/?show=under", "disabled": None if under else ""})),
-       ], "under" if filtering else "all") }}
-    <span class="list-bar-actions">
-      <button type="button" class="btn btn-plain"
-              hx-get="/books/check" hx-target="#sweep-runner" hx-swap="outerHTML"
-              hx-disabled-elt="this"
-              {%- if not stale or walking %} disabled{% endif %}>
-        {%- if stale %}Update <span class="badge">{{ stale }}</span>{% else %}All current{% endif -%}
-      </button>
-      {%- if fresh %}
-        {#- Asks first, unless this device was told not to. -#}
-        <button type="button" class="btn btn-ghost" data-open="check-all-sheet"
-                data-skip="book-watch:check-all-no-ask"{{ busy }}>Check all</button>
-      {%- else %}
-        {#- Nothing is inside the hour, so Check all and Update are the same
-            request and there is nothing to warn about. -#}
-        <button type="button" class="btn btn-ghost"
-                hx-get="/books/check?force=1" hx-target="#sweep-runner"
-                hx-swap="outerHTML" hx-disabled-elt="this"{{ busy }}>Check all</button>
-      {%- endif %}
-    </span>
+    {{ check_button() }}
+    <details class="view-menu">
+      <summary>{{ "Cheapest" if sort == "cheapest" else "Added" }}{% if filtering %} · Under limit{% endif %}</summary>
+      <div class="view-panel">
+        {% include "_sort_pair.html" %}
+        {{ under_toggle() }}
+      </div>
+    </details>
   </div>
+{% else %}
+  {#- A: the filter beside the button; the order over the rows, as on a
+      book's page. -#}
+  <div class="list-bar">
+    {{ check_button() }}
+    {{ under_toggle() }}
+  </div>
+{% endif %}
 
-  {% if fresh %}
-  {% call ui.sheet("check-all-sheet", "Check all %d book%s?" % (total, '' if total == 1 else 's')) %}
-    <p class="sheet-text">
-      {{ fresh }} of them {{ 'was' if fresh == 1 else 'were' }} checked within the
-      last hour and will be searched again.
-      {%- if stale %} To check only the {{ stale }} that {{ 'is' if stale == 1 else 'are' }}
-      out of date, use Update.{% endif %}
-    </p>
-    <label class="sheet-check"><input type="checkbox" data-remember="book-watch:check-all-no-ask"> Don't ask me again</label>
-    <div class="sheet-actions">
-      {%- if stale %}
-      <button type="button" class="btn btn-plain" data-close
-              hx-get="/books/check" hx-target="#sweep-runner" hx-swap="outerHTML">Update {{ stale }}</button>
-      {%- else %}
-      <button type="button" class="btn btn-plain" data-close>Cancel</button>
-      {%- endif %}
-      <button type="button" class="btn btn-primary" data-close data-default
-              hx-get="/books/check?force=1" hx-target="#sweep-runner" hx-swap="outerHTML">Check all {{ total }}</button>
-    </div>
-  {% endcall %}
-  {% endif %}
+{% if not stale and total %}
+{% call ui.sheet("check-all-sheet", "Check all %d book%s?" % (total, '' if total == 1 else 's')) %}
+  <p class="sheet-text">
+    {{ 'It was' if total == 1 else 'All %d were' % total }} checked within the
+    last hour and will be searched again.
+  </p>
+  <label class="sheet-check"><input type="checkbox" data-remember="book-watch:check-all-no-ask"> Don't ask me again</label>
+  <div class="sheet-actions">
+    <button type="button" class="btn btn-plain" data-close>Cancel</button>
+    <button type="button" class="btn btn-primary" data-close data-default
+            hx-get="/books/check?force=1" hx-target="#sweep-runner" hx-swap="outerHTML">Check all {{ total }}</button>
+  </div>
+{% endcall %}
+{% endif %}

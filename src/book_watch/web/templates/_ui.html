@@ -16,7 +16,7 @@
 
 {#- Still digging: the app is working out which copies are really this book.
     The word shimmers; tapping it says why it takes a while. -#}
-{% macro digging(label="digging") -%}
+{% macro digging(label="checking") -%}
 {{ explain(label, "Looking for copies, and checking which of them are really this book. The counts show once that's done. We ask the public catalogs slowly on purpose: they're free, and we'd like them to stay that way.", "digging") }}
 {%- endmacro %}
 
@@ -252,13 +252,44 @@
     An option may carry a third item, a dict of attributes for its radio: the
     want list's switch fetches the list with htmx, and greys out an empty
     side with `disabled`. -#}
+{#- A two-way choice, drawn the same everywhere (S69, #217): two words with a
+    dot between, the current one in plain bold and announced as current, the
+    other a link. Each is a 44px target and keeps room for its bold, so
+    choosing never changes the width.
+
+    `switch` holds radios, for a choice a form or a sheet reads (the add
+    sheet's two ways in). `pair` holds links or htmx buttons, for a choice
+    that fetches or replaces the page (the orders on the want list and a
+    book's page). One look, two kinds of option. -#}
 {% macro switch(name, options, selected) -%}
-<div class="switch" role="radiogroup">
+<span class="pair" role="radiogroup">
   {%- for option in options %}
   {%- set value, label = option[0], option[1] %}
-  <label class="switch-option"><input type="radio" name="{{ name }}" value="{{ value }}"{% if value == selected %} checked{% endif %}{% if option | length > 2 %}{{ option[2] | xmlattr }}{% endif %}><span data-label="{{ label }}">{{ label }}</span></label>
+  {%- if not loop.first %}<span class="pair-dot" aria-hidden="true">·</span>{% endif %}
+  <label class="pair-option"><input type="radio" name="{{ name }}" value="{{ value }}"{% if value == selected %} checked{% endif %}{% if option | length > 2 %}{{ option[2] | xmlattr }}{% endif %}><span data-label="{{ label }}">{{ label }}</span></label>
   {%- endfor %}
-</div>
+</span>
+{%- endmacro %}
+
+{#- `options` is a list of (label, attrs, current). A current option is
+    plain text; another with `href` is a link, and one without is a button
+    whose attrs carry its htmx. -#}
+{% macro pair(options, label) -%}
+<span class="pair" role="group" aria-label="{{ label }}">
+  {%- for text, attrs, current in options %}
+  {%- if not loop.first %}<span class="pair-dot" aria-hidden="true">·</span>{% endif %}
+  {%- if current %}<b class="pair-option" aria-current="true" data-label="{{ text }}">{{ text }}</b>
+  {%- elif attrs.href %}<a class="pair-option" data-label="{{ text }}"{{ attrs | xmlattr }}>{{ text }}</a>
+  {%- else %}<button type="button" class="pair-option" data-label="{{ text }}"{{ attrs | xmlattr }}>{{ text }}</button>
+  {%- endif %}
+  {%- endfor %}
+</span>
+{%- endmacro %}
+
+{#- A filter that is on or off: one word, filled when on (principle 4: two
+    states are a toggle). Greyed out when it would show nothing. -#}
+{% macro toggle(text, on, attrs, disabled=False) -%}
+<button type="button" class="toggle" aria-pressed="{{ 'true' if on else 'false' }}"{{ attrs | xmlattr }}{% if disabled %} disabled{% endif %}>{% if on %}✓ {% endif %}{{ text }}</button>
 {%- endmacro %}
 
 

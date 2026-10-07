@@ -18,11 +18,14 @@ run while somebody waits.
 
 from __future__ import annotations
 
+import os
 import sqlite3
 from collections.abc import Callable
 from contextlib import closing
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
+from typing import Literal
 from urllib.parse import urlsplit
 
 from fastapi import APIRouter, BackgroundTasks, Form, Request
@@ -145,6 +148,65 @@ def wants_under(request: Request) -> bool:
     return "show=under" in urlsplit(current).query.split("&")
 
 
+#: How the want list can be ordered (S69, #217). "added" is the newest book
+#: first, as the list always was; "cheapest" is by the "from $X" each row
+#: shows. It lives in the page address, like the filter.
+Sort = Literal["added", "cheapest"]
+
+
+def wants_sort(request: Request) -> Sort:
+    """The order this request is for, asked the same two ways as the filter."""
+    if request.query_params.get("sort") == "cheapest":
+        return "cheapest"
+    current = request.headers.get("HX-Current-URL", "")
+    if "sort=cheapest" in urlsplit(current).query.split("&"):
+        return "cheapest"
+    return "added"
+
+
+def view_query(under: bool, sort: Sort) -> str:
+    """The page address's query for a filter and an order, empty for the
+    defaults, so opening the app plain shows everything, newest first."""
+    parts = (["show=under"] if under else []) + (
+        ["sort=cheapest"] if sort == "cheapest" else []
+    )
+    return ("?" + "&".join(parts)) if parts else ""
+
+
+def views(under: bool, sort: Sort) -> dict[str, dict[str, str]]:
+    """Where each choice in the header goes: the page address it replaces the
+    current one with, and the list it fetches. One place, so the filter keeps
+    the order and the order keeps the filter."""
+
+    def to(new_under: bool, new_sort: Sort) -> dict[str, str]:
+        query = view_query(new_under, new_sort)
+        return {"page": "/" + query, "fetch": "/books/list" + query}
+
+    return {
+        "under_on": to(True, sort),
+        "under_off": to(False, sort),
+        "cheapest": to(under, "cheapest"),
+        "added": to(under, "added"),
+    }
+
+
+def in_order(books: list, glances: dict, sort: Sort) -> list:
+    """The books in the order asked for. Cheapest goes by each row's own
+    "from $X", so the order can't disagree with what the rows say, and books
+    with no price go last, newest first among them."""
+    if sort != "cheapest":
+        return books
+
+    def price(book) -> tuple[bool, Decimal]:
+        glance = glances.get(book.id)
+        lead = glance.headline if glance is not None else None
+        if lead is None:
+            return (True, Decimal(0))
+        return (False, lead.cheapest.amount)
+
+    return sorted(books, key=price)
+
+
 def build_router(
     connect: ConnectFn | None = None,
     catalog: LazyCatalog | None = None,
@@ -158,6 +220,9 @@ def build_router(
     assets.register(templates.env)
     templates.env.filters["cover_url"] = covers.url
     templates.env.globals["want_row"] = list_view.row
+    # S69 round 1 only: which header arrangement the mocks draw. Removed once
+    # Alan picks one.
+    templates.env.globals["mock_layout"] = os.environ.get("BOOK_WATCH_MOCK_LAYOUT", "a")
     open_database: ConnectFn = (
         connect if connect is not None else open_configured_database
     )
@@ -235,6 +300,8 @@ def build_router(
         under_ids = under_limit(glances)
         if under is None:
             under = wants_under(request)
+        # Adding a book shows it at the top, so the order goes back to added.
+        order = wants_sort(request) if checking is None else "added"
         return templates.TemplateResponse(
             request,
             template,
@@ -243,10 +310,12 @@ def build_router(
                 "isbn": "",
                 "title": "",
                 "author": "",
-                "books": books,
+                "books": in_order(books, glances, order),
                 "glances": glances,
                 "checking": checking,
                 "stale": stale,
+                "sort": order,
+                "views": views(under and bool(under_ids), order),
                 "throttled": throttled(books),
                 "daily": morning,
                 "under_ids": under_ids,
@@ -276,6 +345,8 @@ def build_router(
             morning = daily.status(connection, datetime.now(UTC))
             on_list = wantlist.listed_works(connection) if candidates else set()
         under_ids = under_limit(glances)
+        order = wants_sort(request) if checking is None else "added"
+        filtering = wants_under(request) and bool(under_ids)
         # Through htmx, only the sheet comes back, and it comes back as a
         # success: htmx does not swap an error status in, and the error is
         # the answer the sheet exists to show (S45).
@@ -284,13 +355,15 @@ def build_router(
             request,
             "_add_sheet.html" if htmx else "wantlist.html",
             {
-                "books": books,
+                "books": in_order(books, glances, order),
                 "glances": glances,
                 "stale": stale,
+                "sort": order,
+                "views": views(filtering, order),
                 "throttled": throttled(books),
                 "daily": morning,
                 "under_ids": under_ids,
-                "filtering": wants_under(request) and bool(under_ids),
+                "filtering": filtering,
                 "hidden_digging": hidden_digging(
                     books, under_ids, wants_under(request)
                 ),
@@ -607,13 +680,20 @@ def build_router(
         )
 
     @router.get(BAR_PATH, response_class=HTMLResponse)
-    def the_bar(request: Request, walking: int = 0) -> HTMLResponse:
+    def the_bar(
+        request: Request, walking: int = 0, done: int = 0, remaining: int = 0
+    ) -> HTMLResponse:
         """The header over the list, as it stands now. Asked for by the page
-        whenever the list changes. Reads the store only."""
+        whenever the list changes. Reads the store only.
+
+        `done` and `remaining` come from the runner while a check runs, so
+        the button can say how far it has got (S69, #217)."""
         with closing(open_database()) as connection:
             books = wantlist.all_books(connection)
             under_ids = under_limit(at_a_glance(connection, books))
             stale = out_of_date(connection, books)
+        filtering = wants_under(request) and bool(under_ids)
+        order = wants_sort(request)
         return templates.TemplateResponse(
             request,
             "_list_bar_contents.html",
@@ -621,8 +701,11 @@ def build_router(
                 "total": len(books),
                 "stale": stale,
                 "under_ids": under_ids,
-                "filtering": wants_under(request) and bool(under_ids),
+                "filtering": filtering,
+                "sort": order,
+                "views": views(filtering, order),
                 "walking": bool(walking),
+                "progress": (done + 1, done + remaining) if walking else None,
             },
         )
 

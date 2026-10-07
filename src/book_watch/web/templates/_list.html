@@ -25,6 +25,15 @@
   <div hidden hx-get="/books/list" hx-target="#want-list" hx-swap="outerHTML"
        hx-trigger="every 5s [!document.querySelector('#sweep-runner.sweeping')]"></div>
   {%- endif %}
+  {%- if mock_layout != "b" and books | length > 1 %}
+  {#- How many books show, and the order, as a book's page shows its
+      matches and Cheapest · Newest (S69, #217). -#}
+  {% set shown = (books | selectattr("id", "in", under_ids) | list | length) if filtering else books | length %}
+  <div class="list-meta">
+    <p class="meta">{{ shown }} book{{ '' if shown == 1 else 's' }}</p>
+    {% include "_sort_pair.html" %}
+  </div>
+  {%- endif %}
   <ul class="ui-list">
   {% for book in books if not filtering or book.id in under_ids %}
     {% set glance = glances.get(book.id) if glances else None %}

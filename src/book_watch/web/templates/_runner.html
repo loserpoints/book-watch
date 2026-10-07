@@ -17,6 +17,8 @@
     {#- Sent with the header's request for itself, so it knows a check is
         running and offers no second one (S67). -#}
     <input type="hidden" name="walking" value="1">
+    <input type="hidden" name="done" value="{{ done or 0 }}">
+    <input type="hidden" name="remaining" value="{{ remaining }}">
     Checking {{ remaining }} book{{ '' if remaining == 1 else 's' }}…
   </div>
 {% else %}

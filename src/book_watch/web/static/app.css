@@ -486,8 +486,6 @@ details.fold > summary {
 .match-count { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); }
 .match-count p { margin: 0; }
 /* Cheapest · Newest (S62): two words, each a 44px target. */
-.copy-sort a, .copy-sort b { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--space-1); }
-.copy-sort b { color: var(--fg); }
 .copy-listing {
   color: var(--fg);
   font-size: var(--text-sm);
@@ -562,7 +560,7 @@ details.copy-note[open] > summary { display: block; }
 .btn-ghost { background: transparent; }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn:focus-visible, .fab:focus-visible, .icon-btn:focus-visible, .chip:focus-visible,
-.copy-photo:focus-visible, .switch-option:has(input:focus-visible) {
+.copy-photo:focus-visible, .pair-option:focus-visible, .pair-option:has(input:focus-visible), .toggle:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -603,34 +601,54 @@ details.copy-note[open] > summary { display: block; }
 .field input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .field-hint { margin: 0; color: var(--muted); font-size: var(--text-xs); }
 
-.switch {
-  display: inline-flex;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-pill);
-  overflow: hidden;
-}
-.switch-option { position: relative; cursor: pointer; }
-.switch-option input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
-.switch-option span {
+/* A two-way choice (S69, #217): two words, the current one plain bold, the
+   other a link, a dot between. */
+.pair { display: inline-flex; align-items: center; font-size: var(--text-sm); }
+.pair-dot { color: var(--muted); padding: 0 var(--space-1); }
+.pair-option {
+  position: relative;
   display: inline-flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   min-height: 44px;
-  padding: 0 var(--space-4);
-  color: var(--muted);
-  font-size: var(--text-sm);
+  padding: 0 var(--space-1);
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
 }
-.switch-option input:checked + span { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+b.pair-option, .pair-option:has(input:checked) { color: var(--fg); font-weight: 700; text-decoration: none; cursor: default; }
+.pair-option input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
 /* Each side keeps room for its label in bold, so choosing one never changes
-   the switch's width and never reflows what sits beside it (S60). */
-.switch-option span::after {
+   the pair's width and never reflows what sits beside it (S60). */
+.pair-option::after, .pair-option span::after {
   content: attr(data-label);
-  font-weight: 600;
+  font-weight: 700;
   height: 0;
   overflow: hidden;
   visibility: hidden;
 }
+.pair-option span { display: inline-flex; flex-direction: column; }
+.pair-option:has(span)::after { content: none; }
+
+/* A filter that is on or off (S69). */
+.toggle {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.toggle[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+.toggle:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* The sheet's two ways in: only the chosen side's fields show. The sides lay
    themselves out by class, never inline: an inline display would beat this
@@ -737,10 +755,30 @@ dialog.photo-view[open] { display: grid; gap: var(--space-2); justify-items: cen
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   margin-bottom: var(--space-2);
 }
 .list-bar-actions { display: flex; gap: var(--space-2); }
+/* The count of books and their order, over the rows (S69). */
+.list-meta { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.list-meta .meta { margin: 0; }
+/* Arrangement B: the order and the filter in an area that opens (S69). */
+.view-menu > summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-1);
+  color: var(--accent);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  list-style: none;
+}
+.view-menu > summary::-webkit-details-marker { display: none; }
+.view-menu > summary::after { content: "▾"; margin-left: var(--space-1); }
+.view-menu[open] > summary::after { content: "▴"; }
+.list-bar:has(.view-menu) { align-items: start; }
+.view-menu { display: flex; flex-direction: column; align-items: flex-end; }
+.view-panel { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-1); }
 .badge {
   display: inline-grid;
   place-items: center;
