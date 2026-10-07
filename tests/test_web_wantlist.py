@@ -807,7 +807,7 @@ def priced(verdict):
         listed=1,
         uncertain=0,
         headline=Headline(
-            market=Market("used", listed=1, seen=1, low=price, high=price),
+            market=Market(listed=1, seen=1, low=price, high=price),
             cheapest=price,
             verdict=verdict,
         ),

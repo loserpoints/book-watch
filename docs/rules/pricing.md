@@ -26,18 +26,18 @@ These rules decide what a copy costs, whether it is under a book's limit, and wh
 - An over copy is shown in red, with no ✓ and no amount over.
 - A limit marks copies and never hides them.
 
-### Markets and ranks
+### Ranks and ranges
 
-- New and used copies are separate markets and are never counted together.
+- New and used copies are counted together. Condition is shown on each copy, and is not a separate market.
 - Only certain copies count in ranks, ranges and the want-list's price (see [matching](matching.md)).
-- A copy's rank is its place by delivered price among certain copies of its market listed now. Copies at the same price share a rank.
-- A market's range spans every certain copy of that market ever seen, one price per copy.
-- A copy without a delivered price or a condition code is not ranked, and says why.
+- A copy's rank is its place by delivered price among the certain copies listed now in its currency. Copies at the same price share a rank.
+- A book's range spans every certain copy ever seen in one currency, one price per copy.
+- A copy without a delivered price is not ranked, and says why. A copy with no stated condition is ranked like any other.
 - A range is drawn only when it holds at least two different prices.
 
 ### Order
 
-- The want-list shows each book's cheapest certain copy in its leading market. A market with a copy under the limit leads; otherwise used leads when it has copies listed; otherwise new.
+- The want-list shows each book's cheapest certain copy, new or used. When copies are listed in more than one currency, a currency with a copy under the limit leads; otherwise the one with the most copies listed.
 - Copies sort by delivered price within their tier, or newest first when asked, by the date eBay first listed them (see [matching](matching.md#what-is-new)). Newest first puts copies with no listing date last.
 - Copies without a delivered price sort below every copy with one, by their price alone.
 

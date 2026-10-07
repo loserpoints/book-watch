@@ -75,7 +75,7 @@ def test_another_currency_is_left_uncolored():
 
 def test_a_copy_without_a_delivered_price_says_so_in_place_of_a_rank():
     """One reason, whatever produced it (S54)."""
-    placed = Standing("used", unplaced="no delivered price")
+    placed = Standing(unplaced="no delivered price")
 
     assert row(a_copy("5.00", None), placed)["place_text"] == (
         "can't place: no delivered price"
@@ -83,8 +83,8 @@ def test_a_copy_without_a_delivered_price_says_so_in_place_of_a_rank():
 
 
 def test_a_ranked_copy_is_drawn_among_its_peers():
-    listed = {("used", "USD"): [Decimal("27.00"), Decimal("30.00")]}
-    placed = Standing("used", rank=1, listed=2)
+    listed = {"USD": [Decimal("27.00"), Decimal("30.00")]}
+    placed = Standing(rank=1, listed=2)
 
     c = row(a_copy(condition_id="5000"), placed=placed, listed=listed)
 
@@ -92,34 +92,31 @@ def test_a_ranked_copy_is_drawn_among_its_peers():
     assert c["place_text"] is None
 
 
-def test_the_only_copy_of_its_kind_keeps_its_words():
-    c = row(a_copy(condition_id="1000"), placed=Standing("new", rank=1, listed=1))
+def test_the_only_copy_listed_says_so():
+    """New or used alike since S70 (#247): condition is not a market."""
+    c = row(a_copy(condition_id="1000"), placed=Standing(rank=1, listed=1))
 
-    assert c["place_text"] == "only new listing"
+    assert c["place_text"] == "only listing"
 
 
 def test_a_market_names_both_populations_only_when_they_differ():
-    seen = {("used", "USD"): [Decimal("4"), Decimal("9"), Decimal("30")]}
+    seen = {"USD": [Decimal("4"), Decimal("9"), Decimal("30")]}
     wider = Market(
-        "used",
         listed=2,
         seen=3,
         low=Money(Decimal("4"), "USD"),
         high=Money(Decimal("30"), "USD"),
     )
     same = Market(
-        "used",
         listed=3,
         seen=3,
         low=Money(Decimal("4"), "USD"),
         high=Money(Decimal("30"), "USD"),
     )
 
-    assert book_view.market_line(wider, seen, LIMIT)["text"] == (
-        "2 used listed now, 3 seen"
-    )
+    assert book_view.market_line(wider, seen, LIMIT)["text"] == ("2 listed now, 3 seen")
     line = book_view.market_line(same, seen, LIMIT)
-    assert line["text"] == "3 used listed now"
+    assert line["text"] == "3 listed now"
     # The limit is drawn on the strip, as the dashed guide.
     assert "strip-limit" in line["strip"]
 

@@ -103,16 +103,16 @@ def _against(copy: Copy, verdict: Verdict, ceiling: Money | None) -> dict:
 
 
 def _place(copy: Copy, placed: Standing | None, listed: Prices) -> dict:
-    """Where this copy sits among the others of its kind listed now."""
+    """Where this copy sits among the others listed now."""
     if placed is None:
         return {"place": None, "place_text": None}
     if placed.unplaced is not None:
         return {"place": None, "place_text": f"can't place: {placed.unplaced}"}
     if placed.listed == 1:
-        return {"place": None, "place_text": f"only {placed.condition_class} listing"}
+        return {"place": None, "place_text": "only listing"}
     delivered = copy.landed_cost
     assert delivered is not None  # placed, so it had a delivered price
-    peers = listed.get((placed.condition_class, delivered.currency), [])
+    peers = listed.get(delivered.currency, [])
     return {"place": strips.rank_strip(peers, delivered.amount), "place_text": None}
 
 
@@ -121,11 +121,11 @@ def market_line(market: Market, seen: Prices, ceiling: Money | None) -> dict:
     of every asking price ever seen, with the limit where it applies."""
     # Two populations, both named: what a rank counts, and what
     # the strip spans. "Seen" is left off when it would repeat the count.
-    words = f"{market.listed} {market.condition_class} listed now"
+    words = f"{market.listed} listed now"
     if market.seen > market.listed:
         words += f", {market.seen} seen"
     currency = market.low.currency if market.low else "USD"
-    prices = seen.get((market.condition_class, currency), [])
+    prices = seen.get(currency, [])
     strip: Markup | None = None
     if market.has_range:
         limit = (

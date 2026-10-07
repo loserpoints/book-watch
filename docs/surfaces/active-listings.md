@@ -10,10 +10,10 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 - A warning when the book was added as text rather than an ISBN, since that search finds worse matches.
 - Three chips: the book's limit, the scope (US or Everywhere) and how long ago it was checked.
 - One line when the book's last AbeBooks check failed, "AbeBooks check failed", or found nothing, "No copies on AbeBooks", which links to the search AbeBooks was asked. eBay's copies show either way.
-- One line per market, "3 used listed now, 12 seen", with a strip of every asking price seen. Each dot is green at or under the limit and red over it, and a blue line marks the limit when it falls among the prices (see [pricing](../rules/pricing.md)).
+- One line for every copy, new and used alike, "8 listed now, 12 seen", with a strip of every asking price seen. Each dot is green at or under the limit and red over it, and a blue line marks the limit when it falls among the prices (see [pricing](../rules/pricing.md)).
 - How many copies match, then one row per certain copy from either marketplace, in one list (see [matching](../rules/matching.md)).
 - Each copy's delivered price, green with ✓ when under the limit, or red when over. A copy with unknown shipping shows its price and "+ shipping?".
-- Where each copy sits among the others of its kind, as a strip, or why it can't be placed.
+- Where each copy sits among the others listed now, as a strip, or why it can't be placed.
 - Each copy's condition, where it ships from when outside the US, "takes offers" when the seller accepts Best Offer, and its listing title.
 - "new" on a copy that appeared since the book was last opened (see [matching](../rules/matching.md)).
 - When eBay first listed each copy, "listed 3w". A copy with no listing date, which is every AbeBooks copy, shows no age.

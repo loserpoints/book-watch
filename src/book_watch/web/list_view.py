@@ -100,7 +100,7 @@ def _price(entry: Entry, glance: Glance) -> dict:
         verdict = "under"
     elif lead.verdict == "over" and ceiling is not None:
         verdict = "over"
-    seen = glance.seen_prices.get((lead.market.condition_class, cheapest.currency), [])
+    seen = glance.seen_prices.get(cheapest.currency, [])
     strip = None
     if lead.market.has_range:
         limit = (

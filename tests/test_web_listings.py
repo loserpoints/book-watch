@@ -831,9 +831,9 @@ def test_a_copy_says_where_it_sits_among_the_others(book_client):
     page = visible(client.get("/book/1").text)
 
     # The market once, and the strip of what it asks (S34).
-    assert "2 used listed now" in page
+    assert "2 listed now" in page
     assert "2 asking prices seen, $4 to $30" in page
-    # Each copy's place, drawn: every dot a copy of its kind listed now.
+    # Each copy's place, drawn: every dot a copy listed now.
     assert "1 of 2 by price among copies listed now" in page
     assert "2 of 2 by price among copies listed now" in page
 
@@ -867,9 +867,9 @@ def test_the_range_is_stated_once_however_many_copies_there_are(book_client):
     assert page.count("of 6 by price among copies listed now") == 6
 
 
-def test_a_new_copy_and_a_used_one_are_never_counted_together(book_client):
-    """Two markets rather than two grades. The page must not say 'cheapest of
-    3' where one of the three is shrink-wrapped stock from a bulk seller."""
+def test_a_new_copy_and_a_used_one_are_counted_together(book_client):
+    """S70 (#247): one line and one strip for every copy. Condition is shown
+    on each copy, not split into two markets."""
     client = book_client(
         returning(
             a_listing(
@@ -892,15 +892,14 @@ def test_a_new_copy_and_a_used_one_are_never_counted_together(book_client):
 
     page = visible(client.get("/book/1").text)
 
-    assert "only used listing" in page
-    assert "only new listing" in page
-    # Two markets, stated separately, neither pooled into a count of two.
-    assert "1 used listed now" in page
-    assert "1 new listed now" in page
-    assert "2 used listed now" not in page
+    assert "2 listed now" in page
+    assert "used listed now" not in page
+    assert "new listed now" not in page
+    assert page.count("of 2 by price among copies listed now") == 2
 
 
-def test_a_copy_with_no_stated_condition_says_so_rather_than_ranking(book_client):
+def test_a_copy_with_no_stated_condition_says_so_and_is_still_ranked(book_client):
+    """S70 (#247): condition no longer decides what a copy is compared with."""
     client = book_client(
         returning(
             a_listing(
@@ -918,8 +917,9 @@ def test_a_copy_with_no_stated_condition_says_so_rather_than_ranking(book_client
 
     page = visible(client.get("/book/1").text)
 
-    assert "can't place: condition unstated" in page
-    assert "by price among" not in page
+    assert "condition unstated" in page
+    assert "can't place" not in page
+    assert "only listing" in page
 
 
 def test_a_copy_with_words_but_no_code_does_not_contradict_itself(book_client):
@@ -945,7 +945,7 @@ def test_a_copy_with_words_but_no_code_does_not_contradict_itself(book_client):
     page = visible(client.get("/book/1").text)
 
     assert "Good" in page
-    assert "can't place: no condition code" in page
+    assert "can't place" not in page
     assert "condition unstated" not in page
 
 
@@ -1011,9 +1011,9 @@ def test_the_range_on_the_page_spans_copies_that_have_stopped_appearing(book_cli
     page = as_read(client.get("/book/1?refresh=1").text)
 
     page = visible(page)
-    assert "only used listing" in page
+    assert "only listing" in page
     # One listed now, two seen, and the strip spans both.
-    assert "1 used listed now, 2 seen" in page
+    assert "1 listed now, 2 seen" in page
     assert "2 asking prices seen, $4 to $30" in page
 
 
