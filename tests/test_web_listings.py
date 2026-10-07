@@ -6,6 +6,7 @@ drive the real templates against listings the test made up.
 
 import html
 import re
+from contextlib import closing
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
@@ -13,8 +14,8 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from book_watch import alerts, daily, db, wantlist
 from book_watch import config as config_module
-from book_watch import db
 from book_watch import enrichment as enrichment_module
 from book_watch import sweeps as sweeps_module
 from book_watch.config import DeletionEndpointConfig, MissingCredentialError
@@ -1425,13 +1426,18 @@ def test_back_to_the_want_list_asks_for_it_again(book_client):
 
 
 def test_a_row_can_be_removed_and_asks_first(book_client):
-    """S26 B6: a trash icon, and it keeps its confirmation."""
+    """S26 B6: a trash icon, and it asks first: since S71 (#223), by opening
+    the sheet that takes the book off the list, bought or not wanted."""
     client, _ = a_shelf(book_client)
 
     page = client.get("/").text
+    sheet = client.get("/books/2/off")
 
-    assert 'hx-confirm="Remove Crash from the list?"' in page
-    assert 'hx-delete="/books/2"' in page
+    assert 'hx-get="/books/2/off"' in page
+    assert "Take Crash off the list" in visible(page)
+    assert "Take Crash off the list" in visible(sheet.text)
+    assert "I don't want it" in visible(sheet.text)
+    assert 'hx-delete="/books/2"' in sheet.text
 
 
 def test_the_ceiling_shows_against_the_cheapest_copy(book_client):
@@ -1619,3 +1625,214 @@ def test_one_copy_offers_no_order_to_choose(book_client):
     page = visible(client.get("/book/1").text)
 
     assert "Newest" not in page
+
+
+# --- marking a book bought (S71, #223) ----------------------------------------
+
+
+def opened(client, book_id, item_id):
+    """What the tap on a copy's listing sends alongside it."""
+    return client.post(f"/books/{book_id}/opened?m=ebay&item={item_id}")
+
+
+def buy(client, book_id, **fields):
+    form = {"where": "ebay", "shop": "", "paid": "7.80", "bought_on": "2026-10-01"}
+    form.update(fields)
+    return client.post(f"/books/{book_id}/bought", data=form)
+
+
+def test_each_copy_tells_the_app_when_it_is_opened(book_client):
+    client, _ = a_shelf(book_client)
+    follow(client, "/books/check")
+    all_certain(client)
+
+    page = client.get("/book/1").text
+
+    # The link still goes straight to eBay: that is what hands it to the app.
+    assert 'href="https://www.ebay.com/itm/123"' in page
+    assert 'data-opened="/books/1/opened?m=ebay&amp;item=9781590171998%7C1"' in page
+
+
+def test_the_sheet_is_filled_in_from_the_copy_last_opened(book_client):
+    client, _ = a_shelf(book_client)
+    follow(client, "/books/check")
+    all_certain(client)
+    opened(client, 1, "9781590171998|0")
+
+    assert opened(client, 1, "9781590171998|2").status_code == 204
+    sheet = client.get("/books/1/off")
+
+    shown = visible(sheet.text)
+    assert "Filled in from the copy you opened just now" in shown
+    # The last one opened, delivered: $12 with free shipping.
+    assert 'value="12.00"' in sheet.text
+    assert 'name="where" value="ebay" checked' in sheet.text
+    assert sheet.headers["HX-Trigger-After-Settle"] == '{"sheet-ready": "off-sheet"}'
+
+
+def test_with_no_copy_opened_the_sheet_starts_empty_and_says_so(book_client):
+    client, _ = a_shelf(book_client)
+
+    sheet = client.get("/books/1/off")
+
+    assert "You haven't opened a copy of this book from the app" in visible(sheet.text)
+    assert 'id="bought-paid" name="paid" value=""' in sheet.text
+
+
+def test_a_copy_opened_on_another_book_fills_in_nothing_here(book_client):
+    client, _ = a_shelf(book_client)
+    opened(client, 2, "9780099448396|0")
+
+    assert "You haven't opened a copy" in visible(client.get("/books/1/off").text)
+
+
+def test_an_unknown_marketplace_is_not_remembered(book_client):
+    client, _ = a_shelf(book_client)
+
+    client.post("/books/1/opened?m=amazon&item=x")
+
+    assert "You haven't opened a copy" in visible(client.get("/books/1/off").text)
+
+
+def test_the_date_starts_at_today_and_cannot_be_in_the_future(book_client):
+    client, _ = a_shelf(book_client)
+    today = datetime.now(daily.ZONE).date().isoformat()
+
+    sheet = client.get("/books/1/off").text
+
+    assert f'type="date" max="{today}"' in sheet
+    assert f'id="bought-on" name="bought_on" value="{today}"' in sheet
+
+
+@pytest.mark.parametrize(
+    ("fields", "said"),
+    [
+        ({"paid": ""}, "Say what you paid."),
+        ({"paid": "abc"}, "“abc” isn't an amount."),
+        ({"paid": "0"}, "What you paid has to be more than nothing."),
+        ({"where": "other", "shop": " "}, "Say which shop or site."),
+        ({"bought_on": ""}, "Say when you bought it."),
+        ({"bought_on": "2999-01-01"}, "That date hasn't happened yet."),
+    ],
+)
+def test_what_cannot_be_recorded_keeps_the_sheet_open(book_client, fields, said):
+    client, _ = a_shelf(book_client)
+
+    response = buy(client, 1, **fields)
+
+    assert said in visible(response.text)
+    # The sheet again, not the list, and the book still on it.
+    assert 'id="want-list"' not in response.text
+    assert "Stoner" in visible(client.get("/").text.split("Bought")[0])
+
+
+def test_a_refusal_keeps_what_was_typed(book_client):
+    client, _ = a_shelf(book_client)
+
+    response = buy(client, 1, where="other", shop="Strand Books", paid="nine")
+
+    assert 'value="Strand Books"' in response.text
+    assert 'value="nine"' in response.text
+    assert 'name="where" value="other" checked' in response.text
+
+
+def test_a_book_bought_leaves_the_list_for_the_bought_section(book_client):
+    client, _ = a_shelf(book_client)
+    client.post("/book/1/ceiling", data={"ceiling": "8", "currency": "USD"})
+
+    response = buy(client, 1, paid="7.8", bought_on="2026-10-01")
+
+    assert response.headers["HX-Trigger"] == "taken-off"
+    assert response.headers["HX-Retarget"] == "#want-list"
+    page = visible(client.get("/").text)
+    assert "2 books" in page
+    assert "Bought · 1 book · $7.80" in page
+    assert "on eBay · Oct 1" in page
+    assert "your limit: $8" in page
+    assert 'hx-get="/books/1/off"' not in client.get("/").text
+
+
+def test_what_was_paid_is_judged_against_the_limit_it_had(book_client):
+    client, _ = a_shelf(book_client)
+    client.post("/book/1/ceiling", data={"ceiling": "8", "currency": "USD"})
+    client.post("/book/2/ceiling", data={"ceiling": "8", "currency": "USD"})
+    buy(client, 1, paid="7.80")
+    buy(client, 2, paid="9", where="other", shop="Strand Books")
+    buy(client, 3, paid="5", where="abebooks")
+
+    page = client.get("/").text
+
+    bought = visible(page.split("Bought ·")[1])
+    assert "$7.80 (under your limit)" in bought
+    assert "$9 (over your limit)" in bought
+    assert "on Strand Books" in bought
+    assert "$5 no limit set" in bought
+    assert "Bought · 3 books · $21.80" in visible(page)
+
+
+def test_the_bought_section_stays_when_the_list_is_empty(book_client):
+    client, _ = a_shelf(book_client)
+    for book_id in (1, 2, 3):
+        buy(client, book_id)
+
+    page = visible(client.get("/").text)
+
+    assert "Nothing on the list yet" in page
+    assert "Bought · 3 books" in page
+
+
+def test_nothing_shows_below_the_list_until_a_book_is_bought(book_client):
+    client, _ = a_shelf(book_client)
+
+    assert "Bought ·" not in visible(client.get("/").text)
+
+
+def test_a_book_removed_as_not_wanted_is_not_bought(book_client):
+    client, _ = a_shelf(book_client)
+
+    response = client.delete("/books/1")
+
+    assert response.headers["HX-Trigger"] == "taken-off"
+    assert "Bought ·" not in visible(client.get("/").text)
+
+
+def test_a_book_already_gone_is_not_an_error(book_client):
+    client, _ = a_shelf(book_client)
+    client.delete("/books/1")
+
+    assert buy(client, 1).status_code == 200
+    assert client.get("/books/1/off").headers["HX-Trigger"] == "taken-off"
+    assert "Bought ·" not in visible(client.get("/").text)
+
+
+def test_a_bought_book_is_no_longer_checked_or_emailed(book_client):
+    client, _ = a_shelf(book_client)
+    follow(client, "/books/check")
+    all_certain(client)
+    client.post("/book/1/ceiling", data={"ceiling": "50", "currency": "USD"})
+    with closing(client.app.state.connect()) as connection:
+        # Opened long ago, so every copy is new and under the limit.
+        connection.execute("UPDATE entry SET looked_at = '2000-01-01 00:00:00'")
+        assert any(alert.entry.id == 1 for alert in alerts.due(connection))
+
+    buy(client, 1)
+
+    with closing(client.app.state.connect()) as connection:
+        # The daily check, Check all and the email all start from the list.
+        assert [book.id for book in wantlist.all_books(connection)] == [3, 2]
+        assert not any(alert.entry.id == 1 for alert in alerts.due(connection))
+    assert "Check all" in visible(client.get("/").text)
+
+
+def test_buying_records_the_purchase_and_removes_the_entry_together(book_client):
+    client, _ = a_shelf(book_client)
+
+    buy(client, 1, paid="$7.80", where="other", shop="  Strand Books ")
+
+    with closing(client.app.state.connect()) as connection:
+        (row,) = connection.execute("SELECT * FROM purchase").fetchall()
+        assert (row["title"], row["paid"], row["currency"]) == ("Stoner", "7.80", "USD")
+        assert (row["marketplace"], row["shop"]) == (None, "Strand Books")
+        assert row["bought_on"] == "2026-10-01"
+        gone = connection.execute("SELECT count(*) FROM entry WHERE id = 1")
+        assert gone.fetchone()[0] == 0

@@ -22,6 +22,7 @@ The want list shows every book I'm watching and whether any copy is worth my att
 - Over the rows, how many books show and their order: "6 books · Cheapest · Added". Cheapest goes by each row's "from $X", with books that have no price last. Not shown for a single book.
 - The whole list drawn again on going back to it, and on coming back to the app after a minute or more away, unless a check is running.
 - "Nothing on the list yet" when the list is empty.
+- Below the list, once a book has been bought, a folded "Bought · 3 books · $26.95". Opened, each book bought shows its cover, title and author, where and when it was bought, and what was paid, green at or under the limit the book had then and red over it.
 
 ## What you can do
 
@@ -31,12 +32,14 @@ The want list shows every book I'm watching and whether any copy is worth my att
 - The switch and the order stay through opening a book and going back. Opening the app shows every book, newest added first, and so does adding a book.
 - Tap "Check 2" to check the books not checked in the last hour.
 - Tap "Check all" to check every book again. It asks first, unless this device was told not to ask again.
-- Tap the trash icon to remove a book. It asks first.
+- Tap the trash icon to take a book off the list. A sheet asks which way: "I bought it" or "I don't want it".
+- "I bought it" asks where (eBay, AbeBooks, or elsewhere with the shop's name), what was paid delivered, and the day, with the phone's own date picker. It is filled in from the copy of this book last opened from the app, with that copy's marketplace and delivered price and today's date, and says when that copy was opened. Mark bought, and the book leaves the list for the Bought section and stops being checked and emailed. A bought book can't be put back.
+- "I don't want it" removes the book, and nothing is kept.
 - Tap + to add a book (see [adding a book](add-a-book.md)). Adding leaves nothing to go back through.
 - Press back to leave the app.
 
 ## Open issues
 
 - [An app left open through a deploy redraws the new markup without the new styles](https://github.com/loserpoints/book-watch/issues/256)
-- [Mark a book bought, with what I paid and where, and keep a record of what I've bought](https://github.com/loserpoints/book-watch/issues/223)
+- [A Bought page, as a compact diary of what I've bought](https://github.com/loserpoints/book-watch/issues/258)
 - [Show when a copy's price has dropped](https://github.com/loserpoints/book-watch/issues/164)

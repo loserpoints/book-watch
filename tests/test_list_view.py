@@ -4,10 +4,11 @@ The states S26 kept apart must stay apart: nobody has looked, nothing is
 listed, copies but none comparable, only maybes, and a cheapest copy.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 from book_watch.ebay.search import Money
+from book_watch.purchases import Purchase
 from book_watch.standing import Glance, Headline, Market
 from book_watch.wantlist import Entry
 from book_watch.web import list_view
@@ -111,3 +112,50 @@ def test_listed_counts_every_copy_new_counts():
 
     assert row["new"] <= row["listed"]
     assert row["listed"] == 18
+
+
+def a_purchase(**extra):
+    fields = dict(
+        id=1,
+        title="Stoner",
+        author="John Williams",
+        cover_id=None,
+        paid=usd("7.80"),
+        marketplace="ebay",
+        shop=None,
+        bought_on=date(2026, 10, 3),
+        limit=usd("8"),
+    )
+    fields.update(extra)
+    return Purchase(**fields)
+
+
+def test_a_bought_row_says_where_and_the_day_without_the_year_this_year():
+    today = date(2026, 10, 7)
+
+    this_year = list_view.bought_row(a_purchase(), today)
+    last_year = list_view.bought_row(
+        a_purchase(bought_on=date(2025, 12, 28), marketplace=None, shop="Strand"),
+        today,
+    )
+
+    assert this_year["where_when"] == "on eBay · Oct 3"
+    assert last_year["where_when"] == "on Strand · Dec 28, 2025"
+
+
+def test_a_bought_row_is_judged_against_the_limit_it_had():
+    assert list_view.bought_row(a_purchase())["verdict"] == "under"
+    assert list_view.bought_row(a_purchase(paid=usd("8")))["verdict"] == "under"
+    assert list_view.bought_row(a_purchase(paid=usd("8.01")))["verdict"] == "over"
+    no_limit = list_view.bought_row(a_purchase(limit=None))
+    assert (no_limit["verdict"], no_limit["limit_text"]) == (None, "no limit set")
+
+
+def test_the_bought_total_leaves_out_a_sum_across_currencies():
+    gbp = Money(Decimal("5"), "GBP")
+
+    assert list_view.bought_total([a_purchase()]) == "Bought · 1 book · $7.80"
+    assert list_view.bought_total([a_purchase(), a_purchase(paid=gbp)]) == (
+        "Bought · 2 books"
+    )
+    assert list_view.bought_total([]) is None

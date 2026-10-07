@@ -74,6 +74,34 @@
     if (sheet && sheet.open) sheet.close();
   });
 
+  // "sheet-ready", sent with the take-off sheet's contents (S71, #223): the
+  // trash asked for this book's sheet, and it opens only once it holds it,
+  // so it never shows the last book's for a moment. A refusal sent back to a
+  // sheet already open leaves it open.
+  // The event comes on the trash that asked, and names the sheet to open.
+  document.addEventListener("sheet-ready", function (event) {
+    var id = event.detail && event.detail.value;
+    var sheet = id && document.getElementById(id);
+    if (sheet && !sheet.open && typeof sheet.showModal === "function") sheet.showModal();
+  });
+
+  // "taken-off", sent with the list once a book is bought or removed: the
+  // sheet closes over the list that no longer holds it.
+  document.addEventListener("taken-off", function () {
+    var sheet = document.getElementById("off-sheet");
+    if (sheet && sheet.open) sheet.close();
+  });
+
+  // Opening a copy's listing tells the app which copy it was, so the bought
+  // sheet can offer it (S71). Alongside the tap, never in its way: the link
+  // still goes straight to the marketplace, which is what hands it to the
+  // eBay app, and a note that never arrives costs only the suggestion.
+  document.addEventListener("click", function (event) {
+    var link = event.target instanceof Element && event.target.closest("a[data-opened]");
+    if (!link || typeof navigator.sendBeacon !== "function") return;
+    try { navigator.sendBeacon(link.getAttribute("data-opened")); } catch (ignored) {}
+  });
+
   // A sheet that went to the server and came back with results or an error
   // reopens itself, so the answer appears where the question was asked.
   function openWaiting() {

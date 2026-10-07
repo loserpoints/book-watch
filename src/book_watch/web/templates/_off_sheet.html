@@ -1,0 +1,29 @@
+{% import "_ui.html" as ui %}
+{#- The title names the book, and sits outside the body, so it comes along out of band. -#}
+<h2 class="sheet-title" id="off-sheet-title" hx-swap-oob="true">Take {{ book.name }} off the list</h2>
+{#- What is inside the sheet the trash opens (S71, #223): two ways off the
+    list, as a two-way choice. Bought asks where, what was paid and when,
+    filled in from the copy of this book last opened from the app. Each side
+    is its own form, so neither sends the other's fields. A refusal comes
+    back here, with what was typed. -#}
+{{ ui.switch("off", [("bought", "I bought it"), ("remove", "I don't want it")], "bought") }}
+
+<form class="sheet-form sheet-side" data-when="bought" hx-post="/books/{{ book.id }}/bought" hx-target="#off-sheet-body" method="post" action="/books/{{ book.id }}/bought">
+  {% if suggested %}<p class="sheet-note">{{ suggested }}</p>
+  {%- elif not error %}<p class="sheet-note">You haven't opened a copy of this book from the app.</p>{% endif %}
+  <fieldset class="field">
+    <legend>Where</legend>
+    {{ ui.switch("where", [("ebay", "eBay"), ("abebooks", "AbeBooks"), ("other", "Elsewhere")], where) }}
+  </fieldset>
+  <div data-when="other">{{ ui.field("bought-shop", "Which shop or site", shop, name="shop", placeholder="Biblio, a bookshop…") }}</div>
+  {{ ui.field("bought-paid", "Paid, delivered", paid, name="paid", inputmode="decimal", placeholder="7.80", hint="Price and shipping together." ~ (" Your limit is %s." % limit_text if limit_text else "")) }}
+  {{ ui.field("bought-on", "Bought on", bought_on, name="bought_on", type="date", max=today) }}
+  {% if error %}<p class="sheet-error" role="alert">{{ error }}</p>{% endif %}
+  <p class="sheet-note">It leaves the list and joins what you've bought below it. It stops being checked.</p>
+  <div class="sheet-actions">{{ ui.button("Close", "ghost", close=True) }}{{ ui.button("Mark bought", "primary", type="submit") }}</div>
+</form>
+
+<form class="sheet-form sheet-side" data-when="remove" hx-delete="/books/{{ book.id }}" hx-target="#want-list" hx-swap="outerHTML">
+  <p class="sheet-note">It leaves the list and nothing is kept. It stops being checked.</p>
+  <div class="sheet-actions">{{ ui.button("Close", "ghost", close=True) }}{{ ui.button("Remove", "primary", type="submit") }}</div>
+</form>

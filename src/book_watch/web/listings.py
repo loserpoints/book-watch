@@ -303,6 +303,11 @@ def build_router(
                     listed_prices,
                     new=copies.is_new(copy, since),
                 )
+                # Which copy was opened, for the bought sheet (S71, #223).
+                | {
+                    "opened": f"/books/{book.id}/opened?"
+                    + urlencode({"m": copy.marketplace, "item": copy.item_id})
+                }
                 for copy in shown
                 if (copy.tier == "certain") == tier_wanted
             ]

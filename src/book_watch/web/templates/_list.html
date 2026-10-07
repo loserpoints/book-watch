@@ -42,10 +42,16 @@
     {% with oob = false %}{% include "_entry.html" %}{% endwith %}
   {% endfor %}
   </ul>
-
+{% endif %}
+  {#- What I've bought, folded below the list (S71, #223). Outside the list's
+      own branch, so it stays when every book on the list has been bought. -#}
+  {% if bought %}
+  {% call ui.fold(bought_total) %}<ul class="ui-list">{% for b in bought %}{{ ui.bought_row(b) }}{% endfor %}</ul>{% endcall %}
+  {% endif %}
+  {% if books or bought %}
   {#- Their covers API asks for a link back, and it is the least we owe. -#}
   <p class="meta credit">
     Covers from <a href="https://openlibrary.org" rel="noopener">Open Library</a>.
   </p>
-{% endif %}
+  {% endif %}
 </div>

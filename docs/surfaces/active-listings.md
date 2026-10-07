@@ -34,7 +34,7 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 - Tap Newest to see the latest listings first, and Cheapest to go back. The order stays through checking again, changing scope, going back and reloading. Opening a book shows cheapest first.
 - Tap a copy's photo to see every photo, swiping between them.
 - Tap a condition note to read all of it, and tap again to collapse it.
-- Tap a listing title to open it on its marketplace.
+- Tap a listing title to open it on its marketplace. The app remembers which copy was opened, so marking the book bought can offer it. Copies opened from the morning email aren't remembered.
 - Tap the fold to see the copies that might be this book.
 - Tap "Still checking." to see what it means.
 - Press back to return to the want list, whatever was done on the page. With a sheet or photo open, back closes it first.

@@ -21,7 +21,7 @@ from __future__ import annotations
 import sqlite3
 from collections.abc import Callable
 from contextlib import closing
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Literal
@@ -37,6 +37,7 @@ from book_watch import (
     daily,
     db,
     enrichment,
+    purchases,
     standing,
     sweeps,
     wantlist,
@@ -50,7 +51,7 @@ from book_watch.openlibrary import (
     OpenLibraryClient,
     OpenLibraryUnavailable,
 )
-from book_watch.web import assets, filters, list_view
+from book_watch.web import assets, book_view, filters, list_view
 from book_watch.web.searching import LazyBrowseSearch, SearchFn
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
@@ -300,6 +301,7 @@ def build_router(
             glances = at_a_glance(connection, books)
             stale = out_of_date(connection, books)
             morning = daily.status(connection, datetime.now(UTC))
+            bought = purchases.everything(connection)
         under_ids = under_limit(glances)
         if under is None:
             under = wants_under(request)
@@ -325,6 +327,9 @@ def build_router(
                 # Nothing under a limit shows everything, never an empty list.
                 "filtering": under and bool(under_ids),
                 "hidden_digging": hidden_digging(books, under_ids, under),
+                # Below the list, folded (S71, #223).
+                "bought": [list_view.bought_row(p) for p in bought],
+                "bought_total": list_view.bought_total(bought),
             },
         )
 
@@ -347,6 +352,7 @@ def build_router(
             stale = out_of_date(connection, books)
             morning = daily.status(connection, datetime.now(UTC))
             on_list = wantlist.listed_works(connection) if candidates else set()
+            bought = purchases.everything(connection)
         under_ids = under_limit(glances)
         order = wants_sort(request) if checking is None else "added"
         filtering = wants_under(request) and bool(under_ids)
@@ -376,6 +382,8 @@ def build_router(
                 # book you just added never shows as unchecked, which is the
                 # state that reads worst on a list.
                 "checking": checking,
+                "bought": [list_view.bought_row(p) for p in bought],
+                "bought_total": list_view.bought_total(bought),
                 "error": error,
                 "note": note,
                 "offer_override": offer_override,
@@ -626,7 +634,11 @@ def build_router(
                 return Response(status_code=404)
             if book.cover is None and book.cover_asked_at is None:
                 covers.look_up(connection, open_library, book.work_id)
-                book = wantlist.get(connection, book_id)
+                try:
+                    book = wantlist.get(connection, book_id)
+                except LookupError:
+                    # Taken off the list while its cover was being asked for.
+                    return Response(status_code=404)
         if book.cover is None:
             return Response(status_code=404)
         return RedirectResponse(covers.url(book.cover), status_code=302)
@@ -637,7 +649,140 @@ def build_router(
             wantlist.remove(connection, book_id)
         # Deleting something already gone is not an error worth showing: the
         # list is the answer to "what is on the list", and it is now correct.
-        return render_list(request)
+        return taken_off(render_list(request))
+
+    def taken_off(response: HTMLResponse) -> HTMLResponse:
+        """The list in place of the old one, with the take-off sheet told to
+        close over it (S71)."""
+        response.headers["HX-Retarget"] = "#want-list"
+        response.headers["HX-Reswap"] = "outerHTML"
+        response.headers["HX-Trigger"] = "taken-off"
+        return response
+
+    def off_sheet(
+        request: Request,
+        book: wantlist.Entry,
+        *,
+        suggestion: purchases.Suggestion | None = None,
+        where: str = "ebay",
+        shop: str = "",
+        paid: str = "",
+        bought_on: str = "",
+        error: str | None = None,
+    ) -> HTMLResponse:
+        today = datetime.now(daily.ZONE).date().isoformat()
+        suggested = None
+        if suggestion is not None:
+            ago = filters.since(suggestion.opened_at)
+            suggested = (
+                "Filled in from the copy you opened "
+                + ("just now" if ago == "just now" else f"{ago} ago")
+                + ". Change anything that's different."
+            )
+            if suggestion.paid is None:
+                suggested += " Its shipping wasn't known, so say what you paid."
+        limit = book.will_pay
+        response = templates.TemplateResponse(
+            request,
+            "_off_sheet.html",
+            {
+                "book": book,
+                "suggested": suggested,
+                "where": where,
+                "shop": shop,
+                "paid": paid,
+                "bought_on": bought_on or today,
+                "today": today,
+                "limit_text": book_view.money(limit) if limit else None,
+                "error": error,
+            },
+        )
+        # Opened only once it holds this book, never showing the last one.
+        response.headers["HX-Trigger-After-Settle"] = '{"sheet-ready": "off-sheet"}'
+        return response
+
+    @router.get("/books/{book_id}/off", response_class=HTMLResponse)
+    def take_off(request: Request, book_id: int) -> HTMLResponse:
+        """The sheet the trash opens, filled in from the copy of this book
+        last opened from the app (S71, #223)."""
+        with closing(open_database()) as connection:
+            try:
+                book = wantlist.get(connection, book_id)
+            except LookupError:
+                # Gone already, from another tab: the list says so.
+                return taken_off(render_list(request))
+            suggestion = purchases.suggestion(connection, book)
+        if suggestion is None:
+            return off_sheet(request, book)
+        return off_sheet(
+            request,
+            book,
+            suggestion=suggestion,
+            where=suggestion.marketplace,
+            paid=f"{suggestion.paid.amount:.2f}" if suggestion.paid else "",
+        )
+
+    @router.post("/books/{book_id}/bought", response_class=HTMLResponse)
+    def mark_bought(
+        request: Request,
+        book_id: int,
+        where: str = Form("ebay"),
+        shop: str = Form(""),
+        paid: str = Form(""),
+        bought_on: str = Form(""),
+    ) -> HTMLResponse:
+        """Record the purchase and take the book off the list. A refusal
+        comes back in the sheet with what was typed."""
+        with closing(open_database()) as connection:
+            try:
+                book = wantlist.get(connection, book_id)
+            except LookupError:
+                book = None
+            if book is not None:
+                today = datetime.now(daily.ZONE).date()
+                try:
+                    amount = purchases.amount(paid)
+                    if where not in (*purchases.MARKETPLACES, "other"):
+                        raise purchases.Refused("Say where you bought it.")
+                    if where == "other" and not shop.strip():
+                        raise purchases.Refused("Say which shop or site.")
+                    try:
+                        on = date.fromisoformat(bought_on.strip())
+                    except ValueError:
+                        raise purchases.Refused("Say when you bought it.") from None
+                    if on > today:
+                        raise purchases.Refused("That date hasn't happened yet.")
+                except purchases.Refused as refused:
+                    return off_sheet(
+                        request,
+                        book,
+                        where=where,
+                        shop=shop,
+                        paid=paid,
+                        bought_on=bought_on,
+                        error=str(refused),
+                    )
+                purchases.buy(
+                    connection,
+                    book_id,
+                    paid=amount,
+                    # The sheet asks in dollars, as every limit is set.
+                    currency="USD",
+                    marketplace=None if where == "other" else where,
+                    shop=shop.strip() if where == "other" else None,
+                    bought_on=on,
+                )
+        return taken_off(render_list(request))
+
+    @router.post("/books/{book_id}/opened")
+    def copy_opened(
+        request: Request, book_id: int, m: str = "", item: str = ""
+    ) -> Response:
+        """Which copy of this book was just opened, sent alongside the tap
+        that opens it (S71). Only ever a hint for the bought sheet."""
+        with closing(open_database()) as connection:
+            purchases.opened(connection, book_id, m, item, datetime.now(UTC))
+        return Response(status_code=204)
 
     def render_step(
         request: Request,
