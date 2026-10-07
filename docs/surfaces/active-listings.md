@@ -40,5 +40,4 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 
 ## Open issues
 
-- [Dismiss a copy I've ruled out](https://github.com/loserpoints/book-watch/issues/105)
 - [Remember which sellers I trust on condition](https://github.com/loserpoints/book-watch/issues/75)

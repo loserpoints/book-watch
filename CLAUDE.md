@@ -3,7 +3,7 @@
 ## Start of session
 
 1. Read `README.md`, `docs/governance.md` and `CONTRIBUTING.md`.
-2. Read the surfaces in `docs/surfaces/`, and the latest milestone in `docs/milestones/`.
+2. Read `docs/personas.md` and `docs/jobs.md`, the surfaces in `docs/surfaces/`, and the latest milestone in `docs/milestones/`.
 3. Read a rules doc before changing what it governs, the design system before building or changing a screen, and the runbook before touching the deploy or when production is wrong.
 4. Propose a plan: what you intend to do, what it buys, and where you need a decision. Wait for approval. Exploring to inform the plan is fine. Producing deliverables is not.
 
