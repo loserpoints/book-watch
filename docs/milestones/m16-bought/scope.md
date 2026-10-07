@@ -2,7 +2,7 @@
 
 ## Goal
 
-I can mark a book bought and keep a record of what I paid and where, see which way the last check moved a book's price or a copy's, and tap anywhere on a row to do what it does, on both screens.
+A book comes off the list by a sheet that asks whether I bought it, filled in from the copy I last opened, and joins a folded record below the list with what I paid, where and when; a caret beside a price says which way the last check moved it, on the want list and on each copy; and a tap anywhere on a row, on either screen, shows it pressed and does what the row does.
 
 ## Jobs advanced
 
