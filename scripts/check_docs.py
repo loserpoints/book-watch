@@ -23,6 +23,7 @@ ISSUE_LINK = re.compile(
     r"^- \[[^\]]+\]\(https://github\.com/loserpoints/book-watch/(issues|pull)/\d+\)$"
 )
 JOB_LINK = re.compile(r"^- \[[^\]]+\]\((\.\./)*jobs\.md#j\d+[^)]*\)$")
+PERSONA_LINK = re.compile(r"^- \[[^\]]+\]\((\.\./)*personas\.md#p\d+[^)]*\)$")
 #: A link to a document in this repository, from a learning to where it went.
 DOC_LINK = re.compile(r"\]\((?!https?://)([^)#]+\.md)(#[^)]*)?\)")
 REPO_API = "https://api.github.com/repos/loserpoints/book-watch/issues/{}"
@@ -164,6 +165,12 @@ def check_body(
         bad = [line for line in lines if not JOB_LINK.match(line)]
         if bad:
             return [f"{where}: '{section.name}' holds more than job links: {bad[0]!r}"]
+    if "persona links" in section.flags:
+        bad = [line for line in lines if not PERSONA_LINK.match(line)]
+        if bad:
+            return [
+                f"{where}: '{section.name}' holds more than persona links: {bad[0]!r}"
+            ]
     if "slice links" in section.flags:
         return check_slices(where, section, lines, labels)
     if "routed" in section.flags:

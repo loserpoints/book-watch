@@ -17,6 +17,9 @@ import check_docs  # noqa: E402
 
 ISSUE = "- [Dismiss a copy](https://github.com/loserpoints/book-watch/issues/105)"
 PR = "- [S34 book page](https://github.com/loserpoints/book-watch/pull/119)"
+READER = "- [P1 · Reader](personas.md#p1--reader)"
+PERSONA = f"### Persona\n\n{READER}\n\n"
+J1 = "- [J1 · Keep looking](jobs.md#j1--keep-looking-so-i-dont-have-to)"
 
 
 @pytest.fixture
@@ -152,7 +155,7 @@ def test_each_job_has_its_three_parts(repo):
         governance.read_text().replace("| Jobs | migrating |", "| Jobs | active |")
     )
     good = (
-        "## J1 · Keep looking\n\n### Job\n\nWatch for me.\n\n"
+        "## J1 · Keep looking\n\n" + PERSONA + "### Job\n\nWatch for me.\n\n"
         "### Success signal\n\nI stop searching.\n\n"
         "### Status\n\nMet. It watches for me.\n"
     )
@@ -165,13 +168,14 @@ def test_each_job_has_its_three_parts(repo):
         "# Jobs\n\n" + good.replace("### Success signal", "### Signal"),
     )
     assert any(
-        "needs ['Job', 'Success signal', 'Status']" in e for e in check_docs.check(repo)
+        "needs ['Persona', 'Job', 'Success signal', 'Status']" in e
+        for e in check_docs.check(repo)
     )
 
 
 def test_a_jobs_status_says_met_or_not_met(repo):
     job = (
-        "## J1 · Keep looking\n\n### Job\n\nWatch for me.\n\n"
+        "## J1 · Keep looking\n\n" + PERSONA + "### Job\n\nWatch for me.\n\n"
         "### Success signal\n\nI stop searching.\n\n### Status\n\n{}\n"
     )
     write(repo, "docs/jobs.md", "# Jobs\n\n" + job.format("Not met. Only eBay."))
@@ -179,6 +183,52 @@ def test_a_jobs_status_says_met_or_not_met(repo):
 
     write(repo, "docs/jobs.md", "# Jobs\n\n" + job.format("Mostly. Only eBay."))
     assert any("'Met.' or 'Not met.'" in e for e in check_docs.check(repo))
+
+
+def test_a_job_links_its_personas_only(repo):
+    job = (
+        "## J1 · Keep looking\n\n### Persona\n\n{}\n\n### Job\n\nWatch for me.\n\n"
+        "### Success signal\n\nI stop searching.\n\n### Status\n\nMet. It does.\n"
+    )
+    write(repo, "docs/jobs.md", "# Jobs\n\n" + job.format(READER))
+    assert check_docs.check(repo) == []
+
+    write(repo, "docs/jobs.md", "# Jobs\n\n" + job.format(READER + " and collectors"))
+    assert any("more than persona links" in e for e in check_docs.check(repo))
+
+
+def persona(who="A reader who buys cheap copies.", jobs=J1):
+    return (
+        "# Personas\n\n## P1 · Reader\n\n"
+        f"### Who\n\n{who}\n\n### How they buy\n\n- Cheaply.\n\n"
+        f"### Jobs\n\n{jobs}\n"
+    )
+
+
+def test_a_valid_persona_passes(repo):
+    write(repo, "docs/personas.md", persona())
+
+    assert check_docs.check(repo) == []
+
+
+def test_a_persona_has_its_three_parts(repo):
+    write(repo, "docs/personas.md", persona().replace("### Who", "### Name"))
+
+    assert any(
+        "needs ['Who', 'How they buy', 'Jobs']" in e for e in check_docs.check(repo)
+    )
+
+
+def test_a_personas_who_is_one_sentence(repo):
+    write(repo, "docs/personas.md", persona(who="A reader. Buys cheaply."))
+
+    assert any("one sentence" in e for e in check_docs.check(repo))
+
+
+def test_a_persona_lists_jobs_only(repo):
+    write(repo, "docs/personas.md", persona(jobs=ISSUE))
+
+    assert any("more than job links" in e for e in check_docs.check(repo))
 
 
 def retire(repo, path):

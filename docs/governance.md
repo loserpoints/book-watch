@@ -10,7 +10,8 @@ Every document in this repository is one of the artifacts below. `scripts/check_
 | README | active | `README.md` | Value proposition · What it does · Tech stack · Running it · Repository structure |
 | Agent instructions | active | `CLAUDE.md` | Start of session · Working rules |
 | Contributing | active | `CONTRIBUTING.md` | Building · Testing · Reviewing |
-| Jobs | active | `docs/jobs.md` | J<n> · <name> [Job (sentence) · Success signal · Status (met or not met)] |
+| Personas | active | `docs/personas.md` | P<n> · <name> [Who (sentence) · How they buy · Jobs (job links)] |
+| Jobs | active | `docs/jobs.md` | J<n> · <name> [Persona (persona links) · Job (sentence) · Success signal · Status (met or not met)] |
 | Design system | active | `docs/design-system.md` | Principles · Tokens · Components |
 | Rules | active | `docs/rules/*.md` | Purpose (sentence) · Rules · Open issues (links) |
 | Surface | active | `docs/surfaces/{add-a-book,want-list,active-listings}.md` | Purpose (sentence) · What it shows · What you can do · Open issues (links) |
@@ -26,6 +27,7 @@ Every document in this repository is one of the artifacts below. `scripts/check_
 - *(sentence)*: one sentence.
 - *(links)*: a list of GitHub issue or pull request links and nothing else. Problems live as issues, not as prose in a document.
 - *(job links)*: a list of links to jobs in `docs/jobs.md`.
+- *(persona links)*: a list of links to personas in `docs/personas.md`.
 - *(slice links)*: a list of links to issues labeled `slice`. CI reads the labels from GitHub.
 - *(routed)*: a list in which every item links the document it changed.
 - *(met or not met)*: opens with "Met." or "Not met.", then says why in a sentence or two.
@@ -36,7 +38,7 @@ A Rules section may group its rules under `###` headings, chosen per document.
 
 **Milestones.** Each milestone is a folder, `docs/milestones/mNN-name/`, created when the milestone starts. There are no planned milestones: what comes next is chosen from the open issues at each close. `scope.md` is written when it starts and kept current: the change that adds, rescopes or drops a slice updates it. A dropped slice stays listed, with "dropped" in its link text. `learnings.md` is added when it closes, and a scope change that taught something is recorded there like any other learning.
 
-**Value proposition and jobs.** The README's value proposition says what the app is for, and `docs/jobs.md` holds the jobs that deliver it. A change to either checks the other, and its pull request says whether the other had to change. Each job's status says whether its success signal holds today, as Alan judges it on the live app. A job not met is work still owed on what the app promises.
+**Value proposition, personas and jobs.** The README's value proposition says what the app is for, `docs/personas.md` says who it is built for, and `docs/jobs.md` holds the jobs that deliver it. Each job links the personas it serves, and each persona lists its jobs, so a job two personas share is written once. A change to either checks the other, and its pull request says whether the other had to change. Each job's status says whether its success signal holds today, as Alan judges it on the live app. A job not met is work still owed on what the app promises.
 
 **Current state and history.** Surfaces, rules, the design system and the runbook describe the product as it is now and carry no history. History lives in milestone learnings, and beyond that in git, pull requests and closed issues. Decisions made before these documents existed are in the [decision log](https://github.com/loserpoints/book-watch/blob/537d5ea30621c8756ddfc8c74969d584b2694c62/docs/decisions.md), frozen as it stood when it was retired.
 
@@ -54,7 +56,7 @@ A Rules section may group its rules under `###` headings, chosen per document.
 
 An enhancement links a job already in `docs/jobs.md`. An idea that fits no job, or would change one, is a strategy issue.
 
-A strategy issue waits for Alan to adopt it and is never ranked against other work. Adopting one is a pull request that changes the value proposition and `docs/jobs.md` together, and a job it adds starts not met.
+A strategy issue waits for Alan to adopt it and is never ranked against other work. Adopting one is a pull request that changes the value proposition, `docs/personas.md` and `docs/jobs.md` together, and a job it adds starts not met. A persona it adds lists the existing jobs it shares and brings its own.
 
 A stale reference found anywhere, in a doc, in code or in an issue, is logged as a process gap or tech debt issue, not left.
 

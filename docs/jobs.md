@@ -1,8 +1,12 @@
 # Jobs
 
-What I am trying to get done, and how I will know each job works.
+What I am trying to get done, and how I will know each job works. Each job links the [personas](personas.md) it serves.
 
 ## J1 · Keep looking so I don't have to
+
+### Persona
+
+- [P1 · Reader](personas.md#p1--reader)
 
 ### Job
 
@@ -18,19 +22,27 @@ Met. Judged on the live app on 2026-10-06. eBay and AbeBooks are searched every 
 
 ## J2 · Narrow the pile to the few worth my attention
 
+### Persona
+
+- [P1 · Reader](personas.md#p1--reader)
+
 ### Job
 
-When a title has forty copies listed and most are wrong, I want the few worth looking at at the top and the ones I rejected out of the way, so that I'm not re-reading the same bad listings every day.
+When a title has forty copies listed and most are wrong, I want the few worth looking at at the top, so that I don't read every listing to find them.
 
 ### Success signal
 
-I find what I want in the first handful of copies, and a copy I rejected yesterday is not back at the top today.
+I find what I want in the first handful of copies.
 
 ### Status
 
-Not met. Nothing remembers a copy I've rejected, so it is back in the list tomorrow ([#105](https://github.com/loserpoints/book-watch/issues/105)).
+Met. Copies are listed cheapest first, each marked against the book's limit with its condition in its row, and no copy has needed ruling out one by one.
 
 ## J3 · Judge one copy without opening the listing
+
+### Persona
+
+- [P1 · Reader](personas.md#p1--reader)
 
 ### Job
 
@@ -46,6 +58,10 @@ Met. Each copy shows its condition, its delivered price and its photos in its ro
 
 ## J4 · Tell me when a copy appears
 
+### Persona
+
+- [P1 · Reader](personas.md#p1--reader)
+
 ### Job
 
 When a copy under my limit appears, I want to hear about it without having gone looking, so that finding it doesn't depend on me opening anything.
@@ -60,6 +76,10 @@ Met. The morning email lists copies under their limit, and arrived on two of thr
 
 ## J5 · Buy without wondering if I overpaid
 
+### Persona
+
+- [P1 · Reader](personas.md#p1--reader)
+
 ### Job
 
 When I find a copy at a price high enough that being wrong would annoy me, I want a sense of whether the price is reasonable for that book, so that I can decide now instead of leaving to check.
@@ -73,6 +93,10 @@ I act on a listing without opening a second tab to check its price.
 Met. Each copy shows where its price sits among the copies of the same book, on the price strip and in its rank.
 
 ## J6 · Take a book off the list when I'm done with it
+
+### Persona
+
+- [P1 · Reader](personas.md#p1--reader)
 
 ### Job
 
