@@ -1677,6 +1677,9 @@ def test_with_no_copy_opened_the_sheet_starts_empty_and_says_so(book_client):
 
     assert "You haven't opened a copy of this book from the app" in visible(sheet.text)
     assert 'id="bought-paid" name="paid" value=""' in sheet.text
+    # Grey example text in an empty box reads as a price already filled in,
+    # so it says it's an example.
+    assert 'placeholder="e.g. 10.99"' in sheet.text
 
 
 def test_a_copy_opened_on_another_book_fills_in_nothing_here(book_client):
