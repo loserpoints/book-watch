@@ -4,47 +4,12 @@
 {% if not books %}
   <p class="meta">Nothing on the list yet.</p>
 {% else %}
-  {#- Checking is an explicit act with a button on it. The list itself renders
-      from the store and spends nothing — opening this page is
-      not a request to search ten books.
-
-      Two controls, settled in S27. *Update* checks only the books out of
-      date, so its count says what it will cost. *Check all* overrides the
-      hour and asks first, offering the cheaper Update as the alternative. -#}
   {% set total = books | length %}
-  {% set fresh = total - stale %}
-  {#- All, or only the books whose price is green (S60). No counts: they
-      widened the switch until it pushed Update and Check all onto a second
-      line, and the width then changed with the list. "Under limit" greys out
-      when nothing qualifies. The choice lives in the page address, replaced
-      rather than pushed, so it survives going back from a book and adds
-      nothing to the history. -#}
-  {% set under = under_ids | length %}
-  {% set fetch = {"hx-target": "#want-list", "hx-swap": "outerHTML", "hx-trigger": "change"} %}
-  <div class="list-bar">
-    {{ ui.switch("show", [
-         ("all", "All", dict(fetch, **{"hx-get": "/books/list", "hx-replace-url": "/"})),
-         ("under", "Under limit", dict(fetch, **{"hx-get": "/books/list?show=under", "hx-replace-url": "/?show=under", "disabled": None if under else ""})),
-       ], "under" if filtering else "all") }}
-    <span class="list-bar-actions">
-      <button type="button" class="btn btn-plain"
-              hx-get="/books/check" hx-target="#sweep-runner" hx-swap="outerHTML"
-              {%- if not stale %} disabled{% endif %}>
-        {%- if stale %}Update <span class="badge">{{ stale }}</span>{% else %}All current{% endif -%}
-      </button>
-      {%- if fresh %}
-        {#- Asks first, unless this device was told not to. -#}
-        <button type="button" class="btn btn-ghost" data-open="check-all-sheet"
-                data-skip="book-watch:check-all-no-ask">Check all</button>
-      {%- else %}
-        {#- Nothing is inside the hour, so Check all and Update are the same
-            request and there is nothing to warn about. -#}
-        <button type="button" class="btn btn-ghost"
-                hx-get="/books/check?force=1" hx-target="#sweep-runner"
-                hx-swap="outerHTML">Check all</button>
-      {%- endif %}
-    </span>
-  </div>
+  {#- A book just added starts checking itself, so its list arrives with a
+      check already running. -#}
+  {% with walking = checking is not none %}
+    {% include "_list_bar.html" %}
+  {% endwith %}
   {#- Only when the morning check failed, stopped at the Open Library
       ceiling, or did not happen. -#}
   {% if daily %}<div class="list-alert">{{ ui.alert_pill(daily.label, daily.explanation) }}</div>{% endif %}
@@ -67,27 +32,5 @@
   <p class="meta credit">
     Covers from <a href="https://openlibrary.org" rel="noopener">Open Library</a>.
   </p>
-
-  {% if fresh %}
-  {% call ui.sheet("check-all-sheet", "Check all %d book%s?" % (total, '' if total == 1 else 's')) %}
-    <p class="sheet-text">
-      {{ fresh }} of them {{ 'was' if fresh == 1 else 'were' }} checked within the
-      last hour and will be searched again.
-      {%- if stale %} To check only the {{ stale }} that {{ 'is' if stale == 1 else 'are' }}
-      out of date, use Update.{% endif %}
-    </p>
-    <label class="sheet-check"><input type="checkbox" data-remember="book-watch:check-all-no-ask"> Don't ask me again</label>
-    <div class="sheet-actions">
-      {%- if stale %}
-      <button type="button" class="btn btn-plain" data-close
-              hx-get="/books/check" hx-target="#sweep-runner" hx-swap="outerHTML">Update {{ stale }}</button>
-      {%- else %}
-      <button type="button" class="btn btn-plain" data-close>Cancel</button>
-      {%- endif %}
-      <button type="button" class="btn btn-primary" data-close data-default
-              hx-get="/books/check?force=1" hx-target="#sweep-runner" hx-swap="outerHTML">Check all {{ total }}</button>
-    </div>
-  {% endcall %}
-  {% endif %}
 {% endif %}
 </div>

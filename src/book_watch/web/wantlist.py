@@ -55,6 +55,7 @@ TEMPLATES_DIR = Path(__file__).parent / "templates"
 CHECK_ALL_PATH = "/books/check"
 CHECK_ONE_PATH = "/books/{book_id}/check"
 ROW_PATH = "/books/{book_id}/row"
+BAR_PATH = "/books/bar"
 
 ConnectFn = Callable[[], sqlite3.Connection]
 
@@ -119,6 +120,16 @@ def from_htmx(request: Request) -> bool:
 #: the device, so it survives opening a book and going back, and opening the
 #: app fresh shows everything.
 UNDER_LIMIT_URL = "/?show=under"
+
+
+def list_changed(response: HTMLResponse) -> HTMLResponse:
+    """Tell the page the list changed, so the header asks for itself again.
+
+    After the swap settles, so the header's request carries the runner as it
+    now is, and knows whether a check is still running (S67, #244).
+    """
+    response.headers["HX-Trigger-After-Settle"] = "list-changed"
+    return response
 
 
 def wants_under(request: Request) -> bool:
@@ -543,7 +554,7 @@ def build_router(
             with closing(open_database()) as connection:
                 next_book = wantlist.get(connection, queue[0])
                 next_glance = standing.glance(connection, next_book)
-        return templates.TemplateResponse(
+        return list_changed(templates.TemplateResponse(
             request,
             "_checked.html",
             {
@@ -563,6 +574,26 @@ def build_router(
                 "message": (
                     None if queue else f"Checked {done} book{'' if done == 1 else 's'}."
                 ),
+            },
+        ))
+
+    @router.get(BAR_PATH, response_class=HTMLResponse)
+    def the_bar(request: Request, walking: int = 0) -> HTMLResponse:
+        """The header over the list, as it stands now. Asked for by the page
+        whenever the list changes. Reads the store only."""
+        with closing(open_database()) as connection:
+            books = wantlist.all_books(connection)
+            under_ids = under_limit(at_a_glance(connection, books))
+            stale = out_of_date(connection, books)
+        return templates.TemplateResponse(
+            request,
+            "_list_bar.html",
+            {
+                "total": len(books),
+                "stale": stale,
+                "under_ids": under_ids,
+                "filtering": wants_under(request) and bool(under_ids),
+                "walking": bool(walking),
             },
         )
 
@@ -585,7 +616,9 @@ def build_router(
             # Doing nothing is the correct answer and it still has to be said.
             # Silence here reads as a broken button, and every book being
             # inside the hour gate is exactly why nothing happened.
-            return templates.TemplateResponse(
+            # The header said a book needed checking, or this wasn't asked
+            # for, so it is told to look again.
+            return list_changed(templates.TemplateResponse(
                 request,
                 "_runner.html",
                 {
@@ -595,7 +628,7 @@ def build_router(
                         "within the hour."
                     ),
                 },
-            )
+            ))
         # Nothing has been checked yet, so there is no finished row — only
         # the first book moving into its checking state and a runner aimed at
         # that same book. Aiming it at the second is how the first was
@@ -680,7 +713,8 @@ def build_router(
                 # row, which is what the list would now show.
                 return HTMLResponse("")
             glance = standing.glance(connection, book)
-        return templates.TemplateResponse(
+        held = throttled([book])
+        response = templates.TemplateResponse(
             request,
             "_entry.html",
             {
@@ -688,8 +722,13 @@ def build_router(
                 "glance": glance,
                 "state": "idle",
                 "oob": False,
-                "throttled": throttled([book]),
+                "throttled": held,
             },
         )
+        # The last answer a digging row asks for: its copies are examined, so
+        # which books are under their limit may have changed with them.
+        if list_view.examining(book, held) != "digging":
+            list_changed(response)
+        return response
 
     return router
