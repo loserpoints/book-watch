@@ -33,7 +33,7 @@
   {{ ui.toggle("Under limit", filtering, dict(fetch, **{
        "hx-get": views.under_off.fetch if filtering else views.under_on.fetch,
        "hx-replace-url": views.under_off.page if filtering else views.under_on.page}),
-     disabled=not under) }}
+     disabled=not under, style=mock_filter) }}
 {%- endmacro %}
 
 {% if mock_layout == "b" %}
@@ -54,7 +54,7 @@
       book's page. -#}
   <div class="list-bar">
     {{ check_button() }}
-    {{ under_toggle() }}
+    {% if mock_filter != "meta" %}{{ under_toggle() }}{% endif %}
   </div>
 {% endif %}
 
