@@ -28,9 +28,44 @@
     true
   );
 
-  // Safari applies :active on a tap only when the page listens for touches,
-  // and a row's pressed look is :active (S73). The listener does nothing.
-  document.addEventListener("touchstart", function () {}, { passive: true });
+  // A row being pressed fills edge to edge (S73, #190). The browser's own
+  // :active wasn't seen on the phone for a copy, whose tap hands the listing
+  // to the eBay app at once, so the app presses the row itself the moment a
+  // finger lands on its link, and holds the fill for at least PRESS_MS so a
+  // quick tap shows it. A touch on one of the row's own controls lands on that
+  // control, not the link, and presses nothing. A finger that starts
+  // scrolling cancels the pointer, and the fill goes.
+  var PRESS_MS = 150;
+  var pressedRow = null;
+  var pressedAt = 0;
+
+  function release(now) {
+    var row = pressedRow;
+    if (!row) return;
+    pressedRow = null;
+    var left = now ? 0 : Math.max(0, PRESS_MS - (Date.now() - pressedAt));
+    window.setTimeout(function () { row.classList.remove("pressed"); }, left);
+  }
+
+  document.addEventListener("pointerdown", function (event) {
+    var target = event.target instanceof Element ? event.target : null;
+    var link = target && target.closest(".book-row-title, .copy-listing");
+    var row = link && link.closest(".book-row, .copy-row");
+    if (!row) return;
+    release(true);
+    pressedRow = row;
+    pressedAt = Date.now();
+    row.classList.add("pressed");
+  });
+  document.addEventListener("pointerup", function () { release(false); });
+  document.addEventListener("pointercancel", function () { release(true); });
+  // Back from the book or the listing may restore the page as it was left.
+  window.addEventListener("pageshow", function () {
+    pressedRow = null;
+    Array.prototype.forEach.call(document.querySelectorAll(".pressed"), function (row) {
+      row.classList.remove("pressed");
+    });
+  });
 
   // [data-open="id"] opens the <dialog id="id"> as a modal. The browser then
   // handles focus, Escape and the Android back gesture, and returns focus to
