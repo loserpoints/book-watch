@@ -390,3 +390,11 @@ def test_a_port_it_cant_open_costs_the_counts_and_not_the_app(monkeypatch, caplo
         counts.serve(lambda: None, lambda: Path("x"), lambda: "v")
 
     assert "could not be served on port 9091: Address already in use" in caplog.text
+
+
+def test_the_disk_the_database_is_on_is_measured(connect, path):
+    found = collected(a_state(connect, path))
+
+    size = found["bookwatch_volume_size_bytes"][()]
+    free = found["bookwatch_volume_free_bytes"][()]
+    assert 0 < free <= size
