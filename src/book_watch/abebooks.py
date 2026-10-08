@@ -128,7 +128,12 @@ def checked(page: pages.Page) -> pages.Page:
     if page.challenged:
         raise AbeBooksError("bot challenge")
     if not page.copies:
-        return page  # An ordinary empty result.
+        # Only AbeBooks' own page for a search with nothing on it is empty. A
+        # page in another shape holds no copy the parser can see, and calling
+        # it empty would take the book's AbeBooks copies off the list.
+        if page.no_results:
+            return page
+        raise AbeBooksError("no copies, and not the no-results page")
     if page.result_count is None:
         raise AbeBooksError("copies without a count")
     if any(copy.grouped for copy in page.copies):

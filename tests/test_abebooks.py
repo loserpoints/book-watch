@@ -48,8 +48,11 @@ def a_copy(n: int = 1, **overrides) -> pages.Copy:
 
 
 def a_page(*found: pages.Copy, count: int | None = None) -> pages.Page:
+    """A page with these copies, or AbeBooks' no-results page with none."""
     return pages.Page(
-        result_count=len(found) if count is None else count, copies=list(found)
+        result_count=len(found) if count is None else count,
+        copies=list(found),
+        no_results=not found,
     )
 
 
@@ -136,8 +139,33 @@ def test_a_page_in_a_shape_never_seen_fails_rather_than_being_guessed_at(page, w
         abebooks.checked(page)
 
 
-def test_an_empty_page_is_an_ordinary_answer():
-    assert abebooks.checked(pages.Page(result_count=None)).copies == []
+def test_abebooks_no_results_page_is_an_ordinary_answer():
+    assert abebooks.checked(a_page()).copies == []
+
+
+def test_a_page_with_no_copies_that_is_not_the_no_results_page_fails():
+    """A changed layout, a consent page or an error page sent as 200 (S74)."""
+    with pytest.raises(abebooks.AbeBooksError, match="not the no-results page"):
+        abebooks.checked(pages.Page(result_count=None))
+
+
+def test_a_page_it_cant_read_leaves_the_last_good_copies_listed(connect):
+    """Before S74 such a page was stored as an empty search, which took the
+    book's AbeBooks copies off its page, the want list's price and the email."""
+    unreadable = pages.parse("<html><body><main>We're making changes.</main></html>")
+    entry = add_crash(connect)
+    with closing(connect()) as connection:
+        abebooks.check_book(connection, entry, FakeReader(a_page(a_copy())))
+        outcome = abebooks.check_book(
+            connection,
+            entry,
+            lambda url: abebooks.checked(unreadable),
+            force=True,
+        )
+        listed = copies.for_entry(connection, entry, scope="everywhere")
+
+    assert outcome.outcome == "failed"
+    assert [copy.key for copy in listed] == [("abebooks", "31081277001")]
 
 
 def test_a_count_over_the_page_is_fine():
