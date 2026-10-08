@@ -130,32 +130,44 @@ def a_purchase(**extra):
     return Purchase(**fields)
 
 
-def test_a_bought_row_says_where_and_the_day_without_the_year_this_year():
-    today = date(2026, 10, 7)
-
-    this_year = list_view.bought_row(a_purchase(), today)
-    last_year = list_view.bought_row(
-        a_purchase(bought_on=date(2025, 12, 28), marketplace=None, shop="Strand"),
-        today,
+def test_a_bought_row_says_the_day_and_where():
+    """The year is its month's heading (S82, #258)."""
+    on_ebay = list_view.bought_row(a_purchase())
+    elsewhere = list_view.bought_row(
+        a_purchase(bought_on=date(2025, 12, 28), marketplace=None, shop="Strand")
     )
 
-    assert this_year["where_when"] == "on eBay · Oct 3"
-    assert last_year["where_when"] == "on Strand · Dec 28, 2025"
+    assert (on_ebay["day"], on_ebay["where"]) == ("Oct 3", "eBay")
+    assert (elsewhere["day"], elsewhere["where"]) == ("Dec 28", "Strand")
 
 
 def test_a_bought_row_is_judged_against_the_limit_it_had():
     assert list_view.bought_row(a_purchase())["verdict"] == "under"
     assert list_view.bought_row(a_purchase(paid=usd("8")))["verdict"] == "under"
     assert list_view.bought_row(a_purchase(paid=usd("8.01")))["verdict"] == "over"
-    no_limit = list_view.bought_row(a_purchase(limit=None))
-    assert (no_limit["verdict"], no_limit["limit_text"]) == (None, "no limit set")
+    assert list_view.bought_row(a_purchase(limit=None))["verdict"] is None
 
 
-def test_the_bought_total_leaves_out_a_sum_across_currencies():
+def test_purchases_are_grouped_by_month_with_what_each_month_cost():
+    bought = [
+        a_purchase(bought_on=date(2026, 9, 21), paid=usd("14.20")),
+        a_purchase(bought_on=date(2026, 9, 5), paid=usd("19.40")),
+        a_purchase(bought_on=date(2025, 12, 12), paid=usd("12.95")),
+    ]
+
+    months = list_view.bought_months(bought)
+
+    assert [(m["name"], m["summary"]) for m in months] == [
+        ("September 2026", "2 books · $33.60"),
+        ("December 2025", "1 book · $12.95"),
+    ]
+    assert [r["day"] for r in months[0]["rows"]] == ["Sep 21", "Sep 5"]
+
+
+def test_a_month_paid_in_two_currencies_leaves_out_its_cost():
     gbp = Money(Decimal("5"), "GBP")
 
-    assert list_view.bought_total([a_purchase()]) == "Bought · 1 book · $7.80"
-    assert list_view.bought_total([a_purchase(), a_purchase(paid=gbp)]) == (
-        "Bought · 2 books"
-    )
-    assert list_view.bought_total([]) is None
+    months = list_view.bought_months([a_purchase(), a_purchase(paid=gbp)])
+
+    assert months[0]["summary"] == "2 books"
+    assert list_view.bought_months([]) == []

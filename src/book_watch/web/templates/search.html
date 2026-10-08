@@ -4,6 +4,9 @@
   book-watch
 {% endblock %}
 
+{#- A page under the want list: its back control returns there (S81). -#}
+{% set back = true %}
+
 {% block content %}
 {% if error and not isbn %}
   <h1>Not found</h1>
@@ -17,7 +20,6 @@
   </p>
 {% else %}
   {% if book %}
-    <p class="muted"><a href="/">← Want list</a></p>
     <h1>{{ book.name }}</h1>
     {% if book.added_by %}<p class="muted">{{ book.added_by }}</p>{% endif %}
   {% else %}

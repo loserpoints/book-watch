@@ -6,7 +6,7 @@ Adding a book puts it on the want list, by searching for its title or by enterin
 
 ## What it shows
 
-- A sheet opened by the + button, with a choice between "Title & author · ISBN". The chosen one is in bold and the other underlined in blue, as every two-way choice in the app looks.
+- A sheet opened by the + button, with a choice between "Title & author · ISBN". The chosen one is in bold over an accent bar and the other muted, as every two-way choice in the app looks.
 - On Title & author: "A title is enough. Add the author to narrow it down.", a title field and an optional author field.
 - The search results, each with its cover, title, author, year and number of editions.
 - "On your list" in place of Add on a result already on the list.

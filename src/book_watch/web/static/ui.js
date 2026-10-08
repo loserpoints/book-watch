@@ -67,6 +67,48 @@
     });
   });
 
+  // Moving between screens (S81, #284). The want list is home: back from any
+  // other screen returns to it, and back from it leaves the app. So a tab
+  // followed from the want list adds a step, as any link does, and every
+  // move after that takes the current step's place instead. Going home
+  // steps back to the want list already below, with its order and filter,
+  // when there is one. Tapping the tab of the screen you're on goes to its
+  // top. Without JavaScript they are plain links.
+  var HOME_BELOW = "book-watch:home-below";
+  function homeBelow(value) {
+    try {
+      if (value === undefined) return sessionStorage.getItem(HOME_BELOW) === "1";
+      sessionStorage.setItem(HOME_BELOW, value ? "1" : "0");
+    } catch (ignored) {}
+    return false;
+  }
+  var onHome = window.location.pathname === "/";
+  if (!onHome) {
+    // Arrived from the want list, or from outside the app. From another of
+    // its screens, what is below is unchanged.
+    var from = null;
+    try { from = document.referrer ? new URL(document.referrer) : null; } catch (ignored) {}
+    if (!from || from.origin !== window.location.origin) homeBelow(false);
+    else if (from.pathname === "/") homeBelow(true);
+  }
+  document.addEventListener("click", function (event) {
+    var link = event.target instanceof Element && event.target.closest("a[data-nav]");
+    if (!link || event.defaultPrevented || event.button !== 0 ||
+        event.metaKey || event.ctrlKey || event.shiftKey) return;
+    if (link.getAttribute("aria-current") === "page") {
+      event.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    if (onHome) return;
+    event.preventDefault();
+    if (link.getAttribute("data-nav") === "home" && homeBelow()) {
+      window.history.back();
+    } else {
+      window.location.replace(link.href);
+    }
+  });
+
   // [data-open="id"] opens the <dialog id="id"> as a modal. The browser then
   // handles focus, Escape and the Android back gesture, and returns focus to
   // the opener when it closes.

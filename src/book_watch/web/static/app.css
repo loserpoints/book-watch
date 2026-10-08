@@ -47,11 +47,59 @@ body {
   font-size: var(--text-base);
   line-height: 1.5;
 }
-header {
+/* The top bar (S81, #284): the mark or a back at the left, a tab per screen
+   at the right. It stays on screen while the page scrolls, above the rows'
+   stretched links (1) and their own controls (2). */
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 56px;
+  padding: 0 var(--space-2) 0 var(--space-4);
   border-bottom: 1px solid var(--line);
-  padding: var(--space-3) var(--space-4);
+  background: var(--bg);
+}
+.top-mark {
   font-family: var(--font-title);
   font-weight: 700;
+  font-size: var(--text-lg);
+  letter-spacing: -0.02em;
+}
+.top-mark-dot { color: var(--accent); }
+.top-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  margin-left: calc(-1 * var(--space-3));
+  color: var(--accent);
+}
+.tabs { display: flex; align-self: stretch; }
+.tab {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-size: var(--text-md);
+  text-decoration: none;
+}
+.tab[aria-current] { color: var(--fg); font-weight: 700; border-bottom-color: var(--accent); }
+/* Room for the label in bold, so choosing a tab never moves the others. */
+.tab::after {
+  content: attr(data-label);
+  font-weight: 700;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
 }
 main { max-width: 46rem; margin: 0 auto; padding: var(--space-4); }
 h1 {
@@ -324,6 +372,9 @@ details.digging > summary {
 }
 .cover-ph-author { font-size: var(--text-xxs); opacity: 0.8; }
 .cover-lg .cover-ph-title { font-size: var(--text-xs); }
+/* At 40px no title fits whole, and wherever the small cover is drawn the
+   title is beside it in full, so its placeholder is a plain board (S82). */
+.cover-sm .cover-ph { display: none; }
 
 /* The headline price. Color and a mark together, never color alone. */
 .price {
@@ -629,12 +680,13 @@ details.copy-note[open] > summary { display: block; }
 }
 
 /* The + button floats over the want list, so it sits above every layer a
-   row uses: the row's stretched link (1), and the trash and "digging" (2).
+   row uses: the row's stretched link (1), and the trash and "digging" (2),
+   and above the top bar (4).
    Without this, a tap on it opened the book behind it (S58). Sheets open as
    modal dialogs, which the browser draws above everything. */
 .fab {
   position: fixed;
-  z-index: 3;
+  z-index: 5;
   right: var(--space-4);
   bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
   width: 56px;
@@ -648,6 +700,8 @@ details.copy-note[open] > summary { display: block; }
   cursor: pointer;
 }
 .controls-demo .fab { position: static; }
+.bar-demo { display: grid; gap: var(--space-2); }
+.bar-demo .top-bar { position: static; border: 1px solid var(--line); }
 
 .field { display: grid; gap: var(--space-1); }
 .field label { color: var(--muted); font-size: var(--text-sm); }
@@ -664,10 +718,9 @@ details.copy-note[open] > summary { display: block; }
 .field input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .field-hint { margin: 0; color: var(--muted); font-size: var(--text-xs); }
 
-/* A two-way choice (S69, #217): two words, the current one plain bold, the
-   other a link, a dot between. */
-.pair { display: inline-flex; align-items: center; font-size: var(--text-sm); }
-.pair-dot { color: var(--muted); padding: 0 var(--space-1); }
+/* A two-way choice (S69, #217): two words, the current one bold with an
+   accent bar under it, the other muted, as the top bar's tabs (S81, #284). */
+.pair { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); }
 .pair-option {
   position: relative;
   display: inline-flex;
@@ -678,13 +731,16 @@ details.copy-note[open] > summary { display: block; }
   padding: 0 var(--space-1);
   border: 0;
   background: none;
-  color: var(--accent);
+  color: var(--muted);
   font: inherit;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration: none;
   cursor: pointer;
 }
-b.pair-option, .pair-option:has(input:checked) { color: var(--fg); font-weight: 700; text-decoration: none; cursor: default; }
+b.pair-option, .pair-option:has(input:checked) { color: var(--fg); font-weight: 700; cursor: default; }
+b.pair-option, .pair-option:has(input:checked) span {
+  text-decoration: underline 2px var(--accent);
+  text-underline-offset: 7px;
+}
 .pair-option input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
 /* Each side keeps room for its label in bold, so choosing one never changes
    the pair's width and never reflows what sits beside it (S60). */
@@ -817,8 +873,6 @@ dialog.photo-view[open] { display: grid; gap: var(--space-2); justify-items: cen
 /* ---------------------------------------------------------------------------
    The book page (S34, #98): the book, three chips, the markets, the copies.
    --------------------------------------------------------------------------- */
-.back { margin: 0 0 var(--space-2); font-size: var(--text-sm); }
-.back a { color: var(--muted); }
 .book-hero { display: flex; gap: var(--space-3); align-items: flex-start; margin-bottom: var(--space-3); }
 .book-hero-text { display: grid; gap: var(--space-1); min-width: 0; }
 .book-title { font-family: var(--font-title); overflow-wrap: anywhere; margin: 0; }
@@ -880,3 +934,37 @@ dialog.photo-view[open] { display: grid; gap: var(--space-2); justify-items: cen
    absent when nothing is wrong. It keeps its 44px tap height, pulled up so
    its text sits just under the title rather than in empty space (S69). */
 .list-alert { margin: calc(-1 * var(--space-3)) 0 calc(-1 * var(--space-2)); }
+
+/* The Bought page, a ledger by month (S82, #258). The month's rule does the
+   dividing; books are kept apart by space and their covers, not rules. The
+   price column is never wider than 7rem, and the day and where are fitted under the
+   price so that, for eBay and AbeBooks, the cover sets the row's height. */
+.ledger { list-style: none; margin: 0; padding: 0; }
+.ledger-month + .ledger-month { margin-top: var(--space-5); }
+.ledger-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin: 0;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--fg);
+}
+.ledger-name { font-family: var(--font-title); font-weight: 700; font-size: var(--text-lg); }
+.ledger-sum { color: var(--muted); font-family: var(--font-body); font-weight: 400; font-size: var(--text-sm); }
+.ledger-rows { list-style: none; margin: 0; padding: 0; }
+.ledger-row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) 0; }
+.ledger-book { flex: 1; min-width: 0; display: grid; gap: var(--space-1); }
+.ledger-title { font-family: var(--font-title); font-weight: 700; font-size: var(--text-lg); line-height: 1.25; overflow-wrap: anywhere; }
+.ledger-author { color: var(--muted); font-size: var(--text-sm); }
+.ledger-paid {
+  flex: none;
+  max-width: 7rem;
+  display: grid;
+  justify-items: end;
+  text-align: right;
+  line-height: 1.25;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+.ledger-where { overflow-wrap: anywhere; }

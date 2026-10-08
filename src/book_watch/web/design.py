@@ -269,14 +269,9 @@ def sample_candidates() -> list[dict]:
     ]
 
 
-#: The day the samples below are judged from, so a year shows only on the
-#: one bought in another.
-TODAY = date(2026, 10, 7)
-
-
 def sample_bought() -> list[Purchase]:
-    """Bought at or under the limit, with no limit, over it from a shop, and
-    in another year (S71)."""
+    """Bought at or under the limit, with no limit, over it from a shop with a
+    long name, and in another year (S71, S82)."""
 
     def usd(amount: str) -> Money:
         return Money(Decimal(amount), "USD")
@@ -311,7 +306,7 @@ def sample_bought() -> list[Purchase]:
             None,
             usd("9"),
             None,
-            "Strand Books",
+            "The Strand Book Store, Rare Books Room",
             date(2026, 9, 1),
             usd("8"),
         ),
@@ -364,8 +359,7 @@ def build_router() -> APIRouter:
                 "books": sample_books(),
                 "copies": sample_copies(),
                 "candidates": sample_candidates(),
-                "bought": [list_view.bought_row(p, TODAY) for p in sample_bought()],
-                "bought_total": list_view.bought_total(sample_bought()),
+                "months": list_view.bought_months(sample_bought()),
                 "market_strip": strips.range_strip(SEEN, 12, width=320, height=20),
             },
         )

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% import "_ui.html" as ui %}
+{% block title %}Bought · book-watch{% endblock %}
+{% set screen = "bought" %}
+
+{#- What I've bought, a ledger by month (S82, #258). -#}
+{% block content %}
+<h1 class="sr-only">Bought</h1>
+{% if months %}
+<ul class="ledger">
+  {%- for month in months %}
+  {{ ui.ledger_month(month) }}
+  {%- endfor %}
+</ul>
+{#- Their covers API asks for a link back, here as on the want list. -#}
+<p class="meta credit">
+  Covers from <a href="https://openlibrary.org" rel="noopener">Open Library</a>.
+</p>
+{% else %}
+<p class="meta">Nothing bought yet. A book marked bought on the want list shows here.</p>
+{% endif %}
+{% endblock %}

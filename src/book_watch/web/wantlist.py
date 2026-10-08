@@ -302,7 +302,6 @@ def build_router(
             glances = at_a_glance(connection, books)
             stale = out_of_date(connection, books)
             morning = daily.status(connection, datetime.now(UTC))
-            bought = purchases.everything(connection)
         under_ids = under_limit(glances)
         if under is None:
             under = wants_under(request)
@@ -328,9 +327,6 @@ def build_router(
                 # Nothing under a limit shows everything, never an empty list.
                 "filtering": under and bool(under_ids),
                 "hidden_digging": hidden_digging(books, under_ids, under),
-                # Below the list, folded (S71, #223).
-                "bought": [list_view.bought_row(p) for p in bought],
-                "bought_total": list_view.bought_total(bought),
             },
         )
 
@@ -353,7 +349,6 @@ def build_router(
             stale = out_of_date(connection, books)
             morning = daily.status(connection, datetime.now(UTC))
             on_list = wantlist.listed_works(connection) if candidates else set()
-            bought = purchases.everything(connection)
         under_ids = under_limit(glances)
         order = wants_sort(request) if checking is None else "added"
         filtering = wants_under(request) and bool(under_ids)
@@ -383,8 +378,6 @@ def build_router(
                 # book you just added never shows as unchecked, which is the
                 # state that reads worst on a list.
                 "checking": checking,
-                "bought": [list_view.bought_row(p) for p in bought],
-                "bought_total": list_view.bought_total(bought),
                 "error": error,
                 "note": note,
                 "offer_override": offer_override,
@@ -438,6 +431,13 @@ def build_router(
         # "no-store" makes it ask.
         response.headers["Cache-Control"] = "no-store"
         return response
+
+    @router.get("/bought", response_class=HTMLResponse)
+    def bought(request: Request) -> HTMLResponse:
+        """What I've bought, a ledger by month (S82, #258)."""
+        with closing(open_database()) as connection:
+            months = list_view.bought_months(purchases.everything(connection))
+        return templates.TemplateResponse(request, "bought.html", {"months": months})
 
     @router.get("/books/list", response_class=HTMLResponse)
     def the_list(request: Request) -> HTMLResponse:

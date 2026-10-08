@@ -36,4 +36,6 @@ A mark that has to read the same size everywhere, such as the caret that says wh
 
 Example text in an empty field starts with "e.g.", so in grey it can't pass for a value already filled in.
 
-A choice between two ways of seeing the same thing, such as Cheapest · Newest or Title & author · ISBN, looks the same everywhere: the chosen one in bold, the other underlined in the accent, a dot between. A filter that is on or off is a switch. Both keep their 44px targets.
+Each of the app's screens, Want list and Bought, is a tab in a top bar that stays in view. The want list is home. Back from another screen returns to it, and back from it leaves the app. A screen under the want list, such as a book's page, keeps Want list as its current tab and puts a back to it in place of the app's mark. Tapping the tab of the screen you're on goes back to its top. The tab names the screen, so a screen has no heading of its own.
+
+A tab, and a choice between two ways of seeing the same thing, such as Cheapest or Newest and Title & author or ISBN, look the same: the chosen one bold over a bar in the accent, the others muted. The accent marks what is current. A filter that is on or off is a switch. All keep their 44px targets.

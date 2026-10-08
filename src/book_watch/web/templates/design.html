@@ -8,13 +8,15 @@
   follows your phone's light or dark setting; the swatches show both.
 </p>
 
-<nav class="muted">Pieces: <a href="#book-rows">book rows</a> · <a href="#copy-rows">copy rows</a> · <a href="#candidates">adding</a> · <a href="#pieces">small pieces</a> · <a href="#controls">controls</a>. Tokens: <a href="#color">color</a> · <a href="#type">type</a> · <a href="#space">space</a> · <a href="#radius">radius</a></nav>
+<nav class="muted">Pieces: <a href="#book-rows">book rows</a> · <a href="#bought">bought</a> · <a href="#copy-rows">copy rows</a> · <a href="#candidates">adding</a> · <a href="#pieces">small pieces</a> · <a href="#controls">controls</a>. Tokens: <a href="#color">color</a> · <a href="#type">type</a> · <a href="#space">space</a> · <a href="#radius">radius</a></nav>
 
 <h2 class="design-h" id="book-rows">Book rows</h2>
 <p class="muted">Every state a book on the want-list can be in. A caret after the price, ▾ or ▴ in its color and two thirds the height of its figures, says which way the latest check moved it: tap it for what it was, and tap anywhere to close it. Checked with a price under, over and with no limit; a long title; maybes; checking; couldn't check; not checked yet; nothing listed; still digging; throttled. Tap anywhere on a row to open its book. The trash, "digging" and "Throttled" keep their own taps.</p>
 <ul class="ui-list">{% for b in books %}{{ ui.book_row(b) }}{% endfor %}</ul>
-<p class="muted">Below the list, folded, the books bought: paid at or under the limit, with no limit, over it at a shop, and in another year. Nothing to tap.</p>
-{% call ui.fold(bought_total) %}<ul class="ui-list">{% for b in bought %}{{ ui.bought_row(b) }}{% endfor %}</ul>{% endcall %}
+
+<h2 class="design-h" id="bought">Bought</h2>
+<p class="muted">The ledger on the Bought page, a month at a time: paid at or under the limit, with no limit, over it at a shop with a long name, which wraps in its own column, and in another year. No rule between books. Nothing to tap.</p>
+<ul class="ledger">{% for month in months %}{{ ui.ledger_month(month) }}{% endfor %}</ul>
 
 <h2 class="design-h" id="copy-rows">Copy rows</h2>
 <p class="muted">Tap anywhere on a copy to open its listing; the row fills while pressed. The photo, the note and the caret keep their own taps. A copy's caret says the latest check moved its price. Under, under from abroad, over with a condition note and taking offers, the only listing, and shipping unknown with a long note. Tap a note to open it.</p>
@@ -55,7 +57,9 @@
 <div class="controls-demo">
   <button class="icon-btn" type="button" data-open="off-sheet" aria-label="Take Stoner off the list">{{ ui.trash() }}</button>
 </div>
-<p class="muted">A two-way choice, the same everywhere: with radios for a sheet, or links and buttons for an order.</p>
+<p class="muted">The top bar, on every screen and staying put on scroll: the mark and a tab per screen, then on a book's page, a back to the want list in the mark's place with Want list still the current tab. Tapping the tab of the screen you're on goes back to its top.</p>
+<div class="controls-demo bar-demo">{{ ui.top_bar("bought") }}{{ ui.top_bar("want", back=True) }}</div>
+<p class="muted">A two-way choice, the same everywhere and in the tabs' style: the chosen one bold over an accent bar, the other muted. With radios for a sheet, or links and buttons for an order.</p>
 <div class="controls-demo">{{ ui.switch("way-demo", [("title", "Title & author"), ("isbn", "ISBN")], "title") }}</div>
 <div class="controls-demo">{{ ui.pair([("Cheapest", {"href": "#"}, True), ("Newest", {"href": "#"}, False)], "Order") }} {{ ui.pair([("Cheapest", {}, False), ("Added", {}, True)], "Order") }}</div>
 <p class="muted">A filter that is on or off: off, on, and greyed out when no book qualifies.</p>
