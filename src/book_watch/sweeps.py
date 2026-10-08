@@ -23,7 +23,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
-from book_watch import monitoring
+from book_watch import counts, monitoring
 from book_watch.ebay.search import Listing, Money, Scope
 from book_watch.marketplaces import Marketplace, is_us
 
@@ -180,6 +180,8 @@ def store(
         before = previous.get(listing.item_id)
         if before is None:
             fresh.append(listing.item_id)
+        else:
+            _count_move(marketplace, before, listing, shipping)
         connection.execute(
             """
             INSERT INTO copy (
@@ -332,6 +334,28 @@ def store_both_scopes(
         marketplace=marketplace,
     )
     return everywhere, us
+
+
+def _count_move(
+    marketplace: Marketplace,
+    before: sqlite3.Row,
+    listing: Listing,
+    shipping: str | None,
+) -> None:
+    """Count a copy whose delivered price this check moved, and which way.
+
+    In the same currency only, and with shipping only when both prices know
+    it, so a change in what is known isn't counted as a move.
+    """
+    if before["currency"] != listing.price.currency:
+        return
+    then = Decimal(before["price"])
+    now = listing.price.amount
+    if before["shipping"] is not None and shipping is not None:
+        then += Decimal(before["shipping"])
+        now += Decimal(shipping)
+    if now != then:
+        counts.price_moves.labels(marketplace, "down" if now < then else "up").inc()
 
 
 def _filled(asked_for: int | None, total: int | None, returned: int) -> bool:

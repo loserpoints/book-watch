@@ -44,6 +44,7 @@ Collectible editions, where condition matters more than price, are not built.
 | Listings | AbeBooks search pages | No API is open to this use. One page per book, read within robots.txt. It breaks AbeBooks' website terms, a cost accepted for one user's app ([API policies](docs/rules/api-policies.md#abebooks)). |
 | Email | Resend | Free, and its shared sending address needs no domain. It delivers only to the Resend account's own address, which is the one reader. |
 | Editions | Open Library | Free, with a works and editions model. Every answer is cached. |
+| Monitoring | Fly's managed Prometheus and Grafana | Free for now. Fly collects the app's counts and charts them; logs stay in Fly's log viewer ([monitoring](docs/rules/monitoring.md)). |
 | CI and deploy | GitHub Actions | Every step runs from a browser, with credentials held as secrets. |
 
 eBay and AbeBooks are the marketplaces for now. What AbeBooks, Biblio, Alibris and Amazon allow through their APIs, and where their terms say so, is in [API policies](docs/rules/api-policies.md).

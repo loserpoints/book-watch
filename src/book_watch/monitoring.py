@@ -23,6 +23,8 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import Any
 
+from book_watch import counts
+
 logger = logging.getLogger("book_watch")
 
 #: What started the work: daily, check, open, recheck, add, cover or test.
@@ -165,6 +167,9 @@ def _end_call(
     if exc is not None:
         # So a check or job this failure ends carries the same reason.
         exc.monitoring_reason = reason  # type: ignore[attr-defined]
+    seconds = time.monotonic() - started
+    counts.calls.labels(service, endpoint, _trigger.get(), outcome, reason or "").inc()
+    counts.call_seconds.labels(service, endpoint).observe(seconds)
     _write(
         logging.WARNING if outcome in ("failed", "skipped") else logging.INFO,
         "call",
@@ -198,6 +203,11 @@ def check(marketplace: str) -> Iterator[Outcome]:
         outcome, reason = _settle(found, error, None)
         if outcome == "ok" and found.fields.get("copies") == 0:
             outcome = "empty"
+        counts.checks.labels(marketplace, _trigger.get(), outcome).inc()
+        counts.check_copies.labels(marketplace).inc(found.fields.get("copies", 0))
+        counts.check_new_copies.labels(marketplace).inc(found.fields.get("new", 0))
+        if found.fields.get("full"):
+            counts.checks_full.labels(marketplace).inc()
         _write(
             logging.WARNING if outcome in ("failed", "skipped") else logging.INFO,
             "check",
@@ -224,6 +234,7 @@ def job(name: str) -> Iterator[Outcome]:
         yield found
     except Exception as exc:
         exc.monitoring_logged = True  # type: ignore[attr-defined]
+        _count_job(name, "failed", started)
         _write(
             logging.ERROR,
             "job",
@@ -238,6 +249,7 @@ def job(name: str) -> Iterator[Outcome]:
         )
         raise
     outcome = found.outcome or "ok"
+    _count_job(name, outcome, started)
     _write(
         logging.INFO if outcome == "ok" else logging.WARNING,
         "job",
@@ -252,7 +264,12 @@ def job(name: str) -> Iterator[Outcome]:
     )
 
 
-def page(path: str, status: int, ms: int) -> None:
+def _count_job(name: str, outcome: str, started: float) -> None:
+    counts.jobs.labels(name, outcome).inc()
+    counts.job_seconds.labels(name).observe(time.monotonic() - started)
+
+
+def page(path: str, status: int, ms: int, route: str = "other") -> None:
     """One request to the app. A request that crashed is answered 500, and
     uvicorn writes its traceback on the line after. Another 5xx is the app
     saying a service it needs is down, which it carried on from."""
@@ -263,6 +280,8 @@ def page(path: str, status: int, ms: int) -> None:
         if status > 500
         else logging.INFO
     )
+    counts.pages.labels(route, str(status)).inc()
+    counts.page_seconds.labels(route).observe(ms / 1000)
     _write(
         level,
         "page",
@@ -275,6 +294,7 @@ def page(path: str, status: int, ms: int) -> None:
 def action(name: str, **fields: Any) -> None:
     """Something a person did in the app. It is its own trigger, so it names
     none."""
+    counts.actions.labels(name).inc()
     _write(logging.INFO, "action", name=name, **fields)
 
 
