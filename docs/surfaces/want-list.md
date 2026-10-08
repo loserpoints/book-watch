@@ -6,7 +6,7 @@ The want list shows every book I'm watching and whether any copy is worth my att
 
 ## What it shows
 
-- The top bar, on every screen and staying in view while the page scrolls: "bw." at the left with its full stop in the accent, and a tab for each screen at the right, Want list and Bought. The current tab is bold over an accent bar and the others muted. A book's page shows Want list as current. The tab names the screen, so the page has no heading of its own.
+- The top bar, on every screen and staying in view while the page scrolls: "bw." at the left with its full stop in the accent, and a tab for each screen at the right, Wanted for the want list and Bought. The current tab is bold over an accent bar and the others muted. A book's page shows Wanted as current. The tab names the screen, so the page has no heading of its own.
 - One row per book, most recently added first, or cheapest first.
 - The book's title, cover and author. A book with no cover shows its title on a placeholder.
 - The cheapest copy's delivered price, as "from $10.49". It is green with ✓ when under the book's limit, and red when over (see [pricing](../rules/pricing.md)).
@@ -39,7 +39,7 @@ The want list shows every book I'm watching and whether any copy is worth my att
 - "I bought it" asks where (eBay, AbeBooks, or elsewhere with the shop's name), what was paid delivered, and the day, with the phone's own date picker. It is filled in from the copy of this book last opened from the app, with that copy's marketplace and delivered price and today's date, and says when that copy was opened. Mark bought, and the book leaves the list for the [Bought](bought.md) page and stops being checked and emailed. A bought book can't be put back.
 - "I don't want it" removes the book, and nothing is kept.
 - Tap + to add a book (see [adding a book](add-a-book.md)). Adding leaves nothing to go back through.
-- Tap Bought in the top bar to see what I've bought (see [Bought](bought.md)). Tap Want list while on the want list to go back to its top.
+- Tap Bought in the top bar to see what I've bought (see [Bought](bought.md)). Tap Wanted while on the want list to go back to its top.
 - Press back to leave the app.
 
 ## Open issues

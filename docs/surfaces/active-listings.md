@@ -6,7 +6,7 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 
 ## What it shows
 
-- The top bar, with a back to the want list in place of the app's mark, and the Want list tab current (see [want list](want-list.md#what-it-shows)).
+- The top bar, with a back to the want list in place of the app's mark, and the Wanted tab current (see [want list](want-list.md#what-it-shows)).
 - The book's cover, title, author and the ISBN it was added by, with "Still checking." while the app is still working out which copies are this book.
 - A warning when the book was added as text rather than an ISBN, since that search finds worse matches.
 - Three chips: the book's limit, the scope (US or Everywhere) and how long ago it was checked.
@@ -42,7 +42,7 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 - Tap the fold to see the copies that might be this book.
 - Tap "Still checking." to see what it means.
 - Press back, or tap the top bar's back, to return to the want list, whatever was done on the page. With a sheet or photo open, back closes it first.
-- Tap Want list or Bought in the top bar to go there. Back from Bought then returns to the want list.
+- Tap Wanted or Bought in the top bar to go there. Back from Bought then returns to the want list.
 
 ## Open issues
 

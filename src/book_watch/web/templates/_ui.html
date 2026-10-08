@@ -16,12 +16,12 @@
 {% macro top_bar(here=None, back=False) -%}
 <header class="top-bar">
   {%- if back %}
-  <a class="top-back" href="/" data-nav="home" aria-label="Back to the want list"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></a>
+  <a class="top-back" href="/" data-nav="home" aria-label="Back to Wanted"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></a>
   {%- else %}
   <span class="top-mark">bw<span class="top-mark-dot">.</span></span>
   {%- endif %}
   <nav class="tabs" aria-label="Screens">
-  {%- for key, label, href in [("want", "Want list", "/"), ("bought", "Bought", "/bought")] %}
+  {%- for key, label, href in [("want", "Wanted", "/"), ("bought", "Bought", "/bought")] %}
     <a class="tab" href="{{ href }}" data-label="{{ label }}" data-nav="{{ 'home' if key == 'want' else 'screen' }}"
        {%- if key == here %} aria-current="{{ 'true' if back else 'page' }}"{% endif %}>{{ label }}</a>
   {%- endfor %}

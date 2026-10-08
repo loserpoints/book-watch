@@ -1924,11 +1924,11 @@ def test_every_screen_has_the_tabs_with_its_own_marked(book_client):
     client, _ = a_shelf(book_client)
 
     assert tabs(client.get("/").text) == [
-        ("/", "page", "Want list"),
+        ("/", "page", "Wanted"),
         ("/bought", "", "Bought"),
     ]
     assert tabs(client.get("/bought").text) == [
-        ("/", "", "Want list"),
+        ("/", "", "Wanted"),
         ("/bought", "page", "Bought"),
     ]
 
@@ -1939,8 +1939,8 @@ def test_a_books_page_sits_under_the_want_list_with_a_back_to_it(book_client):
     page = client.get("/book/1").text
 
     # Under the want list, not the want list itself: tapping it goes there.
-    assert ("/", "true", "Want list") in tabs(page)
-    assert 'aria-label="Back to the want list"' in page
+    assert ("/", "true", "Wanted") in tabs(page)
+    assert 'aria-label="Back to Wanted"' in page
     assert "← Want list" not in page
     assert '<span class="top-mark">' not in page
 
@@ -1951,4 +1951,4 @@ def test_the_want_list_and_bought_carry_the_mark_and_no_back(book_client):
     for path in ("/", "/bought"):
         page = client.get(path).text
         assert '<span class="top-mark">bw<' in page
-        assert "Back to the want list" not in page
+        assert "Back to Wanted" not in page
