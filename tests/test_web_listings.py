@@ -1444,7 +1444,7 @@ def test_the_ceiling_shows_against_the_cheapest_copy(book_client):
     client, _ = a_shelf(book_client)
     follow(client, "/books/check")
     all_certain(client)
-    client.post("/book/1/ceiling", data={"ceiling": "11.50", "currency": "USD"})
+    client.post("/book/1/ceiling", data={"ceiling": "11", "currency": "USD"})
 
     page = as_read(client.get("/").text)
 
@@ -1926,10 +1926,17 @@ def test_every_screen_has_the_tabs_with_its_own_marked(book_client):
     assert tabs(client.get("/").text) == [
         ("/", "page", "Wanted"),
         ("/bought", "", "Bought"),
+        ("/settings", "", "Settings"),
     ]
     assert tabs(client.get("/bought").text) == [
         ("/", "", "Wanted"),
         ("/bought", "page", "Bought"),
+        ("/settings", "", "Settings"),
+    ]
+    assert tabs(client.get("/settings").text) == [
+        ("/", "", "Wanted"),
+        ("/bought", "", "Bought"),
+        ("/settings", "page", "Settings"),
     ]
 
 
@@ -1948,7 +1955,125 @@ def test_a_books_page_sits_under_the_want_list_with_a_back_to_it(book_client):
 def test_the_want_list_and_bought_carry_the_mark_and_no_back(book_client):
     client, _ = a_shelf(book_client)
 
-    for path in ("/", "/bought"):
+    for path in ("/", "/bought", "/settings"):
         page = client.get(path).text
         assert '<span class="top-mark">bw<' in page
         assert "Back to Wanted" not in page
+
+
+# --- settings: the default limit (S83, #72) ----------------------------------
+
+
+def default_limit(client, limit, **headers):
+    return client.post(
+        "/settings/default-limit", data={"limit": limit}, headers=headers
+    )
+
+
+def limit_of(client, book_id):
+    return visible(client.get(f"/book/{book_id}").text).split("Limit ")[1].split()[0]
+
+
+def test_a_new_book_starts_with_the_default_limit(book_client):
+    client = book_client(returning(a_listing()))
+    default_limit(client, "12")
+
+    add_book(client, "9780099448396", "Crash")
+
+    assert limit_of(client, 1) == "$12"
+
+
+def test_changing_the_default_changes_no_book_already_on_the_list(book_client):
+    client = book_client(returning(a_listing()))
+    default_limit(client, "12")
+    add_book(client, "9780099448396", "Crash")
+    client.post("/book/1/ceiling", data={"ceiling": "9", "currency": "USD"})
+
+    default_limit(client, "20")
+    add_book(client, "9781590171998", "Stoner")
+
+    assert limit_of(client, 1) == "$9"
+    assert limit_of(client, 2) == "$20"
+
+
+def test_without_a_default_a_new_book_has_no_limit(book_client):
+    client = book_client(returning(a_listing()))
+    default_limit(client, "12")
+    default_limit(client, "")
+
+    add_book(client, "9780099448396", "Crash")
+
+    assert limit_of(client, 1) == "none"
+
+
+def test_the_default_is_shown_and_saved_in_place(book_client):
+    client = book_client(returning(a_listing()))
+
+    assert "Default limit What each new book starts with" in visible(
+        client.get("/settings").text
+    )
+    saved = default_limit(client, "12", **HTMX)
+
+    assert saved.status_code == 200
+    assert 'id="new-books"' in saved.text
+    assert "<html" not in saved.text
+    assert 'value="12"' in saved.text
+    assert "Saved" in visible(saved.text)
+
+
+@pytest.mark.parametrize(
+    ("typed", "said"),
+    [
+        ("12.50", "Whole dollars, like 12."),
+        ("abc", "“abc” isn't an amount."),
+        ("0", "A limit has to be at least $1."),
+        ("1000", "Three digits at most."),
+    ],
+)
+def test_a_default_that_is_not_whole_dollars_is_refused_in_place(
+    book_client, typed, said
+):
+    client = book_client(returning(a_listing()))
+
+    refused = default_limit(client, typed, **HTMX)
+
+    assert said in visible(refused.text)
+    assert f'value="{typed}"' in refused.text
+    assert 'value=""' in client.get("/settings").text
+
+
+def test_a_books_own_limit_is_whole_dollars_too(book_client):
+    client = book_client(returning(a_listing()))
+    add_book(client, "9780099448396", "Crash")
+
+    refused = client.post(
+        "/book/1/ceiling", data={"ceiling": "8.50", "currency": "USD"}, headers=HTMX
+    )
+
+    assert "Whole dollars, like 12." in visible(refused.text)
+    assert limit_of(client, 1) == "none"
+    page = client.get("/book/1").text
+    assert 'inputmode="numeric"' in page and 'maxlength="3"' in page
+
+
+def test_the_default_can_be_set_on_the_books_with_no_limit_and_only_those(
+    book_client,
+):
+    client, _ = a_shelf(book_client)
+    client.post("/book/1/ceiling", data={"ceiling": "9", "currency": "USD"})
+    default_limit(client, "12")
+
+    offer = visible(client.get("/settings").text)
+    assert "2 books on the list have no limit. Set $12 on them" in offer
+
+    filled = client.post("/settings/fill", headers=HTMX)
+
+    assert "Set $12 on 2 books." in visible(filled.text)
+    assert [limit_of(client, n) for n in (1, 2, 3)] == ["$9", "$12", "$12"]
+    assert "no limit" not in visible(client.get("/settings").text)
+
+
+def test_nothing_is_offered_without_a_default(book_client):
+    client, _ = a_shelf(book_client)
+
+    assert "no limit." not in visible(client.get("/settings").text)

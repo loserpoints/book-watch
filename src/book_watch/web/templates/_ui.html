@@ -11,8 +11,7 @@
     page a back to the want list in its place, and a tab per screen. The
     current tab is bold with an accent bar, as a chosen two-way choice is.
     `here` names the current screen's tab; `back` is true on a screen that
-    sits under the want list rather than being one of its own. Settings joins
-    with S83 (#72). -#}
+    sits under the want list rather than being one of its own. -#}
 {% macro top_bar(here=None, back=False) -%}
 <header class="top-bar">
   {%- if back %}
@@ -21,7 +20,7 @@
   <span class="top-mark">bw<span class="top-mark-dot">.</span></span>
   {%- endif %}
   <nav class="tabs" aria-label="Screens">
-  {%- for key, label, href in [("want", "Wanted", "/"), ("bought", "Bought", "/bought")] %}
+  {%- for key, label, href in [("want", "Wanted", "/"), ("bought", "Bought", "/bought"), ("settings", "Settings", "/settings")] %}
     <a class="tab" href="{{ href }}" data-label="{{ label }}" data-nav="{{ 'home' if key == 'want' else 'screen' }}"
        {%- if key == here %} aria-current="{{ 'true' if back else 'page' }}"{% endif %}>{{ label }}</a>
   {%- endfor %}
@@ -296,12 +295,14 @@
     guess. -#}
 {#- `type` and `max` for a date, which the phone picks with its own
     calendar (S71). -#}
-{% macro field(id, label, value="", name=None, hint=None, optional=False, inputmode=None, placeholder=None, type=None, max=None) -%}
+{% macro field(id, label, value="", name=None, hint=None, optional=False, inputmode=None, placeholder=None, type=None, max=None, maxlength=None, pattern=None) -%}
 <div class="field">
   <label for="{{ id }}">{{ label }}{% if optional %} <span class="field-optional">(optional)</span>{% endif %}</label>
   <input id="{{ id }}" name="{{ name or id }}" value="{{ value }}" autocomplete="off"
     {%- if type %} type="{{ type }}"{% endif %}
     {%- if max %} max="{{ max }}"{% endif %}
+    {%- if maxlength %} maxlength="{{ maxlength }}"{% endif %}
+    {%- if pattern %} pattern="{{ pattern }}"{% endif %}
     {%- if inputmode %} inputmode="{{ inputmode }}"{% endif %}
     {%- if placeholder %} placeholder="{{ placeholder }}"{% endif %}
     {%- if hint %} aria-describedby="{{ id }}-hint"{% endif %}>
@@ -317,6 +318,34 @@
     An option may carry a third item, a dict of attributes for its radio: the
     want list's switch fetches the list with htmx, and greys out an empty
     side with `disabled`. -#}
+{#- A setting that is an amount in whole dollars, edited in place (S83, #72):
+    the label and what it does at the left, the value at the right with ✎,
+    and the value is the field. A tap anywhere on the row puts the cursor in
+    it with the number keyboard. Leaving the field saves it, Done leaves it,
+    Escape puts the old value back, and an empty field means none. Without
+    an `action`, as on the design page, it saves nowhere. -#}
+{% macro dollar_setting(id, label, hint, value, action=None, saved=False, error=None) -%}
+<form class="setting"{% if action %} method="post" action="{{ action }}" hx-post="{{ action }}" hx-trigger="change" hx-target="closest .setting-group" hx-swap="outerHTML"{% endif %} data-autosave>
+  <label class="setting-row" for="{{ id }}">
+    <span class="setting-label">
+      <span>{{ label }}</span>
+      <span class="setting-hint setting-hint-rest">{{ hint }}</span>
+      <span class="setting-hint setting-hint-editing">Whole dollars. Done saves, empty for none.</span>
+    </span>
+    <span class="setting-value">
+      {%- if saved %}<span class="setting-saved" role="status">Saved</span>{% endif -%}
+      <span class="setting-dollar" aria-hidden="true">$</span>
+      <input id="{{ id }}" name="limit" value="{{ value if value is not none else '' }}" placeholder="none" autocomplete="off"
+             inputmode="numeric" pattern="[0-9]*" maxlength="3" enterkeyhint="done"
+             {%- if error %} aria-invalid="true" aria-describedby="{{ id }}-error"{% endif %}>
+      <span class="setting-pencil" aria-hidden="true">✎</span>
+    </span>
+  </label>
+  {%- if error %}<p class="sheet-error" id="{{ id }}-error" role="alert">{{ error }}</p>{% endif %}
+</form>
+{%- endmacro %}
+
+
 {#- A two-way choice, drawn the same everywhere (S69, #217): two words, the
     current one bold with an accent bar under it and announced as current,
     the other muted, as the top bar's tabs are (S81, #284). Each is a 44px

@@ -39,6 +39,7 @@ from book_watch import (
     enrichment,
     monitoring,
     purchases,
+    settings,
     standing,
     sweeps,
     wantlist,
@@ -438,6 +439,56 @@ def build_router(
         with closing(open_database()) as connection:
             months = list_view.bought_months(purchases.everything(connection))
         return templates.TemplateResponse(request, "bought.html", {"months": months})
+
+    def new_books(
+        request: Request,
+        *,
+        status_code: int = 200,
+        **said: object,
+    ) -> HTMLResponse:
+        """Settings' "New books" group (S83, #72): the default limit, and the
+        offer to set it on the books that have none. The whole page when
+        asked for directly, the group alone when htmx saved something in it.
+        """
+        with closing(open_database()) as connection:
+            limit = settings.default_limit(connection)
+            without = settings.without_limit(connection)
+        return templates.TemplateResponse(
+            request,
+            "_new_books.html" if from_htmx(request) else "settings.html",
+            {
+                "limit": limit.amount if limit else None,
+                "without": without,
+                **said,
+            },
+            status_code=200 if from_htmx(request) else status_code,
+        )
+
+    @router.get("/settings", response_class=HTMLResponse)
+    def settings_page(request: Request) -> HTMLResponse:
+        return new_books(request)
+
+    @router.post("/settings/default-limit", response_class=HTMLResponse)
+    def set_default_limit(request: Request, limit: str = Form("")) -> HTMLResponse:
+        """Edited in place: saved when the field is left, and an empty one
+        clears the default. A refusal keeps what was typed and says why."""
+        with closing(open_database()) as connection:
+            try:
+                settings.set_default_limit(connection, limit)
+            except ValueError as exc:
+                return new_books(request, status_code=400, error=str(exc), typed=limit)
+        if not from_htmx(request):
+            return RedirectResponse("/settings", status_code=303)
+        return new_books(request, saved=True)
+
+    @router.post("/settings/fill", response_class=HTMLResponse)
+    def fill_limits(request: Request) -> HTMLResponse:
+        """Give the default to every book with no limit, and only those."""
+        with closing(open_database()) as connection:
+            filled = settings.fill(connection)
+        if not from_htmx(request):
+            return RedirectResponse("/settings", status_code=303)
+        return new_books(request, filled=filled)
 
     @router.get("/books/list", response_class=HTMLResponse)
     def the_list(request: Request) -> HTMLResponse:

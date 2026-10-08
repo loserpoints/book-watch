@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Settings · book-watch{% endblock %}
+{% set screen = "settings" %}
+
+{#- The app's settings (S83, #72), a group per kind of thing they change. -#}
+{% block content %}
+<h1 class="sr-only">Settings</h1>
+{% include "_new_books.html" %}
+{% endblock %}

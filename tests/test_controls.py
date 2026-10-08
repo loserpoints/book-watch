@@ -173,7 +173,8 @@ def test_every_field_has_a_visible_label():
 
     assert inputs
     for field_id in inputs:
-        assert f'<label for="{field_id}">' in page, field_id
+        # A setting's whole row is its label (S83), so it carries a class.
+        assert re.search(rf'<label\b[^>]*\bfor="{field_id}"', page), field_id
 
 
 def test_an_optional_field_says_so():

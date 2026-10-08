@@ -31,7 +31,7 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 
 ## What you can do
 
-- Tap the limit chip to set or clear the book's limit.
+- Tap the limit chip to set or clear the book's limit, in whole dollars, with the number keyboard. A book starts with the default limit from [Settings](settings.md).
 - Tap the scope chip to switch between US sellers and everywhere.
 - Tap the checked chip to search eBay and AbeBooks again.
 - Tap Newest to see the latest listings first, and Cheapest to go back. The order stays through checking again, changing scope, going back and reloading. Opening a book shows cheapest first.
@@ -42,7 +42,7 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 - Tap the fold to see the copies that might be this book.
 - Tap "Still checking." to see what it means.
 - Press back, or tap the top bar's back, to return to the want list, whatever was done on the page. With a sheet or photo open, back closes it first.
-- Tap Wanted or Bought in the top bar to go there. Back from Bought then returns to the want list.
+- Tap Wanted, Bought or Settings in the top bar to go there. Back from Bought or Settings then returns to the want list.
 
 ## Open issues
 
