@@ -25,7 +25,7 @@ from datetime import UTC, datetime, timedelta
 from datetime import time as clock_time
 from zoneinfo import ZoneInfo
 
-from book_watch import abebooks, enrichment, sweeps, wantlist
+from book_watch import abebooks, enrichment, monitoring, sweeps, wantlist
 from book_watch.alerts import AlertError
 from book_watch.config import MissingCredentialError
 from book_watch.ebay.errors import EbayError
@@ -37,7 +37,7 @@ ConnectFn = Callable[[], sqlite3.Connection]
 SearchFn = Callable[..., list]
 SpentFn = Callable[[], int]
 #: Sends the morning email, returning how many copies it listed (S40).
-NotifyFn = Callable[[], int]
+NotifyFn = Callable[[], int | None]
 
 #: When the run starts. New York time, so it stays at 7am across daylight
 #: saving.
@@ -95,11 +95,27 @@ def run(
     """Search every book once, examining new copies as it goes, and record
     how it went. Returns the run's id.
 
+    Written as the `daily` job, and everything it does carries the `daily`
+    trigger.
+
     One book at a time, and each book's pass finishes before the next search,
     so the run never has two requests to the same service in flight. A book
     whose search fails is counted and the run carries on: one dead book must
     not cost the other nine their morning.
     """
+    with monitoring.started_by("daily"), monitoring.job("daily") as job:
+        return _run(job, connect, search, enrich, spent, notify, read_abebooks)
+
+
+def _run(
+    job: monitoring.Outcome,
+    connect: ConnectFn,
+    search: SearchFn,
+    enrich: enrichment.EnrichFn,
+    spent: SpentFn,
+    notify: NotifyFn | None,
+    read_abebooks: abebooks.Reader | None,
+) -> int:
     with closing(connect()) as connection:
         run_id = connection.execute("INSERT INTO daily_run DEFAULT VALUES").lastrowid
         connection.commit()
@@ -118,27 +134,30 @@ def run(
                     book = wantlist.get(connection, book_id)
                 except LookupError:
                     continue  # Removed since the run started.
-                try:
-                    sweeps.store(
-                        connection,
-                        book.work_id,
-                        search(book.search_query, DEFAULT_LIMIT, scope="us"),
-                        asked_for=DEFAULT_LIMIT,
-                        scope="us",
+                with monitoring.about(book.id, book.name):
+                    try:
+                        sweeps.check_ebay(
+                            connection,
+                            book.work_id,
+                            search,
+                            book.search_query,
+                            DEFAULT_LIMIT,
+                            "us",
+                        )
+                        connection.commit()
+                    except (MissingCredentialError, EbayError):
+                        # Its `check` line says why.
+                        failed += 1
+                        continue
+                    # Before the copies are examined, so the pass sees both
+                    # marketplaces' copies. Past the hour, as eBay's search
+                    # is, so the email covers this morning's copies whenever
+                    # the book was last opened. A failure here is the book
+                    # page's to show, and costs the run nothing: eBay's copies
+                    # are in.
+                    checked = abebooks.check_book(
+                        connection, book, read_abebooks, force=True
                     )
-                    connection.commit()
-                except (MissingCredentialError, EbayError) as exc:
-                    logger.warning("Daily check could not search %s: %s", book_id, exc)
-                    failed += 1
-                    continue
-                # Before the copies are examined, so the pass sees both
-                # marketplaces' copies. Past the hour, as eBay's search is, so
-                # the email covers this morning's copies whenever the book was
-                # last opened. A failure here is the book page's to show, and
-                # costs the run nothing: eBay's copies are in.
-                checked = abebooks.check_book(
-                    connection, book, read_abebooks, force=True
-                )
                 if checked is not None:
                     abebooks_read += 1
                     abebooks_failed += int(checked.outcome == "failed")
@@ -150,13 +169,21 @@ def run(
                     throttled = True
         # After every book, so the email covers the whole morning.
         if notify is not None:
-            try:
-                emailed = notify()
-            except AlertError as exc:
-                # For the logs, not the app: the check itself went fine, and
-                # nothing was recorded as sent, so tomorrow tries again.
-                logger.warning("Daily check could not send its email: %s", exc)
-                email_failed = True
+            with monitoring.job("email") as sending:
+                try:
+                    sent = notify()
+                    if sent is None:
+                        # RESEND_API_KEY or ALERT_EMAIL_TO isn't set on Fly.
+                        sending.outcome, sending.reason = "skipped", "setup"
+                    else:
+                        emailed = sent
+                        sending.fields.update(copies=emailed)
+                except AlertError as exc:
+                    # For the logs, not the app: the check itself went fine,
+                    # and nothing was recorded as sent, so tomorrow tries
+                    # again.
+                    sending.failed(exc)
+                    email_failed = True
     except Exception:
         crashed = True
         raise
@@ -182,17 +209,15 @@ def run(
                 ),
             )
             connection.commit()
-    logger.info(
-        "Daily check: %s, %d books, %d failed, %d Open Library requests, "
-        "%d emailed, AbeBooks: %d read, %d failed, %d out of order",
-        outcome,
-        len(books),
-        failed,
-        spent() - before,
-        emailed,
-        abebooks_read,
-        abebooks_failed,
-        abebooks_unordered,
+    job.outcome = outcome
+    job.fields.update(
+        books=len(books),
+        failed=failed,
+        openlibrary=spent() - before,
+        emailed=emailed,
+        abebooks_read=abebooks_read,
+        abebooks_failed=abebooks_failed,
+        abebooks_unordered=abebooks_unordered,
     )
     return run_id
 
@@ -230,10 +255,12 @@ def start(
         while True:
             try:
                 tick(connect, search, enrich, spent, now(), notify, read_abebooks)
-            except Exception:
-                # A run that raised has recorded itself as failed, if it got
-                # as far as starting. Either way the thread lives to try again.
-                logger.exception("Daily check could not run")
+            except Exception as exc:
+                # A run that raised has recorded itself as failed, and written
+                # its traceback, if it got as far as starting. Either way the
+                # thread lives to try again.
+                if not monitoring.logged(exc):
+                    logger.exception("Daily check could not run")
             time.sleep(POLL_SECONDS)
 
     thread = threading.Thread(target=loop, name="daily-check", daemon=True)

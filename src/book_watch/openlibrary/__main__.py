@@ -17,7 +17,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from book_watch import db
+from book_watch import db, monitoring
 from book_watch.openlibrary.budget import CallBudget
 from book_watch.openlibrary.client import OpenLibraryClient
 from book_watch.openlibrary.errors import OpenLibraryUnavailable
@@ -95,4 +95,6 @@ def _report_title(client: OpenLibraryClient, title: str, author: str | None) -> 
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    # Run from a GitHub workflow, so its calls say so.
+    with monitoring.started_by("test"):
+        raise SystemExit(main())

@@ -22,6 +22,7 @@ from urllib.parse import quote
 
 import httpx
 
+from book_watch import monitoring
 from book_watch.ebay.auth import DEFAULT_TIMEOUT_SECONDS, USER_AGENT, EbayTokenProvider
 from book_watch.ebay.errors import EbayAuthError, EbaySearchError
 from book_watch.ebay.search import DEFAULT_MARKETPLACE_ID
@@ -106,12 +107,20 @@ class ItemDetailClient:
             token = self._tokens.token()
         except EbayAuthError:
             raise
+        with monitoring.call("ebay", "item") as call:
+            declared = self._fetch(item_id, token.value)
+            if not declared.present:
+                call.outcome = "empty"
+            return declared
+
+    def _fetch(self, item_id: str, token: str) -> Declared:
         # eBay's item ids contain pipes, which have to survive the path.
         url = f"{ITEM_URL}/{quote(item_id, safe='')}"
         try:
-            response = self._client.get(url, headers=self._headers(token.value))
+            response = self._client.get(url, headers=self._headers(token))
         except httpx.HTTPError as exc:
             raise EbaySearchError(f"Fetching {item_id} failed: {exc}") from exc
+        monitoring.call_answered(response.status_code)
 
         if response.status_code == 404:
             return Declared(item_id=item_id, present=False)

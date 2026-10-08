@@ -4,21 +4,16 @@ Separate from `create_app` so importing the application factory in tests does
 not require the environment to be configured.
 """
 
-import logging
-
-from book_watch import abebooks, alerts, daily, enrichment
+from book_watch import abebooks, alerts, daily, enrichment, monitoring
 from book_watch.openlibrary import CallBudget
 from book_watch.web.app import create_app
 from book_watch.web.searching import LazyBrowseSearch
 from book_watch.web.wantlist import open_configured_database
 
-# The app's own INFO lines, such as each morning's "Daily check: …" summary,
-# reach Fly's log viewer. Uvicorn configures only its own loggers, so without
-# this only warnings print. Uvicorn's loggers do not propagate, so nothing
-# prints twice.
-logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
-# httpx logs every request at INFO. The app's own lines are the ones to read.
-logging.getLogger("httpx").setLevel(logging.WARNING)
+# Every line in Fly's log viewer in one format, uvicorn's included, with its
+# per-request line replaced by the app's own `page` line
+# (docs/rules/monitoring.md).
+monitoring.configure()
 
 app = create_app(read_abebooks=abebooks.read)
 

@@ -7,7 +7,7 @@
 - One deploy runs at a time.
 - To redeploy without a commit, for example after changing a secret: Actions → Deploy → Run workflow, on `main`.
 - A deploy after 7am New York time, on a day whose daily check has not finished, starts that check as the app boots.
-- Each daily check logs one line, `Daily check: ok, 6 books, 0 failed, 0 Open Library requests, 1 emailed, AbeBooks: 6 read, 0 failed, 0 out of order`, readable in Fly's log viewer. "Email is off" before it means `RESEND_API_KEY` or `ALERT_EMAIL_TO` is not set on Fly.
+- Each daily check ends with one line in Fly's log viewer, `event=job name=daily phase=end trigger=daily outcome=ok books=6 failed=0 openlibrary=0 emailed=1 abebooks_read=6 abebooks_failed=0 abebooks_unordered=0`. Search `trigger=daily` for everything it did. An `event=job name=email` line ending `outcome=skipped reason=setup` means `RESEND_API_KEY` or `ALERT_EMAIL_TO` is not set on Fly. Every line is described in [monitoring](rules/monitoring.md).
 - "Shipping for calculated listings is off" in Fly's logs means `SHIP_TO_ZIP` is not set, so copies with calculated shipping show "+ shipping?".
 - After setting or changing the Resend key, run Actions → Send a test email. It sends one email from the live app with its real settings, or fails with the reason.
 - To see exactly what eBay sends for a search, field by field, run Actions → Search eBay once with a title and author or an ISBN. It makes one search on the Fly machine, the way the app does, and prints eBay's JSON in the run's log.

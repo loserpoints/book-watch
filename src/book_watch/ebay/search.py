@@ -27,6 +27,7 @@ from urllib.parse import quote
 
 import httpx
 
+from book_watch import monitoring
 from book_watch.config import (
     MissingCredentialError,
     load_ebay_credentials,
@@ -200,9 +201,14 @@ class BrowseClient:
         doing it in the client would bake one use case's preference into the
         layer both modes share.
         """
-        return _parse_listings(
-            self._get(query, limit=limit, search_by=search_by, scope=scope)
-        )
+        with monitoring.call("ebay", "search") as call:
+            results = _parse_listings(
+                self._get(query, limit=limit, search_by=search_by, scope=scope)
+            )
+            call.fields.update(results=len(results))
+            if not results:
+                call.outcome = "empty"
+            return results
 
     def search_raw(
         self,
@@ -217,9 +223,10 @@ class BrowseClient:
         For seeing a field the app does not read yet, and for capturing a real
         response as a test fixture.
         """
-        return _decode_json(
-            self._get(query, limit=limit, search_by=search_by, scope=scope)
-        )
+        with monitoring.call("ebay", "search"):
+            return _decode_json(
+                self._get(query, limit=limit, search_by=search_by, scope=scope)
+            )
 
     def _get(
         self, query: str, *, limit: int, search_by: SearchBy, scope: Scope
@@ -248,6 +255,7 @@ class BrowseClient:
             raise EbaySearchError(
                 f"Could not reach the eBay Browse API: {exc}"
             ) from exc
+        monitoring.call_answered(response.status_code)
 
         if response.status_code != httpx.codes.OK:
             raise EbaySearchError(_describe_failure(response))
@@ -645,4 +653,6 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    # Run from a GitHub workflow, so its calls say so.
+    with monitoring.started_by("test"):
+        raise SystemExit(main())

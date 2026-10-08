@@ -15,7 +15,6 @@ pages that are not.
 from __future__ import annotations
 
 import json
-import logging
 import re
 import sqlite3
 import threading
@@ -27,12 +26,10 @@ from decimal import Decimal
 
 import httpx
 
-from book_watch import pages, sweeps, wantlist
+from book_watch import monitoring, pages, sweeps, wantlist
 from book_watch.ebay.search import Listing, Money, Results
 from book_watch.isbn import normalize
 from book_watch.marketplaces import abebooks_condition_id
-
-logger = logging.getLogger(__name__)
 
 SEARCH = "https://www.abebooks.com/book-search/title/{title}/author/{author}/"
 ISBN_PAGE = "https://www.abebooks.com/book-search/isbn/{isbn}/used/"
@@ -119,13 +116,20 @@ def read(url: str) -> pages.Page:
             wait = SPACING_SECONDS - (time.monotonic() - _last_request)
             if wait > 0:
                 time.sleep(wait)
-        try:
-            status, body = pages.fetch(url)
-        finally:
-            _last_request = time.monotonic()
-    if status != 200:
-        raise AbeBooksError(f"status {status}")
-    return checked(pages.parse(body))
+        with monitoring.call("abebooks", "page") as call:
+            call.fields.update(url=url)
+            try:
+                status, body = pages.fetch(url)
+            finally:
+                _last_request = time.monotonic()
+            monitoring.call_answered(status)
+            if status != 200:
+                raise AbeBooksError(f"status {status}")
+            page = checked(pages.parse(body))
+            call.fields.update(rows=len(page.copies))
+            if not page.copies:
+                call.outcome = "empty"
+            return page
 
 
 def checked(page: pages.Page) -> pages.Page:
@@ -262,25 +266,27 @@ def check(
     A failure stores no sweep, so the copies from the last good check stay
     listed as of then. Commits.
     """
-    if url is None:
-        return Result("empty")
-    try:
-        page = reader(url)
-    except (AbeBooksError, httpx.HTTPError, pages.RefusedPath) as exc:
-        logger.warning("AbeBooks check failed for work %s: %s", work_id, exc)
-        _record(connection, work_id, "failed", str(exc))
-        connection.commit()
-        return Result("failed")
-
-    result = Result("ok" if page.copies else "empty", out_of_place(page))
-    if result.unordered:
-        logger.warning(
-            "AbeBooks page out of order for work %s: %d of %d copies out of place",
-            work_id,
-            result.out_of_place,
-            len(page.copies),
+    with monitoring.check("abebooks") as found:
+        if url is None:
+            # Nothing to search by, so nothing was asked.
+            found.outcome = "empty"
+            return Result("empty")
+        try:
+            page = reader(url)
+        except (AbeBooksError, httpx.HTTPError, pages.RefusedPath) as exc:
+            found.failed(exc)
+            _record(connection, work_id, "failed", str(exc))
+            connection.commit()
+            return Result("failed")
+        result = _store(connection, work_id, page)
+        found.fields.update(
+            unordered=result.unordered, out_of_place=result.out_of_place
         )
+        return result
 
+
+def _store(connection: sqlite3.Connection, work_id: int, page: pages.Page) -> Result:
+    result = Result("ok" if page.copies else "empty", out_of_place(page))
     listings = Results(
         [_listing(copy) for copy in page.copies], total=page.result_count or 0
     )

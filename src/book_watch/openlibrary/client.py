@@ -37,6 +37,7 @@ from typing import Any
 
 import httpx
 
+from book_watch import monitoring
 from book_watch.isbn import normalize
 from book_watch.openlibrary.budget import CallBudget
 from book_watch.openlibrary.errors import OpenLibraryUnavailable
@@ -202,6 +203,22 @@ class OpenLibraryClient:
     ) -> Any:
         """One request, once the pause has elapsed and the ceiling allows it."""
         self._wait_turn()
+        with monitoring.call("openlibrary", _endpoint(path)) as call:
+            if path.startswith("/isbn/"):
+                # Which number, so one that keeps failing can be found.
+                call.fields.update(isbn=path.removeprefix("/isbn/").split(".")[0])
+            payload = self._ask(path, params=params, allow_missing=allow_missing)
+            if payload is None:
+                call.outcome = "empty"
+            return payload
+
+    def _ask(
+        self,
+        path: str,
+        *,
+        params: dict[str, Any] | None,
+        allow_missing: bool,
+    ) -> Any:
         # Counted *after* the pause, so the recorded time is within
         # milliseconds of the request itself. Counting before would make the
         # ledger read as though requests went out faster than they did, which
@@ -220,6 +237,7 @@ class OpenLibraryClient:
             )
         except httpx.HTTPError as exc:
             raise OpenLibraryUnavailable(f"GET {path} failed: {exc}") from exc
+        monitoring.call_answered(response.status_code)
 
         if allow_missing and response.status_code == 404:
             return None
@@ -347,3 +365,12 @@ def _optional_string(value: Any) -> str | None:
 
 def _optional_int(value: Any) -> int | None:
     return value if isinstance(value, int) and not isinstance(value, bool) else None
+
+
+def _endpoint(path: str) -> str:
+    """The vocabulary's name for an Open Library path: search, isbn or work."""
+    if path.startswith("/isbn/"):
+        return "isbn"
+    if path.startswith("/works/"):
+        return "work"
+    return path.strip("/").removesuffix(".json")

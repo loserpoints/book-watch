@@ -24,7 +24,7 @@ These rules keep the app's requests to eBay and Open Library small, spaced out a
 - A search asks for 50 results.
 - A search result carries each copy's price and shipping, so a delivered price costs no extra call.
 - Opening a book searches eBay only if that book was not searched in the last hour for the same scope. Tapping Checked searches regardless.
-- Update searches only the books not searched in the last hour. Check all searches every book.
+- The Check button, as "Check 2", searches only the books not searched in the last hour. As "Check all" it searches every book.
 - Checking several books searches them one at a time, never in parallel.
 - Every book is searched once a day at 7am New York time, one at a time, and each book's new copies are examined before the next book is searched. A run the app was down for runs when it starts again. Each run records how many Open Library requests it spent.
 - Each listing's details are fetched once, ever. A listing is fetched again only when the app starts reading a new field, and only while it is listed.
@@ -32,7 +32,7 @@ These rules keep the app's requests to eBay and Open Library small, spaced out a
 ### AbeBooks
 
 - A book costs one request: page 1 of AbeBooks' title search, asked for without grouped rows. Nothing past page 1 is read.
-- AbeBooks is read at the same moments as eBay: the daily check, Update, and opening a book. Update and opening a book read it only if its last AbeBooks check, whatever the outcome, was over an hour ago. The daily check, tapping Checked and Check all read regardless.
+- AbeBooks is read at the same moments as eBay: the daily check, the Check button, and opening a book. "Check 2" and opening a book read it only if its last AbeBooks check, whatever the outcome, was over an hour ago. The daily check, tapping Checked and Check all read regardless.
 - One request per book serves both the US-only and everywhere views.
 - The daily check reads one book at a time, right after that book's eBay search and before its copies are examined.
 - Requests from anywhere in the app are at least 3 seconds apart.
@@ -52,6 +52,7 @@ These rules keep the app's requests to eBay and Open Library small, spaced out a
 
 - Opening the want-list makes no requests.
 - Every request names the app and links its repository in its User-Agent.
+- Every request writes one `call` line, whatever its outcome ([monitoring](monitoring.md)).
 
 ## Open issues
 
