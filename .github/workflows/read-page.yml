@@ -2,7 +2,9 @@ name: Read a marketplace page once
 
 # Reads one AbeBooks or Biblio page on the Fly machine, the way the app would,
 # and prints what it holds: the status, the page's count of results, the copies
-# on it and their delivered prices. A path the site's robots.txt disallows is
+# on it and their delivered prices, and with "markup" ticked, the page itself
+# without its scripts and styles. AbeBooks and Biblio pages are public, so the
+# public log holds nothing private. A path the site's robots.txt disallows is
 # refused before anything is sent. One request per run.
 #
 # Requires the FLY_API_TOKEN repository secret that Deploy uses.
@@ -12,6 +14,10 @@ on:
       url:
         description: "An https://www.abebooks.com/book-search/... or https://www.biblio.com/... address."
         required: true
+      markup:
+        description: "Also print the page's markup, to see a page with no copies."
+        type: boolean
+        default: false
 
 jobs:
   read:
@@ -25,6 +31,7 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
           URL_IN: ${{ inputs.url }}
+          MARKUP: ${{ inputs.markup }}
         run: |
           # The address becomes part of a command on the machine, so only the
           # characters an address of these pages needs get through.
@@ -32,6 +39,8 @@ jobs:
             echo "Use an https://www.abebooks.com/ or https://www.biblio.com/ address with letters, digits and / . _ - only." >&2
             exit 2
           fi
+          flag=""
+          if [ "${MARKUP}" = "true" ]; then flag=" --markup"; fi
           app=$(sed -n 's/^app = "\(.*\)"$/\1/p' fly.toml)
           flyctl ssh console --app "${app}" \
-            -C "/app/.venv/bin/python -m book_watch.pages ${URL_IN}"
+            -C "/app/.venv/bin/python -m book_watch.pages ${URL_IN}${flag}"

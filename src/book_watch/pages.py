@@ -1,10 +1,12 @@
 """Read one AbeBooks or Biblio page, the way the app would, and say what it holds.
 
-    python -m book_watch.pages <url>
+    python -m book_watch.pages <url> [--markup]
 
-One request, no retry. A path the site's robots.txt asks robots to stay out of
-is refused before anything is sent. This exists to check, from the Fly
-machine, that a page answers and what it carries. See docs/rules/api-policies.md.
+One request, no retry. `--markup` also prints the page itself, without its
+scripts, styles, icons and comments, to see a page that holds no copies.
+A path the site's robots.txt asks robots to stay out of is refused before
+anything is sent. This exists to check, from the Fly machine, that a page
+answers and what it carries. See docs/rules/api-policies.md.
 """
 
 from __future__ import annotations
@@ -77,6 +79,10 @@ _BINDING = re.compile(
     r"Hard cover|Soft cover)\b"
 )
 _ORIGIN = "https://www.abebooks.com"
+#: What `--markup` leaves out: code, styling, icons and comments.
+_NOT_MARKUP = re.compile(
+    r"<(script|style|svg|noscript)\b.*?</\1\s*>|<!--.*?-->", re.DOTALL | re.IGNORECASE
+)
 #: Elements that never close, so they never open a level.
 _VOID = {"img", "br", "input", "meta", "link", "hr", "source", "wbr", "area"}
 
@@ -272,6 +278,12 @@ def parse(page: str) -> Page:
     )
 
 
+def markup(page: str) -> str:
+    """The page without what `_NOT_MARKUP` names, and without blank lines."""
+    lines = (line.strip() for line in _NOT_MARKUP.sub("", page).splitlines())
+    return "\n".join(line for line in lines if line)
+
+
 def fetch(url: str) -> tuple[int, str]:
     """One request, no retry. Returns the status and the body."""
     check_url(url)
@@ -286,8 +298,10 @@ def fetch(url: str) -> tuple[int, str]:
 
 def main(argv: list[str] | None = None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
+    show_markup = "--markup" in args
+    args = [arg for arg in args if arg != "--markup"]
     if len(args) != 1:
-        print("usage: python -m book_watch.pages <url>", file=sys.stderr)
+        print("usage: python -m book_watch.pages <url> [--markup]", file=sys.stderr)
         return 2
     try:
         status, body = fetch(args[0])
@@ -319,6 +333,9 @@ def main(argv: list[str] | None = None) -> int:
             f"  {'grouped' if copy.grouped else '       '}"
             f"  {'first ed.' if copy.first_edition else ''}"
         )
+    if show_markup:
+        print("markup")
+        print(markup(body))
     return 0 if status == 200 else 1
 
 
