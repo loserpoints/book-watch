@@ -1,0 +1,15 @@
+# M17 · Read it right
+
+## Goal
+
+An AbeBooks page the app can't read fails instead of saying "No copies", an app left open through a deploy comes back styled, and a book whose AbeBooks copies are grouped keeps them.
+
+## Jobs advanced
+
+- [J1 · Keep looking so I don't have to](../../jobs.md#j1--keep-looking-so-i-dont-have-to)
+
+## Slices
+
+- [S74 · An AbeBooks page the app can't read fails, instead of saying "No copies"](https://github.com/loserpoints/book-watch/issues/242)
+- [S75 · An app left open through a deploy comes back with the styles that match](https://github.com/loserpoints/book-watch/issues/256)
+- [S76 · AbeBooks' grouped rows are read, so those books keep their AbeBooks copies](https://github.com/loserpoints/book-watch/issues/253)
