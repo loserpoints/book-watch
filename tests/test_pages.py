@@ -101,3 +101,29 @@ def test_a_refused_page_sends_nothing(monkeypatch, capsys):
 
     assert code == 2
     assert "robots.txt disallows /servlet/" in capsys.readouterr().err
+
+
+def test_markup_keeps_the_page_and_leaves_out_code_styles_and_icons():
+    page = (
+        "<html><head><script>track()</script><style>p{}</style></head>\n\n"
+        '<body><!-- note --><p data-test-id="no-results">Nothing found</p>'
+        '<svg viewBox="0 0 1 1"><path d="M0"/></svg>'
+        "<SCRIPT type='x'>\nmore()\n</SCRIPT></body></html>"
+    )
+
+    shown = pages.markup(page)
+
+    assert '<p data-test-id="no-results">Nothing found</p>' in shown
+    for gone in ("track()", "p{}", "note", "<svg", "more()"):
+        assert gone not in shown
+
+
+def test_the_markup_is_printed_only_when_asked_for(monkeypatch, capsys):
+    url = "https://www.abebooks.com/book-search/title/no-such-book/author/_/"
+    monkeypatch.setattr(pages, "fetch", lambda _: (200, "<p>Nothing found</p>"))
+
+    assert pages.main([url]) == 0
+    assert "Nothing found" not in capsys.readouterr().out
+
+    assert pages.main([url, "--markup"]) == 0
+    assert "<p>Nothing found</p>" in capsys.readouterr().out
