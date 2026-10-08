@@ -3,6 +3,7 @@
 from decimal import Decimal
 from pathlib import Path
 
+import httpx
 import pytest
 
 from book_watch import pages
@@ -128,7 +129,7 @@ def test_a_refused_page_sends_nothing(monkeypatch, capsys):
     def no_request(*args, **kwargs):
         raise AssertionError("a refused page must not be requested")
 
-    monkeypatch.setattr(pages.httpx, "get", no_request)
+    monkeypatch.setattr(pages.httpx, "Client", no_request)
 
     code = pages.main(["https://www.abebooks.com/servlet/SearchResults?isbn=1"])
 
@@ -160,3 +161,37 @@ def test_the_markup_is_printed_only_when_asked_for(monkeypatch, capsys):
 
     assert pages.main([url, "--markup"]) == 0
     assert "<p>Nothing found</p>" in capsys.readouterr().out
+
+
+def test_a_redirect_to_a_refused_page_is_not_followed():
+    sent = []
+
+    def answer(request):
+        sent.append(request.url.path)
+        return httpx.Response(
+            302, headers={"Location": "https://www.abebooks.com/servlet/SearchResults"}
+        )
+
+    with pytest.raises(pages.RefusedPath, match="/servlet/"):
+        pages.fetch(
+            "https://www.abebooks.com/book-search/title/hey-jack/author/barry-hannah/",
+            transport=httpx.MockTransport(answer),
+        )
+
+    assert sent == ["/book-search/title/hey-jack/author/barry-hannah/"]
+
+
+def test_ungrouped_asks_abebooks_for_no_grouped_rows(monkeypatch, capsys):
+    asked = []
+    monkeypatch.setattr(pages, "fetch", lambda url: asked.append(url) or (200, ""))
+    search = "https://www.abebooks.com/book-search/title/hey-jack/author/barry-hannah/"
+
+    assert pages.main([search, "--ungrouped"]) == 0
+    assert pages.main([search]) == 0
+
+    assert asked == [search + "?rollup=off", search]
+    assert pages.ungrouped(search + "?a=1") == search + "?a=1&rollup=off"
+
+
+def test_an_unknown_flag_is_refused(capsys):
+    assert pages.main(["https://www.abebooks.com/", "--everything"]) == 2

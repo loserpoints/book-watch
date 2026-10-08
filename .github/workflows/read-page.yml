@@ -3,7 +3,8 @@ name: Read a marketplace page once
 # Reads one AbeBooks or Biblio page on the Fly machine, the way the app would,
 # and prints what it holds: the status, the page's count of results, the copies
 # on it and their delivered prices, and with "markup" ticked, the page itself
-# without its scripts and styles. AbeBooks and Biblio pages are public, so the
+# without its scripts and styles, and with "ungrouped" ticked, AbeBooks' page
+# asked for without grouped rows. AbeBooks and Biblio pages are public, so the
 # public log holds nothing private. A path the site's robots.txt disallows is
 # refused before anything is sent. One request per run.
 #
@@ -16,6 +17,10 @@ on:
         required: true
       markup:
         description: "Also print the page's markup, to see a page with no copies."
+        type: boolean
+        default: false
+      ungrouped:
+        description: "Ask AbeBooks for the page without grouped rows (rollup=off)."
         type: boolean
         default: false
 
@@ -32,6 +37,7 @@ jobs:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
           URL_IN: ${{ inputs.url }}
           MARKUP: ${{ inputs.markup }}
+          UNGROUPED: ${{ inputs.ungrouped }}
         run: |
           # The address becomes part of a command on the machine, so only the
           # characters an address of these pages needs get through.
@@ -41,6 +47,8 @@ jobs:
           fi
           flag=""
           if [ "${MARKUP}" = "true" ]; then flag=" --markup"; fi
+          # A fixed flag, never typed text: the address check above stays strict.
+          if [ "${UNGROUPED}" = "true" ]; then flag="${flag} --ungrouped"; fi
           app=$(sed -n 's/^app = "\(.*\)"$/\1/p' fly.toml)
           flyctl ssh console --app "${app}" \
             -C "/app/.venv/bin/python -m book_watch.pages ${URL_IN}${flag}"
