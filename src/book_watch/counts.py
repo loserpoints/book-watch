@@ -210,6 +210,23 @@ class State(Collector):
                 self._last_good_write,
             )
         try:
+            disk = os.statvfs(Path(self._path()).parent)
+        except OSError:
+            pass
+        else:
+            # Fly publishes nothing on its volumes here, so the app reads the
+            # disk its database is on (S79).
+            yield _gauge(
+                "bookwatch_volume_size_bytes",
+                "The size of the disk the database is on.",
+                disk.f_blocks * disk.f_frsize,
+            )
+            yield _gauge(
+                "bookwatch_volume_free_bytes",
+                "Space free on the disk the database is on.",
+                disk.f_bavail * disk.f_frsize,
+            )
+        try:
             size = sum(
                 os.path.getsize(part)
                 for part in (str(self._path()), f"{self._path()}-wal")

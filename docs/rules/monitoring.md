@@ -78,11 +78,13 @@ These rules say what the app writes to its logs, in one vocabulary, so that Fly'
 | `bookwatch_copies_listed`, `bookwatch_copies_under_limit` | By `marketplace`: copies certainly a book on the list, listed now from US sellers, and those under their book's limit |
 | `bookwatch_db_readable`, `bookwatch_db_writable` | Whether the counts read the database, and whether the last test write reached the disk |
 | `bookwatch_db_last_write_timestamp_seconds`, `bookwatch_db_bytes` | When a test write last reached the disk, and the database file's size |
+| `bookwatch_volume_size_bytes`, `bookwatch_volume_free_bytes` | The size of the disk the database is on, and the space free on it |
 | `bookwatch_version_info`, `process_start_time_seconds` | The version deployed, and when the app started, so restarts can be counted |
 
 - What's found, the books and copies above, is worked out at the first collection and then every 15 minutes, since it changes only when a check runs and is the want list's work over every book. Everything else is read at every collection.
 - The test write overwrites one row in `test_write` and commits, at most once a minute. A write that fails publishes `bookwatch_db_writable 0` and writes an `error` line. A write rolled back never reaches the disk, so it can't catch a full volume.
-- Free space on the volume is Fly's own `fly_volume_` series.
+- Free space is read by the app from the disk the database is on. Fly publishes nothing on its volumes in its Grafana.
+- The dashboard, `grafana/book-watch.json`, is written by `scripts/build_dashboard.py` and imported into Fly's Grafana by hand ([runbook](../runbook.md#deploy)). Every query names a count above, which a test checks.
 - A collection that can't read the database publishes `bookwatch_db_readable 0`, and the counts of events still arrive.
 
 ### Where lines go
