@@ -163,8 +163,12 @@ def test_a_page_is_counted_by_its_route_never_its_address(connect):
         wantlist.add(connection, ISBN, "Crash")
         connection.commit()
     app = FastAPI()
+    # Examining copies stubbed too, or it falls back to the real one, which
+    # needs eBay's keys: present where this was written, absent in CI.
     app.include_router(
-        listings_module.build_router(lambda query, limit, **_: [], connect)
+        listings_module.build_router(
+            lambda query, limit, **_: [], connect, enrich=lambda work_id: None
+        )
     )
     app.add_middleware(PageLines)
     before = value("bookwatch_pages_total", route="/book/{book_id}", status="200")
