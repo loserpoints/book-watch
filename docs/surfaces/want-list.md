@@ -9,7 +9,7 @@ The want list shows every book I'm watching and whether any copy is worth my att
 - One row per book, most recently added first, or cheapest first.
 - The book's title, cover and author. A book with no cover shows its title on a placeholder.
 - The cheapest copy's delivered price, as "from $10.49". It is green with ✓ when under the book's limit, and red when over (see [pricing](../rules/pricing.md)).
-- A caret after that price when the latest check moved it: ▾ down, ▴ up, in the price's color (see [pricing](../rules/pricing.md#moves)).
+- A caret after that price when the latest check moved it: ▾ down, ▴ up, in the price's color, two thirds the height of its figures and centered on them (see [pricing](../rules/pricing.md#moves)).
 - The book's limit under the price, "your limit: $10", or "no limit set".
 - A strip of every asking price seen, when there are at least two different prices. Each dot is green at or under the limit and red over it, with green on top, or blue with no limit. A blue line marks the limit only when it falls among the prices.
 - How many copies are listed, how many are new since the book was last opened, and how long ago it was checked: "3 listed · 2 new · checked 2h". Both count the same copies, so new is never more than listed.

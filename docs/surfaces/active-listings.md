@@ -13,7 +13,7 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 - One line for every copy, new and used alike, "8 listed now, 12 seen", with a strip of every asking price seen. Each dot is green at or under the limit and red over it, and a blue line marks the limit when it falls among the prices (see [pricing](../rules/pricing.md)).
 - How many copies match, then one row per certain copy from either marketplace, in one list (see [matching](../rules/matching.md)).
 - Each copy's delivered price, green with ✓ when under the limit, or red when over. A copy with unknown shipping shows its price and "+ shipping?".
-- A caret after a copy's price when the latest check that saw it moved it: ▾ down, ▴ up, in the price's color. A new copy has none (see [pricing](../rules/pricing.md#moves)).
+- A caret after a copy's price when the latest check that saw it moved it: ▾ down, ▴ up, in the price's color, as on the want list. A new copy has none (see [pricing](../rules/pricing.md#moves)).
 - Where each copy sits among the others listed now, as a strip, or why it can't be placed.
 - Each copy's condition, by one name per grade whatever the seller wrote: Brand New, Like New, Very Good, Good, Acceptable or Used. A grade without one of those names shows the seller's words.
 - Where each copy ships from when outside the US, "takes offers" when the seller accepts Best Offer, and its listing title.

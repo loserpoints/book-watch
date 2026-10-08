@@ -28,8 +28,10 @@
 - `scripts/check.sh` is the one definition of passing: lint, formatting, the docs check and the tests. CI runs it on every pull request.
 - Read a check's exit status. Piping it through another command hides a failure.
 - A feature that acts on an outside event, such as an email sent when a copy appears, needs a way to trigger it on demand, built in its slice. Otherwise nothing proves it works until the event comes.
+- When the event can't be made on demand, such as a seller repricing a copy, the slice says so when it is planned, and names the nearest check and how long it may wait. S72's carets waited on a real price move.
 - A trigger on demand proves the plumbing, not the choice of what to act on. Check that on the live app with data that makes the event likely, such as a book with many listings and a generous limit.
 - Run every change to a screen in a real browser at 360px wide, in both themes, and look at it. Tests miss layout, fonts and taps.
+- Desktop Chromium shows no pressed state for a touch, even emulating a phone, so a pressed look is checked on the phone. S73's fill showed in the browser and not on a copy on the phone.
 - Test a layout fix in the case that broke: the phone width and the data where it happened. A fix that only measures what changed can miss that the layout no longer fits.
 - This environment holds real eBay keys. Run the app locally only with `uv run python scripts/serve_local.py <database> [port]`, which fakes eBay's search, never reads AbeBooks, and refuses every request. The app as built for production searches eBay when a book page opens and examines every copy it finds.
 - Tests check what a reader sees, not the markup that carries it, so they survive a redesign.
