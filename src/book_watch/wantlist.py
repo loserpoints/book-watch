@@ -19,7 +19,7 @@ from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from typing import Literal
 
-from book_watch import covers
+from book_watch import covers, settings
 from book_watch.ebay.search import Money
 from book_watch.isbn import normalize
 
@@ -336,13 +336,23 @@ def _add_reader_entry(
     typed: str | None,
     duplicate: str,
 ) -> Entry:
+    # A new book starts with the default limit, and owns it from then on
+    # (S83, #72).
+    limit = settings.default_limit(connection)
     try:
         cursor = connection.execute(
             """
-            INSERT INTO entry (work_id, hunt, edition_id, typed)
-            VALUES (?, 'reader', NULL, ?)
+            INSERT INTO entry (
+                work_id, hunt, edition_id, typed, ceiling, ceiling_currency
+            )
+            VALUES (?, 'reader', NULL, ?, ?, ?)
             """,
-            (work_id, typed),
+            (
+                work_id,
+                typed,
+                str(limit.amount) if limit else None,
+                limit.currency if limit else None,
+            ),
         )
     except sqlite3.IntegrityError as exc:
         # The partial unique index is the only constraint this insert can
@@ -399,23 +409,16 @@ def set_ceiling(
 
     Rejects an amount that is not a price rather than storing it and failing
     to compare later, which would look like "no copy is under" and give no
-    clue why.
+    clue why. A limit is whole dollars, as the default is (S83, #72).
     """
-    cleaned = (amount or "").strip()
-    if not cleaned:
+    parsed = settings.whole_dollars(amount)
+    if parsed is None:
         connection.execute(
             "UPDATE entry SET ceiling = NULL, ceiling_currency = NULL WHERE id = ?",
             (entry_id,),
         )
         connection.commit()
         return get(connection, entry_id)
-
-    try:
-        parsed = Decimal(cleaned)
-    except InvalidOperation:
-        raise ValueError(f"{cleaned!r} is not an amount.") from None
-    if parsed <= 0:
-        raise ValueError("A ceiling has to be more than nothing.")
 
     connection.execute(
         "UPDATE entry SET ceiling = ?, ceiling_currency = ? WHERE id = ?",

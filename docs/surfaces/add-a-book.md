@@ -19,7 +19,7 @@ Adding a book puts it on the want list, by searching for its title or by enterin
 
 - Tap + to open the sheet.
 - Search by title, with or without the author.
-- Tap anywhere on a result to add it. The sheet closes and the new book starts checking on the want list.
+- Tap anywhere on a result to add it. The sheet closes and the new book starts checking on the want list, with the default limit from [Settings](settings.md) as its own, if one is set.
 - Switch to ISBN and add a book by its number.
 - Add an ISBN or text anyway after an error.
 

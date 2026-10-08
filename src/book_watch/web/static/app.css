@@ -968,3 +968,65 @@ dialog.photo-view[open] { display: grid; gap: var(--space-2); justify-items: cen
   font-size: var(--text-sm);
 }
 .ledger-where { overflow-wrap: anywhere; }
+
+/* Settings (S83, #72). A group is headed as a month is on the Bought page.
+   A dollar setting's value is its own field: it reads as the figure until
+   tapped, then takes an accent underline, and the hint under the label says
+   how to finish. */
+.setting-group + .setting-group { margin-top: var(--space-5); }
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: var(--space-3) 0;
+  cursor: text;
+}
+.setting-label { display: grid; gap: var(--space-1); }
+.setting-hint { color: var(--muted); font-size: var(--text-sm); }
+.setting-hint-editing, .setting-row:focus-within .setting-hint-rest { display: none; }
+.setting-row:focus-within .setting-hint-editing { display: inline; }
+.setting-value {
+  display: inline-flex;
+  align-items: baseline;
+  font-family: var(--font-figure);
+  font-weight: 700;
+  font-size: var(--text-lg);
+  white-space: nowrap;
+}
+.setting-value input {
+  field-sizing: content;
+  min-width: 1ch;
+  padding: 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  text-align: right;
+}
+.setting-value input::placeholder { color: var(--muted); font-family: var(--font-body); font-weight: 400; font-size: var(--text-base); }
+.setting-value input:focus { outline: none; border-bottom-color: var(--accent); min-width: 3ch; }
+.setting-value:has(input:placeholder-shown):not(:focus-within) .setting-dollar { display: none; }
+.setting-pencil { margin-left: var(--space-2); color: var(--muted); font-family: var(--font-body); font-weight: 400; }
+.setting-value:focus-within .setting-pencil { visibility: hidden; }
+.setting-saved {
+  margin-right: var(--space-2);
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--text-sm);
+  animation: setting-saved 2.5s forwards;
+}
+@keyframes setting-saved { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+.setting-fill, .setting-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+.setting-fill .btn { white-space: nowrap; }

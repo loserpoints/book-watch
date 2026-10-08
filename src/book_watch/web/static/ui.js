@@ -109,6 +109,25 @@
     }
   });
 
+  // A setting edited in place saves when its field is left (S83, #72). Done
+  // on the keyboard submits the form, so it leaves the field instead, which
+  // saves once. Escape puts the saved value back and leaves without saving.
+  document.addEventListener("submit", function (event) {
+    var form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.hasAttribute("data-autosave")) return;
+    event.preventDefault();
+    if (document.activeElement && form.contains(document.activeElement)) {
+      document.activeElement.blur();
+    }
+  });
+  document.addEventListener("keydown", function (event) {
+    var field = event.target;
+    if (event.key !== "Escape" || !(field instanceof HTMLInputElement) ||
+        !field.closest("form[data-autosave]")) return;
+    field.value = field.defaultValue;
+    field.blur();
+  });
+
   // [data-open="id"] opens the <dialog id="id"> as a modal. The browser then
   // handles focus, Escape and the Android back gesture, and returns focus to
   // the opener when it closes.

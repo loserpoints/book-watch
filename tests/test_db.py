@@ -497,3 +497,41 @@ def test_a_purchase_names_a_marketplace_or_a_shop_never_both(database):
     for both_or_neither in (("ebay", "Strand Books"), (None, None)):
         with pytest.raises(sqlite3.IntegrityError):
             database.execute(insert, both_or_neither)
+
+
+def test_031_rounds_limits_to_whole_dollars_and_keeps_purchases(database):
+    """S83 (#72): limits became whole dollars. A limit with cents rounds to
+    the nearest dollar, half up, never below one; a purchase keeps the limit
+    it was bought under. Checked by name, not by being the newest."""
+    db.pending(database)
+    for migration in sorted(db.MIGRATIONS_DIR.glob("*.sql")):
+        if migration.name.startswith("031"):
+            break
+        database.executescript(migration.read_text())
+        database.execute(
+            "INSERT INTO schema_migration (name) VALUES (?)", (migration.name,)
+        )
+    for work_id, limit in enumerate(("10.49", "10.50", "8", "0.40", None), start=1):
+        database.execute(
+            "INSERT INTO work (id, title) VALUES (?, 'A book')", (work_id,)
+        )
+        database.execute(
+            "INSERT INTO entry (work_id, hunt, ceiling, ceiling_currency) "
+            "VALUES (?, 'reader', ?, ?)",
+            (work_id, limit, "USD" if limit else None),
+        )
+    database.execute(
+        "INSERT INTO purchase (title, paid, currency, marketplace, bought_on, "
+        "ceiling, ceiling_currency) "
+        "VALUES ('Stoner', '7.80', 'USD', 'ebay', '2026-10-01', '8.50', 'USD')"
+    )
+
+    assert "031_settings_and_whole_dollar_limits.sql" in db.migrate(database)
+
+    limits = [
+        row[0] for row in database.execute("SELECT ceiling FROM entry ORDER BY work_id")
+    ]
+    assert limits == ["10", "11", "8", "1", None]
+    kept = database.execute("SELECT ceiling FROM purchase").fetchone()[0]
+    assert kept == "8.50"
+    assert "setting" in table_names(database)

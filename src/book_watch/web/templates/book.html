@@ -126,8 +126,9 @@
       to the want list (S45). An error comes back into the sheet. -#}
   <form class="sheet-form" id="limit" method="post" action="/book/{{ book.id }}/ceiling"
         hx-post="/book/{{ book.id }}/ceiling" hx-target="#limit-error">
-    {{ ui.field("ceiling", "Limit", value=book.ceiling or "", inputmode="decimal",
-                placeholder="no limit", hint="Shipping included. Leave it empty for no limit.") }}
+    {{ ui.field("ceiling", "Limit", value=book.ceiling or "", inputmode="numeric",
+                maxlength=3, pattern="[0-9]*", placeholder="no limit",
+                hint="Whole dollars, shipping included. Leave it empty for no limit.") }}
     <input type="hidden" name="currency" value="{{ book.ceiling_currency or 'USD' }}">
     <div id="limit-error"></div>
     <div class="sheet-actions">

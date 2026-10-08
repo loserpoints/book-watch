@@ -18,7 +18,7 @@ Bought keeps a record of every book I've bought through the app, a ledger by mon
 
 - Mark a book bought from the want list's trash, and it appears here (see [want list](want-list.md#what-you-can-do)). A bought book can't be put back.
 - Nothing on a line is a link: the book is off the list.
-- Tap Wanted in the top bar to go to the want list. Tap Bought while here to go back to the top.
+- Tap Wanted or Settings in the top bar to go there. Tap Bought while here to go back to the top.
 - Press back to return to the want list.
 
 ## Open issues

@@ -19,7 +19,9 @@ These rules decide what a copy costs, whether it is under a book's limit, and wh
 
 ### Limits
 
-- A book's limit is a delivered amount in one currency. An empty limit means no limit.
+- A book's limit is a delivered amount in whole dollars, from $1 to $999. An empty limit means no limit.
+- A new book starts with the default limit set in [Settings](../surfaces/settings.md), if there is one, as its own. Changing the default changes no book already on the list. Settings can set the default on the books that have no limit, and on no other.
+- A purchase keeps the limit its book had when it was bought.
 - A copy is under the limit when its delivered price is at or below it.
 - A copy is over the limit when its delivered price is above it.
 - A copy without a delivered price in the limit's currency is "can't tell". It is never under or over.

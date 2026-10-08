@@ -1,0 +1,16 @@
+{% import "_ui.html" as ui %}
+{#- Settings' "New books" group (S83, #72), drawn again whole after a save. -#}
+<section class="setting-group" id="new-books">
+  <h2 class="ledger-heading"><span class="ledger-name">New books</span></h2>
+  {{ ui.dollar_setting("default-limit", "Default limit", "What each new book starts with",
+                       typed if error else limit, "/settings/default-limit",
+                       saved=saved, error=error) }}
+  {%- if filled %}
+  <p class="setting-note" role="status">Set ${{ limit }} on {{ filled }} book{{ "s" if filled != 1 }}.</p>
+  {%- elif limit and without %}
+  <form class="setting-fill" method="post" action="/settings/fill" hx-post="/settings/fill" hx-target="#new-books" hx-swap="outerHTML">
+    <span>{{ without }} book{{ "s" if without != 1 }} on the list {{ "have" if without != 1 else "has" }} no limit.</span>
+    {{ ui.button("Set $" ~ limit ~ " on " ~ ("them" if without != 1 else "it"), type="submit") }}
+  </form>
+  {%- endif %}
+</section>
