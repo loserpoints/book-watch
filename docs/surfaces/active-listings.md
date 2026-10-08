@@ -26,6 +26,7 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 - Which marketplace each copy is on, as a band across the bottom of its photo or of the photo's placeholder. Screen readers hear it with the copy.
 - "N more that might be this book", folded, holding the possible copies.
 - "Nothing listed in the US right now" with a link to look everywhere, when there are no copies.
+- The page loaded again, on the new version, on coming back to the app after a deploy. An open sheet closes first. Nothing reloads while the page stays in view.
 
 ## What you can do
 

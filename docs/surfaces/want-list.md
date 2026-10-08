@@ -22,6 +22,7 @@ The want list shows every book I'm watching and whether any copy is worth my att
 - An "Under limit" switch beside it, to show only the books with a copy under their limit. It is greyed out when no book has one. With it on, a book joins or leaves the list once a check finishes.
 - Over the rows, how many books show and their order: "6 books · Cheapest · Added". Cheapest goes by each row's "from $X", with books that have no price last. Not shown for a single book.
 - The whole list drawn again on going back to it, and on coming back to the app after a minute or more away, unless a check is running.
+- The whole app loaded again, on the new version, on coming back to it after a deploy, however long it was away. A running check finishes and an open sheet closes first. Nothing reloads while the app stays in view.
 - "Nothing on the list yet" when the list is empty.
 - Below the list, once a book has been bought, a folded "Bought · 3 books · $26.95". Opened, each book bought shows its cover, title and author, where and when it was bought, and what was paid, green at or under the limit the book had then and red over it.
 
@@ -42,5 +43,4 @@ The want list shows every book I'm watching and whether any copy is worth my att
 
 ## Open issues
 
-- [An app left open through a deploy redraws the new markup without the new styles](https://github.com/loserpoints/book-watch/issues/256)
 - [A Bought page, as a compact diary of what I've bought](https://github.com/loserpoints/book-watch/issues/258)

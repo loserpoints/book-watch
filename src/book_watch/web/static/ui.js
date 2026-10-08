@@ -270,17 +270,64 @@
     htmx.ajax("GET", "/books/list", { target: "#want-list", swap: "outerHTML" });
   }
 
+  // Coming back to the app after a deploy reloads it fresh (S75, #256). The
+  // server draws every piece of screen, so a redraw after a deploy brings
+  // new markup that the stylesheet this page loaded may not know. Each time
+  // the page becomes visible again, however briefly it was away, it asks
+  // which version is running, and reloads in full if that isn't the version
+  // that drew it. Never while the page stays visible: a deploy landing then
+  // waits for the next return. A running check or an open sheet holds the
+  // reload until it ends, since reloading would stop the one and lose what
+  // was typed in the other.
+  var drawnBy = document.querySelector('meta[name="app-version"]');
+  var reloadPending = false;
+
+  function busy() {
+    return document.querySelector("#sweep-runner.sweeping, dialog[open]");
+  }
+
+  function reloadWhenFree() {
+    if (busy()) {
+      reloadPending = true;
+      return;
+    }
+    window.location.reload();
+  }
+
+  function onReturn(otherwise) {
+    if (!drawnBy || !window.fetch) return otherwise();
+    fetch("/version", { cache: "no-store" })
+      .then(function (response) { return response.ok ? response.text() : null; })
+      .then(
+        function (running) {
+          if (running && running.trim() !== drawnBy.content) reloadWhenFree();
+          else otherwise();
+        },
+        // Unreachable: carry on as before, and ask again next time.
+        function () { otherwise(); }
+      );
+  }
+
+  function reloadIfFreed() {
+    if (reloadPending && !busy()) window.location.reload();
+  }
+  // A check's last step redraws the runner without "sweeping".
+  document.body.addEventListener("htmx:afterSettle", reloadIfFreed);
+  // "close" doesn't bubble, so it's caught on its way down.
+  document.addEventListener("close", function () { window.setTimeout(reloadIfFreed, 0); }, true);
+
   document.addEventListener("visibilitychange", function () {
     if (document.visibilityState === "hidden") {
       hiddenAt = Date.now();
       return;
     }
-    if (hiddenAt !== null && Date.now() - hiddenAt >= AWAY_MS) redrawList();
+    var away = hiddenAt !== null && Date.now() - hiddenAt >= AWAY_MS;
     hiddenAt = null;
+    onReturn(function () { if (away) redrawList(); });
   });
 
   window.addEventListener("pageshow", function (event) {
-    if (event.persisted) redrawList();
+    if (event.persisted) onReturn(redrawList);
   });
 
   // With "Under limit" on, a check can change which books belong in the

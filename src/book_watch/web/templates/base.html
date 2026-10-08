@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="{{ theme_color }}">
+{#- The version that drew this page. Coming back to a page after a deploy
+    reloads it (S75). -#}
+<meta name="app-version" content="{{ app_version() }}">
 {#- Installs like an app from the home screen (S35): name, icons, standalone.
     No service worker is registered anywhere, on purpose. -#}
 <link rel="manifest" href="/manifest.webmanifest">
