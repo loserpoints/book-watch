@@ -9,7 +9,7 @@ The want list shows every book I'm watching and whether any copy is worth my att
 - One row per book, most recently added first, or cheapest first.
 - The book's title, cover and author. A book with no cover shows its title on a placeholder.
 - The cheapest copy's delivered price, as "from $10.49". It is green with ✓ when under the book's limit, and red when over (see [pricing](../rules/pricing.md)).
-- A triangle after that price when the latest check moved it: ▼ down, ▲ up, in the price's color (see [pricing](../rules/pricing.md#moves)).
+- A caret after that price when the latest check moved it: ▾ down, ▴ up, in the price's color, two thirds the height of its figures and centered on them (see [pricing](../rules/pricing.md#moves)).
 - The book's limit under the price, "your limit: $10", or "no limit set".
 - A strip of every asking price seen, when there are at least two different prices. Each dot is green at or under the limit and red over it, with green on top, or blue with no limit. A blue line marks the limit only when it falls among the prices.
 - How many copies are listed, how many are new since the book was last opened, and how long ago it was checked: "3 listed · 2 new · checked 2h". Both count the same copies, so new is never more than listed.
@@ -27,13 +27,13 @@ The want list shows every book I'm watching and whether any copy is worth my att
 
 ## What you can do
 
-- Tap anywhere on a book's row to open its active listings. The row fills while pressed. The trash, the price's triangle, "checking" and "Throttled" keep their own taps.
+- Tap anywhere on a book's row to open its active listings. The row fills while pressed. The trash, the price's caret, "checking" and "Throttled" keep their own taps.
 - Tap the "Under limit" switch to see only the books whose price is green, and again to see every book.
 - Tap Cheapest or Added to change the order.
 - The switch and the order stay through opening a book and going back. Opening the app shows every book, newest added first, and so does adding a book.
 - Tap "Check 2" to check the books not checked in the last hour.
 - Tap "Check all" to check every book again. It asks first, unless this device was told not to ask again.
-- Tap a price's triangle to see what it was, "Was $12.40". The next tap anywhere closes it, and does nothing else.
+- Tap a price's caret to see what it was, "Was $12.40". The next tap anywhere closes it, and does nothing else.
 - Tap the trash icon to take a book off the list. A sheet asks which way: "I bought it" or "I don't want it".
 - "I bought it" asks where (eBay, AbeBooks, or elsewhere with the shop's name), what was paid delivered, and the day, with the phone's own date picker. It is filled in from the copy of this book last opened from the app, with that copy's marketplace and delivered price and today's date, and says when that copy was opened. Mark bought, and the book leaves the list for the Bought section and stops being checked and emailed. A bought book can't be put back.
 - "I don't want it" removes the book, and nothing is kept.

@@ -350,8 +350,16 @@ details.move > summary {
   line-height: 1;
   text-decoration: none;
 }
-/* The same size on every device, unlike a typed ▾. */
-.move-mark { display: block; width: var(--space-3); height: var(--space-3); }
+/* The same size on every device, unlike a typed ▾: two thirds of the height
+   of the price's figures, which stand two thirds of its size. It rests just
+   above the price's baseline and is lifted a little more, so its middle
+   meets the figures' middle, measured on both screens. */
+.move-mark {
+  display: block;
+  width: calc(var(--text-lg) * 4 / 9);
+  height: calc(var(--text-lg) * 4 / 9);
+  margin-bottom: calc(var(--text-lg) / 18);
+}
 .move-under > summary { color: var(--under); }
 .move-over > summary { color: var(--over); }
 .move-plain > summary { color: var(--fg); }
