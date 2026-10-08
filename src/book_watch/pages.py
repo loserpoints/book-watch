@@ -71,6 +71,8 @@ _FIRST_EDITION = re.compile(r"\bFirst Edition\b")
 #: "ISBN 10 / ISBN 13: 0670337285 / 9780670337286" or "ISBN 13: 9780670337286".
 _ISBN13 = re.compile(r"ISBN (?:10 / ISBN )?13: (?:[\dX]{10} / )?(97[89]\d{10})")
 #: AbeBooks' own page for a search with nothing on it, title or ISBN alike.
+#: Matched only in what the page shows: every results page also carries the
+#: sentence in its scripts, as *Hey Jack!*'s did on 2026-10-08.
 _NO_RESULTS = re.compile(r"We were unable to find exact matches based on your search")
 _GROUPED = re.compile(r"(?:Used|New) offers from US\$")
 _PHOTO = re.compile(r'<img\b[^>]*\bsrc="(https://pictures\.abebooks\.com/[^"]+)"')
@@ -279,7 +281,7 @@ def parse(page: str) -> Page:
     return Page(
         result_count=int(count.group(1).replace(",", "")) if count else None,
         copies=copies,
-        no_results=bool(_NO_RESULTS.search(page)),
+        no_results=bool(_NO_RESULTS.search(markup(page))),
     )
 
 
