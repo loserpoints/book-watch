@@ -14,7 +14,7 @@ Every document in this repository is one of the artifacts below. `scripts/check_
 | Jobs | active | `docs/jobs.md` | J<n> · <name> [Persona (persona links) · Job (sentence) · Success signal · Status (met or not met)] |
 | Design system | active | `docs/design-system.md` | Principles · Tokens · Components |
 | Rules | active | `docs/rules/*.md` | Purpose (sentence) · Rules · Open issues (links) |
-| Surface | active | `docs/surfaces/{add-a-book,want-list,active-listings}.md` | Purpose (sentence) · What it shows · What you can do · Open issues (links) |
+| Surface | active | `docs/surfaces/{add-a-book,want-list,active-listings,bought}.md` | Purpose (sentence) · What it shows · What you can do · Open issues (links) |
 | Scope | active | `docs/milestones/*/scope.md` | Goal (sentence) · Jobs advanced (job links) · Slices (slice links) |
 | Learnings | active | `docs/milestones/*/learnings.md` | Learnings (routed) · Carried forward (links, may be empty) |
 | Skill | active | `.claude/skills/*/SKILL.md` | Purpose (sentence) · Steps · Rules |

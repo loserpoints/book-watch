@@ -747,7 +747,7 @@ def test_a_failed_morning_check_is_plain_text_under_the_title(client):
 
     assert re.search(r'<details class="[^"]*daily-note', page)
     assert "alert-pill" not in page
-    assert page.index("<h1>Want list</h1>") < page.index("Daily check failed")
+    assert page.index(">Wanted</h1>") < page.index("Daily check failed")
     assert page.index("Daily check failed") < page.index("check-btn")
     assert "Tap Check to search them now." in page
 
@@ -776,7 +776,7 @@ def test_a_title_search_through_htmx_answers_inside_the_sheet(tmp_path):
 
     assert response.status_code == 200
     assert "Which one?" in response.text
-    assert "Want list" not in response.text
+    assert ">Wanted</h1>" not in response.text
 
 
 def test_an_isbn_error_through_htmx_is_shown_in_the_sheet_with_its_offer(client):
@@ -812,7 +812,7 @@ def test_without_htmx_adding_still_answers_with_the_whole_page(client):
     response = add(client, "9780099448396", "Crash", override="1")
 
     assert response.status_code == 200
-    assert "<h1>Want list</h1>" in response.text
+    assert ">Wanted</h1>" in response.text
     assert "HX-Retarget" not in response.headers
 
 

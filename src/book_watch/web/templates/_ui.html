@@ -7,6 +7,29 @@
     Import with:  {% import "_ui.html" as ui %}  -#}
 
 
+{#- The top bar on every screen (S81, #284): the app's mark, or on a book's
+    page a back to the want list in its place, and a tab per screen. The
+    current tab is bold with an accent bar, as a chosen two-way choice is.
+    `here` names the current screen's tab; `back` is true on a screen that
+    sits under the want list rather than being one of its own. Settings joins
+    with S83 (#72). -#}
+{% macro top_bar(here=None, back=False) -%}
+<header class="top-bar">
+  {%- if back %}
+  <a class="top-back" href="/" data-nav="home" aria-label="Back to Wanted"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></a>
+  {%- else %}
+  <span class="top-mark">bw<span class="top-mark-dot">.</span></span>
+  {%- endif %}
+  <nav class="tabs" aria-label="Screens">
+  {%- for key, label, href in [("want", "Wanted", "/"), ("bought", "Bought", "/bought")] %}
+    <a class="tab" href="{{ href }}" data-label="{{ label }}" data-nav="{{ 'home' if key == 'want' else 'screen' }}"
+       {%- if key == here %} aria-current="{{ 'true' if back else 'page' }}"{% endif %}>{{ label }}</a>
+  {%- endfor %}
+  </nav>
+</header>
+{%- endmacro %}
+
+
 {#- A tap that explains, opening in place. Replaces every hover title: a phone
     has no hover (principle 5). The whole summary is the target. -#}
 {% macro explain(label, text, cls="") -%}
@@ -134,23 +157,30 @@
 {%- endmacro %}
 
 
-{#- One book bought (S71, #223), in the folded section below the want list:
-    what was paid, colored against the limit the book had then, and where
-    and when. Nothing to tap: the book is off the list. -#}
-{% macro bought_row(b) -%}
-<li class="book-row bought-row">
-  <span class="book-row-title">{{ b.title }}</span>
-  {{ cover(b.title, b.author, b.cover_url) }}
-  <div class="book-row-body">
-    <div class="book-row-facts">
-      {% if b.author %}<span class="book-row-author">{{ b.author }}</span>{% endif %}
-      <span class="meta">{{ b.where_when }}</span>
-    </div>
-    <div class="book-row-price">
-      {{ price(b.paid_text, b.verdict) }}
-      <span class="row-limit">{{ b.limit_text }}</span>
-    </div>
-  </div>
+{#- A month of the Bought page (S82, #258), a page in a ledger: the month
+    over a rule with how many books and what they cost, then each book with
+    what was paid, the day and where. The price column is never wider than 7rem, so a
+    long shop wraps inside it and never into the title. Nothing to tap: the
+    book is off the list. -#}
+{% macro ledger_month(month) -%}
+<li class="ledger-month">
+  <h2 class="ledger-heading"><span class="ledger-name">{{ month.name }}</span><span class="ledger-sum">{{ month.summary }}</span></h2>
+  <ul class="ledger-rows">
+  {%- for b in month.rows %}
+    <li class="ledger-row">
+      {{ cover(b.title, b.author, b.cover_url, size="sm") }}
+      <div class="ledger-book">
+        <span class="ledger-title">{{ b.title }}</span>
+        {% if b.author %}<span class="ledger-author">{{ b.author }}</span>{% endif %}
+      </div>
+      <div class="ledger-paid">
+        {{ price(b.paid_text, b.verdict) }}
+        <span class="ledger-when">{{ b.day }}</span>
+        <span class="ledger-where">{{ b.where }}</span>
+      </div>
+    </li>
+  {%- endfor %}
+  </ul>
 </li>
 {%- endmacro %}
 
@@ -287,10 +317,10 @@
     An option may carry a third item, a dict of attributes for its radio: the
     want list's switch fetches the list with htmx, and greys out an empty
     side with `disabled`. -#}
-{#- A two-way choice, drawn the same everywhere (S69, #217): two words with a
-    dot between, the current one in plain bold and announced as current, the
-    other a link. Each is a 44px target and keeps room for its bold, so
-    choosing never changes the width.
+{#- A two-way choice, drawn the same everywhere (S69, #217): two words, the
+    current one bold with an accent bar under it and announced as current,
+    the other muted, as the top bar's tabs are (S81, #284). Each is a 44px
+    target and keeps room for its bold, so choosing never changes the width.
 
     `switch` holds radios, for a choice a form or a sheet reads (the add
     sheet's two ways in). `pair` holds links or htmx buttons, for a choice
@@ -300,7 +330,6 @@
 <span class="pair" role="radiogroup">
   {%- for option in options %}
   {%- set value, label = option[0], option[1] %}
-  {%- if not loop.first %}<span class="pair-dot" aria-hidden="true">·</span>{% endif %}
   <label class="pair-option"><input type="radio" name="{{ name }}" value="{{ value }}"{% if value == selected %} checked{% endif %}{% if option | length > 2 %}{{ option[2] | xmlattr }}{% endif %}><span data-label="{{ label }}">{{ label }}</span></label>
   {%- endfor %}
 </span>
@@ -312,7 +341,6 @@
 {% macro pair(options, label) -%}
 <span class="pair" role="group" aria-label="{{ label }}">
   {%- for text, attrs, current in options %}
-  {%- if not loop.first %}<span class="pair-dot" aria-hidden="true">·</span>{% endif %}
   {%- if current %}<b class="pair-option" aria-current="true" data-label="{{ text }}">{{ text }}</b>
   {%- elif attrs.href %}<a class="pair-option" data-label="{{ text }}"{{ attrs | xmlattr }}>{{ text }}</a>
   {%- else %}<button type="button" class="pair-option" data-label="{{ text }}"{{ attrs | xmlattr }}>{{ text }}</button>

@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% import "_ui.html" as ui %}
-{% block title %}Want list · book-watch{% endblock %}
+{% block title %}Wanted · book-watch{% endblock %}
+{% set screen = "want" %}
 
 {% block content %}
-<h1>Want list</h1>
+{#- The tab says where I am (S81, #284); the heading is for screen readers. -#}
+<h1 class="sr-only">Wanted</h1>
 
 {% include "_list.html" %}
 

@@ -1726,7 +1726,7 @@ def test_what_cannot_be_recorded_keeps_the_sheet_open(book_client, fields, said)
     assert said in visible(response.text)
     # The sheet again, not the list, and the book still on it.
     assert 'id="want-list"' not in response.text
-    assert "Stoner" in visible(client.get("/").text.split("Bought")[0])
+    assert "Stoner" in visible(client.get("/").text)
 
 
 def test_a_refusal_keeps_what_was_typed(book_client):
@@ -1739,7 +1739,8 @@ def test_a_refusal_keeps_what_was_typed(book_client):
     assert 'name="where" value="other" checked' in response.text
 
 
-def test_a_book_bought_leaves_the_list_for_the_bought_section(book_client):
+def test_a_book_bought_leaves_the_list_for_the_bought_page(book_client):
+    """S82 (#258): the folded section below the list became a page."""
     client, _ = a_shelf(book_client)
     client.post("/book/1/ceiling", data={"ceiling": "8", "currency": "USD"})
 
@@ -1747,12 +1748,13 @@ def test_a_book_bought_leaves_the_list_for_the_bought_section(book_client):
 
     assert response.headers["HX-Trigger"] == "taken-off"
     assert response.headers["HX-Retarget"] == "#want-list"
-    page = visible(client.get("/").text)
-    assert "2 books" in page
-    assert "Bought · 1 book · $7.80" in page
-    assert "on eBay · Oct 1" in page
-    assert "your limit: $8" in page
-    assert 'hx-get="/books/1/off"' not in client.get("/").text
+    want_list = client.get("/").text
+    assert "2 books" in visible(want_list)
+    assert 'hx-get="/books/1/off"' not in want_list
+    assert "Bought ·" not in visible(want_list)
+    bought = visible(client.get("/bought").text)
+    assert "October 2026 1 book · $7.80" in bought
+    assert "Stoner ✓ $7.80 (under your limit) Oct 1 eBay" in bought
 
 
 def test_what_was_paid_is_judged_against_the_limit_it_had(book_client):
@@ -1761,33 +1763,24 @@ def test_what_was_paid_is_judged_against_the_limit_it_had(book_client):
     client.post("/book/2/ceiling", data={"ceiling": "8", "currency": "USD"})
     buy(client, 1, paid="7.80")
     buy(client, 2, paid="9", where="other", shop="Strand Books")
-    buy(client, 3, paid="5", where="abebooks")
+    buy(client, 3, paid="5", where="abebooks", bought_on="2026-09-12")
 
-    page = client.get("/").text
+    page = visible(client.get("/bought").text)
 
-    bought = visible(page.split("Bought ·")[1])
-    assert "$7.80 (under your limit)" in bought
-    assert "$9 (over your limit)" in bought
-    assert "on Strand Books" in bought
-    assert "$5 no limit set" in bought
-    assert "Bought · 3 books · $21.80" in visible(page)
-
-
-def test_the_bought_section_stays_when_the_list_is_empty(book_client):
-    client, _ = a_shelf(book_client)
-    for book_id in (1, 2, 3):
-        buy(client, book_id)
-
-    page = visible(client.get("/").text)
-
-    assert "Nothing on the list yet" in page
-    assert "Bought · 3 books" in page
+    assert "$7.80 (under your limit) Oct 1 eBay" in page
+    assert "$9 (over your limit) Oct 1 Strand Books" in page
+    assert "$5 Sep 12 AbeBooks" in page
+    assert page.index("October 2026 2 books · $16.80") < page.index(
+        "September 2026 1 book · $5"
+    )
 
 
-def test_nothing_shows_below_the_list_until_a_book_is_bought(book_client):
+def test_the_bought_page_says_so_when_nothing_was_bought(book_client):
     client, _ = a_shelf(book_client)
 
-    assert "Bought ·" not in visible(client.get("/").text)
+    page = visible(client.get("/bought").text)
+
+    assert "Nothing bought yet. A book marked bought on the want list shows" in page
 
 
 def test_a_book_removed_as_not_wanted_is_not_bought(book_client):
@@ -1914,3 +1907,48 @@ def test_a_new_copy_carries_no_caret(book_client):
     page = visible(client.get("/book/1").text)
 
     assert "at the last check" not in page
+
+
+# --- moving between screens (S81, #284) ---------------------------------------
+
+
+def tabs(page):
+    """Each tab's label and how it is marked current, if it is."""
+    return re.findall(
+        r'<a class="tab" href="([^"]*)"[^>]*?(?: aria-current="([^"]*)")?>([^<]*)</a>',
+        page,
+    )
+
+
+def test_every_screen_has_the_tabs_with_its_own_marked(book_client):
+    client, _ = a_shelf(book_client)
+
+    assert tabs(client.get("/").text) == [
+        ("/", "page", "Wanted"),
+        ("/bought", "", "Bought"),
+    ]
+    assert tabs(client.get("/bought").text) == [
+        ("/", "", "Wanted"),
+        ("/bought", "page", "Bought"),
+    ]
+
+
+def test_a_books_page_sits_under_the_want_list_with_a_back_to_it(book_client):
+    client, _ = a_shelf(book_client)
+
+    page = client.get("/book/1").text
+
+    # Under the want list, not the want list itself: tapping it goes there.
+    assert ("/", "true", "Wanted") in tabs(page)
+    assert 'aria-label="Back to Wanted"' in page
+    assert "← Want list" not in page
+    assert '<span class="top-mark">' not in page
+
+
+def test_the_want_list_and_bought_carry_the_mark_and_no_back(book_client):
+    client, _ = a_shelf(book_client)
+
+    for path in ("/", "/bought"):
+        page = client.get(path).text
+        assert '<span class="top-mark">bw<' in page
+        assert "Back to Wanted" not in page

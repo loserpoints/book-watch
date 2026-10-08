@@ -7,7 +7,7 @@ decides anything; every verdict and number was derived in `standing`.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 
 from book_watch import covers, enrichment, marketplaces, moves
 from book_watch.purchases import Purchase, total
@@ -167,38 +167,42 @@ def candidate(found, on_list: set[str]) -> dict:
     }
 
 
-def bought_row(purchase: Purchase, today: date | None = None) -> dict:
-    """One book bought, as `ui.bought_row` takes it (S71, #223): what was
-    paid, judged against the limit it had then, and where and when."""
-    today = today or datetime.now(UTC).date()
+def bought_row(purchase: Purchase) -> dict:
+    """One book bought, as `ui.ledger_row` takes it (S82, #258): what was
+    paid, judged against the limit it had then, the day and where. The month
+    and year are its month's heading."""
     on = purchase.bought_on
-    when = f"{on:%b} {on.day}" + (f", {on.year}" if on.year != today.year else "")
-    where = (
-        marketplaces.NAMES[purchase.marketplace]
-        if purchase.marketplace
-        else purchase.shop
-    )
     return {
         "title": purchase.title,
         "author": purchase.author,
         "cover_url": covers.url(purchase.cover_id) if purchase.cover_id else None,
         "paid_text": book_view.money(purchase.paid),
         "verdict": purchase.verdict,
-        "limit_text": f"your limit: {book_view.money(purchase.limit)}"
-        if purchase.limit is not None
-        else "no limit set",
-        "where_when": f"on {where} · {when}",
+        "day": f"{on:%b} {on.day}",
+        "where": (
+            marketplaces.NAMES[purchase.marketplace]
+            if purchase.marketplace
+            else purchase.shop
+        ),
     }
 
 
-def bought_total(purchases: list[Purchase]) -> str | None:
-    """ "Bought · 3 books · $26.95", the folded section's label. The total is
-    left out when the books were paid for in more than one currency."""
-    if not purchases:
-        return None
-    count = len(purchases)
-    parts = ["Bought", f"{count} book{'' if count == 1 else 's'}"]
-    spent = total(purchases)
-    if spent is not None:
-        parts.append(book_view.money(spent))
-    return " · ".join(parts)
+def bought_months(purchases: list[Purchase]) -> list[dict]:
+    """The Bought page's months, newest first (S82, #258): "September 2026",
+    "3 books · $39.60" and its books. The cost is left out of a month paid in
+    more than one currency. `purchases` comes most recently bought first."""
+    months: list[dict] = []
+    for purchase in purchases:
+        name = f"{purchase.bought_on:%B %Y}"
+        if not months or months[-1]["name"] != name:
+            months.append({"name": name, "purchases": []})
+        months[-1]["purchases"].append(purchase)
+    for month in months:
+        bought = month.pop("purchases")
+        parts = [f"{len(bought)} book{'' if len(bought) == 1 else 's'}"]
+        spent = total(bought)
+        if spent is not None:
+            parts.append(book_view.money(spent))
+        month["summary"] = " · ".join(parts)
+        month["rows"] = [bought_row(p) for p in bought]
+    return months

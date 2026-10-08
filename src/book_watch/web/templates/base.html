@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{%- import "_ui.html" as ui_frame -%}
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -21,7 +22,9 @@
 <script src="{{ static_url('ui.js') }}" defer></script>
 </head>
 <body>
-<header><a href="/">book-watch</a></header>
+{#- Each screen names its tab with `screen`, and a screen under the want list
+    sets `back` (S81, #284). -#}
+{{ ui_frame.top_bar(screen | default(none), back | default(false)) }}
 <main>
 {% block content %}{% endblock %}
 </main>

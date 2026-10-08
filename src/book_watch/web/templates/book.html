@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% import "_ui.html" as ui %}
 {% block title %}{{ book.name }} · book-watch{% endblock %}
+{% set screen = "want" %}
+{% set back = true %}
 
 {#- The book page, built from the system's pieces (S34, #98). Every fact S26
     listed as P1–P9 is still here; what changed is that they are consolidated
     so the copies start near the top of a phone screen. -#}
 {% block content %}
-<p class="back"><a href="/">← Want list</a></p>
-
 {#- P1 and P8: the book, and whether we are still working on it. -#}
 <div class="book-hero">
   {#- The image straight from Open Library when its id is known, our route
