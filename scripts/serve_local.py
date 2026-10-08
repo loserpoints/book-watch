@@ -57,7 +57,17 @@ def main(argv: list[str]) -> int:
     os.environ["BOOK_WATCH_DB_PATH"] = argv[0]
     import uvicorn
 
-    uvicorn.run(app(), host="127.0.0.1", port=int(argv[1]) if len(argv) > 1 else 8000)
+    from book_watch import monitoring
+
+    # The lines as production writes them, with uvicorn told not to set up
+    # its own logging over them.
+    monitoring.configure()
+    uvicorn.run(
+        app(),
+        host="127.0.0.1",
+        port=int(argv[1]) if len(argv) > 1 else 8000,
+        log_config=None,
+    )
     return 0
 
 

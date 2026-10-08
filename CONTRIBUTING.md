@@ -20,6 +20,7 @@
 - Actions logs are public, like the repository. A workflow prints nothing that holds an address or a key.
 - Running cost is about $2–3 a month, all hosting. Say so before adding anything with a recurring cost.
 - Every request to an outside service follows the [rate limits](docs/rules/rate-limits.md).
+- A new request to an outside service goes through `monitoring.call`, and new work names its trigger where it starts, so every line keeps the [monitoring](docs/rules/monitoring.md) vocabulary.
 - Make work that can overlap harmless where it happens, rather than blocking the ways in. S68 found a second check during a running examination lost copies for good. Greying out the buttons would have left the 7am check, and any path not yet thought of, still losing them.
 - A mark that tells one kind of outside page from another is checked against every kind the app reads, and only where the page shows it. S74's no-results sentence was also hidden in the scripts of every AbeBooks results page.
 - Before building around a change a site made, look in its own links for a setting that undoes it. S76 found AbeBooks' `rollup=off` there and asked for it, rather than reading a grouped page it could no longer see.

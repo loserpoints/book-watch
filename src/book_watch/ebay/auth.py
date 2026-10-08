@@ -18,6 +18,7 @@ from typing import Any
 
 import httpx
 
+from book_watch import monitoring
 from book_watch.config import EbayCredentials
 from book_watch.ebay.errors import EbayAuthError
 
@@ -116,17 +117,19 @@ class EbayTokenProvider:
         }
         form = {"grant_type": "client_credentials", "scope": self._scope}
         requested_at = self._clock()
-        try:
-            response = self._client.post(TOKEN_URL, headers=headers, data=form)
-        except httpx.HTTPError as exc:
-            raise EbayAuthError(
-                f"Could not reach the eBay token endpoint: {exc}"
-            ) from exc
+        with monitoring.call("ebay", "token"):
+            try:
+                response = self._client.post(TOKEN_URL, headers=headers, data=form)
+            except httpx.HTTPError as exc:
+                raise EbayAuthError(
+                    f"Could not reach the eBay token endpoint: {exc}"
+                ) from exc
+            monitoring.call_answered(response.status_code)
 
-        if response.status_code != httpx.codes.OK:
-            raise EbayAuthError(_describe_failure(response))
+            if response.status_code != httpx.codes.OK:
+                raise EbayAuthError(_describe_failure(response))
 
-        return _parse_token(response, requested_at=requested_at)
+            return _parse_token(response, requested_at=requested_at)
 
     def _basic_auth(self) -> str:
         pair = f"{self._credentials.client_id}:{self._credentials.client_secret}"

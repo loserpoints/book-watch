@@ -438,8 +438,8 @@ def test_the_daily_check_counts_how_abebooks_went(connect, caplog):
         ).fetchone()
 
     assert tuple(run) == (3, 1, 1)
-    assert "AbeBooks: 3 read, 1 failed, 1 out of order" in caplog.text
-    assert "5 of 7 copies out of place" in caplog.text
+    assert "abebooks_read=3 abebooks_failed=1 abebooks_unordered=1" in caplog.text
+    assert "unordered=yes out_of_place=5" in caplog.text
 
 
 # --- the email ---------------------------------------------------------------

@@ -22,6 +22,8 @@ from urllib.parse import urljoin, urlsplit
 
 import httpx
 
+from book_watch import monitoring
+
 #: Services are entitled to know who is calling them. See CLAUDE.md.
 USER_AGENT = (
     "book-watch/0.1 (personal book want-list tool; "
@@ -369,4 +371,6 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    # Run from a GitHub workflow, so its calls say so.
+    with monitoring.started_by("test"):
+        raise SystemExit(main())

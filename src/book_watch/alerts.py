@@ -14,7 +14,6 @@ and delivers only to the Resend account's own address, the one recipient.
 from __future__ import annotations
 
 import html
-import logging
 import re
 import sqlite3
 import sys
@@ -25,15 +24,13 @@ from decimal import Decimal
 
 import httpx
 
-from book_watch import copies, marketplaces, wantlist
+from book_watch import copies, marketplaces, monitoring, wantlist
 from book_watch.config import AlertConfig, MissingCredentialError, load_alert_config
 from book_watch.copies import Copy
 from book_watch.ebay.auth import USER_AGENT
 from book_watch.ebay.search import Money
 from book_watch.wantlist import Entry
 from book_watch.web.book_view import money
-
-logger = logging.getLogger(__name__)
 
 ConnectFn = Callable[[], sqlite3.Connection]
 PostFn = Callable[..., httpx.Response]
@@ -161,6 +158,13 @@ def send(
     config: AlertConfig, subject: str, body_html: str, body_text: str, post: PostFn
 ) -> None:
     """One request to Resend. Raises `AlertError` if it did not take it."""
+    with monitoring.call("resend", "send"):
+        _send(config, subject, body_html, body_text, post)
+
+
+def _send(
+    config: AlertConfig, subject: str, body_html: str, body_text: str, post: PostFn
+) -> None:
     try:
         response = post(
             RESEND_URL,
@@ -179,6 +183,7 @@ def send(
         )
     except httpx.HTTPError as exc:
         raise AlertError(f"Resend could not be reached: {exc}") from exc
+    monitoring.call_answered(response.status_code)
     if response.status_code >= 300:
         # Resend's error names the problem and never echoes the key.
         raise AlertError(f"Resend said {response.status_code}: {response.text}")
@@ -189,15 +194,15 @@ def notify(
     *,
     config: Callable[[], AlertConfig] = load_alert_config,
     post: PostFn = httpx.post,
-) -> int:
+) -> int | None:
     """Send this morning's email if anything is due. Returns how many copies
-    it listed. Raises `AlertError` when sending failed, having recorded
-    nothing, so the next morning tries the same copies again."""
+    it listed, or None when email is off for want of a setting. Raises
+    `AlertError` when sending failed, having recorded nothing, so the next
+    morning tries the same copies again."""
     try:
         settings = config()
-    except MissingCredentialError as exc:
-        logger.info("Email is off: %s", exc)
-        return 0
+    except MissingCredentialError:
+        return None
     with closing(connect()) as connection:
         alerts = due(connection)
         if not alerts:
@@ -268,4 +273,6 @@ def _scrubbed(text: str) -> str:
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    # Run from a GitHub workflow, so its calls say so.
+    with monitoring.started_by("test"):
+        sys.exit(main(sys.argv[1:]))

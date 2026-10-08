@@ -33,6 +33,7 @@ from book_watch import (
     copies,
     covers,
     enrichment,
+    monitoring,
     moves,
     standing,
     sweeps,
@@ -201,6 +202,7 @@ def build_router(
                     status_code=404,
                 )
 
+            monitoring.handling("recheck" if refresh else "open", book.id, book.name)
             error = None
             # Opening a book is a request to see what is listed *now* — there
             # is no other reason to click a book's title. It used to search
@@ -215,12 +217,13 @@ def build_router(
             abebooks.check_book(connection, book, read_abebooks, force=bool(refresh))
             if refresh or sweeps.due_for_sweep(connection, book.work_id, scope=scope):
                 try:
-                    sweeps.store(
+                    sweeps.check_ebay(
                         connection,
                         book.work_id,
-                        run_search(book.search_query, limit, scope=scope),
-                        asked_for=limit,
-                        scope=scope,
+                        run_search,
+                        book.search_query,
+                        limit,
+                        scope,
                     )
                     connection.commit()
                     book = wantlist.get(connection, book_id)
@@ -279,7 +282,9 @@ def build_router(
         # while passing every test, because tests start from an empty
         # database and production does not.
         if book.enriched_at is None:
-            background.add_task(enrichment.queued(start_enrichment, book.work_id))
+            background.add_task(
+                monitoring.carried(enrichment.queued(start_enrichment, book.work_id))
+            )
 
         shown = [copy for copy in for_sale if copy.tier != "excluded"]
         if newest:

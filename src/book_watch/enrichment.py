@@ -20,19 +20,19 @@ Nothing here needs to be transactional because nothing here is a transaction.
 
 from __future__ import annotations
 
-import logging
+import contextlib
 import sqlite3
 import threading
 from collections.abc import Callable
+from contextlib import closing
 from dataclasses import dataclass
 
+from book_watch import monitoring, wantlist
 from book_watch.config import load_ebay_credentials
 from book_watch.ebay.declarations import Declarations
 from book_watch.ebay.errors import EbayError
 from book_watch.isbn import normalize
 from book_watch.openlibrary import BudgetExhausted, OpenLibraryUnavailable, Resolver
-
-logger = logging.getLogger(__name__)
 
 ConnectFn = Callable[[], sqlite3.Connection]
 
@@ -137,21 +137,16 @@ class _Failures:
     number that always fails no longer stops the book at the same place every
     day. Nothing is stored, so it is asked again the next time the book has
     new copies. Two failures in a row are Open Library's, most likely down,
-    and stop the pass so it isn't spent on every remaining number.
+    and stop the pass so it isn't spent on every remaining number. Each
+    failure's `call` line names its number.
     """
 
-    def __init__(self, work_id: int, doing: str) -> None:
-        self._work_id = work_id
-        self._doing = doing
+    def __init__(self) -> None:
         self._in_a_row = 0
 
-    def stop(self, isbn: str, exc: Exception) -> bool:
+    def stop(self) -> bool:
         self._in_a_row += 1
-        if self._in_a_row >= 2:
-            logger.warning("%s %s stopped: %s", self._doing, self._work_id, exc)
-            return True
-        logger.warning("%s %s skipped %s: %s", self._doing, self._work_id, isbn, exc)
-        return False
+        return self._in_a_row >= 2
 
     def answered(self) -> None:
         self._in_a_row = 0
@@ -174,20 +169,49 @@ def enrich(
             return Pass(stopped_because="already running")
         _in_progress.add(work_id)
     try:
-        with connect() as connection:
-            # Again when copies arrived while it ran, from a check made
-            # meanwhile: their sweep cleared the mark this pass would set, and
-            # setting it would leave them unexamined until some later check
-            # happened to find new copies (S68, #240). Bounded, since a pass
-            # that keeps being overtaken has a bigger problem than this.
-            for _ in range(_GO_AGAIN):
-                result = _run(connection, work_id, declarations_for, resolver_for)
-                if result.stopped_because != "copies arrived":
-                    return result
+        with closing(connect()) as connection:
+            row = connection.execute(
+                "SELECT id FROM entry WHERE work_id = ?", (work_id,)
+            ).fetchone()
+            book = wantlist.get(connection, row["id"]) if row else None
+        with (
+            monitoring.about(book.id, book.name) if book else contextlib.nullcontext(),
+            monitoring.job("examine") as job,
+        ):
+            result = _passes(connect, work_id, declarations_for, resolver_for)
+            job.fields.update(
+                examined=result.examined,
+                resolved=result.resolved,
+                recaptured=result.recaptured,
+                stopped=result.stopped_because,
+            )
+            if result.stopped_because in ("ebay unavailable", "open library"):
+                job.outcome = "failed"
+            elif result.stopped_because == "over budget":
+                job.outcome = "throttled"
             return result
     finally:
         with _guard:
             _in_progress.discard(work_id)
+
+
+def _passes(
+    connect: ConnectFn,
+    work_id: int,
+    declarations_for: Callable[[sqlite3.Connection], Declarations],
+    resolver_for: Callable[[sqlite3.Connection], Resolver],
+) -> Pass:
+    with connect() as connection:
+        # Again when copies arrived while it ran, from a check made meanwhile:
+        # their sweep cleared the mark this pass would set, and setting it
+        # would leave them unexamined until some later check happened to find
+        # new copies (S68, #240). Bounded, since a pass that keeps being
+        # overtaken has a bigger problem than this.
+        for _ in range(_GO_AGAIN):
+            result = _run(connection, work_id, declarations_for, resolver_for)
+            if result.stopped_because != "copies arrived":
+                return result
+        return result
 
 
 def _run(
@@ -223,10 +247,9 @@ def _run(
         already = declarations.known(item_id)
         try:
             declared = declarations.of(item_id)
-        except EbayError as exc:
+        except EbayError:
             # Leave what was learned and stop. The next pass resumes.
             connection.commit()
-            logger.warning("Enriching %s stopped: %s", work_id, exc)
             return Pass(examined=examined, stopped_because="ebay unavailable")
         if not already:
             examined += 1
@@ -246,9 +269,8 @@ def _run(
     for item_id in behind:
         try:
             declared = declarations.refresh(item_id)
-        except EbayError as exc:
+        except EbayError:
             connection.commit()
-            logger.warning("Recapturing %s stopped: %s", work_id, exc)
             return Pass(
                 examined=examined,
                 recaptured=recaptured,
@@ -274,7 +296,7 @@ def _run(
     # a one-off backfill means the next such gap heals itself too.
     if wanted is None:
         wanted, identified = _identify_the_book(connection, work_id, resolver)
-    failures = _Failures(work_id, "Enriching")
+    failures = _Failures()
     for isbn in sorted(numbers):
         already = resolver.known(isbn)
         try:
@@ -282,15 +304,14 @@ def _run(
             # pass no longer draws any conclusion from it. Which numbers are
             # this book is worked out on read, from what is stored here.
             resolver.identify(isbn)
-        except BudgetExhausted as exc:
+        except BudgetExhausted:
             connection.commit()
             # Not retried, and not treated as an outage. A caller
             # that retries this on a timer is the exact failure it prevents.
-            logger.warning("Enriching %s stopped at the ceiling: %s", work_id, exc)
             return Pass(examined, resolved, stopped_because="over budget")
-        except OpenLibraryUnavailable as exc:
+        except OpenLibraryUnavailable:
             connection.commit()
-            if failures.stop(isbn, exc):
+            if failures.stop():
                 return Pass(examined, resolved, stopped_because="open library")
             continue
         failures.answered()
@@ -302,13 +323,12 @@ def _run(
     # so every outdated number is worth re-asking about, and the pace and
     # ceiling apply here exactly as they do to a first ask —
     # this goes through the same resolver and spends the same budget.
-    failures = _Failures(work_id, "Recapturing")
+    failures = _Failures()
     for isbn in resolver.outdated(sorted(numbers)):
         try:
             resolver.recapture(isbn)
-        except BudgetExhausted as exc:
+        except BudgetExhausted:
             connection.commit()
-            logger.warning("Recapturing %s stopped at the ceiling: %s", work_id, exc)
             return Pass(
                 examined,
                 resolved,
@@ -318,9 +338,9 @@ def _run(
                 ),
                 stopped_because="over budget",
             )
-        except OpenLibraryUnavailable as exc:
+        except OpenLibraryUnavailable:
             connection.commit()
-            if not failures.stop(isbn, exc):
+            if not failures.stop():
                 continue
             return Pass(
                 examined,

@@ -19,6 +19,7 @@ from book_watch.abebooks import Reader
 from book_watch.config import DeletionEndpointConfig, load_deletion_config
 from book_watch.enrichment import EnrichFn
 from book_watch.web import design, ebay_deletion, listings, manifest, version, wantlist
+from book_watch.web.page_lines import PageLines
 from book_watch.web.searching import SearchFn
 
 STATIC_DIR = Path(__file__).parent / "static"
@@ -67,4 +68,5 @@ def create_app(
     # htmx is vendored rather than loaded from a CDN: one file, no runtime
     # dependency on somebody else's uptime, and it works offline.
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+    app.add_middleware(PageLines)
     return app

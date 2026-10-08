@@ -188,7 +188,7 @@ def test_without_a_key_email_is_off_and_nothing_is_sent(morning):
 
     resend = Resend()
 
-    assert alerts.notify(morning, config=missing, post=resend) == 0
+    assert alerts.notify(morning, config=missing, post=resend) is None
     assert resend.sent == []
 
 
@@ -235,7 +235,7 @@ def test_a_failed_email_is_logged_and_not_shown_in_the_app(connect, caplog):
     def broken():
         raise alerts.AlertError("Resend said 500")
 
-    with caplog.at_level("WARNING", logger="book_watch.daily"):
+    with caplog.at_level("WARNING", logger="book_watch"):
         daily.run(connect, no_search, lambda w: None, lambda: 0, broken)
 
     with closing(connect()) as connection:
@@ -244,7 +244,8 @@ def test_a_failed_email_is_logged_and_not_shown_in_the_app(connect, caplog):
     assert run["outcome"] == "ok"
     assert run["email_failed"] == 1
     assert said is None
-    assert "could not send its email: Resend said 500" in caplog.text
+    assert "event=job name=email phase=end trigger=daily outcome=failed" in caplog.text
+    assert 'detail="Resend said 500"' in caplog.text
 
 
 # --- price drops (S41, #165) --------------------------------------------------

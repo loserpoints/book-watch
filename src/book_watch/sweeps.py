@@ -19,9 +19,11 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
+from book_watch import monitoring
 from book_watch.ebay.search import Listing, Money, Scope
 from book_watch.marketplaces import Marketplace, is_us
 
@@ -248,6 +250,12 @@ def store(
                 ),
             )
 
+    monitoring.check_saw(
+        copies=len(listings),
+        new=len(fresh),
+        full=_filled(asked_for, getattr(listings, "total", None), len(listings)),
+    )
+
     # Only genuinely new copies are new work. This used to clear
     # unconditionally, so every refresh scheduled a full enrichment pass and
     # spent Open Library requests re-asking about numbers already answered —
@@ -264,6 +272,30 @@ def store(
             (work_id,),
         )
     return sweep_id
+
+
+def check_ebay(
+    connection: sqlite3.Connection,
+    work_id: int,
+    search: Callable[..., list[Listing]],
+    query: str,
+    limit: int,
+    scope: Scope,
+) -> int:
+    """Search eBay for one book and store what came back, as one check.
+
+    Every check of a book on eBay comes through here, so each writes the same
+    `check` line, and a failed search raises after writing it. Returns the
+    sweep id.
+    """
+    with monitoring.check("ebay"):
+        return store(
+            connection,
+            work_id,
+            search(query, limit, scope=scope),
+            asked_for=limit,
+            scope=scope,
+        )
 
 
 def store_both_scopes(
@@ -300,6 +332,19 @@ def store_both_scopes(
         marketplace=marketplace,
     )
     return everywhere, us
+
+
+def _filled(asked_for: int | None, total: int | None, returned: int) -> bool:
+    """Whether a check came back full, so copies past its page went unseen.
+
+    The same rule for every marketplace: more matched than was asked for, or,
+    with no count, as many came back as were asked for.
+    """
+    if asked_for is None:
+        return False
+    if total is not None:
+        return total > asked_for
+    return returned >= asked_for
 
 
 def _was_complete(sweep: sqlite3.Row) -> bool:

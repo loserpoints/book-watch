@@ -17,7 +17,7 @@ These rules decide when the app emails me about a copy, so that an email is alwa
 
 ### When it is sent
 
-- One email a morning at most, sent after the daily check. Update and Check all never send.
+- One email a morning at most, sent after the daily check. The Check button never sends.
 - No copy to list means no email.
 - A copy is in at most one email, ever.
 

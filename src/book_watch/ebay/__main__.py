@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import sys
 
+from book_watch import monitoring
 from book_watch.config import MissingCredentialError, load_ebay_credentials
 from book_watch.ebay.auth import EbayTokenProvider
 from book_watch.ebay.errors import EbayAuthError
@@ -66,4 +67,6 @@ def _hints(message: str, client_id: str) -> list[str]:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    # Run from a GitHub workflow, so its calls say so.
+    with monitoring.started_by("test"):
+        raise SystemExit(main())

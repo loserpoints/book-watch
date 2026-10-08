@@ -37,6 +37,7 @@ from book_watch import (
     daily,
     db,
     enrichment,
+    monitoring,
     purchases,
     standing,
     sweeps,
@@ -402,11 +403,13 @@ def build_router(
             with closing(open_database()) as connection:
                 added = put_on_list(connection)
         except wantlist.DuplicateBook:
+            monitoring.action("add", outcome="duplicate")
             return render_page(
                 request,
                 error=f"{duplicate_of} is already on the list.",
                 status_code=409,
             )
+        monitoring.action("add", book=added.id, title=added.name)
         # The whole page comes back, so the form clears and the new row shows
         # — already checking itself, because the first thing you want to know
         # about a book you just added is whether anybody is selling it.
@@ -450,6 +453,7 @@ def build_router(
         author: str = Form(""),
         override: str = Form(""),
     ) -> HTMLResponse:
+        monitoring.handling("add")
         typed = isbn.strip()
         wanted = title.strip()
         by = author.strip()
@@ -601,6 +605,7 @@ def build_router(
         for low volume, and it is safe here only because there is one user and
         no authentication. Worth revisiting if either changes.
         """
+        monitoring.handling("add")
         return store(
             request,
             lambda c: wantlist.add_identified(
@@ -633,6 +638,7 @@ def build_router(
             except LookupError:
                 return Response(status_code=404)
             if book.cover is None and book.cover_asked_at is None:
+                monitoring.handling("cover", book.id, book.name)
                 covers.look_up(connection, open_library, book.work_id)
                 try:
                     book = wantlist.get(connection, book_id)
@@ -646,7 +652,13 @@ def build_router(
     @router.delete("/books/{book_id}", response_class=HTMLResponse)
     def remove_book(request: Request, book_id: int) -> HTMLResponse:
         with closing(open_database()) as connection:
+            try:
+                book = wantlist.get(connection, book_id)
+            except LookupError:
+                book = None
             wantlist.remove(connection, book_id)
+        if book is not None:
+            monitoring.action("remove", book=book.id, title=book.name)
         # Deleting something already gone is not an error worth showing: the
         # list is the answer to "what is on the list", and it is now correct.
         return taken_off(render_list(request))
@@ -772,6 +784,13 @@ def build_router(
                     shop=shop.strip() if where == "other" else None,
                     bought_on=on,
                 )
+                monitoring.action(
+                    "bought",
+                    book=book.id,
+                    title=book.name,
+                    where=shop.strip() if where == "other" else where,
+                    paid=amount,
+                )
         return taken_off(render_list(request))
 
     @router.post("/books/{book_id}/opened")
@@ -875,6 +894,7 @@ def build_router(
                 for book in wantlist.all_books(connection)
                 if force or sweeps.due_for_sweep(connection, book.work_id, scope="us")
             ]
+        monitoring.action("check", all=bool(force), books=len(queue))
         if not queue:
             # Doing nothing is the correct answer and it still has to be said.
             # Silence here reads as a broken button, and every book being
@@ -928,14 +948,16 @@ def build_router(
         state = "idle"
         with closing(open_database()) as connection:
             book = wantlist.get(connection, book_id)
+            monitoring.handling("check", book.id, book.name)
             if force or sweeps.due_for_sweep(connection, book.work_id, scope="us"):
                 try:
-                    sweeps.store(
+                    sweeps.check_ebay(
                         connection,
                         book.work_id,
-                        run_search(book.search_query, DEFAULT_LIMIT, scope="us"),
-                        asked_for=DEFAULT_LIMIT,
-                        scope="us",
+                        run_search,
+                        book.search_query,
+                        DEFAULT_LIMIT,
+                        "us",
                     )
                     connection.commit()
                 except (MissingCredentialError, EbayError):
@@ -954,7 +976,9 @@ def build_router(
             and book.being_enriched
             and not enrichment.busy(book.work_id)
         ):
-            background.add_task(enrichment.queued(start_enrichment, book.work_id))
+            background.add_task(
+                monitoring.carried(enrichment.queued(start_enrichment, book.work_id))
+            )
 
         return render_step(
             request,
