@@ -9,6 +9,7 @@
 - Measure before deciding when a choice turns on a number, and measure again when the data grows.
 - Before inventing a proxy for a signal, check whether the code already has the signal and throws it away.
 - Decide a design by looking at it on real screens at phone width.
+- A view of data, such as the Grafana dashboard, is reviewed once it holds real data. Before then, review only that it loads and every panel reads a count the app publishes. S79's review stopped after one round, with a few hours of counts to look at, and alerts waited for the same reason.
 - Ask Alan for his ideas before each round of mocks, and mock them among the options. A round of options that leaves out Alan's idea is usually followed by one that mocks it.
 - A layout aims for three rounds. Past three, it keeps going until the design is right, and its slice records why it took more.
 - Migrations run forward only, and a rollback does not undo them. Keep a migration additive, so the previous code still works if its change is reverted.
@@ -36,6 +37,8 @@
 - Run every change to a screen in a real browser at 360px wide, in both themes, and look at it. Tests miss layout, fonts and taps.
 - Desktop Chromium shows no pressed state for a touch, even emulating a phone, so a pressed look is checked on the phone. S73's fill showed in the browser and not on a copy on the phone.
 - Test a layout fix in the case that broke: the phone width and the data where it happened. A fix that only measures what changed can miss that the layout no longer fits.
+- Run `scripts/check.sh` once without eBay's keys before pushing, `env -u EBAY_CLIENT_ID -u EBAY_CLIENT_SECRET scripts/check.sh`, since CI has none. S78's test passed here and failed in CI, because a router it built without a stub fell back to the real client and found this environment's keys.
+- A test that a secret stays out of what the app writes uses a fake shaped like the real one and checks for any piece of it. S77's scrubbing hid only the first character of an eBay token, which holds `^` and `#`, and its test passed by looking for the whole token.
 - This environment holds real eBay keys. Run the app locally only with `uv run python scripts/serve_local.py <database> [port]`, which fakes eBay's search, never reads AbeBooks, and refuses every request. The app as built for production searches eBay when a book page opens and examines every copy it finds.
 - Tests check what a reader sees, not the markup that carries it, so they survive a redesign.
 - A test of a request htmx makes sends what htmx sends with it, such as `HX-Current-URL`. From S60 to S69, switching "Under limit" off kept the list filtered, because the tests asked for the list without the page it came from.
@@ -57,3 +60,4 @@
 - Never push to `main`. Before pushing to a branch, check its pull request is still open. A merged pull request cannot take new work, so start a new branch from `main`.
 - Before building on another pull request, check it has merged.
 - When a change makes a doc untrue, update the doc in the same pull request.
+- When a change rewords a message or a log line, search the docs for its old wording. S77 replaced the app's log lines and left the runbook quoting two of the old ones until S79.
