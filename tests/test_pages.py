@@ -35,6 +35,18 @@ def test_abebooks_page_for_a_search_with_nothing_on_it_says_so(real):
     assert page.no_results
 
 
+def test_the_message_counts_only_where_the_page_shows_it():
+    """Every results page carries the sentence in its scripts (S74). A page
+    whose copies can't be read must still fail, not read as empty."""
+    hidden = (
+        '<script>window.i18n = {"nullResults": "We were unable to find exact '
+        'matches based on your search"}</script>'
+    )
+
+    assert not pages.parse(ISBN_PAGE + hidden).no_results
+    assert not pages.parse("<html><body><main></main>" + hidden).no_results
+
+
 def test_a_results_page_and_a_page_without_the_message_are_not_no_results():
     changed = NO_RESULTS_TITLE.replace("We were unable to find exact matches", "")
 
