@@ -2,7 +2,7 @@
 
 ## Goal
 
-Every call to an outside service and every job the app runs on its own is logged and counted in one shared vocabulary, a Grafana dashboard shows the app's activity and problems over time, and Grafana tells me when something goes wrong.
+Every call to an outside service and every job the app runs on its own writes one log line and moves its counts in one shared vocabulary, and a Grafana dashboard shows the app's activity and problems over time, while hearing about problems waits to be chosen from that dashboard once it holds data.
 
 ## Jobs advanced
 
@@ -13,4 +13,4 @@ Every call to an outside service and every job the app runs on its own is logged
 - [S77 · Every outside call and every job the app runs on its own writes one log line in a shared vocabulary](https://github.com/loserpoints/book-watch/issues/168)
 - [S78 · The app publishes its counts for Fly's Grafana](https://github.com/loserpoints/book-watch/issues/275)
 - [S79 · A v1 Grafana dashboard shows the app's activity and problems](https://github.com/loserpoints/book-watch/issues/276)
-- [S80 · Grafana tells me when something goes wrong, chosen from the dashboard](https://github.com/loserpoints/book-watch/issues/277)
+- [S80, dropped · Grafana tells me when something goes wrong, chosen from the dashboard](https://github.com/loserpoints/book-watch/issues/277)

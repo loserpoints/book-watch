@@ -30,4 +30,4 @@ These rules decide when the app emails me about a copy, so that an email is alwa
 
 ## Open issues
 
-- [See what the app does unattended, and hear when something is wrong](https://github.com/loserpoints/book-watch/issues/168)
+- [Hear from Grafana when something goes wrong, and restyle the dashboard once it holds data](https://github.com/loserpoints/book-watch/issues/282)

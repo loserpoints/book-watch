@@ -32,6 +32,8 @@ Choose the next milestone from the open issues by one order of priority, and set
 3. **A job not met frames the milestone next.** The issue of highest value toward a job whose status is not met frames it, with a theme built around that job. When its work is blocked, its first slice is the research that either unblocks it or shows it can't be done. When it can't be done, the value proposition and the job are rewritten to stop promising it.
 4. **Otherwise, the enhancement of highest value to a met job frames the milestone,** with a theme built from other enhancements around it.
 
+Alan can choose a frame these rules don't pick. The draft then names the rule that applied and what it would have chosen, and the milestone's learnings record the choice. M18 took observability over rule 4's enhancement.
+
 ### Filling
 
 - A milestone holds 3–5 slices. Outside that range, the draft says why.

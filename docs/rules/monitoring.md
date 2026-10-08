@@ -94,5 +94,4 @@ These rules say what the app writes to its logs, in one vocabulary, so that Fly'
 
 ## Open issues
 
-- [S79 · A v1 Grafana dashboard shows the app's activity and problems](https://github.com/loserpoints/book-watch/issues/276)
-- [S80 · Grafana tells me when something goes wrong, chosen from the dashboard](https://github.com/loserpoints/book-watch/issues/277)
+- [Hear from Grafana when something goes wrong, and restyle the dashboard once it holds data](https://github.com/loserpoints/book-watch/issues/282)
