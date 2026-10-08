@@ -12,6 +12,7 @@ DATA = Path(__file__).parent / "data"
 ISBN_PAGE = (DATA / "abebooks_isbn_page.html").read_text()
 NO_RESULTS_TITLE = (DATA / "abebooks_no_results_title.html").read_text()
 NO_RESULTS_ISBN = (DATA / "abebooks_no_results_isbn.html").read_text()
+TITLE_PAGE = (DATA / "abebooks_title_page.html").read_text()
 
 
 def test_an_isbn_page_gives_its_count_and_each_copy_delivered():
@@ -195,3 +196,19 @@ def test_ungrouped_asks_abebooks_for_no_grouped_rows(monkeypatch, capsys):
 
 def test_an_unknown_flag_is_refused(capsys):
     assert pages.main(["https://www.abebooks.com/", "--everything"]) == 2
+
+
+def test_a_title_search_asked_for_ungrouped_reads_each_copy():
+    """*Hey Jack!*, served to Fly with rollup=off on 2026-10-08 (S76). On
+    2026-10-07 its two cheapest copies were grouped rows."""
+    page = pages.parse(TITLE_PAGE)
+
+    assert page.result_count == 79
+    assert [c.delivered for c in page.copies] == [
+        Decimal("6.99"),
+        Decimal("8.97"),
+        Decimal("10.45"),
+    ]
+    assert not any(c.grouped for c in page.copies)
+    assert all(c.listing_id and c.url and c.seller for c in page.copies)
+    assert not page.no_results

@@ -91,14 +91,19 @@ def search_url(title: str | None, author: str | None, typed: str | None) -> str 
     The main title only, before any colon: a subtitle narrows the search,
     since many sellers leave it out. A book with no title but a typed ISBN is
     read from that ISBN's page.
+
+    Either asks for the page without grouped rows (S76): AbeBooks grouped an
+    edition's copies into one row on 2026-10-07, which the app can't read.
     """
     if title:
         main = slug(title.split(":", 1)[0])
         if main:
-            return SEARCH.format(title=main, author=slug(author or "") or "_")
+            return pages.ungrouped(
+                SEARCH.format(title=main, author=slug(author or "") or "_")
+            )
     isbn = normalize(typed) if typed else None
     if isbn:
-        return ISBN_PAGE.format(isbn=isbn)
+        return pages.ungrouped(ISBN_PAGE.format(isbn=isbn))
     return None
 
 

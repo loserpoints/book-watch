@@ -99,16 +99,17 @@ def add_crash(connect) -> wantlist.Entry:
 
 def test_the_search_is_written_as_abebooks_reads_it():
     assert abebooks.search_url("Crash: A Novel", "J. G. Ballard", None) == (
-        "https://www.abebooks.com/book-search/title/crash/author/j-g-ballard/"
+        "https://www.abebooks.com/book-search/title/crash/author/j-g-ballard/?rollup=off"
     )
     assert abebooks.search_url("Cien años de soledad", None, None) == (
         "https://www.abebooks.com/book-search/title/cien-anos-de-soledad/author/_/"
+        "?rollup=off"
     )
 
 
 def test_a_book_known_only_by_its_isbn_is_read_from_that_isbns_page():
     assert abebooks.search_url(None, None, "978-0-09-944839-6") == (
-        "https://www.abebooks.com/book-search/isbn/9780099448396/used/"
+        "https://www.abebooks.com/book-search/isbn/9780099448396/used/?rollup=off"
     )
     assert abebooks.search_url(None, None, "not a number") is None
 
@@ -243,7 +244,7 @@ def test_a_check_stores_the_copies_for_both_views(connect):
 
     assert outcome.outcome == "ok"
     assert reader.urls == [
-        "https://www.abebooks.com/book-search/title/crash/author/j-g-ballard/"
+        "https://www.abebooks.com/book-search/title/crash/author/j-g-ballard/?rollup=off"
     ]
     assert [tuple(row) for row in rows] == [
         (
@@ -543,7 +544,7 @@ def test_an_empty_result_links_to_the_search_that_found_nothing(connect, client_
 
     assert "No copies on AbeBooks" in visible(page)
     assert (
-        'href="https://www.abebooks.com/book-search/title/crash/author/j-g-ballard/"'
+        'href="https://www.abebooks.com/book-search/title/crash/author/j-g-ballard/?rollup=off"'
         in page
     )
 
