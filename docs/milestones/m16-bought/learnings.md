@@ -9,6 +9,7 @@
 - Choosing M16, Alan judged the two open AbeBooks defects not bad: each is seen only now and then, and the next check undoes it. [Set milestone](../../../.claude/skills/set-milestone/SKILL.md#priority)
 - Closing M16 listed what each job had gained from the milestone, as if features changed jobs. It is the other way round: a close checks whether anything learned changes how a job is understood, and expects not. [Governance](../../governance.md#workflow)
 - Closing M16 ran at the end of a long session that had planned and built the whole milestone. The next milestone now starts in a fresh session, which reads the docs as they stand after the close. [Governance](../../governance.md#workflow)
+- S72's carets looked right in mocks drawn on desktop and were much smaller on the phone, whose font draws ▾ at its own size. They are now triangles drawn as shapes, the same size on every device. [Design system](../../design-system.md#components)
 
 ## Carried forward
 

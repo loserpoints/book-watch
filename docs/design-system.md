@@ -32,6 +32,8 @@ Jinja macros in `src/book_watch/web/templates/_ui.html`. Each takes plain values
 
 A row that leads somewhere, a book on the want list or a copy on a book's page, is one target: its link stretches over it, and its own controls sit above the link. Pressed, the whole row fills with the sheet color, never the phone's own highlight. The app sets the fill from the touch itself and holds it long enough to see, since a tap that opens another app leaves the browser's own pressed state no time to draw.
 
+A mark that has to read the same size everywhere, such as the triangle that says which way a price moved, is drawn as a shape. A typed character such as ▾ is as big as each device's font makes it.
+
 Example text in an empty field starts with "e.g.", so in grey it can't pass for a value already filled in.
 
 A choice between two ways of seeing the same thing, such as Cheapest · Newest or Title & author · ISBN, looks the same everywhere: the chosen one in bold, the other underlined in the accent, a dot between. A filter that is on or off is a switch. Both keep their 44px targets.
