@@ -12,6 +12,7 @@ These rules decide which eBay listings are copies of the book being watched, and
 - Searches return copies from US sellers. Searching everywhere is a choice made per view, and is not saved.
 - Searches return fixed-price listings only, never auctions (see [pricing](pricing.md#prices)).
 - AbeBooks is searched by the book's main title, before any colon, and its author, written as AbeBooks writes them in a path: lowercase, punctuation dropped, words joined by hyphens. A book with no title is searched by the ISBN it was added by.
+- Every AbeBooks search asks for the page without grouped rows, `?rollup=off`, the setting AbeBooks' own search links carry. AbeBooks grouped an edition's copies into one row, priced at the cheapest, on 2026-10-07 and stopped. A grouped row has no one seller, condition or link, so a page that has one still fails the check.
 - AbeBooks answers with the 30 cheapest copies by delivered price, across editions and sellers worldwide. An edition whose copies all cost more than the 30th is not seen, and neither is any copy the seller gave no ISBN: the page served to the app leaves them out.
 - AbeBooks' search also returns other books that share the title. Each copy is graded by the rules below, as eBay's are.
 - An AbeBooks page that is a bot challenge, has grouped rows, has copies but no count, has no copies and isn't AbeBooks' no-results page, or has a copy without a price, shipping, id or link fails the check. Nothing is guessed from it, and the copies from the last good check stay listed.
@@ -66,5 +67,4 @@ These rules decide which eBay listings are copies of the book being watched, and
 
 ## Open issues
 
-- [AbeBooks now groups an edition's cheapest copies into one row, and the check fails on those books](https://github.com/loserpoints/book-watch/issues/253)
 - [A reading copy is searched across every edition](https://github.com/loserpoints/book-watch/issues/130)
