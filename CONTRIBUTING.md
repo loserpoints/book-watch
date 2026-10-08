@@ -21,6 +21,8 @@
 - Running cost is about $2–3 a month, all hosting. Say so before adding anything with a recurring cost.
 - Every request to an outside service follows the [rate limits](docs/rules/rate-limits.md).
 - Make work that can overlap harmless where it happens, rather than blocking the ways in. S68 found a second check during a running examination lost copies for good. Greying out the buttons would have left the 7am check, and any path not yet thought of, still losing them.
+- A mark that tells one kind of outside page from another is checked against every kind the app reads, and only where the page shows it. S74's no-results sentence was also hidden in the scripts of every AbeBooks results page.
+- Before building around a change a site made, look in its own links for a setting that undoes it. S76 found AbeBooks' `rollup=off` there and asked for it, rather than reading a grouped page it could no longer see.
 - A check on data the app reads from outside fails only what the app can't read correctly. A property it can read through, such as a page's price order, is measured and counted instead. A rule drawn from a few samples fails real data, as AbeBooks' order check did on its first day.
 
 ## Testing
@@ -43,7 +45,7 @@
 - Keep labeled real data in the repository as test fixtures, so a study becomes a regression test.
 - A fake of an outside service answers with what the real one sends, field names and units included, taken from a real response or the service's own source. A fake built from memory passes the tests and fails the first real run.
 - Tests start empty and miss what production holds. After a change deploys, Alan checks it on his phone against the live data, and its pull request says what to check.
-- That check starts from a fresh open of the app. An app left open through a deploy redraws in new markup with the stylesheet it loaded before, as S69 did on its first check.
+- That check starts from a fresh open of the app, or from coming back to it after the deploy, which reloads it on the new version (S75). A change to what a page left open does shows only from the deploy after it, since the open page holds the code from before.
 
 ## Reviewing
 

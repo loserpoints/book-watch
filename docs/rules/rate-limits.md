@@ -41,7 +41,7 @@ These rules keep the app's requests to eBay and Open Library small, spaced out a
 ### AbeBooks and Biblio
 
 - Apart from the checks above, pages are read only by the Read a marketplace page once workflow, one request per run.
-- A path the site's robots.txt disallows is refused before anything is sent.
+- A path the site's robots.txt disallows is refused before anything is sent, and so is a redirect to one.
 - A failed request is not retried.
 
 ### Resend

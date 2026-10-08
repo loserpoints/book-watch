@@ -27,6 +27,8 @@ Before any code, check that a slice covers what its outcome means to the person 
 - Has the current behavior been reproduced, and is its cause confirmed or only guessed?
 - What does the original issue say already works? Is the slice still needed without that part?
 - What would a literal reading of the outcome miss?
+- When the defect is a wrong answer, where else does that answer go: what the app stores, shows elsewhere and emails? S74's wrong "empty" took a book's copies off the want list and the email too, which the issue didn't say.
+- When something happens on its own, such as a reload or a redraw, can the person name the moment it happens? S75 was first planned to reload at the next redraw, which Alan found unpredictable, and settled on leaving the app and coming back.
 - When a screen shows a change, what is it measured against: the last check, the last visit, or something else? Ask Alan rather than reading it from the issue's words.
 - When it keeps a screen current, which ways does a person reach that screen: opening it, going back to it, coming back to the app after time away, and a piece of it redrawing? Each is a case to plan and check.
 - Does the case it handles happen at all? Check the outside service's own rules before planning to measure it.

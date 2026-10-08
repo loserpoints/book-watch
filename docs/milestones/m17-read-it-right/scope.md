@@ -2,7 +2,7 @@
 
 ## Goal
 
-An AbeBooks page the app can't read fails instead of saying "No copies", an app left open through a deploy comes back styled, and every AbeBooks read asks for the page without grouped rows.
+An AbeBooks page the app can't read fails instead of reading as empty and taking the book's copies off the list, coming back to the app after a deploy reloads it fresh on the new version, and every AbeBooks read asks for the page without grouped rows.
 
 ## Jobs advanced
 
