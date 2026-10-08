@@ -27,6 +27,13 @@ primary_region = "iad"
     path = "/health"
     timeout = "5s"
 
+# The app's counts, for Fly's Prometheus and Grafana (docs/rules/monitoring.md).
+# Collected every 15 seconds. Not under [http_service], so outside traffic
+# never reaches it.
+[metrics]
+  port = 9091
+  path = "/metrics"
+
 # The SQLite file lives here, not on the machine's own filesystem, which is
 # rebuilt on every deploy.
 [mounts]
