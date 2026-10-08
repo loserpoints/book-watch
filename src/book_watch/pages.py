@@ -70,6 +70,8 @@ _SHIPPING = re.compile(r"US\$\s?([\d,]+\.\d{2}) shipping")
 _FIRST_EDITION = re.compile(r"\bFirst Edition\b")
 #: "ISBN 10 / ISBN 13: 0670337285 / 9780670337286" or "ISBN 13: 9780670337286".
 _ISBN13 = re.compile(r"ISBN (?:10 / ISBN )?13: (?:[\dX]{10} / )?(97[89]\d{10})")
+#: AbeBooks' own page for a search with nothing on it, title or ISBN alike.
+_NO_RESULTS = re.compile(r"We were unable to find exact matches based on your search")
 _GROUPED = re.compile(r"(?:Used|New) offers from US\$")
 _PHOTO = re.compile(r'<img\b[^>]*\bsrc="(https://pictures\.abebooks\.com/[^"]+)"')
 #: "Published by The Viking Press, New York, 1972": the publisher, then the year.
@@ -132,6 +134,8 @@ class Page:
     copies: list[Copy] = field(default_factory=list)
     #: True when the site answered with a bot challenge instead of the page.
     challenged: bool = False
+    #: True when the page says the search found nothing.
+    no_results: bool = False
 
 
 def check_url(url: str) -> None:
@@ -275,6 +279,7 @@ def parse(page: str) -> Page:
     return Page(
         result_count=int(count.group(1).replace(",", "")) if count else None,
         copies=copies,
+        no_results=bool(_NO_RESULTS.search(page)),
     )
 
 
@@ -320,6 +325,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     print(f"results    {page.result_count if page.result_count is not None else '?'}")
     print(f"on page    {len(page.copies)}")
+    print(f"no results {'yes' if page.no_results else 'no'}")
     delivered = [c.delivered for c in page.copies if c.delivered is not None]
     print(f"cheapest   {', '.join(str(d) for d in delivered[:10]) or 'none'}")
     print(f"in order   {'yes' if delivered == sorted(delivered) else 'no'}")

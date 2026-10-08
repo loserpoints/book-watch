@@ -7,7 +7,10 @@ import pytest
 
 from book_watch import pages
 
-ISBN_PAGE = (Path(__file__).parent / "data" / "abebooks_isbn_page.html").read_text()
+DATA = Path(__file__).parent / "data"
+ISBN_PAGE = (DATA / "abebooks_isbn_page.html").read_text()
+NO_RESULTS_TITLE = (DATA / "abebooks_no_results_title.html").read_text()
+NO_RESULTS_ISBN = (DATA / "abebooks_no_results_isbn.html").read_text()
 
 
 def test_an_isbn_page_gives_its_count_and_each_copy_delivered():
@@ -19,6 +22,24 @@ def test_an_isbn_page_gives_its_count_and_each_copy_delivered():
         Decimal("100.00"),
         Decimal("120.00"),
     ]
+
+
+@pytest.mark.parametrize(
+    "real", [NO_RESULTS_TITLE, NO_RESULTS_ISBN], ids=["title", "isbn"]
+)
+def test_abebooks_page_for_a_search_with_nothing_on_it_says_so(real):
+    """Both served to Fly on 2026-10-08: a made-up title, an unstocked ISBN."""
+    page = pages.parse(real)
+
+    assert page.copies == []
+    assert page.no_results
+
+
+def test_a_results_page_and_a_page_without_the_message_are_not_no_results():
+    changed = NO_RESULTS_TITLE.replace("We were unable to find exact matches", "")
+
+    assert not pages.parse(ISBN_PAGE).no_results
+    assert not pages.parse(changed).no_results
 
 
 def test_a_large_count_says_over():
