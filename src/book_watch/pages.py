@@ -1,9 +1,10 @@
 """Read one AbeBooks or Biblio page, the way the app would, and say what it holds.
 
-    python -m book_watch.pages <url> [--markup]
+    python -m book_watch.pages <url> [--markup] [--ungrouped]
 
 One request, no retry. `--markup` also prints the page itself, without its
 scripts, styles, icons and comments, to see a page that holds no copies.
+`--ungrouped` asks for the page without grouped rows.
 A path the site's robots.txt asks robots to stay out of is refused before
 anything is sent. This exists to check, from the Fly machine, that a page
 answers and what it carries. See docs/rules/api-policies.md.
@@ -28,6 +29,10 @@ USER_AGENT = (
 )
 
 TIMEOUT_SECONDS = 20.0
+
+#: AbeBooks' own setting for a search page without grouped rows, carried by
+#: every link on its search pages. Grouping came and went on 2026-10-07 (S76).
+UNGROUPED = "rollup=off"
 
 #: Paths each site's robots.txt disallows for every robot, as read on
 #: 2026-10-06. A page under one of these is never requested.
@@ -285,33 +290,48 @@ def parse(page: str) -> Page:
     )
 
 
+def ungrouped(url: str) -> str:
+    """The address, asking for no grouped rows."""
+    return f"{url}{'&' if '?' in url else '?'}{UNGROUPED}"
+
+
 def markup(page: str) -> str:
     """The page without what `_NOT_MARKUP` names, and without blank lines."""
     lines = (line.strip() for line in _NOT_MARKUP.sub("", page).splitlines())
     return "\n".join(line for line in lines if line)
 
 
-def fetch(url: str) -> tuple[int, str]:
-    """One request, no retry. Returns the status and the body."""
+def fetch(url: str, transport: httpx.BaseTransport | None = None) -> tuple[int, str]:
+    """One request, no retry. Returns the status and the body.
+
+    A redirect is followed only to a page `check_url` allows: every hop is
+    checked before it is sent, not only the address asked for.
+    """
     check_url(url)
-    response = httpx.get(
-        url,
+    with httpx.Client(
         headers={"User-Agent": USER_AGENT},
         timeout=TIMEOUT_SECONDS,
         follow_redirects=True,
-    )
+        event_hooks={"request": [lambda request: check_url(str(request.url))]},
+        transport=transport,
+    ) as client:
+        response = client.get(url)
     return response.status_code, response.text
 
 
 def main(argv: list[str] | None = None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
-    show_markup = "--markup" in args
-    args = [arg for arg in args if arg != "--markup"]
-    if len(args) != 1:
-        print("usage: python -m book_watch.pages <url> [--markup]", file=sys.stderr)
+    flags = {arg for arg in args if arg.startswith("--")}
+    args = [arg for arg in args if not arg.startswith("--")]
+    if len(args) != 1 or flags - {"--markup", "--ungrouped"}:
+        print(
+            "usage: python -m book_watch.pages <url> [--markup] [--ungrouped]",
+            file=sys.stderr,
+        )
         return 2
+    url = ungrouped(args[0]) if "--ungrouped" in flags else args[0]
     try:
-        status, body = fetch(args[0])
+        status, body = fetch(url)
     except RefusedPath as exc:
         print(f"Refused: {exc}", file=sys.stderr)
         return 2
@@ -320,6 +340,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     page = parse(body)
+    print(f"address    {url}")
     print(f"status     {status}")
     print(f"bytes      {len(body)}")
     if page.challenged:
@@ -341,7 +362,7 @@ def main(argv: list[str] | None = None) -> int:
             f"  {'grouped' if copy.grouped else '       '}"
             f"  {'first ed.' if copy.first_edition else ''}"
         )
-    if show_markup:
+    if "--markup" in flags:
         print("markup")
         print(markup(body))
     return 0 if status == 200 else 1
