@@ -5,6 +5,10 @@ phone caches `app.css` until it actually changes and never shows yesterday's
 styles against today's markup. The tag is computed once, at startup: a file
 under `static/` changes with a deploy, never while the app is running.
 
+The app as a whole has a version too, a fingerprint of its code, so a page
+left open through a deploy can tell, when I come back to it, that the app
+it was drawn by is gone (S75, #256).
+
 This is not a build step. Nothing is compiled or rewritten; the
 file served is the file in the repository.
 """
@@ -21,6 +25,7 @@ from markupsafe import Markup
 from book_watch.web import photos, strips, tokens
 
 STATIC_DIR = Path(__file__).parent / "static"
+PACKAGE_DIR = Path(__file__).parent.parent
 
 
 @cache
@@ -33,9 +38,32 @@ def static_url(name: str) -> str:
     return f"/static/{name}?v={version(name)}"
 
 
+def fingerprint(root: Path) -> str:
+    """A short fingerprint of every file under `root` that a deploy can change.
+
+    Compiled bytecode is left out: Python writes it as it runs, so it would
+    change the version without a deploy.
+    """
+    digest = hashlib.sha256()
+    for path in sorted(root.rglob("*")):
+        if not path.is_file() or "__pycache__" in path.parts or path.suffix == ".pyc":
+            continue
+        digest.update(path.relative_to(root).as_posix().encode())
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+    return digest.hexdigest()[:12]
+
+
+@cache
+def app_version() -> str:
+    """The version of the app now running. A deploy changes it; a restart doesn't."""
+    return fingerprint(PACKAGE_DIR)
+
+
 def register(env: Environment) -> None:
     """Give a template environment the stylesheet link and the tokens."""
     env.globals["static_url"] = static_url
+    env.globals["app_version"] = app_version
     env.globals["range_strip"] = strips.range_strip
     env.globals["rank_strip"] = strips.rank_strip
     env.globals["larger_photo"] = photos.larger

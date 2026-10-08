@@ -11,5 +11,5 @@ An AbeBooks page the app can't read fails instead of saying "No copies", an app 
 ## Slices
 
 - [S74 · An AbeBooks page the app can't read fails, instead of saying "No copies"](https://github.com/loserpoints/book-watch/issues/242)
-- [S75 · An app left open through a deploy comes back with the styles that match](https://github.com/loserpoints/book-watch/issues/256)
+- [S75 · Coming back to the app after a deploy reloads it fresh on the new version](https://github.com/loserpoints/book-watch/issues/256)
 - [S76 · AbeBooks' grouped rows are read, so those books keep their AbeBooks copies](https://github.com/loserpoints/book-watch/issues/253)
