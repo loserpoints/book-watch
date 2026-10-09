@@ -49,7 +49,7 @@ A Rules section may group its rules under `###` headings, chosen per document.
 | Type | Label | Is | Template asks |
 |---|---|---|---|
 | Defect | `defect` | The app does something its surface or rules doc says it shouldn't. | What happens · What should happen |
-| Enhancement | `enhancement` | Something new I could see or do. | What I could do · Job it advances |
+| Enhancement | `enhancement` | Something I could see or do, added, made simpler or taken away. | What I could do · Job it advances |
 | Tech debt | `tech debt` | An internal change I would never see: code, infrastructure or compliance. | What's wrong · What it costs if left |
 | Process gap | `process gap` | How we work is missing something: a doc, a workflow or an operating step. | What went wrong or is missing · Which doc or workflow should change |
 | Strategy | `strategy` | A change to what the app is for: its value proposition, its jobs, or who and what it is built for. | What would change · Why it might be worth it |
@@ -74,6 +74,8 @@ Related issues can become one slice: one is refined, and the others are closed a
 **Starting a milestone** uses the `set-milestone` skill. A milestone can start while the one before it waits to close.
 
 **Starting a slice** uses the `plan-slice` skill, before any code.
+
+**A review panel** uses the `review-panel` skill, only when Alan asks for one. It runs three agents, so it is never a step of a milestone.
 
 **Closing a milestone:**
 
