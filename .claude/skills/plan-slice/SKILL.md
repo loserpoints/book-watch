@@ -27,6 +27,7 @@ Before any code, check that a slice covers what its outcome means to the person 
 - Has the current behavior been reproduced, and is its cause confirmed or only guessed?
 - What does the original issue say already works? Is the slice still needed without that part?
 - What would a literal reading of the outcome miss?
+- When a slice adds a setting, what reads the value it replaces? #72's default scope ran through the daily check, the want list's price, the email and the counts, and left the slice for #288.
 - When the defect is a wrong answer, where else does that answer go: what the app stores, shows elsewhere and emails? S74's wrong "empty" took a book's copies off the want list and the email too, which the issue didn't say.
 - When something happens on its own, such as a reload or a redraw, can the person name the moment it happens? S75 was first planned to reload at the next redraw, which Alan found unpredictable, and settled on leaving the app and coming back.
 - When a screen shows a change, what is it measured against: the last check, the last visit, or something else? Ask Alan rather than reading it from the issue's words.
@@ -41,6 +42,9 @@ Before any code, check that a slice covers what its outcome means to the person 
 
 - A screen change is planned from mocks, never from a description alone.
 - Mocks are rendered by the app itself, with every case the slice handles seeded: each state, the edges, and real-looking amounts. A drawing made apart from the app misses what the app's layout and data do.
+- Seed each field's longest real value, not only its usual one. S82's shop name ran into the book's title only once a mock held a long one, in its third round.
+- A copy shows its price in a mock only when it is certainly the book, so seeded copies need a declared ISBN beside them (see [matching](../../../docs/rules/matching.md#which-numbers-are-this-book)).
+- A reference Alan brings is mocked in the app's own pieces, beside a close copy. S82's Letterboxd diary read as borrowed until its months became typed headings.
 - Before each round, ask Alan for his ideas, and mock them among the options.
 - Each mock is shown at 360px in both themes, with the trade-off of each option stated.
 - A layout aims for three rounds. Past three, keep going until it's right, and record in the slice why it took more.

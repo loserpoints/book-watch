@@ -42,7 +42,7 @@
 - This environment holds real eBay keys. Run the app locally only with `uv run python scripts/serve_local.py <database> [port]`, which fakes eBay's search, never reads AbeBooks, and refuses every request. The app as built for production searches eBay when a book page opens and examines every copy it finds.
 - Tests check what a reader sees, not the markup that carries it, so they survive a redesign.
 - A test of a request htmx makes sends what htmx sends with it, such as `HX-Current-URL`. From S60 to S69, switching "Under limit" off kept the list filtered, because the tests asked for the list without the page it came from.
-- A check proves nothing until it has been seen to fail. Break the code on purpose, on a committed tree, and confirm the break applied.
+- A check proves nothing until it has been seen to fail. Break the code on purpose, on a committed tree or with the file copied aside, and confirm the break applied. Juggling the stash to break S83's code reverted a file's own changes, caught only by checking the tree before pushing.
 - A migration's test checks that its own migration ran, not that it is the newest. S65's test assumed 025 was the last and broke when 026 arrived.
 - Reset process-wide state between tests. A test that passes only because another ran first proves nothing.
 - Run the production entrypoint before trusting what only it starts, such as the daily check. No test starts it.
