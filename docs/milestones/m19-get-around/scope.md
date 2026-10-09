@@ -2,7 +2,7 @@
 
 ## Goal
 
-The app has three screens, Want list, Bought and Settings, reached from one navigation under a top bar of its own, settings hold the default limit and the ship-to ZIP, and the want list and a book's page open the way I left them.
+The app has three screens, Wanted, Bought and Settings, as tabs under a top bar of its own, Bought is a ledger by month, Settings holds a default limit in whole dollars and the ship-to ZIP that left Fly's secrets, and the want list and a book's page open the way I left them.
 
 ## Jobs advanced
 
