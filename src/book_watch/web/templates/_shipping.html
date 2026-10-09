@@ -1,0 +1,10 @@
+{% import "_ui.html" as ui %}
+{#- Settings' "Shipping" group (S84, #182), drawn again whole after a save. -#}
+<section class="setting-group" id="shipping">
+  <h2 class="ledger-heading"><span class="ledger-name">Shipping</span></h2>
+  {{ ui.number_setting("ship-to-zip", "zip", "Ship-to ZIP",
+                       "Where delivered prices are priced to" if zip else "Without one, calculated shipping shows “+ shipping?”",
+                       "Five digits. Done saves. Prices follow from the next check.",
+                       typed if error else zip, "/settings/ship-to-zip",
+                       maxlength=5, saved=saved, error=error) }}
+</section>

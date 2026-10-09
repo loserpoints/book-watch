@@ -31,7 +31,6 @@ from book_watch import monitoring
 from book_watch.config import (
     MissingCredentialError,
     load_ebay_credentials,
-    load_ship_to_zip,
 )
 from book_watch.ebay.auth import (
     DEFAULT_TIMEOUT_SECONDS,
@@ -179,7 +178,9 @@ class BrowseClient:
     ) -> None:
         self._tokens = tokens
         self._marketplace_id = marketplace_id
-        self._ship_to_zip = ship_to_zip
+        #: Read on every request, so a search can be told the ZIP Settings
+        #: holds just before it runs (S84, #182).
+        self.ship_to_zip = ship_to_zip
         if client is None:
             client = httpx.Client(timeout=DEFAULT_TIMEOUT_SECONDS)
             self._owns_client = True
@@ -269,8 +270,8 @@ class BrowseClient:
             "Accept": "application/json",
             "User-Agent": USER_AGENT,
         }
-        if self._ship_to_zip is not None:
-            headers[END_USER_CONTEXT_HEADER] = _end_user_context(self._ship_to_zip)
+        if self.ship_to_zip is not None:
+            headers[END_USER_CONTEXT_HEADER] = _end_user_context(self.ship_to_zip)
         return headers
 
     def close(self) -> None:
@@ -308,7 +309,9 @@ def search_listings(
     every call and so spends the daily budget on authentication.
     """
     credentials = load_ebay_credentials()
-    ship_to_zip = load_ship_to_zip()
+    from book_watch import settings  # imports this module, so not at the top
+
+    ship_to_zip = settings.stored_ship_to_zip()
     with (
         EbayTokenProvider(credentials) as tokens,
         BrowseClient(tokens, ship_to_zip=ship_to_zip) as browse,
@@ -325,7 +328,9 @@ def search_listings_raw(
     so a field can be checked against a real answer before it is built on.
     """
     credentials = load_ebay_credentials()
-    ship_to_zip = load_ship_to_zip()
+    from book_watch import settings  # imports this module, so not at the top
+
+    ship_to_zip = settings.stored_ship_to_zip()
     with (
         EbayTokenProvider(credentials) as tokens,
         BrowseClient(tokens, ship_to_zip=ship_to_zip) as browse,

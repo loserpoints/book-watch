@@ -437,48 +437,69 @@ def test_a_real_search_returns_listings():
 
 
 class RecordingBrowse:
-    """Stands in for BrowseClient, keeping what it was built with."""
+    """Stands in for BrowseClient, keeping the ZIP each search ran with."""
 
-    built: list[str | None] = []
+    searched_with: list[str | None] = []
 
     def __init__(self, tokens, *, ship_to_zip=None):
-        RecordingBrowse.built.append(ship_to_zip)
+        self.ship_to_zip = ship_to_zip
 
     def search(self, query, *, limit, scope):
+        RecordingBrowse.searched_with.append(self.ship_to_zip)
         return []
 
 
 @pytest.fixture
 def lazy_search(monkeypatch):
+    """The app's search with a ZIP held in a list, as Settings holds it."""
     from book_watch.web import searching
 
     monkeypatch.setenv("EBAY_CLIENT_ID", "an-app-id")
     monkeypatch.setenv("EBAY_CLIENT_SECRET", "a-cert-id")
     monkeypatch.setattr("book_watch.config.load_dotenv", lambda: None)
     monkeypatch.setattr(searching, "BrowseClient", RecordingBrowse)
-    RecordingBrowse.built = []
-    return searching.LazyBrowseSearch()
+    RecordingBrowse.searched_with = []
+    held: list[str | None] = [None]
+    search = searching.LazyBrowseSearch(ship_to=lambda: held[0])
+    return search, held
 
 
-def test_the_app_searches_with_the_ship_to_zip(monkeypatch, lazy_search, caplog):
-    monkeypatch.setenv("SHIP_TO_ZIP", "10001")
+def test_each_search_reads_the_zip_settings_hold_when_it_runs(lazy_search, caplog):
+    """S84 (#182): a ZIP changed in Settings applies from the next search."""
+    search, held = lazy_search
+    held[0] = "10001"
+    search("Hey Jack", 50)
+    held[0] = "60614"
+    search("Hey Jack", 50)
 
-    lazy_search("Hey Jack", 50)
-
-    assert RecordingBrowse.built == ["10001"]
-    assert "10001" not in caplog.text
+    assert RecordingBrowse.searched_with == ["10001", "60614"]
+    assert "10001" not in caplog.text and "60614" not in caplog.text
     assert "Shipping for calculated listings is off" not in caplog.text
 
 
-def test_without_a_ship_to_zip_the_app_searches_and_says_shipping_is_off(
-    monkeypatch, lazy_search, caplog
+def test_without_a_zip_the_app_searches_and_says_shipping_is_off_once(
+    lazy_search, caplog
 ):
-    monkeypatch.delenv("SHIP_TO_ZIP", raising=False)
+    search, _ = lazy_search
 
-    assert lazy_search("Hey Jack", 50) == []
+    assert search("Hey Jack", 50) == []
+    search("Hey Jack", 50)
 
-    assert RecordingBrowse.built == [None]
-    assert "Shipping for calculated listings is off" in caplog.text
+    assert RecordingBrowse.searched_with == [None, None]
+    assert caplog.text.count("Shipping for calculated listings is off") == 1
+
+
+def test_the_secret_is_read_nowhere():
+    """S84 (#182): the ZIP moved to Settings, and the Fly secret went."""
+    from pathlib import Path
+
+    root = Path(__file__).parent.parent
+    sources = [
+        *root.glob("src/**/*.py"),
+        *root.glob("scripts/*.py"),
+        root / ".env.example",
+    ]
+    assert not [p for p in sources if "SHIP_TO_ZIP" in p.read_text()]
 
 
 def test_a_raw_search_keeps_fields_the_app_does_not_read():

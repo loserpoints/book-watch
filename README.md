@@ -68,7 +68,7 @@ Setting up a new deployment, once:
 1. **Fly:** create an organization-scoped deploy token under Account → Access Tokens. An app-scoped token cannot create its own app.
 2. **GitHub:** add two repository secrets: `FLY_API_TOKEN`, the Fly token, and `EBAY_VERIFICATION_TOKEN`, a string you invent of 32–80 letters, digits, `_` or `-`.
 3. **Fly:** set `app` in `fly.toml` and run Actions → Deploy. It creates the app, deploys, and checks the eBay endpoint answers correctly.
-4. **Fly:** add `EBAY_CLIENT_ID` (the production App ID) and `EBAY_CLIENT_SECRET` (its Cert ID) under the app's Secrets. Nothing in GitHub reads them, so they live only on Fly. Add `SHIP_TO_ZIP`, the ZIP the books ship to, so eBay prices calculated shipping. Without it, those copies show "+ shipping?".
+4. **Fly:** add `EBAY_CLIENT_ID` (the production App ID) and `EBAY_CLIENT_SECRET` (its Cert ID) under the app's Secrets. Nothing in GitHub reads them, so they live only on Fly. Then set the ZIP the books ship to in the app's Settings, so eBay prices calculated shipping. Without it, those copies show "+ shipping?".
 5. **eBay:** under Alerts & Notifications → Marketplace Account Deletion, enter the endpoint URL and the token, and save. eBay disables a production keyset until this works.
 6. **Resend:** sign up with the address the email should go to, and create an API key with "Sending access" only. On Fly, add it as `RESEND_API_KEY`, and that address as `ALERT_EMAIL_TO`. Without either, the app runs and sends no email. Then run Actions → Send a test email to check both.
 

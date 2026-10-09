@@ -440,25 +440,26 @@ def build_router(
             months = list_view.bought_months(purchases.everything(connection))
         return templates.TemplateResponse(request, "bought.html", {"months": months})
 
-    def new_books(
+    def settings_screen(
         request: Request,
+        group: str = "_new_books.html",
         *,
         status_code: int = 200,
         **said: object,
     ) -> HTMLResponse:
-        """Settings' "New books" group (S83, #72): the default limit, and the
-        offer to set it on the books that have none. The whole page when
-        asked for directly, the group alone when htmx saved something in it.
-        """
+        """Settings (S83, #72; S84, #182). The whole page when asked for
+        directly, and one group alone when htmx saved something in it."""
         with closing(open_database()) as connection:
             limit = settings.default_limit(connection)
             without = settings.without_limit(connection)
+            zip_code = settings.ship_to_zip(connection)
         return templates.TemplateResponse(
             request,
-            "_new_books.html" if from_htmx(request) else "settings.html",
+            group if from_htmx(request) else "settings.html",
             {
                 "limit": limit.amount if limit else None,
                 "without": without,
+                "zip": zip_code,
                 **said,
             },
             status_code=200 if from_htmx(request) else status_code,
@@ -466,7 +467,7 @@ def build_router(
 
     @router.get("/settings", response_class=HTMLResponse)
     def settings_page(request: Request) -> HTMLResponse:
-        return new_books(request)
+        return settings_screen(request)
 
     @router.post("/settings/default-limit", response_class=HTMLResponse)
     def set_default_limit(request: Request, limit: str = Form("")) -> HTMLResponse:
@@ -476,10 +477,12 @@ def build_router(
             try:
                 settings.set_default_limit(connection, limit)
             except ValueError as exc:
-                return new_books(request, status_code=400, error=str(exc), typed=limit)
+                return settings_screen(
+                    request, status_code=400, error=str(exc), typed=limit
+                )
         if not from_htmx(request):
             return RedirectResponse("/settings", status_code=303)
-        return new_books(request, saved=True)
+        return settings_screen(request, saved=True)
 
     @router.post("/settings/fill", response_class=HTMLResponse)
     def fill_limits(request: Request) -> HTMLResponse:
@@ -488,7 +491,26 @@ def build_router(
             filled = settings.fill(connection)
         if not from_htmx(request):
             return RedirectResponse("/settings", status_code=303)
-        return new_books(request, filled=filled)
+        return settings_screen(request, filled=filled)
+
+    @router.post("/settings/ship-to-zip", response_class=HTMLResponse)
+    def set_ship_to_zip(request: Request, zip: str = Form("")) -> HTMLResponse:  # noqa: A002
+        """The ZIP eBay prices shipping to, edited in place (S84, #182). The
+        next search of each book uses it; nothing is searched now."""
+        with closing(open_database()) as connection:
+            try:
+                settings.set_ship_to_zip(connection, zip)
+            except ValueError as exc:
+                return settings_screen(
+                    request,
+                    "_shipping.html",
+                    status_code=400,
+                    error=str(exc),
+                    typed=zip,
+                )
+        if not from_htmx(request):
+            return RedirectResponse("/settings", status_code=303)
+        return settings_screen(request, "_shipping.html", saved=True)
 
     @router.get("/books/list", response_class=HTMLResponse)
     def the_list(request: Request) -> HTMLResponse:

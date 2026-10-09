@@ -318,25 +318,26 @@
     An option may carry a third item, a dict of attributes for its radio: the
     want list's switch fetches the list with htmx, and greys out an empty
     side with `disabled`. -#}
-{#- A setting that is an amount in whole dollars, edited in place (S83, #72):
-    the label and what it does at the left, the value at the right with ✎,
-    and the value is the field. A tap anywhere on the row puts the cursor in
-    it with the number keyboard. Leaving the field saves it, Done leaves it,
-    Escape puts the old value back, and an empty field means none. Without
-    an `action`, as on the design page, it saves nowhere. -#}
-{% macro dollar_setting(id, label, hint, value, action=None, saved=False, error=None) -%}
+{#- A setting that is a short number, edited in place (S83, #72): the label
+    and what it does at the left, the value at the right with ✎, and the
+    value is the field. A tap anywhere on the row puts the cursor in it with
+    the number keyboard. Leaving the field saves it, Done leaves it, Escape
+    puts the old value back, and an empty field means none. `prefix` goes
+    before a value, as "$" does for an amount; the ZIP has none (S84).
+    Without an `action`, as on the design page, it saves nowhere. -#}
+{% macro number_setting(id, name, label, hint, editing, value, action=None, prefix=None, maxlength=3, saved=False, error=None) -%}
 <form class="setting"{% if action %} method="post" action="{{ action }}" hx-post="{{ action }}" hx-trigger="change" hx-target="closest .setting-group" hx-swap="outerHTML"{% endif %} data-autosave>
   <label class="setting-row" for="{{ id }}">
     <span class="setting-label">
       <span>{{ label }}</span>
       <span class="setting-hint setting-hint-rest">{{ hint }}</span>
-      <span class="setting-hint setting-hint-editing">Whole dollars. Done saves, empty for none.</span>
+      <span class="setting-hint setting-hint-editing">{{ editing }}</span>
     </span>
     <span class="setting-value">
       {%- if saved %}<span class="setting-saved" role="status">Saved</span>{% endif -%}
-      <span class="setting-dollar" aria-hidden="true">$</span>
-      <input id="{{ id }}" name="limit" value="{{ value if value is not none else '' }}" placeholder="none" autocomplete="off"
-             inputmode="numeric" pattern="[0-9]*" maxlength="3" enterkeyhint="done"
+      {%- if prefix %}<span class="setting-dollar" aria-hidden="true">{{ prefix }}</span>{% endif -%}
+      <input id="{{ id }}" name="{{ name }}" value="{{ value if value is not none else '' }}" placeholder="none" autocomplete="off"
+             inputmode="numeric" pattern="[0-9]*" maxlength="{{ maxlength }}" enterkeyhint="done"
              {%- if error %} aria-invalid="true" aria-describedby="{{ id }}-error"{% endif %}>
       <span class="setting-pencil" aria-hidden="true">✎</span>
     </span>

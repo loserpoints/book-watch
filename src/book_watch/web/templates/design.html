@@ -59,12 +59,13 @@
 </div>
 <p class="muted">The top bar, on every screen and staying put on scroll: the mark and a tab per screen, then on a book's page, a back to the want list in the mark's place with Wanted still the current tab. Tapping the tab of the screen you're on goes back to its top.</p>
 <div class="controls-demo bar-demo">{{ ui.top_bar("bought") }}{{ ui.top_bar("want", back=True) }}</div>
-<p class="muted">A setting in whole dollars, edited in place: tap the row to type, and leave the field to save. Set, none, just saved, and refused.</p>
+<p class="muted">A setting that is a short number, edited in place: tap the row to type, and leave the field to save. An amount set, none, just saved and refused, then a ZIP, which takes no "$".</p>
 <div class="bar-demo">
-  {{ ui.dollar_setting("demo-limit-set", "Default limit", "What each new book starts with", 10) }}
-  {{ ui.dollar_setting("demo-limit-none", "Default limit", "What each new book starts with", none) }}
-  {{ ui.dollar_setting("demo-limit-saved", "Default limit", "What each new book starts with", 12, saved=True) }}
-  {{ ui.dollar_setting("demo-limit-error", "Default limit", "What each new book starts with", "12.50", error="Whole dollars, like 12.") }}
+  {{ ui.number_setting("demo-limit-set", "limit", "Default limit", "What each new book starts with", "Whole dollars. Done saves, empty for none.", 10, prefix="$") }}
+  {{ ui.number_setting("demo-limit-none", "limit", "Default limit", "What each new book starts with", "Whole dollars. Done saves, empty for none.", none, prefix="$") }}
+  {{ ui.number_setting("demo-limit-saved", "limit", "Default limit", "What each new book starts with", "Whole dollars. Done saves, empty for none.", 12, prefix="$", saved=True) }}
+  {{ ui.number_setting("demo-zip", "zip", "Ship-to ZIP", "Where delivered prices are priced to", "Five digits. Done saves. Prices follow from the next check.", "10001", maxlength=5) }}
+  {{ ui.number_setting("demo-limit-error", "limit", "Default limit", "What each new book starts with", "Whole dollars. Done saves, empty for none.", "12.50", prefix="$", error="Whole dollars, like 12.") }}
 </div>
 <p class="muted">A two-way choice, the same everywhere and in the tabs' style: the chosen one bold over an accent bar, the other muted. With radios for a sheet, or links and buttons for an order.</p>
 <div class="controls-demo">{{ ui.switch("way-demo", [("title", "Title & author"), ("isbn", "ISBN")], "title") }}</div>
