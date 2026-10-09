@@ -9,7 +9,7 @@ These rules decide what a copy costs, whether it is under a book's limit, and wh
 ### Prices
 
 - Every price is a delivered price: the item price plus shipping.
-- Shipping is priced to one US ZIP, set as the `SHIP_TO_ZIP` Fly secret. Without it, eBay does not price calculated shipping, and those copies have no delivered price.
+- Shipping is priced to one US ZIP, five digits, set in [Settings](../surfaces/settings.md) and read by every eBay search when it runs. Without it, eBay does not price calculated shipping, and those copies have no delivered price. A changed ZIP reprices nothing at once: each book's delivered prices follow from its next check.
 - AbeBooks prices shipping to a country, the US for the app, not to a ZIP. A delivered price from AbeBooks and one from eBay are compared as they stand, though AbeBooks' can be off for a given address where a seller charges by distance.
 - A copy has no delivered price when its shipping is not stated or is in a different currency from its price. eBay requires shipping on every listing except local pickup and freight, so this is rare for a book.
 - Every price is an asking price. Nothing claims a copy sold, or sold for a given amount.

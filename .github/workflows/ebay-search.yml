@@ -1,7 +1,7 @@
 name: Search eBay once
 
 # Runs one eBay search on the Fly machine, the way the app searches (US
-# sellers, 50 results, shipping priced to SHIP_TO_ZIP), and prints what came
+# sellers, 50 results, shipping priced to the ZIP in Settings), and prints what came
 # back. The eBay keys live only on Fly, so this is how a field can be checked
 # against a real answer from a browser. One eBay request per run.
 #

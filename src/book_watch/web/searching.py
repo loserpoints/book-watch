@@ -15,7 +15,8 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable
 
-from book_watch.config import load_ebay_credentials, load_ship_to_zip
+from book_watch import settings
+from book_watch.config import load_ebay_credentials
 from book_watch.ebay.auth import EbayTokenProvider
 from book_watch.ebay.search import BrowseClient, Listing, Scope
 
@@ -41,17 +42,22 @@ class LazyBrowseSearch:
     So a missing key breaks searching, loudly, and breaks nothing else.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, ship_to: Callable[[], str | None] | None = None) -> None:
         self._browse: BrowseClient | None = None
+        # The ZIP is read before every search, so one changed in Settings
+        # applies from the next search with no restart (S84, #182).
+        self._ship_to = ship_to if ship_to is not None else settings.stored_ship_to_zip
+        self._warned = False
 
     def __call__(self, query: str, limit: int, *, scope: Scope = "us") -> list[Listing]:
         if self._browse is None:
-            tokens = EbayTokenProvider(load_ebay_credentials())
-            ship_to_zip = load_ship_to_zip()
-            if ship_to_zip is None:
-                logger.warning(
-                    "Shipping for calculated listings is off: SHIP_TO_ZIP is "
-                    "not set, so those copies have no delivered price."
-                )
-            self._browse = BrowseClient(tokens, ship_to_zip=ship_to_zip)
+            self._browse = BrowseClient(EbayTokenProvider(load_ebay_credentials()))
+        ship_to_zip = self._ship_to()
+        if ship_to_zip is None and not self._warned:
+            logger.warning(
+                "Shipping for calculated listings is off: no ship-to ZIP is set "
+                "in Settings, so those copies have no delivered price."
+            )
+        self._warned = ship_to_zip is None
+        self._browse.ship_to_zip = ship_to_zip
         return self._browse.search(query, limit=limit, scope=scope)

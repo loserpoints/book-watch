@@ -1,6 +1,9 @@
-"""The app's own settings (S83, #72).
+"""The app's own settings (S83, #72; S84, #182).
 
-One so far: the default limit, the whole-dollar amount each new book starts
+The ship-to ZIP that eBay prices calculated shipping to, read by every search
+when it runs, so a change applies from the next one.
+
+The default limit, the whole-dollar amount each new book starts
 with. It is a starting value, not inherited. A book copies it when added and
 owns its limit from then on, so changing the default changes no book already
 on the list. The books that have no limit can be given it on purpose, with
@@ -9,7 +12,9 @@ on the list. The books that have no limit can be given it on purpose, with
 
 from __future__ import annotations
 
+import re
 import sqlite3
+from contextlib import closing
 from decimal import Decimal, InvalidOperation
 
 from book_watch.ebay.search import Money
@@ -21,6 +26,11 @@ CURRENCY = "USD"
 MOST = 999
 
 DEFAULT_LIMIT = "default_limit"
+SHIP_TO = "ship_to_zip"
+
+#: A US ZIP code, five digits. eBay prices from the first five, so the
+#: four-digit extension the secret once allowed is not taken.
+_ZIP = re.compile(r"\d{5}")
 
 
 def whole_dollars(raw: str | None) -> Decimal | None:
@@ -47,24 +57,14 @@ def whole_dollars(raw: str | None) -> Decimal | None:
 
 def default_limit(connection: sqlite3.Connection) -> Money | None:
     """The limit a new book starts with, or None for none."""
-    row = connection.execute(
-        "SELECT value FROM setting WHERE name = ?", (DEFAULT_LIMIT,)
-    ).fetchone()
-    return Money(Decimal(row["value"]), CURRENCY) if row else None
+    value = _get(connection, DEFAULT_LIMIT)
+    return Money(Decimal(value), CURRENCY) if value is not None else None
 
 
 def set_default_limit(connection: sqlite3.Connection, raw: str | None) -> Money | None:
     """Set the default limit from what was typed, or clear it when empty."""
     amount = whole_dollars(raw)
-    if amount is None:
-        connection.execute("DELETE FROM setting WHERE name = ?", (DEFAULT_LIMIT,))
-    else:
-        connection.execute(
-            "INSERT INTO setting (name, value) VALUES (?, ?) "
-            "ON CONFLICT (name) DO UPDATE SET value = excluded.value",
-            (DEFAULT_LIMIT, str(amount)),
-        )
-    connection.commit()
+    _put(connection, DEFAULT_LIMIT, str(amount) if amount is not None else None)
     return default_limit(connection)
 
 
@@ -89,3 +89,52 @@ def fill(connection: sqlite3.Connection) -> int:
     )
     connection.commit()
     return cursor.rowcount
+
+
+def _get(connection: sqlite3.Connection, name: str) -> str | None:
+    row = connection.execute(
+        "SELECT value FROM setting WHERE name = ?", (name,)
+    ).fetchone()
+    return row["value"] if row else None
+
+
+def _put(connection: sqlite3.Connection, name: str, value: str | None) -> None:
+    if value is None:
+        connection.execute("DELETE FROM setting WHERE name = ?", (name,))
+    else:
+        connection.execute(
+            "INSERT INTO setting (name, value) VALUES (?, ?) "
+            "ON CONFLICT (name) DO UPDATE SET value = excluded.value",
+            (name, value),
+        )
+    connection.commit()
+
+
+def ship_to_zip(connection: sqlite3.Connection) -> str | None:
+    """The ZIP eBay prices calculated shipping to (S84, #182), or None."""
+    return _get(connection, SHIP_TO)
+
+
+def set_ship_to_zip(connection: sqlite3.Connection, raw: str | None) -> str | None:
+    """Set the ZIP from what was typed, or clear it when empty.
+
+    Refused unless it is five digits. The message never repeats what was
+    typed: it is close to where somebody lives.
+    """
+    cleaned = (raw or "").strip()
+    if cleaned and not _ZIP.fullmatch(cleaned):
+        raise ValueError("A ZIP is five digits.")
+    _put(connection, SHIP_TO, cleaned or None)
+    return ship_to_zip(connection)
+
+
+def stored_ship_to_zip() -> str | None:
+    """The ZIP from the configured database, read fresh, for a search about
+    to run. Opened here so every search, the CLI's on the Fly machine
+    included, reads the one value Settings wrote."""
+    from book_watch import db
+    from book_watch.config import load_database_path
+
+    with closing(db.connect(load_database_path())) as connection:
+        db.migrate(connection)
+        return ship_to_zip(connection)

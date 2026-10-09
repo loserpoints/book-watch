@@ -2077,3 +2077,45 @@ def test_nothing_is_offered_without_a_default(book_client):
     client, _ = a_shelf(book_client)
 
     assert "no limit." not in visible(client.get("/settings").text)
+
+
+# --- settings: the ship-to ZIP (S84, #182) ------------------------------------
+
+
+def test_the_zip_is_saved_in_place_and_read_back(book_client):
+    client = book_client(returning(a_listing()))
+
+    assert "Without one, calculated shipping shows" in visible(
+        client.get("/settings").text
+    )
+    saved = client.post("/settings/ship-to-zip", data={"zip": "60614"}, headers=HTMX)
+
+    assert 'id="shipping"' in saved.text and "<html" not in saved.text
+    assert "Saved" in visible(saved.text)
+    page = client.get("/settings").text
+    assert 'value="60614"' in page
+    assert "Where delivered prices are priced to" in visible(page)
+
+
+@pytest.mark.parametrize("typed", ["6061", "606144", "60614-1234", "6o614"])
+def test_a_zip_that_is_not_five_digits_is_refused_without_repeating_it(
+    book_client, typed
+):
+    client = book_client(returning(a_listing()))
+
+    refused = client.post("/settings/ship-to-zip", data={"zip": typed}, headers=HTMX)
+
+    assert "A ZIP is five digits." in visible(refused.text)
+    assert typed not in visible(refused.text).replace(f'"{typed}"', "")
+    assert 'value=""' in client.get("/settings").text.split('id="shipping"')[1]
+
+
+def test_an_empty_zip_clears_it(book_client):
+    client = book_client(returning(a_listing()))
+    client.post("/settings/ship-to-zip", data={"zip": "60614"})
+
+    client.post("/settings/ship-to-zip", data={"zip": ""})
+
+    assert "Without one, calculated shipping shows" in visible(
+        client.get("/settings").text
+    )
