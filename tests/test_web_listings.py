@@ -322,7 +322,7 @@ def test_the_page_says_when_it_fetched(book_client):
     page = client.get("/book/1").text
     # A chip since S34: tapping it is the re-run.
     assert "Checked just now" in visible(page)
-    assert re.search(r'href="/book/1\?refresh=1"', page)
+    assert re.search(r'href="/book/1\?sort=cheapest&amp;refresh=1"', page)
 
 
 # --- the page reads the store ----------------------------------------------
@@ -1530,8 +1530,8 @@ def test_a_limit_that_cannot_be_read_is_answered_inside_the_sheet(book_client):
 @pytest.mark.parametrize(
     ("asked", "shown"),
     [
-        ("/book/1?refresh=1", "/book/1"),
-        ("/book/1?everywhere=1&refresh=1", "/book/1?everywhere=1"),
+        ("/book/1?refresh=1", "/book/1?sort=cheapest"),
+        ("/book/1?everywhere=1&refresh=1", "/book/1?everywhere=1&sort=cheapest"),
     ],
 )
 def test_after_searching_again_the_page_drops_refresh(book_client, asked, shown):
@@ -1555,7 +1555,10 @@ def test_the_chips_that_show_the_book_another_way_replace_the_page(book_client):
 
     page = client.get("/book/1").text
 
-    for chip in ('"/book/1?everywhere=1"', '"/book/1?refresh=1"'):
+    for chip in (
+        '"/book/1?everywhere=1&amp;sort=cheapest"',
+        '"/book/1?sort=cheapest&amp;refresh=1"',
+    ):
         tag = re.search(r"<a[^>]*href=" + re.escape(chip) + r"[^>]*>", page)
         assert tag and "data-replace" in tag.group(0)
 
@@ -1615,7 +1618,10 @@ def test_the_order_rides_along_on_every_link_the_page_makes(book_client):
     assert 'href="/book/1?everywhere=1&amp;sort=newest"' in page
     assert 'href="/book/1?sort=newest&amp;refresh=1"' in page
     # Back to cheapest replaces the page rather than adding to the history.
-    assert re.search(r'<a [^>]*href="/book/1"[^>]*data-replace[^>]*>Cheapest</a>', page)
+    assert re.search(
+        r'<a [^>]*href="/book/1\?sort=cheapest"[^>]*data-replace[^>]*>Cheapest</a>',
+        page,
+    )
 
 
 def test_one_copy_offers_no_order_to_choose(book_client):
@@ -2119,3 +2125,33 @@ def test_an_empty_zip_clears_it(book_client):
     assert "Without one, calculated shipping shows" in visible(
         client.get("/settings").text
     )
+
+
+# --- a book's page opens in the last order chosen (S85, #264) -----------------
+
+
+def test_a_book_opens_in_the_order_last_chosen_on_any_book(book_client):
+    from book_watch import settings
+
+    client = book_client(returning(*THREE))
+    add_book(client, "9780099448396", "Crash")
+    newest = r'<b class="pair-option" aria-current="true"[^>]*>Newest</b>'
+
+    assert not re.search(newest, client.get("/book/1").text)
+    client.get("/book/1?sort=newest")
+
+    # Opened plainly, as from the want list: the order last chosen.
+    assert re.search(newest, client.get("/book/1").text)
+    with closing(client.app.state.connect()) as connection:
+        assert settings.book_sort(connection) == "newest"  # one for every book
+    client.get("/book/1?sort=cheapest")
+    assert not re.search(newest, client.get("/book/1").text)
+
+
+def test_a_books_scope_is_not_remembered(book_client):
+    """Everywhere searches again, so it stays a choice per view (#288)."""
+    client = book_client(returning(*THREE))
+    add_book(client, "9780099448396", "Crash")
+    client.get("/book/1?everywhere=1")
+
+    assert "US" in visible(client.get("/book/1").text).split("Checked")[0]

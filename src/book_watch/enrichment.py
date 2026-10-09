@@ -362,6 +362,13 @@ def _run(
     connection.execute(
         "UPDATE work SET enriched_at = datetime('now') WHERE id = ?", (work_id,)
     )
+    # The book's first check is done, so it leaves the top of the want list
+    # for its place (S85, #264).
+    connection.execute(
+        "UPDATE entry SET first_checked_at = datetime('now') "
+        "WHERE work_id = ? AND first_checked_at IS NULL",
+        (work_id,),
+    )
     connection.commit()
     return Pass(
         examined,

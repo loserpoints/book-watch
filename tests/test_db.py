@@ -535,3 +535,23 @@ def test_031_rounds_limits_to_whole_dollars_and_keeps_purchases(database):
     kept = database.execute("SELECT ceiling FROM purchase").fetchone()[0]
     assert kept == "8.50"
     assert "setting" in table_names(database)
+
+
+def test_032_marks_every_book_already_on_the_list_as_checked(database):
+    """S85 (#264): a book on its first check shows at the top of the list,
+    so every book already on it is marked as past that, and none jumps."""
+    db.pending(database)
+    for migration in sorted(db.MIGRATIONS_DIR.glob("*.sql")):
+        if migration.name.startswith("032"):
+            break
+        database.executescript(migration.read_text())
+        database.execute(
+            "INSERT INTO schema_migration (name) VALUES (?)", (migration.name,)
+        )
+    database.execute("INSERT INTO work (id, title) VALUES (1, 'Stoner')")
+    database.execute("INSERT INTO entry (work_id, hunt) VALUES (1, 'reader')")
+
+    assert "032_when_a_book_was_first_checked.sql" in db.migrate(database)
+
+    marked = database.execute("SELECT first_checked_at FROM entry").fetchone()[0]
+    assert marked is not None

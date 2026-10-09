@@ -1,6 +1,8 @@
 {% import "_ui.html" as ui %}
 {# The list on its own, so a delete can swap just this and leave the form alone. #}
-<div id="want-list">
+{#- Draws itself again when the list changes, while it is filtered or a book
+    is on its first check (S68, S85). -#}
+<div id="want-list"{% if redraw %} data-redraw{% endif %}>
 {% if not books %}
   <p class="meta">Nothing on the list yet.</p>
 {% else %}
@@ -29,14 +31,15 @@
   {%- if books | length > 1 %}
   {#- How many books show, and the order, as a book's page shows its
       matches and Cheapest · Newest (S69, #217). -#}
-  {% set shown = (books | selectattr("id", "in", under_ids) | list | length) if filtering else books | length %}
+  {% set shown = (books | selectattr("id", "in", (under_ids | list) + ((arriving or []) | list)) | list | length) if filtering else books | length %}
   <div class="list-meta">
     <p class="meta">{{ shown }} book{{ '' if shown == 1 else 's' }}</p>
     {% include "_sort_pair.html" %}
   </div>
   {%- endif %}
   <ul class="ui-list">
-  {% for book in books if not filtering or book.id in under_ids %}
+  {#- A book on its first check shows whatever the filter (S85, #264). -#}
+  {% for book in books if not filtering or book.id in under_ids or book.id in (arriving or []) %}
     {% set glance = glances.get(book.id) if glances else None %}
     {% set state = 'checking' if book.id == checking else 'idle' %}
     {% with oob = false %}{% include "_entry.html" %}{% endwith %}

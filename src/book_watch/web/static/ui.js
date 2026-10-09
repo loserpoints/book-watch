@@ -395,9 +395,17 @@
   // list, and redrawing one row at a time can't add or remove one. So the
   // list draws itself again when the list changes, once no check is running
   // (S68, #240).
+  // A book on its first check sits at the top until that check finishes,
+  // then the list draws itself again so the book takes its place (S85,
+  // #264). The server marks the list when either case holds, since a
+  // remembered filter or order is no longer in the page address. A change
+  // arriving within the redraw's two seconds waits for them rather than
+  // being lost, or the new book would stay on top.
   document.body.addEventListener("list-changed", function () {
-    if (new URLSearchParams(window.location.search).get("show") === "under") {
-      redrawList();
-    }
+    var list = document.getElementById("want-list");
+    if (!list || !list.hasAttribute("data-redraw")) return;
+    var wait = 2000 - (Date.now() - redrawnAt);
+    if (wait > 0) window.setTimeout(redrawList, wait + 50);
+    else redrawList();
   });
 })();

@@ -908,7 +908,7 @@ def test_the_switch_fetches_the_list_without_adding_history(client, three_books)
 
     toggle = under_toggle(page)
     assert 'hx-get="/books/list?show=under&amp;sort=added"' in toggle
-    assert 'hx-replace-url="/?show=under"' in toggle
+    assert 'hx-replace-url="/?show=under&amp;sort=added"' in toggle
     assert "hx-push-url" not in page
     assert shown(client.get("/books/list?show=under").text) == {"Stoner"}
 
@@ -1027,8 +1027,9 @@ def test_the_order_and_the_filter_keep_each_other(client, three_books):
     going back, or a reload, show the list as it was."""
     page = client.get("/?show=under&sort=cheapest").text
 
-    assert 'hx-replace-url="/?sort=cheapest"' in under_toggle(page)
-    assert 'hx-replace-url="/?show=under"' in page  # Added, keeping the filter
+    assert 'hx-replace-url="/?show=all&amp;sort=cheapest"' in under_toggle(page)
+    # Added, keeping the filter.
+    assert 'hx-replace-url="/?show=under&amp;sort=added"' in page
 
 
 def test_a_piece_of_the_list_keeps_the_order_of_the_page_it_came_from(
@@ -1057,18 +1058,95 @@ def test_deleting_a_book_keeps_the_filter_on(client, three_books):
     assert shown(page) == {"Stoner"}
 
 
-def test_adding_a_book_shows_the_whole_list_with_the_new_book(
+def test_adding_a_book_keeps_the_filter_and_shows_the_new_book(
     client, catalog, three_books
 ):
+    """S85 (#264): adding changes neither the order nor the filter. The new
+    book shows while its first check runs, filter or not."""
+    three_books[4] = None
     response = client.post(
         "/books",
-        data={"isbn": "9780099448396", "title": "", "override": ""},
+        data={"isbn": "Middlemarch", "title": "", "override": "1"},
         headers={"HX-Request": "true", "HX-Current-URL": "http://x/?show=under"},
     )
 
     assert response.headers["HX-Replace-Url"] == "/"
-    assert {"Stoner", "Crash", "Kindred"} <= shown(response.text)
+    assert shown(response.text) == {"Stoner"}
+    assert "Middlemarch" in response.text
     assert 'href="/book/4"' in response.text
+
+
+def titles(page):
+    """Every book's title, in the order a reader sees them."""
+    return re.findall(r'class="book-row-title"[^>]*>([^<]+)<', page)
+
+
+def finish_first_check(client, book_id):
+    with closing(client.app.state.connect()) as connection:
+        connection.execute(
+            "UPDATE entry SET first_checked_at = datetime('now') WHERE id = ?",
+            (book_id,),
+        )
+        connection.commit()
+
+
+def test_a_new_book_sits_on_top_until_its_first_check_then_takes_its_place(
+    client, three_prices
+):
+    """S85 (#264): under Cheapest, a book just added has no price, which
+    would put it last. It shows first until its first check finishes."""
+    for book_id in three_prices:
+        finish_first_check(client, book_id)
+    client.get("/books/list?show=all&sort=cheapest")
+    three_prices[4] = None
+
+    added = client.post(
+        "/books",
+        data={"isbn": "Middlemarch", "title": "", "override": "1"},
+        headers={"HX-Request": "true", "HX-Current-URL": "http://x/"},
+    ).text
+
+    assert titles(added) == ["Middlemarch", "Crash", "Stoner", "Kindred"]
+    assert re.search(r'id="want-list"[^>]*data-redraw', added)
+
+    # The check finishes with a copy at $8: it moves to its place by price.
+    three_prices[4] = "8.00"
+    finish_first_check(client, 4)
+    redrawn = client.get("/books/list", headers={"HX-Request": "true"}).text
+
+    assert titles(redrawn) == ["Crash", "Middlemarch", "Stoner", "Kindred"]
+    assert not re.search(r'id="want-list"[^>]*data-redraw', redrawn)
+
+    # Or with no price at all: among the books with none, newest first.
+    three_prices[4] = None
+    assert titles(client.get("/").text) == ["Crash", "Stoner", "Middlemarch", "Kindred"]
+
+
+def test_a_book_checked_again_keeps_its_place(client, three_prices, monkeypatch):
+    """Only a first check puts a book on top. One checked again, still
+    examining its copies, stays where its price puts it."""
+    from book_watch.web import list_view
+
+    for book_id in three_prices:
+        finish_first_check(client, book_id)
+    monkeypatch.setattr(
+        list_view, "examining", lambda entry, throttled=False: "digging"
+    )
+
+    page = client.get("/?show=all&sort=cheapest").text
+
+    assert titles(page) == ["Crash", "Stoner", "Kindred"]
+
+
+def test_the_want_list_opens_in_the_order_and_filter_last_chosen(client, three_books):
+    client.get("/books/list?show=under&sort=cheapest", headers={"HX-Request": "true"})
+
+    page = client.get("/").text
+
+    assert shown(page) == {"Stoner"}
+    assert re.search(r'<b class="pair-option" aria-current="true"[^>]*>Cheapest<', page)
+    client.get("/books/list?show=all&sort=added", headers={"HX-Request": "true"})
+    assert shown(client.get("/").text) == {"Stoner", "Crash", "Kindred"}
 
 
 def test_a_row_says_its_limit_or_that_there_is_none(client, three_books):
