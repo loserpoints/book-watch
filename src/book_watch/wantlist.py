@@ -72,6 +72,9 @@ class Entry:
     #: there was none or no check has noted it.
     checked_from: str | None = None
     checked_from_currency: str | None = None
+    #: When the book's first check finished, or None while it has not
+    #: (S85, #264).
+    first_checked_at: str | None = None
     #: The work's cover id, and when anybody asked. See migration 018 for why
     #: those are three states and not two.
     work_cover: int | None = None
@@ -226,6 +229,7 @@ SELECT entry.id,
        entry.looked_before,
        entry.checked_from,
        entry.checked_from_currency,
+       entry.first_checked_at,
        work.title,
        work.author,
        work.resolved_at,
@@ -518,6 +522,7 @@ def _to_entry(row: sqlite3.Row) -> Entry:
         looked_before=row["looked_before"],
         checked_from=row["checked_from"],
         checked_from_currency=row["checked_from_currency"],
+        first_checked_at=row["first_checked_at"],
         work_cover=row["work_cover"],
         cover_asked_at=row["cover_asked_at"],
         edition_cover=row["edition_cover"],

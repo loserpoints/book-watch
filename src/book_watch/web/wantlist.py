@@ -120,13 +120,6 @@ def from_htmx(request: Request) -> bool:
     return request.headers.get("HX-Request") == "true"
 
 
-#: The page address for the want list narrowed to books with a copy under
-#: their limit (S60, #132). It lives in the address, not in the database or
-#: the device, so it survives opening a book and going back, and opening the
-#: app fresh shows everything.
-UNDER_LIMIT_URL = "/?show=under"
-
-
 def list_changed(response: HTMLResponse) -> HTMLResponse:
     """Tell the page the list changed, so the header asks for itself again.
 
@@ -137,7 +130,7 @@ def list_changed(response: HTMLResponse) -> HTMLResponse:
     return response
 
 
-def wants_under(request: Request) -> bool:
+def wants_under(request: Request, remembered: bool = False) -> bool:
     """Whether this request is for the list narrowed to books under a limit.
 
     Asked by the address itself, or, for a piece htmx fetches from another
@@ -148,8 +141,11 @@ def wants_under(request: Request) -> bool:
     """
     if "show" in request.query_params:
         return request.query_params["show"] == "under"
-    current = request.headers.get("HX-Current-URL", "")
-    return "show=under" in urlsplit(current).query.split("&")
+    current = urlsplit(request.headers.get("HX-Current-URL", "")).query.split("&")
+    if "show=under" in current or "show=all" in current:
+        return "show=under" in current
+    # Neither asked: the last choice made (S85, #264).
+    return remembered
 
 
 #: How the want list can be ordered (S69, #217). "added" is the newest book
@@ -158,23 +154,21 @@ def wants_under(request: Request) -> bool:
 Sort = Literal["added", "cheapest"]
 
 
-def wants_sort(request: Request) -> Sort:
-    """The order this request is for, asked the same two ways as the filter."""
+def wants_sort(request: Request, remembered: Sort = "added") -> Sort:
+    """The order this request is for, asked the same two ways as the filter,
+    then the last order chosen (S85, #264)."""
     if "sort" in request.query_params:
         return "cheapest" if request.query_params["sort"] == "cheapest" else "added"
-    current = request.headers.get("HX-Current-URL", "")
-    if "sort=cheapest" in urlsplit(current).query.split("&"):
-        return "cheapest"
-    return "added"
+    current = urlsplit(request.headers.get("HX-Current-URL", "")).query.split("&")
+    if "sort=cheapest" in current or "sort=added" in current:
+        return "cheapest" if "sort=cheapest" in current else "added"
+    return remembered
 
 
 def view_query(under: bool, sort: Sort) -> str:
-    """The page address's query for a filter and an order, empty for the
-    defaults, so opening the app plain shows everything, newest first."""
-    parts = (["show=under"] if under else []) + (
-        ["sort=cheapest"] if sort == "cheapest" else []
-    )
-    return ("?" + "&".join(parts)) if parts else ""
+    """The page address's query for a filter and an order. Both are named,
+    since a plain address now means the last ones chosen (S85, #264)."""
+    return f"?show={'under' if under else 'all'}&sort={sort}"
 
 
 def views(under: bool, sort: Sort) -> dict[str, dict[str, str]]:
@@ -199,21 +193,36 @@ def views(under: bool, sort: Sort) -> dict[str, dict[str, str]]:
     }
 
 
-def in_order(books: list, glances: dict, sort: Sort) -> list:
-    """The books in the order asked for. Cheapest goes by each row's own
-    "from $X", so the order can't disagree with what the rows say, and books
-    with no price go last, newest first among them."""
-    if sort != "cheapest":
-        return books
+def arriving(books: list, checking: int | None = None) -> set[int]:
+    """The books on their first check (S85, #264): just added, or examining
+    their copies for the first time. They show at the top whatever the order
+    and filter, and take their place when that check finishes."""
+    return {
+        book.id
+        for book in books
+        if book.first_checked_at is None
+        and (book.id == checking or list_view.examining(book) == "digging")
+    }
 
-    def price(book) -> tuple[bool, Decimal]:
+
+def in_order(
+    books: list, glances: dict, sort: Sort, first: set[int] | frozenset = frozenset()
+) -> list:
+    """The books in the order asked for, the ones on their first check on
+    top. Cheapest goes by each row's own "from $X", so the order can't
+    disagree with what the rows say, and books with no price go last, newest
+    first among them."""
+
+    def place(book) -> tuple[bool, bool, Decimal]:
+        if sort != "cheapest":
+            return (book.id not in first, False, Decimal(0))
         glance = glances.get(book.id)
         lead = glance.headline if glance is not None else None
         if lead is None:
-            return (True, Decimal(0))
-        return (False, lead.cheapest.amount)
+            return (book.id not in first, True, Decimal(0))
+        return (book.id not in first, False, lead.cheapest.amount)
 
-    return sorted(books, key=price)
+    return sorted(books, key=place)
 
 
 def build_router(
@@ -303,11 +312,16 @@ def build_router(
             glances = at_a_glance(connection, books)
             stale = out_of_date(connection, books)
             morning = daily.status(connection, datetime.now(UTC))
+            kept_under, kept_sort = settings.want_view(connection)
+            if under is None:
+                under = wants_under(request, kept_under)
+            order = wants_sort(request, kept_sort)
+            # A choice asked for by name is the one the list opens in next
+            # time (S85, #264).
+            if {"show", "sort"} <= set(request.query_params):
+                settings.remember_want_view(connection, under, order)
         under_ids = under_limit(glances)
-        if under is None:
-            under = wants_under(request)
-        # Adding a book shows it at the top, so the order goes back to added.
-        order = wants_sort(request) if checking is None else "added"
+        first = arriving(books, checking)
         return templates.TemplateResponse(
             request,
             template,
@@ -316,7 +330,9 @@ def build_router(
                 "isbn": "",
                 "title": "",
                 "author": "",
-                "books": in_order(books, glances, order),
+                "books": in_order(books, glances, order, first),
+                "arriving": first,
+                "redraw": under or bool(first),
                 "glances": glances,
                 "checking": checking,
                 "stale": stale,
@@ -350,9 +366,11 @@ def build_router(
             stale = out_of_date(connection, books)
             morning = daily.status(connection, datetime.now(UTC))
             on_list = wantlist.listed_works(connection) if candidates else set()
+            kept_under, kept_sort = settings.want_view(connection)
         under_ids = under_limit(glances)
-        order = wants_sort(request) if checking is None else "added"
-        filtering = wants_under(request) and bool(under_ids)
+        order = wants_sort(request, kept_sort)
+        filtering = wants_under(request, kept_under) and bool(under_ids)
+        first = arriving(books, checking)
         # Through htmx, only the sheet comes back, and it comes back as a
         # success: htmx does not swap an error status in, and the error is
         # the answer the sheet exists to show (S45).
@@ -361,7 +379,9 @@ def build_router(
             request,
             "_add_sheet.html" if htmx else "wantlist.html",
             {
-                "books": in_order(books, glances, order),
+                "books": in_order(books, glances, order, first),
+                "arriving": first,
+                "redraw": wants_under(request, kept_under) or bool(first),
                 "glances": glances,
                 "stale": stale,
                 "sort": order,
@@ -371,7 +391,7 @@ def build_router(
                 "under_ids": under_ids,
                 "filtering": filtering,
                 "hidden_digging": hidden_digging(
-                    books, under_ids, wants_under(request)
+                    books, under_ids, wants_under(request, kept_under)
                 ),
                 # The book just added, which starts checking itself on load.
                 # Adding a book is an explicit act, so this is not an
@@ -411,11 +431,10 @@ def build_router(
             return render_page(request, checking=added.id)
         # Through htmx the list is swapped in place and the sheet emptied and
         # closed, so adding a book leaves nothing in the history (S45).
-        # The whole list shows, filter off, so the new book is there to see:
-        # it has no price yet, and would otherwise vanish as it was added.
-        response = render_list(
-            request, checking=added.id, template="_added.html", under=False
-        )
+        # The order and filter stay as chosen. The new book shows at the top
+        # while its first check runs, filter or not, and takes its place when
+        # that check finishes (S85, #264).
+        response = render_list(request, checking=added.id, template="_added.html")
         response.headers["HX-Replace-Url"] = "/"
         response.headers["HX-Retarget"] = "#want-list"
         response.headers["HX-Reswap"] = "outerHTML"
@@ -932,8 +951,9 @@ def build_router(
             books = wantlist.all_books(connection)
             under_ids = under_limit(at_a_glance(connection, books))
             stale = out_of_date(connection, books)
-        filtering = wants_under(request) and bool(under_ids)
-        order = wants_sort(request)
+            kept_under, kept_sort = settings.want_view(connection)
+        filtering = wants_under(request, kept_under) and bool(under_ids)
+        order = wants_sort(request, kept_sort)
         return templates.TemplateResponse(
             request,
             "_list_bar_contents.html",

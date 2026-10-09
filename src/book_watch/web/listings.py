@@ -35,6 +35,7 @@ from book_watch import (
     enrichment,
     monitoring,
     moves,
+    settings,
     standing,
     sweeps,
     wantlist,
@@ -69,13 +70,13 @@ def _book_url(
     """A book's page, in the scope and order it was viewed in.
 
     The order rides along on every link the page makes, so changing scope or
-    checking again keeps it (S62). Opening a book fresh shows cheapest first.
+    checking again keeps it (S62). It is always named, since a book opened
+    with none opens in the last order chosen (S85, #264).
     """
     query = [("everywhere", "1")] if everywhere else []
     if limit != DEFAULT_LIMIT:
         query.append(("limit", str(limit)))
-    if newest:
-        query.append(("sort", "newest"))
+    query.append(("sort", "newest" if newest else "cheapest"))
     if refresh:
         query.append(("refresh", "1"))
     return f"/book/{book_id}" + ("?" + urlencode(query) if query else "")
@@ -181,12 +182,17 @@ def build_router(
         listing's detail: measured at 0.51s each, fifty of them is
         twenty-five seconds, and that work belongs to the background.
         """
-        # Nothing is persisted. A toggle that quietly changed what every later
-        # visit searched for would be a setting wearing a link's clothes, and
-        # settings are #72.
+        # The scope is not remembered: Everywhere is a search, and a choice
+        # that quietly changed what every later visit searched for would be a
+        # setting wearing a link's clothes (#288). The order is: the last one
+        # chosen on any book, unless the address names one (S85, #264).
         scope: Scope = "everywhere" if everywhere else "us"
-        newest = sort == "newest"
         with closing(open_database()) as connection:
+            if sort in ("cheapest", "newest"):
+                settings.remember_book_sort(connection, sort)
+                newest = sort == "newest"
+            else:
+                newest = settings.book_sort(connection) == "newest"
             try:
                 book = wantlist.get(connection, book_id)
             except LookupError:

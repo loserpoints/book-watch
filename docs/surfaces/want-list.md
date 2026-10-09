@@ -20,7 +20,7 @@ The want list shows every book I'm watching and whether any copy is worth my att
 - A row's state when there is no price: Couldn't check just now, Not checked yet, 2 maybes, or 0 listed.
 - Under the title, only when something is wrong with the daily check: "Daily check failed", "Daily check throttled" or "Daily check didn't run", as plain text. Tapping it says when and why.
 - One Check button. It reads "Check 2" when two books weren't checked in the last hour, and "Check all" when every book was. While a check runs it says how far it has got, "Checking 2 of 5…", and is greyed out. It counts down as books are checked, and keeps up after adding a book and when a book's copies finish being examined.
-- An "Under limit" switch beside it, to show only the books with a copy under their limit. It is greyed out when no book has one. With it on, a book joins or leaves the list once a check finishes.
+- An "Under limit" switch beside it, to show only the books with a copy under their limit. It is greyed out when no book has one. With it on, a book joins or leaves the list once a check finishes, and the list draws itself again to show it.
 - Over the rows, how many books show and their order: "6 books" and "Cheapest Added", the chosen order in bold over an accent bar and the other muted. Cheapest goes by each row's "from $X", with books that have no price last. Not shown for a single book.
 - The whole list drawn again on going back to it, and on coming back to the app after a minute or more away, unless a check is running.
 - The whole app loaded again, on the new version, on coming back to it after a deploy, however long it was away. A running check finishes and an open sheet closes first. Nothing reloads while the app stays in view.
@@ -31,14 +31,14 @@ The want list shows every book I'm watching and whether any copy is worth my att
 - Tap anywhere on a book's row to open its active listings. The row fills while pressed. The trash, the price's caret, "checking" and "Throttled" keep their own taps.
 - Tap the "Under limit" switch to see only the books whose price is green, and again to see every book.
 - Tap Cheapest or Added to change the order.
-- The switch and the order stay through opening a book and going back. Opening the app shows every book, newest added first, and so does adding a book.
+- The switch and the order stay through opening a book and going back, and opening the app shows them as last chosen, on any device. The count and the switch say when the list is filtered.
 - Tap "Check 2" to check the books not checked in the last hour.
 - Tap "Check all" to check every book again. It asks first, unless this device was told not to ask again.
 - Tap a price's caret to see what it was, "Was $12.40". The next tap anywhere closes it, and does nothing else.
 - Tap the trash icon to take a book off the list. A sheet asks which way: "I bought it" or "I don't want it".
 - "I bought it" asks where (eBay, AbeBooks, or elsewhere with the shop's name), what was paid delivered, and the day, with the phone's own date picker. It is filled in from the copy of this book last opened from the app, with that copy's marketplace and delivered price and today's date, and says when that copy was opened. Mark bought, and the book leaves the list for the [Bought](bought.md) page and stops being checked and emailed. A bought book can't be put back.
 - "I don't want it" removes the book, and nothing is kept.
-- Tap + to add a book (see [adding a book](add-a-book.md)). Adding leaves nothing to go back through.
+- Tap + to add a book (see [adding a book](add-a-book.md)). Adding leaves nothing to go back through, and changes neither the order nor the filter. The new book shows at the top while its first check runs, even with "Under limit" on, and takes its place when that check finishes. A book checked again keeps its place.
 - Tap Bought in the top bar to see what I've bought (see [Bought](bought.md)), or Settings to set the default limit (see [Settings](settings.md)). Tap Wanted while on the want list to go back to its top.
 - Press back to leave the app.
 

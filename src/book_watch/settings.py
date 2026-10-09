@@ -138,3 +138,38 @@ def stored_ship_to_zip() -> str | None:
     with closing(db.connect(load_database_path())) as connection:
         db.migrate(connection)
         return ship_to_zip(connection)
+
+
+# --- what the screens remember (S85, #264) ------------------------------------
+#
+# The last choice made, not a default set on purpose: the want list's order
+# and filter, and one order for every book's page. Kept here, so it is the
+# same on every device and each page is drawn right the first time. A book
+# page's scope is not remembered: Everywhere searches again (#288).
+
+WANT_SORT = "want_sort"
+WANT_UNDER = "want_under"
+BOOK_SORT = "book_sort"
+
+
+def want_view(connection: sqlite3.Connection) -> tuple[bool, str]:
+    """The want list's last filter and order: (under limit only, order)."""
+    sort = _get(connection, WANT_SORT)
+    return (
+        _get(connection, WANT_UNDER) == "1",
+        sort if sort in ("cheapest", "added") else "added",
+    )
+
+
+def remember_want_view(connection: sqlite3.Connection, under: bool, sort: str) -> None:
+    _put(connection, WANT_UNDER, "1" if under else "0")
+    _put(connection, WANT_SORT, sort)
+
+
+def book_sort(connection: sqlite3.Connection) -> str:
+    """The order every book's page opens in: "cheapest" or "newest"."""
+    return "newest" if _get(connection, BOOK_SORT) == "newest" else "cheapest"
+
+
+def remember_book_sort(connection: sqlite3.Connection, sort: str) -> None:
+    _put(connection, BOOK_SORT, "newest" if sort == "newest" else "cheapest")

@@ -34,7 +34,7 @@ Active listings shows the copies of one book for sale now, so I can judge each c
 - Tap the limit chip to set or clear the book's limit, in whole dollars, with the number keyboard. A book starts with the default limit from [Settings](settings.md).
 - Tap the scope chip to switch between US sellers and everywhere.
 - Tap the checked chip to search eBay and AbeBooks again.
-- Tap Newest to see the latest listings first, and Cheapest to go back. The order stays through checking again, changing scope, going back and reloading. Opening a book shows cheapest first.
+- Tap Newest to see the latest listings first, and Cheapest to go back. The order stays through checking again, changing scope, going back and reloading. Opening any book shows the order last chosen on any book. The scope is not remembered: a book always opens on US sellers.
 - Tap a copy's photo to see every photo, swiping between them.
 - Tap a condition note to read all of it, and tap again to collapse it.
 - Tap a price's caret to see what it was. The next tap anywhere closes it, and does nothing else.
