@@ -92,6 +92,6 @@ docs/
   milestones/              what each milestone set out to do, did, and learned
   runbook.md               deploy, roll back, restore
 CONTRIBUTING.md            how to build, test and review
-.claude/skills/            set-milestone and plan-slice, used at the steps governance names
+.claude/skills/            set-milestone, plan-slice and review-panel, used where governance names them
 LICENSE                    MIT
 ```

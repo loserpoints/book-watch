@@ -1,5 +1,5 @@
 name: Enhancement
-description: "Something new I could see or do"
+description: "Something I could see or do, added, made simpler or taken away"
 labels: ["enhancement"]
 body:
   - type: textarea
